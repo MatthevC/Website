@@ -1,5 +1,40 @@
 const app = document.getElementById("app");
 
+const MODERATOR_TEAM = [
+  {
+    name: "Blackstaryolow",
+    role: "OPIEKUNKA SPOŁECZNOŚCI",
+    description: "Dba o dobrą atmosferę na czacie i wspiera nowych członków społeczności. Spokojna reakcja i pomocna dłoń, kiedy robi się tłoczno.",
+    twitch: "https://www.twitch.tv/blackstaryolow",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/blackstaryolow.webp"
+  },
+  {
+    name: "xorzech112",
+    role: "MODERATOR TECHNICZNY",
+    description: "Techniczny ogarniacz i strażnik zasad. Pomaga utrzymać porządek, a gdy potrzeba — szybko reaguje na problemy podczas transmisji.",
+    twitch: "https://www.twitch.tv/xorzech112",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/xorzech112.webp"
+  },
+  {
+    name: "x_aeriel",
+    role: "MODERATORKA SPOŁECZNOŚCI",
+    description: "Pozytywna energia i przyjazne podejście. Pomaga budować dobrą atmosferę oraz dba o to, żeby każdy czuł się u nas swobodnie.",
+    twitch: "https://www.twitch.tv/x_aeriel",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/x_aeriel.webp"
+  },
+  {
+    name: "texturalorc",
+    role: "MODERATOR PORZĄDKU",
+    description: "Czujny i opanowany. Dba o sprawną reakcję moderacji, porządek na czacie oraz bezpieczną atmosferę podczas wspólnych transmisji.",
+    twitch: "https://www.twitch.tv/texturalorc",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/texturalorc.webp"
+  }
+];
+
 const pages = {
   home: {
     title: "CENTRUM <span>SPOŁECZNOŚCI</span>",
@@ -258,40 +293,7 @@ function vipPage() {
   `;
 }
 
-const MODERATOR_TEAM = [
-  {
-    name: "Blackstaryolow",
-    role: "OPIEKUNKA SPOŁECZNOŚCI",
-    description: "Dba o dobrą atmosferę na czacie i wspiera nowych członków społeczności. Spokojna reakcja i pomocna dłoń, kiedy robi się tłoczno.",
-    twitch: "https://www.twitch.tv/blackstaryolow",
-    discord: "DO UZUPEŁNIENIA",
-    image: "pictures/moderators/blackstaryolow.webp"
-  },
-  {
-    name: "xorzech112",
-    role: "MODERATOR TECHNICZNY",
-    description: "Techniczny ogarniacz i strażnik zasad. Pomaga utrzymać porządek, a gdy potrzeba — szybko reaguje na problemy podczas transmisji.",
-    twitch: "https://www.twitch.tv/xorzech112",
-    discord: "DO UZUPEŁNIENIA",
-    image: "pictures/moderators/xorzech112.webp"
-  },
-  {
-    name: "x_aeriel",
-    role: "MODERATORKA SPOŁECZNOŚCI",
-    description: "Pozytywna energia i przyjazne podejście. Pomaga budować dobrą atmosferę oraz dba o to, żeby każdy czuł się u nas swobodnie.",
-    twitch: "https://www.twitch.tv/x_aeriel",
-    discord: "DO UZUPEŁNIENIA",
-    image: "pictures/moderators/x_aeriel.webp"
-  },
-  {
-    name: "texturalorc",
-    role: "MODERATOR PORZĄDKU",
-    description: "Czujny i opanowany. Dba o sprawną reakcję moderacji, porządek na czacie oraz bezpieczną atmosferę podczas wspólnych transmisji.",
-    twitch: "https://www.twitch.tv/texturalorc",
-    discord: "DO UZUPEŁNIENIA",
-    image: "pictures/moderators/texturalorc.webp"
-  }
-];
+
 
 function moderatorTeamPage() {
   const cards = MODERATOR_TEAM.map((moderator, index) => `
