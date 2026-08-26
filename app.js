@@ -3,34 +3,34 @@ const app = document.getElementById("app");
 const MODERATOR_TEAM = [
   {
     name: "Blackstaryolow",
-    role: "OPIEKUNKA SPOŁECZNOŚCI",
-    description: "Dba o dobrą atmosferę na czacie i wspiera nowych członków społeczności. Spokojna reakcja i pomocna dłoń, kiedy robi się tłoczno.",
+    role: "MODERATOR GŁÓWNY",
+    description: "Koordynuje pracę całej moderacji i czuwa nad tym, żeby zespół działał sprawnie. Wspiera pozostałych moderatorów, pomaga w trudniejszych sytuacjach i dba o dobrą atmosferę w społeczności.",
     twitch: "https://www.twitch.tv/blackstaryolow",
-    discord: "DO UZUPEŁNIENIA",
+    discord: "blackstaryolow",
     image: "pictures/moderators/blackstaryolow.webp"
   },
   {
     name: "xorzech112",
-    role: "MODERATOR TECHNICZNY",
-    description: "Techniczny ogarniacz i strażnik zasad. Pomaga utrzymać porządek, a gdy potrzeba — szybko reaguje na problemy podczas transmisji.",
+    role: "KOORDYNATOR EVENTÓW",
+    description: "Odpowiada za organizacyjną stronę naszych eventów — pomaga przy przygotowaniach, pilnuje przebiegu wydarzeń i wspiera ekipę, żeby wszystko odbywało się zgodnie z planem.",
     twitch: "https://www.twitch.tv/xorzech112",
-    discord: "DO UZUPEŁNIENIA",
+    discord: "orzech8933",
     image: "pictures/moderators/xorzech112.webp"
   },
   {
     name: "x_aeriel",
-    role: "MODERATORKA SPOŁECZNOŚCI",
-    description: "Pozytywna energia i przyjazne podejście. Pomaga budować dobrą atmosferę oraz dba o to, żeby każdy czuł się u nas swobodnie.",
+    role: "OPIEKUNKA SPOŁECZNOŚCI",
+    description: "Dba o kontakt ze społecznością i dobrą atmosferę wokół transmisji. Pomaga nowym osobom odnaleźć się w ekipie, wspiera rozmowy i pilnuje, żeby każdy czuł się u nas mile widziany.",
     twitch: "https://www.twitch.tv/x_aeriel",
-    discord: "DO UZUPEŁNIENIA",
+    discord: "_.aeriel",
     image: "pictures/moderators/x_aeriel.webp"
   },
   {
     name: "texturalorc",
-    role: "MODERATOR PORZĄDKU",
-    description: "Czujny i opanowany. Dba o sprawną reakcję moderacji, porządek na czacie oraz bezpieczną atmosferę podczas wspólnych transmisji.",
+    role: "STRAŻNIK DISCORDA",
+    description: "Czuwa nad porządkiem na naszym Discordzie. Pilnuje przestrzegania zasad, reaguje na problemy i pomaga utrzymać serwer jako uporządkowane i przyjazne miejsce dla całej społeczności.",
     twitch: "https://www.twitch.tv/texturalorc",
-    discord: "DO UZUPEŁNIENIA",
+    discord: "textural__",
     image: "pictures/moderators/texturalorc.webp"
   }
 ];
@@ -329,7 +329,7 @@ function moderatorTeamPage() {
           <div class="moderator-kicker">MODERATORZY MATT'S WORLD</div>
           <h1>NASZA <span>MODERACJA</span></h1>
           <p>To osoby, które pomagają utrzymać dobrą atmosferę, reagują wtedy, gdy jest to potrzebne, i wspierają naszą społeczność zarówno podczas transmisji, jak i poza nią.</p>
-          <div class="moderator-hero-note">Profile i funkcje są na razie wersją tymczasową — później możemy podmienić zdjęcia, opisy, role i nazwy Discord 1:1 na właściwe dane.</div>
+          <div class="moderator-hero-note">Portrety moderatorów są na razie tymczasowe — później możemy podmienić je na właściwe zdjęcia bez zmiany układu strony.</div>
         </section>
 
         <div class="moderator-grid">${cards}</div>
