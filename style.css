@@ -2067,3 +2067,51 @@ button, a { -webkit-tap-highlight-color: transparent; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* === MINIMALNY REGULAMIN TWITCH === */
+.twitch-minimal-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.twitch-download-box,
+.twitch-official-mini {
+  margin-top: 1.2rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.twitch-download-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(191,36,45,0.12), rgba(255,255,255,0.03));
+}
+
+.twitch-download-box h2,
+.twitch-official-mini h2 {
+  margin: .35rem 0 .45rem;
+}
+
+.twitch-download-box p {
+  margin: 0;
+  max-width: 720px;
+}
+
+.official-links-list.compact {
+  margin-top: .8rem;
+}
+
+@media (max-width: 900px) {
+  .twitch-minimal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .twitch-download-box {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

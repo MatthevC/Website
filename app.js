@@ -611,133 +611,63 @@ function gamePickRulesPage() {
 function twitchRulesPage() {
   return `
     <div class="container content-wrap">
-      <div class="page-panel rules-showcase twitch-rules-page">
+      <div class="page-panel rules-showcase twitch-rules-page twitch-rules-minimal">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
           <div class="rules-hero-badge">REGULAMIN TWITCH</div>
-          <h1>NA TWITCHU GRAMY <span>ZGODNIE Z ZASADAMI PLATFORMY</span></h1>
-          <p>Ten skrót ma pomóc szybko ocenić, jakie zachowania są u nas niedozwolone na czacie i podczas wspólnego przebywania na transmisji. To prosty przewodnik dla widzów — a w razie sporu obowiązują oficjalne zasady Twitcha.</p>
+          <h1>PROSTO: <span>SZANUJ INNYCH I ZASADY TWITCHA</span></h1>
+          <p>Na czacie i podczas transmisji obowiązują zasady naszej społeczności oraz oficjalne zasady Twitcha. Poniżej znajdziesz tylko najważniejsze punkty.</p>
         </div>
 
-        <div class="rules-memory-strip">
-          <div class="rules-memory-title">Najważniejsze w skrócie:</div>
-          <div class="rules-memory-tags">
-            <span>BEZ NĘKANIA</span>
-            <span>BEZ MOWY NIENAWIŚCI</span>
-            <span>BEZ TREŚCI 18+</span>
-            <span>BEZ SPAMU I SCAMU</span>
-            <span>BEZ UJAWNIANIA DANYCH</span>
-          </div>
-        </div>
-
-        <section class="twitch-word-guide">
-          <div class="twitch-word-guide-head">
-            <div>
-              <div class="rule-card-label">SŁOWA I ZWROTY</div>
-              <h2>Co traktujemy jako zakazane na Twitchu?</h2>
-              <p>Twitch nie publikuje pełnej listy slurów, dlatego nie istnieje oficjalna kompletna lista „wszystkich zakazanych słów”. Poniżej masz praktyczną zasadę: jeśli słowo lub zwrot jest używany do nienawiści, poniżania, grożenia, seksualnego nękania albo zachęcania do samookaleczeń — traktujemy go jako niedozwolony.</p>
-            </div>
-            <a class="download-rules-btn" href="downloads/twitch-zakazane-slowa-i-zwroty.txt" download>POBIERZ LISTĘ SŁÓW I ZWROTÓW ↓</a>
-          </div>
-
-          <div class="twitch-word-grid">
-            <div class="twitch-word-card danger">
-              <strong>Slury i mowa nienawiści</strong>
-              <span>Zakazane są rasistowskie, etniczne, religijne, homofobiczne, transfobiczne, seksistowskie i ableistyczne slury. Twitch podaje, że N-word z „hard R” jest niedozwolone w każdych okolicznościach.</span>
-            </div>
-            <div class="twitch-word-card">
-              <strong>„kys”, „kill yourself”, „zabij się”</strong>
-              <span>Zwroty zachęcające inną osobę do samobójstwa lub samookaleczenia są niedozwolonym nękaniem i mogą prowadzić do reakcji moderacji.</span>
-            </div>
-            <div class="twitch-word-card">
-              <strong>Wyzwiska seksualne</strong>
-              <span>Zwroty takie jak „whore” czy „virgin”, kiedy są używane do uporczywego seksualnego poniżania konkretnej osoby, Twitch wskazuje jako przykład nękania seksualnego.</span>
-            </div>
-            <div class="twitch-word-card">
-              <strong>Słowa o grupach chronionych użyte jako obelga</strong>
-              <span>Nawet zwykłe określenia dotyczące orientacji, płci, niepełnosprawności, religii czy pochodzenia stają się problemem, jeśli używasz ich pogardliwie albo jako negatywnego określenia innej osoby.</span>
-            </div>
-            <div class="twitch-word-card">
-              <strong>Groźby i życzenie komuś krzywdy</strong>
-              <span>Zakazane są zwroty nawołujące do pobicia, zabicia, ciężkiego zranienia albo życzące komuś choroby, śmierci czy innej poważnej krzywdy.</span>
-            </div>
-            <div class="twitch-word-card">
-              <strong>Obsceniczne / seksualne określenia w nazwach i tagach</strong>
-              <span>Twitch nakłada dodatkowe ograniczenia na nazwy kont i tagi. Nie wolno tam stosować m.in. odniesień do aktów seksualnych, genitaliów, płynów seksualnych, wulgarnych treści czy nienawistnych określeń.</span>
-            </div>
-          </div>
-          <div class="twitch-word-note">
-            <strong>Ważne:</strong> kontekst ma znaczenie. Niektóre słowa mogą być dozwolone w neutralnej rozmowie, edukacji lub przy cytowaniu, ale niedozwolone jako obelga. Dlatego plik do pobrania zawiera kategorie i publicznie podane przykłady Twitcha, a nie zmyśloną „tajną listę”.
-          </div>
-        </section>
-
-        <div class="rules-card-grid">
+        <div class="rules-card-grid twitch-minimal-grid">
           <section class="rule-card">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
             <div class="rule-card-label">SZACUNEK</div>
-            <h2>Zakaz nękania, gróźb i obrażania</h2>
-            <p>Nie tolerujemy wyzwisk, gróźb, ośmieszania, uporczywego zaczepiania ani prowokowania innych osób. Jeśli chcesz uczestniczyć w czacie, rób to z kulturą i bez atakowania innych.</p>
+            <h2>Bez obrażania, nękania i mowy nienawiści</h2>
+            <p>Nie atakujemy innych osób, nie prowokujemy i nie używamy treści naruszających zasady Twitcha.</p>
           </section>
 
           <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🚫</div></div>
-            <div class="rule-card-label">MOWA NIENAWIŚCI</div>
-            <h2>Zakazane są slury i obraźliwe określenia</h2>
-            <p>Nie używamy słów i zwrotów obrażających ludzi ze względu na pochodzenie, kolor skóry, narodowość, religię, płeć, orientację, tożsamość, niepełnosprawność czy stan zdrowia. Każda forma mowy nienawiści jest zabroniona.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">🔞</div></div>
-            <div class="rule-card-label">TREŚCI 18+</div>
-            <h2>Bez seksualnych, obscenicznych i NSFW treści</h2>
-            <p>Na czacie i podczas interakcji nie wrzucamy treści pornograficznych, seksualnych, obscenicznych ani linków do materiałów 18+. Niedozwolone są także sugestie nagości i nieodpowiednie treści wobec nieletnich.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">📣</div></div>
-            <div class="rule-card-label">SPAM / SCAM</div>
-            <h2>Bez spamu, reklam, scamów i szkodliwych linków</h2>
-            <p>Nie spamujemy, nie floodujemy, nie reklamujemy się bez zgody i nie wrzucamy podejrzanych linków. Zakazane są również próby oszustwa, wyłudzania danych oraz podszywania się pod inne osoby lub marki.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🛡️</div></div>
+            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🛡️</div></div>
             <div class="rule-card-label">BEZPIECZEŃSTWO</div>
-            <h2>Nie ujawniamy cudzych danych i nie zachęcamy do łamania prawa</h2>
-            <p>Zakazane jest publikowanie cudzych danych prywatnych, namawianie do przemocy, samookaleczeń, nielegalnych działań lub innych szkodliwych zachowań. Bezpieczeństwo społeczności zawsze ma pierwszeństwo.</p>
+            <h2>Bez treści zakazanych i szkodliwych</h2>
+            <p>Zakazane są m.in. nieodpowiednie treści 18+, spam, scam, ujawnianie cudzych danych oraz inne zachowania zabronione przez Twitch.</p>
           </section>
 
-          <section class="rule-card twitch-links-card">
-            <div class="rule-card-top"><div class="rule-card-number">06</div><div class="rule-card-icon" aria-hidden="true">🔗</div></div>
-            <div class="rule-card-label">OFICJALNE ŹRÓDŁA</div>
-            <h2>Sprawdź oficjalne zasady Twitcha</h2>
-            <p>Jeśli chcesz zobaczyć pełne i nadrzędne zasady platformy, skorzystaj z oficjalnych materiałów Twitcha:</p>
-            <div class="official-links-list">
-              <a class="official-link-card" href="https://legal.twitch.com/en/legal/community-guidelines/" target="_blank" rel="noopener">
-                <strong>Community Guidelines</strong>
-                <span>Główne zasady społeczności Twitcha</span>
-              </a>
-              <a class="official-link-card" href="https://legal.twitch.com/en/legal/terms-of-service/" target="_blank" rel="noopener">
-                <strong>Terms of Service</strong>
-                <span>Ogólne warunki korzystania z platformy</span>
-              </a>
-              <a class="official-link-card" href="https://safety.twitch.tv/articles/en_US/Knowledge/Community-Guidelines" target="_blank" rel="noopener">
-                <strong>Twitch Safety: Community Guidelines</strong>
-                <span>Przystępne omówienie zasad bezpieczeństwa</span>
-              </a>
-              <a class="official-link-card" href="https://blog.twitch.tv/en/2020/04/07/update-to-our-nudity-and-attire-policy/" target="_blank" rel="noopener">
-                <strong>Nudity & Attire Policy</strong>
-                <span>Oficjalne wyjaśnienie zasad dotyczących nagości i ubioru</span>
-              </a>
-            </div>
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">⚖️</div></div>
+            <div class="rule-card-label">MODERACJA</div>
+            <h2>Moderacja może reagować od razu</h2>
+            <p>Łamanie zasad może skutkować usunięciem wiadomości, timeoutem lub banem — zależnie od sytuacji i skali naruszenia.</p>
           </section>
         </div>
 
-        <div class="rules-summary-box">
-          <h2>Ważna uwaga</h2>
-          <p>Ten regulamin jest prostym skrótem na potrzeby naszej społeczności. Ostatecznie zawsze liczą się oficjalne zasady Twitcha oraz decyzje moderacji i platformy. Jeśli coś jest ewidentnie szkodliwe, obraźliwe lub ryzykowne — traktujemy to jako niedozwolone.</p>
-        </div>
+        <section class="twitch-download-box">
+          <div>
+            <div class="rule-card-label">PLIK DO POBRANIA</div>
+            <h2>Lista niedozwolonych słów i zwrotów</h2>
+            <p>Jeśli potrzebujesz bardziej szczegółowej listy do moderacji, pobierz ją jako osobny plik. Jej treść nie jest wyświetlana na tej stronie.</p>
+          </div>
+          <a class="download-rules-btn" href="downloads/twitch-zakazane-slowa-i-zwroty.txt" download>POBIERZ LISTĘ ↓</a>
+        </section>
+
+        <section class="twitch-official-mini">
+          <div>
+            <div class="rule-card-label">OFICJALNE ZASADY</div>
+            <h2>Pełne zasady znajdziesz na Twitchu</h2>
+          </div>
+          <div class="official-links-list compact">
+            <a class="official-link-card" href="https://legal.twitch.com/en/legal/community-guidelines/" target="_blank" rel="noopener">
+              <strong>Community Guidelines</strong>
+              <span>Oficjalne zasady społeczności Twitcha</span>
+            </a>
+            <a class="official-link-card" href="https://legal.twitch.com/en/legal/terms-of-service/" target="_blank" rel="noopener">
+              <strong>Terms of Service</strong>
+              <span>Warunki korzystania z Twitcha</span>
+            </a>
+          </div>
+        </section>
       </div>
     </div>
   `;
