@@ -2609,3 +2609,59 @@ button, a { -webkit-tap-highlight-color: transparent; }
     transform: translateX(0) translateY(0);
   }
 }
+
+
+/* === POPRAWKA WYRÓWNANIA: BINGO / DIXPER === */
+.reward-grid-paired {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.reward-grid-paired .reward-card {
+  height: 100%;
+}
+
+.reward-column-head-bingo {
+  background: rgba(191,36,45,0.12);
+  border-color: rgba(191,36,45,0.26);
+}
+
+.reward-column-head-dixper {
+  background: rgba(88,101,242,0.11);
+  border-color: rgba(88,101,242,0.24);
+}
+
+/* === POPRAWKA TOOLTIPÓW STEAM === */
+.steam-signature-card {
+  overflow: visible;
+  z-index: 8;
+}
+
+.steam-signature-card::after {
+  border-radius: 24px;
+}
+
+.steam-signature-examples {
+  overflow: visible;
+}
+
+.steam-example-chip {
+  z-index: 1;
+}
+
+.steam-example-chip:hover,
+.steam-example-chip:focus-visible {
+  z-index: 30;
+}
+
+.steam-tooltip {
+  z-index: 999;
+}
+
+@media (max-width: 860px) {
+  .reward-grid-paired {
+    grid-template-columns: 1fr;
+  }
+}
