@@ -148,6 +148,10 @@ const pages = {
     title: "DLA WIDZA / <span>DIXPER</span>",
     body: dixperPage()
   },
+  "viewer/bingo": {
+    title: "DLA WIDZA / <span>BINGO - STREAM BOUNTY</span>",
+    body: bingoPage()
+  },
   "viewer/rewards": {
     title: "DLA WIDZA / <span>NAGRODY</span>",
     body: rewardsPage()
@@ -1077,6 +1081,175 @@ function setupDixperPage() {
   });
 }
 
+function bingoPage() {
+  return `
+    <div class="container content-wrap bingo-page bingo-page-minimal">
+      <div class="page-panel bingo-shell">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <header class="bingo-intro" id="bingo-top">
+          <div>
+            <span class="dixper-kicker">DLA WIDZA / BINGO - STREAM BOUNTY</span>
+            <h1>BINGO <span>W 5 PROSTYCH KROKACH</span></h1>
+            <p>Stream Bounty zamienia wydarzenia z transmisji w planszę Bingo. Dołączasz do gry, zaznaczasz eventy, które wydarzyły się na streamie, i ścigasz się z innymi o pierwszą linię pięciu pól.</p>
+          </div>
+        </header>
+
+        <div class="dixper-reading-layout bingo-reading-layout">
+          <aside class="dixper-toc bingo-toc" aria-label="Nawigacja po stronie Bingo">
+            <div class="dixper-toc-title">NA TEJ STRONIE</div>
+            <div class="dixper-toc-track" aria-hidden="true"><span data-bingo-progress></span></div>
+            <button type="button" class="dixper-toc-link active" data-bingo-target="bingo-extension"><span>01</span> Rozszerzenie</button>
+            <button type="button" class="dixper-toc-link" data-bingo-target="bingo-join"><span>02</span> Join Game</button>
+            <button type="button" class="dixper-toc-link" data-bingo-target="bingo-balls"><span>03</span> Kolory kulek</button>
+            <button type="button" class="dixper-toc-link" data-bingo-target="bingo-win"><span>04</span> Jak wygrać</button>
+            <button type="button" class="dixper-toc-link" data-bingo-target="bingo-prizes"><span>05</span> Bingo z nagrodami</button>
+          </aside>
+
+          <main class="dixper-reading-content bingo-reading-content">
+            <section class="dixper-clean-section" id="bingo-extension" data-bingo-section>
+              <div class="dixper-clean-heading"><span>01</span><div><h2>ZNAJDŹ ROZSZERZENIE</h2><p>Najpierw otwórz panel Stream Bounty na transmisji.</p></div></div>
+              <div class="dixper-tutorial-minimal bingo-tutorial-minimal">
+                <article>
+                  <div class="dixper-step-copy">
+                    <span>KROK 1</span>
+                    <h3>Otwórz ikonkę Stream Bounty</h3>
+                    <p>Na <strong>komputerze</strong> najedź myszką na ekran transmisji i znajdź ikonkę rozszerzenia po prawej stronie odtwarzacza. Na <strong>telefonie</strong> szukaj tej samej ikonki pod transmisją.</p>
+                  </div>
+                  <button type="button" class="dixper-shot-link bingo-shot-link" data-image-preview="pictures/bingo/step1-iconka-bingo.png" data-image-alt="Gdzie znajduje się ikonka Stream Bounty na transmisji">
+                    <img src="pictures/bingo/step1-iconka-bingo.png" alt="Widok transmisji z zaznaczoną ikonką Stream Bounty">
+                    <span class="bingo-image-note">Kliknij, aby powiększyć</span>
+                  </button>
+                </article>
+              </div>
+            </section>
+
+            <section class="dixper-clean-section" id="bingo-join" data-bingo-section>
+              <div class="dixper-clean-heading"><span>02</span><div><h2>DOŁĄCZ DO GRY</h2><p>Jedno kliknięcie i dostajesz własną planszę.</p></div></div>
+              <div class="dixper-tutorial-minimal bingo-tutorial-minimal">
+                <article>
+                  <div class="dixper-step-copy">
+                    <span>KROK 2</span>
+                    <h3>Kliknij Join Game!</h3>
+                    <p>Po otwarciu rozszerzenia kliknij <strong>Join Game!</strong>. Stream Bounty od razu doda Cię do rozgrywki i przygotuje własną kartę z eventami.</p>
+                  </div>
+                  <button type="button" class="dixper-shot-link bingo-shot-link" data-image-preview="pictures/bingo/step2-join-game.png" data-image-alt="Panel Stream Bounty z przyciskiem Join Game">
+                    <img src="pictures/bingo/step2-join-game.png" alt="Panel Stream Bounty z dużym przyciskiem Join Game">
+                    <span class="bingo-image-note">Kliknij, aby powiększyć</span>
+                  </button>
+                </article>
+              </div>
+            </section>
+
+            <section class="dixper-clean-section" id="bingo-balls" data-bingo-section>
+              <div class="dixper-clean-heading"><span>03</span><div><h2>CO OZNACZAJĄ KOLORY?</h2><p>Wystarczy zapamiętać trzy kolory.</p></div></div>
+              <div class="bingo-balls-layout">
+                <div class="bingo-ball-legend">
+                  <article>
+                    <span class="bingo-ball gray"></span>
+                    <div><strong>SZARA</strong><p>Event jeszcze się nie wydarzył po ostatnim resecie.</p></div>
+                  </article>
+                  <article>
+                    <span class="bingo-ball yellow"></span>
+                    <div><strong>ŻÓŁTA</strong><p>Event już się wydarzył. Możesz kliknąć kulkę i zaznaczyć ją na swojej planszy.</p></div>
+                  </article>
+                  <article>
+                    <span class="bingo-ball purple"></span>
+                    <div><strong>FIOLETOWA</strong><p>Event został przez Ciebie poprawnie zaznaczony.</p></div>
+                  </article>
+                </div>
+                <button type="button" class="dixper-shot-link bingo-shot-link bingo-board-shot" data-image-preview="pictures/bingo/step3-plansza-kulki.png" data-image-alt="Plansza Stream Bounty z kulkami w różnych kolorach">
+                  <img src="pictures/bingo/step3-plansza-kulki.png" alt="Plansza Stream Bounty pokazująca szare, żółte i fioletowe kulki">
+                  <span class="bingo-image-note">Kliknij, aby powiększyć</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="dixper-clean-section" id="bingo-win" data-bingo-section>
+              <div class="dixper-clean-heading"><span>04</span><div><h2>JAK WYGRAĆ?</h2><p>Liczy się pierwsza pełna linia pięciu zaznaczonych eventów.</p></div></div>
+              <div class="bingo-win-layout">
+                <div class="bingo-mini-boards" aria-label="Możliwe układy wygranej">
+                  <div class="bingo-mini-board horizontal" title="Poziomo">${Array(25).fill('<i></i>').join('')}</div>
+                  <div class="bingo-mini-board vertical" title="Pionowo">${Array(25).fill('<i></i>').join('')}</div>
+                  <div class="bingo-mini-board diagonal" title="Na skos">${Array(25).fill('<i></i>').join('')}</div>
+                </div>
+                <div class="bingo-win-copy">
+                  <p>Aby wygrać daną rozgrywkę, musisz <strong>przed innymi</strong> zaznaczyć 5 kulek w jednej linii:</p>
+                  <div class="bingo-win-tags"><span>POZIOMO</span><span>PIONOWO</span><span>NA SKOS</span></div>
+                  <div class="bingo-extra-card"><strong>Chcesz grać dalej?</strong><p>Po wygranej możesz zdobywać kolejne punkty rankingu. Wykup następną planszę za Bitsy przyciskiem <strong>+ Extra Card</strong>.</p></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="dixper-clean-section" id="bingo-prizes" data-bingo-section>
+              <div class="dixper-clean-heading"><span>05</span><div><h2>BINGO Z NAGRODAMI</h2><p>Od czasu do czasu zwykłe Bingo zmienia się w kilkumiesięczną walkę o nagrody.</p></div></div>
+              <div class="bingo-prize-summary">
+                <div><span>⏱</span><strong>3–4 miesiące</strong><small>typowy czas trwania eventu</small></div>
+                <div><span>🏆</span><strong>TOP 3–5</strong><small>osób z rankingu przechodzi do finału</small></div>
+                <div><span>🎁</span><strong>do ok. 200 zł</strong><small>typowa wartość nagród</small></div>
+              </div>
+
+              <div class="dixper-tutorial-minimal bingo-tutorial-minimal bingo-tutorial-single">
+                <article>
+                  <div class="dixper-step-copy">
+                    <span>KROK 5</span>
+                    <h3>Śledź ranking w Leaderboardzie</h3>
+                    <p>W eventach <strong>BINGO Z NAGRODAMI</strong> liczy się aktywność i pozycja w rankingu przez cały okres wydarzenia. Najlepsze osoby z <strong>Leaderboardu</strong> dostają możliwość zagrania o nagrodę w finale.</p>
+                  </div>
+                  <button type="button" class="dixper-shot-link bingo-shot-link" data-image-preview="pictures/bingo/step4-leaderboard.png" data-image-alt="Leaderboard w Stream Bounty">
+                    <img src="pictures/bingo/step4-leaderboard.png" alt="Leaderboard w Stream Bounty pokazujący ranking graczy">
+                    <span class="bingo-image-note">Kliknij, aby powiększyć</span>
+                  </button>
+                </article>
+              </div>
+
+              <div class="bingo-prize-copy">
+                <p>Finaliści grają później o nagrodę w formule przypominającej <strong>grę w ciemno</strong>. W praktyce wybierasz jedną z przygotowanych kopert i dostajesz to, co kryje się w środku.</p>
+              </div>
+
+              <div class="bingo-envelope-demo" aria-label="Przykład finału z kopertami">
+                <div class="bingo-envelope"><span>A</span><small>KOPERTA</small></div>
+                <div class="bingo-envelope"><span>B</span><small>KOPERTA</small></div>
+                <div class="bingo-envelope"><span>C</span><small>KOPERTA</small></div>
+              </div>
+              <p class="bingo-demo-note">To wizualizacja sposobu finału. Konkretne nagrody i liczba kopert zależą od aktualnego eventu.</p>
+            </section>
+          </main>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setupBingoPage() {
+  const root = document.querySelector(".bingo-page-minimal");
+  if (!root) return;
+
+  const links = [...root.querySelectorAll("[data-bingo-target]")];
+  const sections = [...root.querySelectorAll("[data-bingo-section]")];
+  const progress = root.querySelector("[data-bingo-progress]");
+
+  links.forEach(link => {
+    link.addEventListener("click", () => {
+      const target = document.getElementById(link.dataset.bingoTarget);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  if ("IntersectionObserver" in window && sections.length) {
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const activeId = visible.target.id;
+      const activeIndex = sections.findIndex(section => section.id === activeId);
+      links.forEach(link => link.classList.toggle("active", link.dataset.bingoTarget === activeId));
+      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+    }, { rootMargin: "-25% 0px -55% 0px", threshold: [0, .15, .35, .6] });
+    sections.forEach(section => observer.observe(section));
+  }
+}
+
 function rewardsPage() {
   return `
     <div class="container content-wrap rewards-page">
@@ -1696,7 +1869,7 @@ function setupImagePreview() {
 
 function setupGlobalPageNavigation() {
   // Dixper ma własną, ręcznie dopracowaną nawigację 1–6.
-  if (document.querySelector(".dixper-page-minimal")) return;
+  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal")) return;
 
   const panel = document.querySelector("#app .page-panel");
   if (!panel || panel.dataset.globalNavReady === "1") return;
@@ -2009,6 +2182,7 @@ async function render() {
   setupCommandsPage();
   setupRewardsSearch();
   setupDixperPage();
+  setupBingoPage();
   setupImagePreview();
   setupGlobalPageNavigation();
   closeMobileMenu();
