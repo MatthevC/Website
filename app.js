@@ -1868,7 +1868,12 @@ function setupImagePreview() {
 }
 
 function setupGlobalPageNavigation() {
-  // Dixper ma własną, ręcznie dopracowaną nawigację 1–6.
+  const currentPath = location.hash.replace(/^#\/?/, "").replace(/^\/+|\/+$/g, "");
+
+  // Te podstrony celowo nie korzystają z automatycznego paska nawigacji.
+  if (currentPath.startsWith("rules/") || currentPath === "moderator/team") return;
+
+  // Dixper i Bingo mają własną, ręcznie dopracowaną nawigację.
   if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal")) return;
 
   const panel = document.querySelector("#app .page-panel");
