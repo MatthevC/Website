@@ -97,7 +97,7 @@ const pages = {
     body: commandsPage()
   },
   "moderator/commands": {
-    title: "DLA WIDZA / <span>KOMENDY</span>",
+    title: "MODERACJA / <span>KOMENDY</span>",
     body: commandsPage()
   },
 
@@ -119,17 +119,23 @@ const pages = {
   "vip/how-to": { title: "DLA WIDZA / <span>VIP</span>", body: vipPage() },
   "vip/benefits": { title: "DLA WIDZA / <span>VIP</span>", body: vipPage() },
 
-  "moderator/how-to": {
-    title: "MODERATOR / <span>JAK ZOSTAĆ?</span>",
-    body: infoPage("JAK ZOSTAĆ MODERATOREM?", "Informacje dotyczące wyboru i wymagań wobec moderatorów.", "Tutaj wpiszemy dokładne wymagania oraz proces wyboru moderatora.")
+  "moderator/team": {
+    title: "MODERACJA / <span>NASZA MODERACJA</span>",
+    body: moderatorTeamPage()
   },
   "moderator/benefits": {
-    title: "MODERATOR / <span>KORZYŚCI</span>",
-    body: infoPage("KORZYŚCI MODERATORA", "Najważniejsze informacje dotyczące roli moderatora.", "Tutaj wpiszemy zakres uprawnień, dodatkowe przywileje oraz informacje organizacyjne.")
+    title: "MODERACJA / <span>KORZYŚCI</span>",
+    body: moderatorBenefitsPage()
+  },
+
+  // Stare adresy moderatora pozostają aktywne, ale prowadzą do nowych sekcji.
+  "moderator/how-to": {
+    title: "MODERACJA / <span>KORZYŚCI</span>",
+    body: moderatorBenefitsPage()
   },
   "moderator/rules": {
-    title: "MODERATOR / <span>REGULAMIN</span>",
-    body: rulesPage("REGULAMIN DLA MODERACJI", "Zasady pracy i zachowania podczas moderowania społeczności.")
+    title: "MODERACJA / <span>NASZA MODERACJA</span>",
+    body: moderatorTeamPage()
   },
 
   "discord/join": {
@@ -149,6 +155,13 @@ const pages = {
 
 
 function getCommandFilterDefaults() {
+  const preset = sessionStorage.getItem("commandsPreset");
+  if (preset) sessionStorage.removeItem("commandsPreset");
+
+  if (preset === "moderator") {
+    return { viewer: false, vip: false, mod: true };
+  }
+
   const route = window.location.hash.split("?")[0];
   if (route === "#/moderator/commands") {
     return { viewer: false, vip: false, mod: true };
@@ -239,6 +252,162 @@ function vipPage() {
             <div class="vip-benefit"><span>04</span><p><strong>DODATKOWE KANAŁY DISCORD</strong><br>VIP może otrzymać dostęp do dodatkowych kanałów, np. z polecanymi i przetestowanymi narzędziami online.</p></div>
             <div class="vip-benefit"><span>05</span><p><strong>PIERWSZEŃSTWO DO LOBBY</strong><br>VIP ma pierwszeństwo do lobby podczas wspólnych gier.</p></div>
           </div>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+const MODERATOR_TEAM = [
+  {
+    name: "Blackstaryolow",
+    role: "OPIEKUNKA SPOŁECZNOŚCI",
+    description: "Dba o dobrą atmosferę na czacie i wspiera nowych członków społeczności. Spokojna reakcja i pomocna dłoń, kiedy robi się tłoczno.",
+    twitch: "https://www.twitch.tv/blackstaryolow",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/blackstaryolow.webp"
+  },
+  {
+    name: "xorzech112",
+    role: "MODERATOR TECHNICZNY",
+    description: "Techniczny ogarniacz i strażnik zasad. Pomaga utrzymać porządek, a gdy potrzeba — szybko reaguje na problemy podczas transmisji.",
+    twitch: "https://www.twitch.tv/xorzech112",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/xorzech112.webp"
+  },
+  {
+    name: "x_aeriel",
+    role: "MODERATORKA SPOŁECZNOŚCI",
+    description: "Pozytywna energia i przyjazne podejście. Pomaga budować dobrą atmosferę oraz dba o to, żeby każdy czuł się u nas swobodnie.",
+    twitch: "https://www.twitch.tv/x_aeriel",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/x_aeriel.webp"
+  },
+  {
+    name: "texturalorc",
+    role: "MODERATOR PORZĄDKU",
+    description: "Czujny i opanowany. Dba o sprawną reakcję moderacji, porządek na czacie oraz bezpieczną atmosferę podczas wspólnych transmisji.",
+    twitch: "https://www.twitch.tv/texturalorc",
+    discord: "DO UZUPEŁNIENIA",
+    image: "pictures/moderators/texturalorc.webp"
+  }
+];
+
+function moderatorTeamPage() {
+  const cards = MODERATOR_TEAM.map((moderator, index) => `
+    <article class="moderator-card">
+      <div class="moderator-photo-wrap">
+        <img class="moderator-photo" src="${moderator.image}" alt="Tymczasowy portret moderatora ${moderator.name}" loading="lazy">
+        <div class="moderator-photo-index">0${index + 1}</div>
+      </div>
+      <div class="moderator-card-body">
+        <div class="moderator-name-row">
+          <h2>${moderator.name}</h2>
+          <span class="moderator-role">${moderator.role}</span>
+        </div>
+        <p>${moderator.description}</p>
+        <div class="moderator-links">
+          <a class="moderator-social moderator-twitch" href="${moderator.twitch}" target="_blank" rel="noopener">
+            <span>TWITCH</span><strong>${moderator.name}</strong><b>↗</b>
+          </a>
+          <div class="moderator-social moderator-discord">
+            <span>DISCORD</span><strong>${moderator.discord}</strong>
+          </div>
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  return `
+    <div class="container content-wrap moderator-page">
+      <div class="page-panel moderator-panel">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <section class="moderator-team-hero">
+          <div class="moderator-kicker">MODERATORZY MATT'S WORLD</div>
+          <h1>NASZA <span>MODERACJA</span></h1>
+          <p>To osoby, które pomagają utrzymać dobrą atmosferę, reagują wtedy, gdy jest to potrzebne, i wspierają naszą społeczność zarówno podczas transmisji, jak i poza nią.</p>
+          <div class="moderator-hero-note">Profile i funkcje są na razie wersją tymczasową — później możemy podmienić zdjęcia, opisy, role i nazwy Discord 1:1 na właściwe dane.</div>
+        </section>
+
+        <div class="moderator-grid">${cards}</div>
+
+      </div>
+    </div>
+  `;
+}
+
+function moderatorBenefitsPage() {
+  return `
+    <div class="container content-wrap moderator-page">
+      <div class="page-panel moderator-panel">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <section class="moderator-benefits-hero">
+          <div class="moderator-kicker">DOŁĄCZ DO EKIPY</div>
+          <h1>MODERACJA / <span>KORZYŚCI</span></h1>
+          <p>Moderacja to przede wszystkim zaufanie i odpowiedzialność, ale chcemy też realnie doceniać osoby, które regularnie pomagają przy naszej społeczności.</p>
+        </section>
+
+        <section class="moderator-recruit-card">
+          <div class="moderator-recruit-number">01</div>
+          <div class="moderator-recruit-content">
+            <span class="moderator-section-label">REKRUTACJA</span>
+            <h2>JAK ZOSTAĆ MODERATOREM?</h2>
+            <p>Jeżeli jesteś osobą mało konfliktową i lubisz przebywać u nas na transmisjach, wyślij zgłoszenie przez <strong>KONTAKT/WNIOSKI</strong> i napisz, w czym mógłbyś nas wesprzeć oraz dlaczego akurat chcesz być u nas Moderatorem.</p>
+          </div>
+          <a class="moderator-cta moderator-cta-solid" href="#/contact">WYŚLIJ ZGŁOSZENIE →</a>
+        </section>
+
+        <div class="moderator-benefits-heading">
+          <div>
+            <span class="moderator-section-label">CO OFERUJEMY</span>
+            <h2>JAKIE SĄ KORZYŚCI Z BYCIA MODERATOREM U NAS?</h2>
+          </div>
+          <p>Najbardziej aktywne osoby chcemy nagradzać nie tylko rangą, ale też konkretnymi benefitami i wspólnym czasem.</p>
+        </div>
+
+        <div class="moderator-benefits-grid">
+          <article class="moderator-benefit-card">
+            <span class="moderator-benefit-number">01</span>
+            <div>
+              <h3>BONY, BILETY I ATRAKCJE</h3>
+              <p>Dla aktywnych moderatorów na Discordzie i Twitchu przewidujemy bony do różnych sklepów, np. Empik czy Sizeer, bilety do kin lub inne atrakcje.</p>
+            </div>
+          </article>
+
+          <article class="moderator-benefit-card">
+            <span class="moderator-benefit-number">02</span>
+            <div>
+              <h3>SPOTKANIA IRL</h3>
+              <p>W ciągu roku organizujemy przynajmniej dwa spotkania IRL dla Moderacji, wraz z możliwością nocowanki dla chętnych.</p>
+            </div>
+          </article>
+
+          <article class="moderator-benefit-card">
+            <span class="moderator-benefit-number">03</span>
+            <div>
+              <h3>TWITCH — PORADNIKI I UDOGODNIENIA</h3>
+              <p>Udostępniamy zestaw poradników pomagających rozpocząć własną przygodę z Twitchem oraz rozwiązania i udogodnienia, które możesz zobaczyć na transmisjach MatthevC.</p>
+            </div>
+          </article>
+
+          <article class="moderator-benefit-card">
+            <span class="moderator-benefit-number">04</span>
+            <div>
+              <h3>POMOC TECHNICZNA IT</h3>
+              <p>Możesz liczyć na pomoc techniczną z szeroko pojętego IT — od prostych usterek, przez składanie PC, aż po wsparcie przy pisaniu oprogramowania.</p>
+            </div>
+          </article>
+        </div>
+
+        <section class="moderator-benefits-bottom">
+          <div>
+            <span class="moderator-section-label">WAŻNE</span>
+            <h2>LICZY SIĘ AKTYWNOŚĆ I ZAUFANIE</h2>
+            <p>Korzyści traktujemy jako podziękowanie dla osób, które faktycznie angażują się w życie społeczności. Szczegóły i zasady poszczególnych benefitów możemy później doprecyzować.</p>
+          </div>
+          <a class="moderator-ghost-link" href="#/moderator/team">POZNAJ NASZĄ MODERACJĘ →</a>
         </section>
       </div>
     </div>
@@ -837,6 +1006,20 @@ document.querySelectorAll(".nav-dropdown > button").forEach(button => {
 });
 
 window.addEventListener("hashchange", render);
+
+// Wejście do komend z menu MODERACJA otwiera tę samą stronę komend,
+// ale jednorazowo zaznacza wyłącznie filtr MODERACJA.
+document.addEventListener("click", (event) => {
+  const link = event.target.closest('a[data-command-preset="moderator"]');
+  if (!link) return;
+
+  sessionStorage.setItem("commandsPreset", "moderator");
+  const targetHash = "#/viewer/commands";
+  if (location.hash.split("?")[0] === targetHash) {
+    event.preventDefault();
+    render();
+  }
+});
 
 // Fallback dla przeglądarek/cache: kliknięcie linku Kontakt zawsze uruchamia router.
 document.addEventListener("click", (event) => {
