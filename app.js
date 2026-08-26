@@ -887,19 +887,30 @@ function dixperPage() {
     { slug: "IronicCrispyGalagoKippa-d7GQFM52gV121HVe", channel: "SandyNPC", url: "https://www.twitch.tv/sandynpc/clip/IronicCrispyGalagoKippa-d7GQFM52gV121HVe?range=7d" }
   ];
 
+  const clipParent = location.hostname || "matthevc.github.io";
   const clipsHtml = clips.map((clip, index) => `
     <article class="dixper-clip-card" data-dixper-clip data-clip-slug="${clip.slug}" data-clip-channel="${clip.channel}">
-      <div class="dixper-clip-placeholder" data-dixper-clip-slot>
-        <div class="dixper-play-mark">▶</div>
-        <div>
-          <span class="dixper-clip-index">PRZYKŁAD ${String(index + 1).padStart(2, "0")}</span>
-          <h3>Dixper w praktyce</h3>
-          <p>Źródło: <strong>${clip.channel}</strong></p>
-        </div>
-        <button type="button" class="dixper-play-button" data-dixper-play>ODTWÓRZ KLIP</button>
+      <div class="dixper-clip-placeholder dixper-clip-preview" data-dixper-clip-slot>
+        <iframe
+          class="dixper-clip-preview-frame"
+          src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip.slug)}&parent=${encodeURIComponent(clipParent)}&autoplay=false&muted=true"
+          title="Miniatura klipu Twitch — ${clip.channel}"
+          loading="lazy"
+          tabindex="-1"
+          aria-hidden="true"
+          allow="fullscreen">
+        </iframe>
+        <button type="button" class="dixper-clip-preview-cover" data-dixper-play aria-label="Odtwórz klip ${index + 1} od ${clip.channel}">
+          <span class="dixper-preview-play">▶</span>
+          <span class="dixper-preview-copy">
+            <small>PRZYKŁAD ${String(index + 1).padStart(2, "0")}</small>
+            <strong>Dixper w praktyce</strong>
+            <em>Źródło: ${clip.channel}</em>
+          </span>
+        </button>
       </div>
       <div class="dixper-clip-meta">
-        <span>Klip odtwarza się bezpośrednio z Twitcha.</span>
+        <span>Kliknij miniaturę, aby uruchomić tylko ten klip.</span>
         <a href="${clip.url}" target="_blank" rel="noopener">OTWÓRZ ORYGINAŁ ↗</a>
       </div>
     </article>
@@ -965,11 +976,11 @@ function dixperPage() {
               <div class="dixper-tutorial-minimal">
                 <article>
                   <div class="dixper-step-copy"><span>KROK 1</span><h3>Wybierz kartę</h3><p>Kliknij kartę, której chcesz użyć, a następnie <strong>Add Skill to Launch</strong>. Skill jest przygotowany, ale jeszcze się nie uruchamia.</p></div>
-                  <a href="pictures/dixper/01-wybierz-skill.webp" target="_blank" class="dixper-shot-link"><img src="pictures/dixper/01-wybierz-skill.webp" alt="Dixper — Add Skill to Launch" loading="lazy"></a>
+                  <button type="button" class="dixper-shot-link" data-image-preview="pictures/dixper/01-wybierz-skill.webp" data-image-alt="Dixper — Add Skill to Launch"><img src="pictures/dixper/01-wybierz-skill.webp" alt="Dixper — Add Skill to Launch" loading="lazy"><span class="dixper-shot-hint">Kliknij, aby powiększyć</span></button>
                 </article>
                 <article>
                   <div class="dixper-step-copy"><span>KROK 2</span><h3>Uruchom kartę</h3><p>W dodatkowym panelu kliknij <strong>Launch Skills</strong>. W tym momencie karta odpala się na transmisji.</p></div>
-                  <a href="pictures/dixper/02-launch-skills.webp" target="_blank" class="dixper-shot-link"><img src="pictures/dixper/02-launch-skills.webp" alt="Dixper — Launch Skills" loading="lazy"></a>
+                  <button type="button" class="dixper-shot-link" data-image-preview="pictures/dixper/02-launch-skills.webp" data-image-alt="Dixper — Launch Skills"><img src="pictures/dixper/02-launch-skills.webp" alt="Dixper — Launch Skills" loading="lazy"><span class="dixper-shot-hint">Kliknij, aby powiększyć</span></button>
                 </article>
               </div>
             </section>
@@ -1034,6 +1045,7 @@ function setupDixperPage() {
     slot.innerHTML = slot.dataset.originalMarkup;
     card.classList.remove("playing");
     bindPlayButton(card);
+    if (activeCard === card) activeCard = null;
   }
 
   function bindPlayButton(card) {
@@ -1046,9 +1058,15 @@ function setupDixperPage() {
       if (!slot.dataset.originalMarkup) slot.dataset.originalMarkup = slot.innerHTML;
       const slug = card.dataset.clipSlug;
       const channel = card.dataset.clipChannel;
-      slot.innerHTML = `<iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(slug)}&parent=${encodeURIComponent(parent)}&autoplay=true" title="Klip Twitch — ${channel}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      slot.innerHTML = `
+        <div class="dixper-active-player">
+          <iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(slug)}&parent=${encodeURIComponent(parent)}&autoplay=true" title="Klip Twitch — ${channel}" allow="autoplay; fullscreen" allowfullscreen></iframe>
+          <button type="button" class="dixper-player-close" data-dixper-close aria-label="Zamknij klip">×</button>
+        </div>`;
       card.classList.add("playing");
       activeCard = card;
+      const close = card.querySelector("[data-dixper-close]");
+      if (close) close.addEventListener("click", () => resetCard(card), { once: true });
     });
   }
 
@@ -1620,6 +1638,125 @@ function setupCommandsPage() {
   renderCommands();
 }
 
+function setupImagePreview() {
+  const triggers = [...document.querySelectorAll("[data-image-preview]")];
+  if (!triggers.length) return;
+
+  let modal = document.getElementById("site-image-preview");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "site-image-preview";
+    modal.className = "site-image-preview";
+    modal.setAttribute("aria-hidden", "true");
+    modal.innerHTML = `
+      <div class="site-image-preview-backdrop" data-image-preview-close></div>
+      <div class="site-image-preview-dialog" role="dialog" aria-modal="true" aria-label="Podgląd obrazu">
+        <button type="button" class="site-image-preview-close" data-image-preview-close aria-label="Zamknij podgląd">×</button>
+        <img src="" alt="">
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  const image = modal.querySelector("img");
+  const closeButtons = [...modal.querySelectorAll("[data-image-preview-close]")];
+
+  function closePreview() {
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("image-preview-open");
+    window.setTimeout(() => { if (!modal.classList.contains("open")) image.src = ""; }, 180);
+  }
+
+  triggers.forEach(trigger => {
+    if (trigger.dataset.previewReady === "1") return;
+    trigger.dataset.previewReady = "1";
+    trigger.addEventListener("click", () => {
+      image.src = trigger.dataset.imagePreview;
+      image.alt = trigger.dataset.imageAlt || trigger.querySelector("img")?.alt || "Podgląd obrazu";
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("image-preview-open");
+      modal.querySelector(".site-image-preview-close")?.focus();
+    });
+  });
+
+  closeButtons.forEach(button => {
+    if (button.dataset.previewCloseReady === "1") return;
+    button.dataset.previewCloseReady = "1";
+    button.addEventListener("click", closePreview);
+  });
+
+  if (modal.dataset.escapeReady !== "1") {
+    modal.dataset.escapeReady = "1";
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && modal.classList.contains("open")) closePreview();
+    });
+  }
+}
+
+function setupGlobalPageNavigation() {
+  // Dixper ma własną, ręcznie dopracowaną nawigację 1–6.
+  if (document.querySelector(".dixper-page-minimal")) return;
+
+  const panel = document.querySelector("#app .page-panel");
+  if (!panel || panel.dataset.globalNavReady === "1") return;
+
+  const headings = [...panel.querySelectorAll("h1, h2")]
+    .filter(heading => !heading.closest(".site-page-toc") && heading.offsetParent !== null);
+  if (headings.length < 2) return;
+
+  panel.dataset.globalNavReady = "1";
+  panel.classList.add("with-global-page-nav");
+
+  headings.forEach((heading, index) => {
+    if (!heading.id) heading.id = `page-section-${index + 1}`;
+    heading.dataset.pageNavHeading = "1";
+  });
+
+  const backLink = [...panel.children].find(child => child.classList?.contains("back-link"));
+  const movable = [...panel.children].filter(child => child !== backLink);
+  const content = document.createElement("div");
+  content.className = "site-page-nav-content";
+  movable.forEach(child => content.appendChild(child));
+
+  const aside = document.createElement("aside");
+  aside.className = "dixper-toc site-page-toc";
+  aside.setAttribute("aria-label", "Nawigacja po tej stronie");
+  aside.innerHTML = `
+    <div class="dixper-toc-title">NA TEJ STRONIE</div>
+    <div class="dixper-toc-track" aria-hidden="true"><span data-site-page-progress></span></div>
+    ${headings.map((heading, index) => {
+      const raw = heading.textContent.replace(/\s+/g, " ").trim();
+      const label = index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw);
+      return `<button type="button" class="dixper-toc-link site-page-toc-link${index === 0 ? " active" : ""}" data-site-page-target="${heading.id}"><span>${String(index + 1).padStart(2, "0")}</span>${label}</button>`;
+    }).join("")}`;
+
+  const layout = document.createElement("div");
+  layout.className = "dixper-reading-layout site-page-nav-layout";
+  layout.append(aside, content);
+  if (backLink) backLink.insertAdjacentElement("afterend", layout);
+  else panel.prepend(layout);
+
+  const links = [...aside.querySelectorAll("[data-site-page-target]")];
+  const progress = aside.querySelector("[data-site-page-progress]");
+
+  links.forEach(link => link.addEventListener("click", () => {
+    document.getElementById(link.dataset.sitePageTarget)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }));
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const activeIndex = headings.indexOf(visible.target);
+      links.forEach(link => link.classList.toggle("active", link.dataset.sitePageTarget === visible.target.id));
+      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
+    }, { rootMargin: "-22% 0px -62% 0px", threshold: [0, .1, .3, .6] });
+    headings.forEach(heading => observer.observe(heading));
+  }
+}
+
 function discordJoinPage() {
   return `
     <div class="container content-wrap">
@@ -1832,6 +1969,8 @@ async function render() {
     await renderEventDetail(decodeURIComponent(eventMatch[1]));
     updateLinks();
     setupContactForm();
+    setupImagePreview();
+    setupGlobalPageNavigation();
     return;
   }
 
@@ -1848,6 +1987,8 @@ async function render() {
     await renderEvents();
     updateLinks();
     setupContactForm();
+    setupImagePreview();
+    setupGlobalPageNavigation();
     return;
   }
 
@@ -1868,6 +2009,8 @@ async function render() {
   setupCommandsPage();
   setupRewardsSearch();
   setupDixperPage();
+  setupImagePreview();
+  setupGlobalPageNavigation();
   closeMobileMenu();
 }
 
