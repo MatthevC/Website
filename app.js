@@ -949,45 +949,50 @@ function rewardsPage() {
             <h2>DIXPER ORAZ STREAM BOUNTY (BINGO)</h2>
             <p>Skrzynki Dixpera oraz nagrody wpływające na eventy i planszę Stream Bounty. Teraz układ jest wyrównany w parach: <strong>Bingo po lewej</strong>, <strong>Dixper po prawej</strong>.</p>
           </div>
-          <div class="reward-grid reward-grid-paired">
-            <div class="reward-column-head reward-column-head-bingo">BINGO / STREAM BOUNTY</div>
-            <div class="reward-column-head reward-column-head-dixper">DIXPER</div>
+          <div class="reward-grid reward-grid-family" data-reward-family-grid>
+            <div class="reward-family reward-family-bingo" data-reward-family="bingo">
+              <div class="reward-column-head reward-column-head-bingo">BINGO / STREAM BOUNTY</div>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic red">🎲</div><span class="reward-cost">1K COINS</span></div>
-              <h3>BINGO — RANDOM</h3>
-              <p>Rozszerzenie automatycznie odblokowuje jeden losowy event w <strong>Stream Bounty (Bingo)</strong>.</p>
-            </article>
+              <article class="reward-card" data-reward-card data-reward-family-card="bingo">
+                <div class="reward-card-top"><div class="reward-graphic red">🎲</div><span class="reward-cost">1K COINS</span></div>
+                <h3>BINGO — RANDOM</h3>
+                <p>Rozszerzenie automatycznie odblokowuje jeden losowy event w <strong>Stream Bounty (Bingo)</strong>.</p>
+              </article>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic blue">📦</div><span class="reward-cost">1,5K COINS</span></div>
-              <h3>Dixper — Basic Crate</h3>
-              <p>Dostajesz podstawową skrzynkę do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
-            </article>
+              <article class="reward-card" data-reward-card data-reward-family-card="bingo">
+                <div class="reward-card-top"><div class="reward-graphic red">🗳️</div><span class="reward-cost">8K COINS</span></div>
+                <h3>BINGO — VOTE</h3>
+                <p>Uruchamia głosowanie, który event w Stream Bounty odblokuje community. Wygrywa opcja z największą liczbą głosów, a przy remisie losujemy między najczęściej wybieranymi eventami.</p>
+              </article>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic red">🗳️</div><span class="reward-cost">8K COINS</span></div>
-              <h3>BINGO — VOTE</h3>
-              <p>Uruchamia głosowanie, który event w Stream Bounty odblokuje community. Wygrywa opcja z największą liczbą głosów, a przy remisie losujemy między najczęściej wybieranymi eventami.</p>
-            </article>
+              <article class="reward-card" data-reward-card data-reward-family-card="bingo">
+                <div class="reward-card-top"><div class="reward-graphic red">💥</div><span class="reward-cost">60K COINS</span></div>
+                <h3>BINGO ALL</h3>
+                <p>Zaznacza wszystkie eventy w <strong>Stream Bounty</strong>. Po wybraniu nagrody trzeba szybko wypełnić planszę, ponieważ po <strong>5 wygranych</strong> i zakończonej rozgrywce w danej grze event wygasa.</p>
+              </article>
+            </div>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic blue">🎁</div><span class="reward-cost">3K COINS</span></div>
-              <h3>Dixper — Rarity Crate</h3>
-              <p>Dostajesz skrzyneczkę <strong>Rarity</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
-            </article>
+            <div class="reward-family reward-family-dixper" data-reward-family="dixper">
+              <div class="reward-column-head reward-column-head-dixper">DIXPER</div>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic red">💥</div><span class="reward-cost">60K COINS</span></div>
-              <h3>BINGO ALL</h3>
-              <p>Zaznacza wszystkie eventy w <strong>Stream Bounty</strong>. Po wybraniu nagrody trzeba szybko wypełnić planszę, ponieważ po <strong>5 wygranych</strong> i zakończonej rozgrywce w danej grze event wygasa.</p>
-            </article>
+              <article class="reward-card" data-reward-card data-reward-family-card="dixper">
+                <div class="reward-card-top"><div class="reward-graphic blue">📦</div><span class="reward-cost">1,5K COINS</span></div>
+                <h3>Dixper — Basic Crate</h3>
+                <p>Dostajesz podstawową skrzynkę do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+              </article>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic blue">🧰</div><span class="reward-cost">4K COINS</span></div>
-              <h3>Dixper — Skill Crate</h3>
-              <p>Dostajesz skrzyneczkę <strong>Skill</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
-            </article>
+              <article class="reward-card" data-reward-card data-reward-family-card="dixper">
+                <div class="reward-card-top"><div class="reward-graphic blue">🎁</div><span class="reward-cost">3K COINS</span></div>
+                <h3>Dixper — Rarity Crate</h3>
+                <p>Dostajesz skrzyneczkę <strong>Rarity</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+              </article>
+
+              <article class="reward-card" data-reward-card data-reward-family-card="dixper">
+                <div class="reward-card-top"><div class="reward-graphic blue">🧰</div><span class="reward-cost">4K COINS</span></div>
+                <h3>Dixper — Skill Crate</h3>
+                <p>Dostajesz skrzyneczkę <strong>Skill</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -1170,10 +1175,15 @@ function setupRewardsSearch() {
       if (visible) visibleCount += 1;
     });
 
-    const columns = [...document.querySelectorAll("[data-reward-column]")];
-    columns.forEach(column => {
-      const hasVisibleCards = [...column.querySelectorAll("[data-reward-card]")].some(card => !card.hidden);
-      column.hidden = !hasVisibleCards;
+    const families = [...document.querySelectorAll("[data-reward-family]")];
+    families.forEach(family => {
+      const hasVisibleCards = [...family.querySelectorAll("[data-reward-card]")].some(card => !card.hidden);
+      family.hidden = !hasVisibleCards;
+    });
+
+    document.querySelectorAll("[data-reward-family-grid]").forEach(grid => {
+      const visibleFamilies = [...grid.querySelectorAll("[data-reward-family]")].filter(family => !family.hidden).length;
+      grid.classList.toggle("single-family", visibleFamilies === 1);
     });
 
     groups.forEach(group => {

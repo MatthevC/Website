@@ -2665,3 +2665,49 @@ button, a { -webkit-tap-highlight-color: transparent; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* === WYSZUKIWARKA: UKRYWANIE NIEPASUJĄCEJ KOLUMNY BINGO / DIXPER === */
+.reward-grid-family {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.reward-family {
+  display: grid;
+  grid-template-rows: auto repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  min-width: 0;
+}
+
+.reward-family .reward-card {
+  height: 100%;
+}
+
+.reward-grid-family.single-family {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reward-grid-family.single-family .reward-family {
+  grid-template-rows: auto;
+}
+
+.reward-grid-family.single-family .reward-card {
+  height: auto;
+}
+
+@media (max-width: 860px) {
+  .reward-grid-family {
+    grid-template-columns: 1fr;
+  }
+
+  .reward-family {
+    grid-template-rows: auto;
+  }
+
+  .reward-family .reward-card {
+    height: auto;
+  }
+}
