@@ -880,7 +880,6 @@ function moderatorBenefitsPage() {
 }
 
 function dixperPage() {
-  const twitchParent = location.hostname || "matthevc.github.io";
   const clips = [
     { slug: "ExquisiteElegantCardBCouch-y_gcq6VvWUj2CeTl", channel: "MatthevC", url: "https://www.twitch.tv/matthevc/clip/ExquisiteElegantCardBCouch-y_gcq6VvWUj2CeTl?range=all" },
     { slug: "BillowingInexpensiveMacaroniBIRB-jl58lQ1w3XoEX8_R", channel: "MatthevC", url: "https://www.twitch.tv/matthevc/clip/BillowingInexpensiveMacaroniBIRB-jl58lQ1w3XoEX8_R" },
@@ -889,141 +888,175 @@ function dixperPage() {
   ];
 
   const clipsHtml = clips.map((clip, index) => `
-    <article class="dixper-clip-card">
-      <div class="dixper-clip-head">
+    <article class="dixper-clip-card" data-dixper-clip data-clip-slug="${clip.slug}" data-clip-channel="${clip.channel}">
+      <div class="dixper-clip-placeholder" data-dixper-clip-slot>
+        <div class="dixper-play-mark">▶</div>
         <div>
           <span class="dixper-clip-index">PRZYKŁAD ${String(index + 1).padStart(2, "0")}</span>
-          <h3>Klip z kanału ${clip.channel}</h3>
+          <h3>Dixper w praktyce</h3>
+          <p>Źródło: <strong>${clip.channel}</strong></p>
         </div>
-        <a href="${clip.url}" target="_blank" rel="noopener" class="dixper-clip-open">TWITCH ↗</a>
+        <button type="button" class="dixper-play-button" data-dixper-play>ODTWÓRZ KLIP</button>
       </div>
-      <div class="dixper-clip-frame">
-        <iframe
-          src="https://clips.twitch.tv/embed?clip=${clip.slug}&parent=${encodeURIComponent(twitchParent)}&autoplay=false"
-          title="Klip Twitch — ${clip.channel}"
-          loading="lazy"
-          allowfullscreen>
-        </iframe>
+      <div class="dixper-clip-meta">
+        <span>Klip odtwarza się bezpośrednio z Twitcha.</span>
+        <a href="${clip.url}" target="_blank" rel="noopener">OTWÓRZ ORYGINAŁ ↗</a>
       </div>
     </article>
   `).join("");
 
   return `
-    <div class="container content-wrap dixper-page">
-      <div class="page-panel dixper-shell">
+    <div class="container content-wrap dixper-page dixper-page-minimal">
+      <div class="page-panel dixper-shell dixper-shell-minimal">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
-        <section class="dixper-hero">
-          <div class="dixper-hero-copy">
+        <header class="dixper-intro" id="dixper-top">
+          <div>
             <span class="dixper-kicker">DLA WIDZA / DIXPER</span>
-            <h1>STERUJ STREAMEM. <span>ODPALAJ SKILLE.</span></h1>
-            <p>Dixper pozwala widzom uruchamiać podczas transmisji interaktywne karty, które wpływają na grę Matta. Najważniejsze: korzystaj zawsze z linku Matta — nawet jeśli masz już konto w Dixperze.</p>
-            <div class="dixper-hero-actions">
-              <a class="dixper-primary-link" href="https://dixper.gg/matthevc" target="_blank" rel="noopener">OTWÓRZ DIXPER MATTA ↗</a>
-              <a class="dixper-secondary-link" href="#/viewer/rewards">ZOBACZ SKRZYNKI ZA COINSY →</a>
-            </div>
+            <h1>DIXPER <span>W 6 PROSTYCH KROKACH</span></h1>
+            <p>Karty Dixpera pozwalają widzom uruchamiać interakcje podczas transmisji. Poniżej masz wszystko, czego potrzebujesz — bez powtarzania tych samych informacji.</p>
           </div>
-          <div class="dixper-start-card">
-            <div class="dixper-start-number">01</div>
-            <div>
-              <h2>JAK ZACZĄĆ?</h2>
-              <p>Wejdź przez <strong>dixper.gg/matthevc</strong> i zaloguj się kontem Twitch. Nawet jeśli korzystałeś z Dixpera u innego streamera, wejdź ponownie przez link Matta, żeby pojawić się w bazie wykorzystywanej przy rozdawaniu skrzynek.</p>
-            </div>
-          </div>
-        </section>
+          <a class="dixper-primary-link" href="https://dixper.gg/matthevc" target="_blank" rel="noopener">OTWÓRZ DIXPER MATTA ↗</a>
+        </header>
 
-        <section class="dixper-section">
-          <div class="dixper-section-head">
-            <span>02 / KARTY</span>
-            <h2>JAK ZGARNĄĆ KARTY W DIXPERZE?</h2>
-            <p>Do kart potrzebujesz skrzynki (crate). Każda skrzynka daje 3 karty, a u nas możesz zdobyć ją na pięć sposobów.</p>
-          </div>
+        <div class="dixper-reading-layout">
+          <aside class="dixper-toc" aria-label="Nawigacja po stronie Dixper">
+            <div class="dixper-toc-title">NA TEJ STRONIE</div>
+            <div class="dixper-toc-track" aria-hidden="true"><span data-dixper-progress></span></div>
+            <button type="button" class="dixper-toc-link active" data-dixper-target="dixper-start"><span>01</span> Jak zacząć</button>
+            <button type="button" class="dixper-toc-link" data-dixper-target="dixper-get"><span>02</span> Jak zdobyć karty</button>
+            <button type="button" class="dixper-toc-link" data-dixper-target="dixper-crates"><span>03</span> Rodzaje skrzynek</button>
+            <button type="button" class="dixper-toc-link" data-dixper-target="dixper-use"><span>04</span> Jak odpalić skill</button>
+            <button type="button" class="dixper-toc-link" data-dixper-target="dixper-limits"><span>05</span> Cooldowny</button>
+            <button type="button" class="dixper-toc-link" data-dixper-target="dixper-clips"><span>06</span> Przykłady</button>
+          </aside>
 
-          <div class="dixper-methods-grid">
-            <article class="dixper-method-card"><div class="dixper-method-no">01</div><div class="dixper-method-icon">🎁</div><h3>Drop podczas transmisji</h3><p>Raz na jakiś czas pojawia się drop, np. 5 skrzynek. Pierwsze osoby, które wejdą w podany link, zgarniają darmową <strong>Basic Crate</strong>.</p></article>
-            <article class="dixper-method-card"><div class="dixper-method-no">02</div><div class="dixper-method-icon">🪙</div><h3>Punkty kanału</h3><p>Możesz odebrać konkretny rodzaj skrzynki za Coinsy. W wiadomości dopisz, jaki rodzaj kart chcesz — np. <strong>Straszaki</strong> albo <strong>Matt Collection</strong> (głównie DBD).</p><a href="#/viewer/rewards">ZOBACZ NAGRODY →</a></article>
-            <article class="dixper-method-card"><div class="dixper-method-no">03</div><div class="dixper-method-icon">💜</div><h3>Bonus dla subskrybentów</h3><p>Co tydzień subskrybenci kanału otrzymują darmowy zestaw skrzynek.</p></article>
-            <article class="dixper-method-card"><div class="dixper-method-no">04</div><div class="dixper-method-icon">🛒</div><h3>Zakup przez Dixper</h3><p>Skrzynki możesz też kupić bezpośrednio na stronie Dixpera. Ceny są ustawione możliwie nisko w ramach prowizji platformy.</p><a href="https://dixper.gg/matthevc" target="_blank" rel="noopener">PRZEJDŹ DO DIXPERA ↗</a></article>
-            <article class="dixper-method-card dixper-method-wide"><div class="dixper-method-no">05</div><div class="dixper-method-icon">🏆</div><h3>Eventy i specjalne rozdania</h3><p>Skrzynki można również wygrać w specjalnych eventach, takich jak <strong>BINGO Z NAGRODAMI</strong>, <strong>MIKOŁAJKOWY MATT</strong> i inne wydarzenia organizowane dla community.</p></article>
-          </div>
-        </section>
+          <main class="dixper-reading-content">
+            <section class="dixper-clean-section" id="dixper-start" data-dixper-section>
+              <div class="dixper-clean-heading"><span>01</span><div><h2>JAK ZACZĄĆ?</h2><p>Jedna rzecz jest najważniejsza.</p></div></div>
+              <div class="dixper-clean-callout">
+                <strong>Wejdź przez <a href="https://dixper.gg/matthevc" target="_blank" rel="noopener">dixper.gg/matthevc ↗</a> i zaloguj się przez Twitcha.</strong>
+                <p>Nawet jeśli używałeś Dixpera u innego streamera, wejdź przez link Matta — dzięki temu pojawisz się w jego bazie potrzebnej m.in. do rozdawania skrzynek.</p>
+              </div>
+            </section>
 
-        <section class="dixper-section">
-          <div class="dixper-section-head">
-            <span>03 / SKRZYNKI</span>
-            <h2>JAKIE MAMY RODZAJE SKRZYNEK?</h2>
-            <p>Trzy typy skrzynek różnią się tym, ile kontroli masz nad kartami, które otrzymasz.</p>
-          </div>
+            <section class="dixper-clean-section" id="dixper-get" data-dixper-section>
+              <div class="dixper-clean-heading"><span>02</span><div><h2>JAK ZDOBYĆ KARTY?</h2><p>Karty dostajesz ze skrzynek. Skrzynkę możesz zdobyć na 5 sposobów.</p></div></div>
+              <div class="dixper-compact-list">
+                <div><b>1</b><p><strong>Drop na streamie</strong><span>Gdy pojawi się drop, pierwsze osoby korzystające z linku mogą zgarnąć darmową Basic Crate.</span></p></div>
+                <div><b>2</b><p><strong>Coinsy / punkty kanału</strong><span>Wybierz skrzynkę w <a href="#/viewer/rewards">Nagrodach</a>. W wiadomości dopisz kolekcję, np. Straszaki albo Matt Collection.</span></p></div>
+                <div><b>3</b><p><strong>Subskrypcja</strong><span>Subskrybenci otrzymują co tydzień darmowy zestaw skrzynek.</span></p></div>
+                <div><b>4</b><p><strong>Zakup w Dixperze</strong><span>Skrzynki możesz kupić bezpośrednio na stronie Dixpera; ceny są ustawione możliwie nisko w ramach prowizji platformy.</span></p></div>
+                <div><b>5</b><p><strong>Eventy</strong><span>Skrzynki pojawiają się też jako nagrody w specjalnych wydarzeniach, np. Bingo z nagrodami czy Mikołajkowy Matt.</span></p></div>
+              </div>
+            </section>
 
-          <div class="dixper-crates-grid">
-            <article class="dixper-crate-card basic">
-              <div class="dixper-crate-art" aria-hidden="true"><span class="crate-lid"></span><span class="crate-body"></span><span class="crate-core">3×</span></div>
-              <span class="dixper-crate-label">BASIC CRATE</span>
-              <h3>3 losowe karty</h3>
-              <p>Najprostsza skrzynka. Otrzymujesz <strong>3 randomowe karty</strong> z danej kolekcji.</p>
-            </article>
-            <article class="dixper-crate-card rarity">
-              <div class="dixper-crate-art" aria-hidden="true"><span class="crate-lid"></span><span class="crate-body"></span><span class="crate-core">★</span></div>
-              <span class="dixper-crate-label">RARITY CRATE</span>
-              <h3>3 karty + wybrana rzadkość</h3>
-              <p>Otrzymujesz <strong>3 karty</strong>, a jedna z nich ma wybraną przez Ciebie rzadkość.</p>
-            </article>
-            <article class="dixper-crate-card skill">
-              <div class="dixper-crate-art" aria-hidden="true"><span class="crate-lid"></span><span class="crate-body"></span><span class="crate-core">✓</span></div>
-              <span class="dixper-crate-label">SKILL CRATE</span>
-              <h3>3 karty + konkretny skill</h3>
-              <p>Otrzymujesz <strong>3 karty</strong>, w tym jedną konkretną kartę wybraną przez Ciebie.</p>
-            </article>
-          </div>
-          <div class="dixper-doc-note">Typy skrzynek i ich działanie są zgodne z dokumentacją Dixpera. <a href="https://dixper.notion.site/Crate-prices-Discounts-c71f9f2542cf4b5c89c3af9eaddd9a40" target="_blank" rel="noopener">Oficjalna dokumentacja skrzynek ↗</a></div>
-        </section>
+            <section class="dixper-clean-section" id="dixper-crates" data-dixper-section>
+              <div class="dixper-clean-heading"><span>03</span><div><h2>RODZAJE SKRZYNEK</h2><p>Każda daje 3 karty. Różni się poziomem kontroli nad tym, co dostaniesz.</p></div></div>
+              <div class="dixper-crates-minimal">
+                <article><div class="dixper-crate-symbol basic">3×</div><div><strong>Basic Crate</strong><p>3 losowe karty.</p></div></article>
+                <article><div class="dixper-crate-symbol rarity">★</div><div><strong>Rarity Crate</strong><p>3 karty, w tym jedna o wybranej rzadkości.</p></div></article>
+                <article><div class="dixper-crate-symbol skill">✓</div><div><strong>Skill Crate</strong><p>3 karty, w tym jedna konkretna wybrana przez Ciebie.</p></div></article>
+              </div>
+            </section>
 
-        <section class="dixper-section">
-          <div class="dixper-section-head">
-            <span>04 / URUCHAMIANIE</span>
-            <h2>JAK KORZYSTAĆ Z DIXPERA PODCZAS STREAMA?</h2>
-            <p>Całość sprowadza się do dwóch prostych kroków. Najpierw przygotowujesz kartę, a potem ją odpalasz.</p>
-          </div>
+            <section class="dixper-clean-section" id="dixper-use" data-dixper-section>
+              <div class="dixper-clean-heading"><span>04</span><div><h2>JAK ODPALIĆ SKILL?</h2><p>Tylko dwa kliknięcia.</p></div></div>
+              <div class="dixper-tutorial-minimal">
+                <article>
+                  <div class="dixper-step-copy"><span>KROK 1</span><h3>Wybierz kartę</h3><p>Kliknij kartę, której chcesz użyć, a następnie <strong>Add Skill to Launch</strong>. Skill jest przygotowany, ale jeszcze się nie uruchamia.</p></div>
+                  <a href="pictures/dixper/01-wybierz-skill.webp" target="_blank" class="dixper-shot-link"><img src="pictures/dixper/01-wybierz-skill.webp" alt="Dixper — Add Skill to Launch" loading="lazy"></a>
+                </article>
+                <article>
+                  <div class="dixper-step-copy"><span>KROK 2</span><h3>Uruchom kartę</h3><p>W dodatkowym panelu kliknij <strong>Launch Skills</strong>. W tym momencie karta odpala się na transmisji.</p></div>
+                  <a href="pictures/dixper/02-launch-skills.webp" target="_blank" class="dixper-shot-link"><img src="pictures/dixper/02-launch-skills.webp" alt="Dixper — Launch Skills" loading="lazy"></a>
+                </article>
+              </div>
+            </section>
 
-          <div class="dixper-tutorial-grid">
-            <article class="dixper-tutorial-card">
-              <div class="dixper-tutorial-step">KROK 1</div>
-              <h3>Wybierz kartę i kliknij „Add Skill to Launch”</h3>
-              <p>Wejdź na stronę Matta w Dixperze, wybierz interesującą Cię kartę i dodaj ją do kolejki uruchamiania. To jeszcze nie odpala efektu — tylko przygotowuje skill.</p>
-              <a href="pictures/dixper/01-wybierz-skill.webp" target="_blank" class="dixper-shot-link"><img src="pictures/dixper/01-wybierz-skill.webp" alt="Dixper — wybieranie karty i przycisk Add Skill to Launch" loading="lazy"></a>
-            </article>
-            <article class="dixper-tutorial-card">
-              <div class="dixper-tutorial-step">KROK 2</div>
-              <h3>Kliknij „Launch Skills”</h3>
-              <p>Po przygotowaniu skilla pojawi się dodatkowy panel. Kliknięcie <strong>Launch Skills</strong> uruchamia kartę od razu podczas transmisji.</p>
-              <a href="pictures/dixper/02-launch-skills.webp" target="_blank" class="dixper-shot-link"><img src="pictures/dixper/02-launch-skills.webp" alt="Dixper — panel Launch Skills" loading="lazy"></a>
-            </article>
-          </div>
-        </section>
+            <section class="dixper-clean-section" id="dixper-limits" data-dixper-section>
+              <div class="dixper-clean-heading"><span>05</span><div><h2>COOLDOWNY</h2><p>Limity ograniczają spam skillami.</p></div></div>
+              <div class="dixper-limits-row">
+                <div><span>GLOBAL COOLDOWN</span><strong>300 s</strong><small>5 minut globalnie</small></div>
+                <div><span>USER COOLDOWN</span><strong>360 s</strong><small>6 minut na użytkownika</small></div>
+              </div>
+            </section>
 
-        <section class="dixper-section dixper-cooldown-section">
-          <div class="dixper-section-head">
-            <span>05 / OGRANICZENIA</span>
-            <h2>COOLDOWNY — ŻEBY NIE BYŁO SPAMU</h2>
-            <p>Skille mają limity czasowe, dzięki czemu transmisja pozostaje grywalna nawet wtedy, gdy community mocno korzysta z Dixpera.</p>
-          </div>
-          <div class="dixper-cooldown-grid">
-            <div class="dixper-cooldown-card"><span class="dixper-cooldown-name">GLOBAL COOLDOWN</span><strong>300 s</strong><small>5 minut przerwy globalnie</small></div>
-            <div class="dixper-cooldown-card"><span class="dixper-cooldown-name">USER COOLDOWN</span><strong>360 s</strong><small>6 minut dla pojedynczego użytkownika</small></div>
-          </div>
-        </section>
-
-        <section class="dixper-section dixper-clips-section">
-          <div class="dixper-section-head">
-            <span>06 / PRZYKŁADY</span>
-            <h2>ZOBACZ, JAK DIXPER DZIAŁA W PRAKTYCE</h2>
-            <p>Klipy są osadzone bezpośrednio z Twitcha — nie pobieramy ich ani nie wrzucamy ponownie na stronę. Pod każdym klipem zachowany jest kanał źródłowy oraz link do oryginału.</p>
-          </div>
-          <div class="dixper-clips-grid">${clipsHtml}</div>
-        </section>
+            <section class="dixper-clean-section" id="dixper-clips" data-dixper-section>
+              <div class="dixper-clean-heading"><span>06</span><div><h2>DIXPER W PRAKTYCE</h2><p>Wybierz klip. Odtwarzacz Twitcha zostanie załadowany dopiero po kliknięciu, a uruchomienie kolejnego zamknie poprzedni.</p></div></div>
+              <div class="dixper-clips-minimal">${clipsHtml}</div>
+            </section>
+          </main>
+        </div>
       </div>
     </div>
   `;
+}
+
+function setupDixperPage() {
+  const root = document.querySelector(".dixper-page-minimal");
+  if (!root) return;
+
+  const tocLinks = [...root.querySelectorAll("[data-dixper-target]")];
+  const sections = [...root.querySelectorAll("[data-dixper-section]")];
+  const progress = root.querySelector("[data-dixper-progress]");
+
+  tocLinks.forEach(link => {
+    link.addEventListener("click", () => {
+      const target = document.getElementById(link.dataset.dixperTarget);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  if ("IntersectionObserver" in window && sections.length) {
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const activeId = visible.target.id;
+      const activeIndex = sections.findIndex(section => section.id === activeId);
+      tocLinks.forEach(link => link.classList.toggle("active", link.dataset.dixperTarget === activeId));
+      if (progress && activeIndex >= 0) {
+        progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+      }
+    }, { rootMargin: "-25% 0px -55% 0px", threshold: [0, .15, .35, .6] });
+    sections.forEach(section => observer.observe(section));
+  }
+
+  const cards = [...root.querySelectorAll("[data-dixper-clip]")];
+  const parent = location.hostname || "matthevc.github.io";
+  let activeCard = null;
+
+  function resetCard(card) {
+    const slot = card?.querySelector("[data-dixper-clip-slot]");
+    if (!slot || !slot.dataset.originalMarkup) return;
+    slot.innerHTML = slot.dataset.originalMarkup;
+    card.classList.remove("playing");
+    bindPlayButton(card);
+  }
+
+  function bindPlayButton(card) {
+    const button = card.querySelector("[data-dixper-play]");
+    if (!button || button.dataset.ready === "1") return;
+    button.dataset.ready = "1";
+    button.addEventListener("click", () => {
+      if (activeCard && activeCard !== card) resetCard(activeCard);
+      const slot = card.querySelector("[data-dixper-clip-slot]");
+      if (!slot.dataset.originalMarkup) slot.dataset.originalMarkup = slot.innerHTML;
+      const slug = card.dataset.clipSlug;
+      const channel = card.dataset.clipChannel;
+      slot.innerHTML = `<iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(slug)}&parent=${encodeURIComponent(parent)}&autoplay=true" title="Klip Twitch — ${channel}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      card.classList.add("playing");
+      activeCard = card;
+    });
+  }
+
+  cards.forEach(card => {
+    const slot = card.querySelector("[data-dixper-clip-slot]");
+    if (slot) slot.dataset.originalMarkup = slot.innerHTML;
+    bindPlayButton(card);
+  });
 }
 
 function rewardsPage() {
@@ -1834,6 +1867,7 @@ async function render() {
   setupContactForm();
   setupCommandsPage();
   setupRewardsSearch();
+  setupDixperPage();
   closeMobileMenu();
 }
 
