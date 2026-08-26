@@ -150,7 +150,7 @@ const pages = {
   },
   "viewer/rewards": {
     title: "DLA WIDZA / <span>NAGRODY</span>",
-    body: infoPage("NAGRODY", "Informacje o nagrodach dostępnych dla widzów.", "Tutaj możemy później dodać tabelę nagród, wymagania, punkty kanału oraz zasady odbierania nagród.")
+    body: rewardsPage()
   },
 
   "viewer/vip": {
@@ -873,6 +873,272 @@ function moderatorBenefitsPage() {
             <p>Korzyści traktujemy jako podziękowanie dla osób, które faktycznie angażują się w życie społeczności. Szczegóły i zasady poszczególnych benefitów możemy później doprecyzować.</p>
           </div>
           <a class="moderator-ghost-link" href="#/moderator/team">POZNAJ NASZĄ MODERACJĘ →</a>
+        </section>
+      </div>
+    </div>
+  `;
+}
+
+function rewardsPage() {
+  return `
+    <div class="container content-wrap rewards-page">
+      <div class="page-panel rewards-shell">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rewards-hero">
+          <div class="rewards-hero-copy">
+            <span class="rewards-eyebrow">DLA WIDZA / NAGRODY</span>
+            <h1>NAGRODY ZA <span>COINSY</span></h1>
+            <p>Tu znajdziesz wszystkie nagrody, które można odebrać na kanale. Każda karta pokazuje koszt w <strong>Coins</strong> (czyli punktach kanału) oraz dokładnie wyjaśnia, co otrzymujesz po odebraniu nagrody.</p>
+          </div>
+
+          <div class="rewards-side-note">
+            <div class="point-chip-demo">
+              <span class="point-chip-icon">🪙</span>
+              <span class="point-chip-text">COINS = PUNKTY KANAŁU</span>
+            </div>
+            <p>Im wyższy koszt, tym większy wpływ na stream, grę albo dodatkowe nagrody. Opisy są rozpisane prosto i czytelnie, żebyś od razu wiedział, co wybierasz.</p>
+          </div>
+        </div>
+
+        <div class="rewards-highlight-bar">
+          <span class="reward-highlight-pill">MEGA CZYTELNIE</span>
+          <span class="reward-highlight-pill">KOSZT NA PIERWSZYM PLANIE</span>
+          <span class="reward-highlight-pill">GRAFIKA DLA KAŻDEJ NAGRODY</span>
+          <span class="reward-highlight-pill">DODATKOWE ZASADY WIDOCZNE OD RAZU</span>
+        </div>
+
+        <section class="reward-group">
+          <div class="reward-group-head">
+            <span class="moderator-section-label">SZYBKIE NAGRODY</span>
+            <h2>MAŁE KOSZTY, SZYBKIE EFEKTY</h2>
+            <p>Idealne, jeśli chcesz zaznaczyć swoją obecność, podbić wiadomość lub szybko wpłynąć na stream.</p>
+          </div>
+
+          <div class="reward-grid">
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic orange">🎁</div>
+                <span class="reward-cost">10 COINS</span>
+              </div>
+              <h3>Obecny</h3>
+              <p>Nagroda, która pokazuje, że jesteś aktualnie na transmisji i aktywnie uczestniczysz w streamie.</p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic gold">💬</div>
+                <span class="reward-cost">100 COINS</span>
+              </div>
+              <h3>Wyróżnij moją wiadomość</h3>
+              <p>Podkreśla Twoją wiadomość na chacie, dzięki czemu jest bardziej widoczna dla streamera i społeczności.</p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic red">🎲</div>
+                <span class="reward-cost">1K COINS</span>
+              </div>
+              <h3>BINGO — RANDOM</h3>
+              <p>Rozszerzenie automatycznie odblokowuje jeden losowy event w <strong>Stream Bounty (Bingo)</strong>.</p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic purple">⏭️</div>
+                <span class="reward-cost">1,5K COINS</span>
+              </div>
+              <h3>Skip piosenki</h3>
+              <p>Pozwala pominąć aktualnie odtwarzany utwór na Music Bocie i szybciej przejść do następnej piosenki.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="reward-group">
+          <div class="reward-group-head">
+            <span class="moderator-section-label">DIXPER I STREAM BOUNTY</span>
+            <h2>INTERAKCJE, SKRZYNKI I GŁOSOWANIA</h2>
+            <p>Nagrody dla osób, które chcą bardziej mieszać na streamie, otwierać skrzynki lub wpływać na wydarzenia Bingo.</p>
+          </div>
+
+          <div class="reward-grid">
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic blue">📦</div>
+                <span class="reward-cost">1,5K COINS</span>
+              </div>
+              <h3>Dixper — Basic Crate</h3>
+              <p>Dostajesz podstawową skrzynkę do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic blue">🎁</div>
+                <span class="reward-cost">3K COINS</span>
+              </div>
+              <h3>Dixper — Rarity Crate</h3>
+              <p>Dostajesz skrzyneczkę <strong>Rarity</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic blue">🧰</div>
+                <span class="reward-cost">4K COINS</span>
+              </div>
+              <h3>Dixper — Skill Crate</h3>
+              <p>Dostajesz skrzyneczkę <strong>Skill</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic red">🗳️</div>
+                <span class="reward-cost">8K COINS</span>
+              </div>
+              <h3>BINGO — VOTE</h3>
+              <p>Uruchamia głosowanie, który event w <strong>Stream Bounty</strong> odblokuje community. Wygrywa opcja z największą liczbą głosów, a przy remisie losowanie odbywa się między najczęściej wybieranymi eventami.</p>
+            </article>
+
+            <article class="reward-card reward-card-wide">
+              <div class="reward-card-top">
+                <div class="reward-graphic red">💥</div>
+                <span class="reward-cost">60K COINS</span>
+              </div>
+              <h3>BINGO ALL</h3>
+              <p>Zaznacza wszystkie eventy w <strong>Stream Bounty</strong>. Po wybraniu nagrody trzeba szybko wypełnić swoją planszę, ponieważ po <strong>5 wygranych</strong> i zakończonej rozgrywce w danej grze event wygasa. W grach single player liczy się moment, w którym można zatrzymać grę.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="reward-group">
+          <div class="reward-group-head">
+            <span class="moderator-section-label">DEAD BY DAYLIGHT</span>
+            <h2>NAGRODY ZWIĄZANE Z DBD</h2>
+            <p>Jeśli lubisz Dead by Daylight, te nagrody pozwolą Ci mieszać w buildach, killerach i kolejnych meczach.</p>
+          </div>
+
+          <div class="reward-grid">
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic green">🎯</div>
+                <span class="reward-cost">5K COINS</span>
+              </div>
+              <h3>Random perk — surv</h3>
+              <p>Losujemy randomowy build na survivora, który zostanie zagrany w następnej gierce. <strong>Tylko DBD.</strong> Pamiętaj, aby w wiadomości napisać, kim mam zagrać.</p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic green">🔪</div>
+                <span class="reward-cost">6K COINS</span>
+              </div>
+              <h3>Random perk — killer</h3>
+              <p>Losujemy randomowy build na killera, który zostanie zagrany w next gierkę. <strong>Tylko DBD.</strong> Jeśli aktualnie gram z kimś survivami, osoba w lobby musi poczekać 1 meczyk, aż rozegram wskazanego killera. Pamiętaj, aby napisać, kim mam zagrać.</p>
+            </article>
+
+            <article class="reward-card reward-card-wide">
+              <div class="reward-card-top">
+                <div class="reward-graphic gold">🧪</div>
+                <span class="reward-cost">10K COINS</span>
+              </div>
+              <h3>Przetestuj build</h3>
+              <p>Matt gra wybranym przez Ciebie buildem na wskazanej przez Ciebie postaci. To nagroda dla osób, które chcą sprawdzić własny pomysł w praktyce.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="reward-group">
+          <div class="reward-group-head">
+            <span class="moderator-section-label">SPECJALNE NAGRODY</span>
+            <h2>WPŁYW NA STREAM I DODATKOWE BONUSY</h2>
+            <p>Tu wchodzą nagrody bardziej unikalne — od timeoutów, przez pojedynki 1 vs 1, aż po wpływ na następną transmisję.</p>
+          </div>
+
+          <div class="reward-grid">
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic dark">🔨</div>
+                <span class="reward-cost">10K COINS</span>
+              </div>
+              <h3>Banicja</h3>
+              <p>Nakładasz <strong>24h t/o</strong> na wybraną przez siebie osobę.</p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic gold">✍️</div>
+                <span class="reward-cost">15K COINS</span>
+              </div>
+              <h3>Podpis profilu Steam</h3>
+              <p>Wymyślam unikalny podpis pod Twój profil Steam. Podpisy nigdy nie są takie same. Przykładowe podpisy były już robione m.in. dla <strong>Carmelova777</strong>, <strong>cvrdi</strong>, <strong>oskixx</strong> i <strong>Blackstaryolow</strong>.</p>
+              <div class="reward-note">Czas oczekiwania: do 2 tygodni.</div>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic purple">⚔️</div>
+                <span class="reward-cost">15K COINS</span>
+              </div>
+              <h3>1 vs 1</h3>
+              <p>Uniwersalna nagroda do każdej gry, którą Matt ma w bibliotece. Jeśli gra jest zainstalowana — gramy tego samego dnia. Jeśli nie — ustalamy dogodny termin na priv. Pamiętaj, żeby napisać do Matta poza streamem.</p>
+              <div class="reward-note">Jeśli nagroda dotyczy gry, której Matt nie posiada, zwrot punktów nastąpi w ciągu najbliższych 30 dni.</div>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic red">❤️</div>
+                <span class="reward-cost">20K COINS</span>
+              </div>
+              <h3>SPAM like / serduszek</h3>
+              <p>Jeżeli prowadzisz Instagrama, TikToka, fanpage albo inne miejsce w social mediach, pod maksymalnie <strong>25 postami</strong> dostaniesz reakcje.</p>
+            </article>
+
+            <article class="reward-card reward-card-wide">
+              <div class="reward-card-top">
+                <div class="reward-graphic orange">🧠</div>
+                <span class="reward-cost">25K COINS</span>
+              </div>
+              <h3>Ban na słowo</h3>
+              <p>Matt nie może powiedzieć wybranego przez Ciebie słowa przez <strong>30 minut</strong> — uruchamiamy też widoczny timer na ekranie. Jeżeli Matt wygra, odblokowuje się jedynie ten event w Stream Bounty. Jeżeli przegra, dostajecie <strong>koło fortuny</strong>, w którym można wygrać skrzyneczkę do DIXPERA albo nawet nagrody warte <strong>do 200 zł</strong> (np. bony do sklepów, zamówienie na pyszne.pl czy Paysafecard).</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="reward-group">
+          <div class="reward-group-head">
+            <span class="moderator-section-label">NAJWIĘKSZE NAGRODY</span>
+            <h2>NAGRODY PREMIUM</h2>
+            <p>Najdroższe nagrody to te, które naprawdę mocno wpływają na stream albo dają realną korzyść poza transmisją.</p>
+          </div>
+
+          <div class="reward-grid">
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic blue">🎮</div>
+                <span class="reward-cost">50K COINS</span>
+              </div>
+              <h3>Wybierz w co gramy</h3>
+              <p>Możesz wybrać grę na następną transmisję. Najważniejsze, aby Matt miał ją w bibliotece i zagrał w nią minimum <strong>1 godzinę</strong>.</p>
+            </article>
+
+            <article class="reward-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic gold">💜</div>
+                <span class="reward-cost">80K COINS</span>
+              </div>
+              <h3>SUBIK</h3>
+              <p>Dostajesz subika na kanał <strong>MatthevC</strong>.</p>
+            </article>
+
+            <article class="reward-card reward-card-wide">
+              <div class="reward-card-top">
+                <div class="reward-graphic green">🍔</div>
+                <span class="reward-cost reward-cost-soft">PRÓG ZALEŻY OD WERSJI</span>
+              </div>
+              <h3>Zamówienie z Pyszne do 50 zł / 100 zł</h3>
+              <p>Są to bony do <strong>pyszne.pl</strong>, dlatego upewnij się wcześniej, że w Twojej lokalizacji są restauracje obsługujące ten portal.</p>
+              <div class="reward-note">Na stronie kanału mogą być dostępne różne warianty tej nagrody — np. do 50 zł lub do 100 zł.</div>
+            </article>
+          </div>
         </section>
       </div>
     </div>
