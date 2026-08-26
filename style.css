@@ -2346,3 +2346,122 @@ button, a { -webkit-tap-highlight-color: transparent; }
     text-align: center;
   }
 }
+
+
+/* === WYSZUKIWARKA NAGRÓD === */
+.reward-search-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .85rem;
+  align-items: center;
+  padding: .85rem;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.reward-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.reward-search-icon {
+  position: absolute;
+  left: .95rem;
+  color: var(--muted);
+  font-size: 1.15rem;
+  pointer-events: none;
+}
+
+.reward-search-box input {
+  width: 100%;
+  min-height: 48px;
+  padding: .78rem 3rem .78rem 2.75rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.28);
+  color: var(--text);
+  outline: none;
+  font: inherit;
+}
+
+.reward-search-box input:focus {
+  border-color: rgba(191,36,45,0.55);
+  box-shadow: 0 0 0 3px rgba(191,36,45,0.10);
+}
+
+.reward-search-clear {
+  position: absolute;
+  right: .65rem;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reward-search-clear.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.reward-search-clear:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+
+.reward-search-status {
+  min-width: 145px;
+  padding: .65rem .8rem;
+  border-radius: 13px;
+  background: rgba(191,36,45,0.12);
+  border: 1px solid rgba(191,36,45,0.24);
+  font-size: .8rem;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.reward-no-results {
+  padding: 2.2rem 1rem;
+  text-align: center;
+  border-radius: 22px;
+  border: 1px dashed rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.025);
+}
+
+.reward-no-results-icon {
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: .55rem;
+}
+
+.reward-no-results h2 {
+  margin-bottom: .45rem;
+}
+
+.reward-no-results p {
+  margin: 0;
+}
+
+.reward-card[hidden],
+.reward-group[hidden],
+.reward-no-results[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .reward-search-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .reward-search-status {
+    width: 100%;
+  }
+}
