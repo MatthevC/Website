@@ -124,7 +124,7 @@ const pages = {
   },
   "rules/events": {
     title: "REGULAMIN <span>EVENTÓW</span>",
-    body: rulesPage("REGULAMIN EVENTÓW", "Zasady uczestnictwa w organizowanych eventach.")
+    body: eventRulesPage()
   },
 
   "viewer/commands": {
@@ -467,6 +467,92 @@ function vipRulesRulesPage() {
         <div class="rules-summary-box">
           <h2>VIP to coś więcej niż plakietka</h2>
           <p>Ta ranga jest wyróżnieniem dla osób, które realnie budują klimat naszej społeczności. Dlatego zależy nam, aby korzystać z niej odpowiedzialnie i z szacunkiem do pozostałych osób.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function eventRulesPage() {
+  return `
+    <div class="container content-wrap">
+      <div class="page-panel rules-showcase event-rules-page">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rules-hero">
+          <div class="rules-hero-badge">REGULAMIN EVENTÓW</div>
+          <h1>GRAMY FAIR I <span>DBAMY O DOBRĄ ZABAWĘ</span></h1>
+          <p>Eventy i rozdania mają być przyjemne dla całej społeczności. Dlatego zasady są proste: jedno konto, uczciwy udział, rozsądny kontakt po wygranej i odrobina cierpliwości.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">5 rzeczy do zapamiętania:</div>
+          <div class="rules-memory-tags">
+            <span>JEDNO KONTO</span>
+            <span>14 DNI NA DANE</span>
+            <span>GRAMY FAIR</span>
+            <span>DO 3 MIESIĘCY NA WYSYŁKĘ</span>
+            <span>ZASADY = UDZIAŁ</span>
+          </div>
+        </div>
+
+        <div class="event-rules-timeline">
+          <div class="event-rule-step">
+            <span class="event-rule-step-icon">🏆</span>
+            <div><strong>WYGRYWASZ</strong><small>Gratulacje!</small></div>
+          </div>
+          <span class="event-rule-arrow">→</span>
+          <div class="event-rule-step">
+            <span class="event-rule-step-icon">📩</span>
+            <div><strong>14 DNI</strong><small>Na przesłanie danych</small></div>
+          </div>
+          <span class="event-rule-arrow">→</span>
+          <div class="event-rule-step">
+            <span class="event-rule-step-icon">📦</span>
+            <div><strong>DO 3 MIESIĘCY</strong><small>Na wysyłkę nagrody</small></div>
+          </div>
+        </div>
+
+        <div class="rules-card-grid">
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">👤</div></div>
+            <div class="rule-card-label">UCZCIWY UDZIAŁ</div>
+            <h2>Jedna osoba = jedno konto</h2>
+            <p>Zakazane jest tworzenie nowych kont widmo oraz multikont w celu zwiększenia swoich szans. Wykrycie takiego działania przez bota może skutkować <strong>stałym wykluczeniem z przyszłych rozdań</strong>.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">📦</div></div>
+            <div class="rule-card-label">ODBIÓR NAGRODY</div>
+            <h2>Masz 2 tygodnie na przesłanie danych</h2>
+            <p>Jeżeli wygrasz fizyczną nagrodę, w ciągu <strong>14 dni</strong> prześlij w wiadomości prywatnej: numer paczkomatu, miejscowość oraz numer telefonu lub e-mail potrzebny do odbioru paczki. Brak kontaktu oznacza przekazanie nagrody na kolejne rozdanie.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">🎲</div></div>
+            <div class="rule-card-label">ZASADY KONKURSU</div>
+            <h2>Nie wymuszamy zmian w trakcie zabawy</h2>
+            <p>Jeżeli nie odpowiada Ci sposób przeprowadzenia konkretnego konkursu lub rozdania, po prostu nie bierz w nim udziału. Nie wymuszamy zmian i nie psujemy zabawy pozostałym osobom.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🚚</div></div>
+            <div class="rule-card-label">WYSYŁKA</div>
+            <h2>Na wysyłkę przewidujemy do 3 miesięcy</h2>
+            <p>Nagrody będą wysyłane w ciągu maksymalnie <strong>3 miesięcy</strong>. Prosimy o cierpliwość — uporczywe upominanie się i spamowanie w sprawie nagrody może skutkować <strong>rezygnacją z nagrody</strong>.</p>
+          </section>
+
+          <section class="rule-card event-rule-card-wide">
+            <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">⚖️</div></div>
+            <div class="rule-card-label">KONSEKWENCJE</div>
+            <h2>Złamanie zasad = odsunięcie od najbliższego rozdania</h2>
+            <p>Za złamanie regulaminu osoba zostaje odsunięta od najbliższego rozdania. Przy poważniejszych lub powtarzających się naruszeniach mogą obowiązywać także konsekwencje wskazane przy konkretnej zasadzie.</p>
+          </section>
+        </div>
+
+        <div class="rules-summary-box event-rules-summary">
+          <h2>Najprościej?</h2>
+          <p>Nie kombinuj z kontami, pilnuj terminu po wygranej, daj organizatorom czas na wysyłkę i baw się zgodnie z zasadami. Dzięki temu eventy pozostają uczciwe i przyjemne dla wszystkich.</p>
         </div>
       </div>
     </div>
