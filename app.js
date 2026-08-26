@@ -108,7 +108,7 @@ const pages = {
 
   "rules/general": {
     title: "REGULAMIN <span>OGÓLNY</span>",
-    body: rulesPage("REGULAMIN OGÓLNY", "Zasady obowiązujące wszystkich członków społeczności.")
+    body: generalRulesPage()
   },
   "rules/discord": {
     title: "REGULAMIN <span>DISCORD</span>",
@@ -208,6 +208,79 @@ function isEventEnded(event) {
   if (!event || !event.endDate) return false;
   const end = new Date(`${event.endDate}T23:59:59`);
   return Date.now() >= end.getTime();
+}
+
+function generalRulesPage() {
+  return `
+    <div class="container content-wrap">
+      <div class="page-panel rules-showcase">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rules-hero">
+          <div class="rules-hero-badge">REGULAMIN OGÓLNY</div>
+          <h1>ZASADY, KTÓRE UTRZYMUJĄ <span>DOBRY KLIMAT</span></h1>
+          <p>U nas stawiamy na dobrą atmosferę, szacunek i wspólną zabawę. Poniżej znajdziesz 4 najważniejsze zasady, które łatwo zapamiętać i jeszcze łatwiej stosować.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">Zapamiętaj w skrócie:</div>
+          <div class="rules-memory-tags">
+            <span>DOBRA ZABAWA</span>
+            <span>BEZ PRYWATNYCH DRAM</span>
+            <span>BEZ KŁÓTNI</span>
+            <span>REGULAMIN TWITCHA</span>
+          </div>
+        </div>
+
+        <div class="rules-card-grid">
+          <section class="rule-card">
+            <div class="rule-card-top">
+              <div class="rule-card-number">01</div>
+              <div class="rule-card-icon" aria-hidden="true">🎮</div>
+            </div>
+            <div class="rule-card-label">ATMOSFERA</div>
+            <h2>Baw się dobrze i nie bądź dzbanem</h2>
+            <p>Najważniejsza zasada naszej społeczności: bawimy się wspólnie i nie psujemy innym humoru. Szacunek, luz i pozytywna energia zawsze wygrywają.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top">
+              <div class="rule-card-number">02</div>
+              <div class="rule-card-icon" aria-hidden="true">🧩</div>
+            </div>
+            <div class="rule-card-label">PRYWATNE SPRAWY</div>
+            <h2>Prywatne dramy zostawcie dla siebie</h2>
+            <p>Jeżeli macie między sobą konflikt, nie przenoście go na stream, Discord ani eventy. Wystarczy dać znać, że razem nie gracie, nie gadacie i nie ma tematu.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top">
+              <div class="rule-card-number">03</div>
+              <div class="rule-card-icon" aria-hidden="true">🕊️</div>
+            </div>
+            <div class="rule-card-label">SPOKÓJ</div>
+            <h2>Nie gadamy o polityce, religii i innych tematach do kłótni</h2>
+            <p>Omijamy tematy, które najczęściej kończą się niepotrzebnymi spięciami. Chcemy budować miejsce do odpoczynku i zabawy, a nie pole do sporów.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top">
+              <div class="rule-card-number">04</div>
+              <div class="rule-card-icon" aria-hidden="true">📜</div>
+            </div>
+            <div class="rule-card-label">PLATFORMA</div>
+            <h2>Przestrzegamy regulaminu Twitcha</h2>
+            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p>
+          </section>
+        </div>
+
+        <div class="rules-summary-box">
+          <h2>Krótko mówiąc</h2>
+          <p>Tworzymy społeczność, w której liczy się dobra zabawa, wzajemny szacunek i brak niepotrzebnych konfliktów. Jeśli każdy trzyma się tych 4 zasad, wszystkim jest po prostu przyjemniej.</p>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function rulesPage(title, subtitle) {
