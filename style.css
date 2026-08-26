@@ -2465,3 +2465,147 @@ button, a { -webkit-tap-highlight-color: transparent; }
     width: 100%;
   }
 }
+
+
+/* === NAGRODY: BINGO VS DIXPER === */
+.reward-grid-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.reward-column {
+  display: grid;
+  gap: 1rem;
+}
+
+.reward-column-head {
+  padding: .72rem .9rem;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: var(--text);
+  font-size: .8rem;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.reward-column-bingo .reward-column-head {
+  background: rgba(191,36,45,0.12);
+  border-color: rgba(191,36,45,0.26);
+}
+
+.reward-column-dixper .reward-column-head {
+  background: rgba(88,101,242,0.11);
+  border-color: rgba(88,101,242,0.24);
+}
+
+.reward-grid-split .reward-card {
+  grid-column: auto;
+}
+
+/* === STEAM PODPISY: TOOLTIPY === */
+.steam-signature-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.steam-example-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .62rem .82rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.09);
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: default;
+}
+
+.steam-example-chip:hover,
+.steam-example-chip:focus-visible {
+  border-color: rgba(191,36,45,0.36);
+  background: rgba(191,36,45,0.12);
+  outline: none;
+}
+
+.steam-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translateX(-50%) translateY(8px);
+  width: min(360px, 78vw);
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(11, 12, 16, 0.98);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+  color: var(--text);
+  white-space: pre-line;
+  text-align: left;
+  line-height: 1.6;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+  z-index: 15;
+}
+
+.steam-tooltip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border-width: 10px 9px 0 9px;
+  border-style: solid;
+  border-color: rgba(11, 12, 16, 0.98) transparent transparent transparent;
+}
+
+.steam-example-chip:hover .steam-tooltip,
+.steam-example-chip:focus-visible .steam-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 860px) {
+  .reward-grid-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .steam-signature-examples {
+    flex-direction: column;
+  }
+
+  .steam-example-chip {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .steam-tooltip {
+    left: 0;
+    right: auto;
+    transform: translateX(0) translateY(8px);
+    width: min(340px, calc(100vw - 80px));
+  }
+
+  .steam-tooltip::after {
+    left: 22px;
+    transform: none;
+  }
+
+  .steam-example-chip:hover .steam-tooltip,
+  .steam-example-chip:focus-visible .steam-tooltip {
+    transform: translateX(0) translateY(0);
+  }
+}

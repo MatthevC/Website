@@ -947,44 +947,50 @@ function rewardsPage() {
           <div class="reward-group-head">
             <span class="moderator-section-label">DIXPER ORAZ STREAM BOUNTY (BINGO)</span>
             <h2>DIXPER ORAZ STREAM BOUNTY (BINGO)</h2>
-            <p>Skrzynki Dixpera oraz nagrody wpływające na eventy i planszę Stream Bounty.</p>
+            <p>Skrzynki Dixpera oraz nagrody wpływające na eventy i planszę Stream Bounty. Ułożyłem je osobno: <strong>Bingo po lewej</strong>, <strong>Dixper po prawej</strong>.</p>
           </div>
-          <div class="reward-grid">
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic red">🎲</div><span class="reward-cost">1K COINS</span></div>
-              <h3>BINGO — RANDOM</h3>
-              <p>Rozszerzenie automatycznie odblokowuje jeden losowy event w <strong>Stream Bounty (Bingo)</strong>.</p>
-            </article>
+          <div class="reward-grid reward-grid-split">
+            <div class="reward-column reward-column-bingo" data-reward-column>
+              <div class="reward-column-head">BINGO / STREAM BOUNTY</div>
+              <article class="reward-card" data-reward-card>
+                <div class="reward-card-top"><div class="reward-graphic red">🎲</div><span class="reward-cost">1K COINS</span></div>
+                <h3>BINGO — RANDOM</h3>
+                <p>Rozszerzenie automatycznie odblokowuje jeden losowy event w <strong>Stream Bounty (Bingo)</strong>.</p>
+              </article>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic blue">📦</div><span class="reward-cost">1,5K COINS</span></div>
-              <h3>Dixper — Basic Crate</h3>
-              <p>Dostajesz podstawową skrzynkę do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
-            </article>
+              <article class="reward-card" data-reward-card>
+                <div class="reward-card-top"><div class="reward-graphic red">🗳️</div><span class="reward-cost">8K COINS</span></div>
+                <h3>BINGO — VOTE</h3>
+                <p>Uruchamia głosowanie, który event w Stream Bounty odblokuje community. Wygrywa opcja z największą liczbą głosów, a przy remisie losujemy między najczęściej wybieranymi eventami.</p>
+              </article>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic blue">🎁</div><span class="reward-cost">3K COINS</span></div>
-              <h3>Dixper — Rarity Crate</h3>
-              <p>Dostajesz skrzyneczkę <strong>Rarity</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
-            </article>
+              <article class="reward-card" data-reward-card>
+                <div class="reward-card-top"><div class="reward-graphic red">💥</div><span class="reward-cost">60K COINS</span></div>
+                <h3>BINGO ALL</h3>
+                <p>Zaznacza wszystkie eventy w <strong>Stream Bounty</strong>. Po wybraniu nagrody trzeba szybko wypełnić planszę, ponieważ po <strong>5 wygranych</strong> i zakończonej rozgrywce w danej grze event wygasa.</p>
+              </article>
+            </div>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic blue">🧰</div><span class="reward-cost">4K COINS</span></div>
-              <h3>Dixper — Skill Crate</h3>
-              <p>Dostajesz skrzyneczkę <strong>Skill</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
-            </article>
+            <div class="reward-column reward-column-dixper" data-reward-column>
+              <div class="reward-column-head">DIXPER</div>
+              <article class="reward-card" data-reward-card>
+                <div class="reward-card-top"><div class="reward-graphic blue">📦</div><span class="reward-cost">1,5K COINS</span></div>
+                <h3>Dixper — Basic Crate</h3>
+                <p>Dostajesz podstawową skrzynkę do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+              </article>
 
-            <article class="reward-card" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic red">🗳️</div><span class="reward-cost">8K COINS</span></div>
-              <h3>BINGO — VOTE</h3>
-              <p>Uruchamia głosowanie, który event w Stream Bounty odblokuje community. Wygrywa opcja z największą liczbą głosów, a przy remisie losujemy między najczęściej wybieranymi eventami.</p>
-            </article>
+              <article class="reward-card" data-reward-card>
+                <div class="reward-card-top"><div class="reward-graphic blue">🎁</div><span class="reward-cost">3K COINS</span></div>
+                <h3>Dixper — Rarity Crate</h3>
+                <p>Dostajesz skrzyneczkę <strong>Rarity</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+              </article>
 
-            <article class="reward-card reward-card-wide" data-reward-card>
-              <div class="reward-card-top"><div class="reward-graphic red">💥</div><span class="reward-cost">60K COINS</span></div>
-              <h3>BINGO ALL</h3>
-              <p>Zaznacza wszystkie eventy w <strong>Stream Bounty</strong>. Po wybraniu nagrody trzeba szybko wypełnić planszę, ponieważ po <strong>5 wygranych</strong> i zakończonej rozgrywce w danej grze event wygasa.</p>
-            </article>
+              <article class="reward-card" data-reward-card>
+                <div class="reward-card-top"><div class="reward-graphic blue">🧰</div><span class="reward-cost">4K COINS</span></div>
+                <h3>Dixper — Skill Crate</h3>
+                <p>Dostajesz skrzyneczkę <strong>Skill</strong> do Dixpera. <a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>
+              </article>
+            </div>
           </div>
         </section>
 
@@ -1047,7 +1053,60 @@ function rewardsPage() {
             <article class="reward-card" data-reward-card>
               <div class="reward-card-top"><div class="reward-graphic gold">✍️</div><span class="reward-cost">15K COINS</span></div>
               <h3>Podpis profilu Steam</h3>
-              <p>Wymyślam unikalny podpis pod Twój profil Steam. Podpisy nigdy nie są takie same. Przykładowe podpisy były robione m.in. dla <strong>Carmelova777</strong>, <strong>cvrdi</strong>, <strong>oskixx</strong> i <strong>Blackstaryolow</strong>.</p>
+              <p>Wymyślam unikalny podpis pod Twój profil Steam. Podpisy nigdy nie są takie same. Najedź na wybraną osobę poniżej i zobacz przykładowy komentarz, żeby wiedzieć, na co się piszesz.</p>
+              <div class="steam-signature-examples">
+                <button type="button" class="steam-example-chip" data-steam-example>
+                  Carmelova777
+                  <span class="steam-tooltip">+rep
+Pod maską skrywa swój sekret mały,
+podobno kryje się tak urok wspaniały.
+Choć w gierkach nieraz trolluje bez końca,
+to z nią każda rozgrywka nabiera słońca.
+
+Maska zostaje, sekret niech trwa dalej,
+lecz od dawna jedno życzenie mamy.
+Wpadaj do nas częściej na wspólne granie,
+bo z Tobą zawsze jest więcej śmiechu i zabawy!
+
+Pozdro od Matta.</span>
+                </button>
+                <button type="button" class="steam-example-chip" data-steam-example>
+                  cvrdi
+                  <span class="steam-tooltip">Jest taka cvrdi, co w Dead by Daylight wymiata,
+Gdy widzi Pyramid Heada to serduszko już lata!
+Choć inni się loopują i tylko się pocą,
+Ona w jego objęcia wpada z czułą tęsknotą.
+
+Chyba lepszego nie napiszę.</span>
+                </button>
+                <button type="button" class="steam-example-chip" data-steam-example>
+                  oskixx
+                  <span class="steam-tooltip">+REP
+Oski, który jest po prostu boski,
+Gdy DBD tylko odpala, przeciwnik poci się od troski.
+Bo to dobry gamer i kumpel, przy nim ekipa doskonała!
+Rivals, Among Us czy Dead by Daylight?
+W każdej grze potrafi poprowadzić nas do chwały!
+Z nim każda gra ma klimat, śmiech i najlepsze składy!
+
+Pozdrowionka od Matta.</span>
+                </button>
+                <button type="button" class="steam-example-chip" data-steam-example>
+                  BlackStaryolow
+                  <span class="steam-tooltip">+REP
+Oliwka na złomku wciąż z lagami wojowała,
+grała jak mogła, choć gra czasem ją wyśmiewała.
+Lecz gdy nowy sprzęt został odpalony raz,
+wszyscy oniemieli i pytali - "to ona umie tak grać?".
+
+Choć toksyczne towarzystwo wokół czasem ją dusiło,
+u pewnego Matta serduszko znów się rozjaśniło.
+Ze Śląska dziewczyna, więc wiadomo, że mocny ma charakter,
+a śląski upór w oczach błyszczy - twardszy niż niejeden pancerz.
+Niech kluski i rolady dadzą jej w końcu parę kilo,
+by przez życie szła już pewnie, głośno czy tam miło.</span>
+                </button>
+              </div>
               <div class="reward-note">Czas oczekiwania: do 2 tygodni.</div>
             </article>
 
@@ -1112,6 +1171,12 @@ function setupRewardsSearch() {
       const visible = !query || haystack.includes(query);
       card.hidden = !visible;
       if (visible) visibleCount += 1;
+    });
+
+    const columns = [...document.querySelectorAll("[data-reward-column]")];
+    columns.forEach(column => {
+      const hasVisibleCards = [...column.querySelectorAll("[data-reward-card]")].some(card => !card.hidden);
+      column.hidden = !hasVisibleCards;
     });
 
     groups.forEach(group => {
