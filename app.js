@@ -118,13 +118,17 @@ const pages = {
     title: "REGULAMIN <span>VIP</span>",
     body: vipRulesRulesPage()
   },
-  "rules/twitch": {
-    title: "REGULAMIN <span>TWITCH</span>",
-    body: rulesPage("REGULAMIN TWITCH", "Zasady obowiązujące podczas transmisji na Twitchu.")
-  },
   "rules/events": {
     title: "REGULAMIN <span>EVENTÓW</span>",
     body: eventRulesPage()
+  },
+  "rules/game-picks": {
+    title: "ZASADY <span>WSPÓLNYCH GIER</span>",
+    body: gamePickRulesPage()
+  },
+  "rules/twitch": {
+    title: "REGULAMIN <span>TWITCH</span>",
+    body: twitchRulesPage()
   },
 
   "viewer/commands": {
@@ -553,6 +557,145 @@ function eventRulesPage() {
         <div class="rules-summary-box event-rules-summary">
           <h2>Najprościej?</h2>
           <p>Nie kombinuj z kontami, pilnuj terminu po wygranej, daj organizatorom czas na wysyłkę i baw się zgodnie z zasadami. Dzięki temu eventy pozostają uczciwe i przyjemne dla wszystkich.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function gamePickRulesPage() {
+  return `
+    <div class="container content-wrap">
+      <div class="page-panel rules-showcase game-picks-page">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rules-hero">
+          <div class="rules-hero-badge">ZASADY WSPÓLNYCH GIER</div>
+          <h1>KTO MA <span>PIERWSZEŃSTWO DO GRY?</span></h1>
+          <p>Żeby uniknąć nieporozumień i zachować porządek podczas wspólnych rozgrywek, obowiązuje poniższa kolejność wyboru osób do lobby. Im wyżej na liście, tym większy priorytet wejścia do wspólnej gry.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">Najkrócej:</div>
+          <div class="rules-memory-tags">
+            <span>JASNA KOLEJNOŚĆ</span>
+            <span>PRIORYTET ZA WSPARCIE</span>
+            <span>BEZ SPIN</span>
+            <span>CZYTELNE ZASADY</span>
+          </div>
+        </div>
+
+        <div class="pick-order-board">
+          <div class="pick-order-intro">Kolejność wyboru osób do wspólnych gier</div>
+          <div class="pick-order-list">
+            <div class="pick-order-item priority-1"><div class="pick-order-rank">1</div><div class="pick-order-text"><strong>Osoba wykupująca wybór gry</strong><span>Najwyższy priorytet — jeśli ktoś wykupił wybór gry, jego miejsce jest rozpatrywane w pierwszej kolejności.</span></div></div>
+            <div class="pick-order-item priority-2"><div class="pick-order-rank">2</div><div class="pick-order-text"><strong>Top donatorzy</strong><span>Osoby najmocniej wspierające kanał finansowo mają bardzo wysoki priorytet wejścia.</span></div></div>
+            <div class="pick-order-item priority-3"><div class="pick-order-rank">3</div><div class="pick-order-text"><strong>First Subskrybenci</strong><span>Wysoka pozycja dla osób, które wspierają kanał jako subskrybenci w wyjątkowy sposób.</span></div></div>
+            <div class="pick-order-item priority-4"><div class="pick-order-rank">4</div><div class="pick-order-text"><strong>Subskrybenci</strong><span>Stałe wsparcie kanału również przekłada się na wyższe pierwszeństwo przy wspólnych grach.</span></div></div>
+            <div class="pick-order-item priority-5"><div class="pick-order-rank">5</div><div class="pick-order-text"><strong>VIP</strong><span>Aktywni i wyróżnieni członkowie społeczności także mają zwiększony priorytet.</span></div></div>
+            <div class="pick-order-item priority-6"><div class="pick-order-rank">6</div><div class="pick-order-text"><strong>Osoby obserwujące ponad 3 miesiące</strong><span>Dłuższa obecność i lojalność wobec społeczności mają znaczenie przy doborze do gier.</span></div></div>
+            <div class="pick-order-item priority-7"><div class="pick-order-rank">7</div><div class="pick-order-text"><strong>Osoby obserwujące</strong><span>Regularni widzowie nadal są mile widziani — po prostu znajdują się niżej w kolejności priorytetów.</span></div></div>
+            <div class="pick-order-item priority-8"><div class="pick-order-rank">8</div><div class="pick-order-text"><strong>Koledzy kolegów</strong><span>Osoby spoza stałej społeczności również mogą dołączyć, ale są dobierane na samym końcu listy priorytetów.</span></div></div>
+          </div>
+        </div>
+
+        <div class="rules-summary-box">
+          <h2>Po co ta kolejność?</h2>
+          <p>Ta lista pomaga uniknąć chaosu, niepotrzebnych dyskusji i poczucia niesprawiedliwości. Dzięki temu każdy wie, jak wygląda dobór do lobby i na jakiej zasadzie przyznawany jest priorytet.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function twitchRulesPage() {
+  return `
+    <div class="container content-wrap">
+      <div class="page-panel rules-showcase twitch-rules-page">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rules-hero">
+          <div class="rules-hero-badge">REGULAMIN TWITCH</div>
+          <h1>NA TWITCHU GRAMY <span>ZGODNIE Z ZASADAMI PLATFORMY</span></h1>
+          <p>Ten skrót ma pomóc szybko ocenić, jakie zachowania są u nas niedozwolone na czacie i podczas wspólnego przebywania na transmisji. To prosty przewodnik dla widzów — a w razie sporu obowiązują oficjalne zasady Twitcha.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">Najważniejsze w skrócie:</div>
+          <div class="rules-memory-tags">
+            <span>BEZ NĘKANIA</span>
+            <span>BEZ MOWY NIENAWIŚCI</span>
+            <span>BEZ TREŚCI 18+</span>
+            <span>BEZ SPAMU I SCAMU</span>
+            <span>BEZ UJAWNIANIA DANYCH</span>
+          </div>
+        </div>
+
+        <div class="rules-card-grid">
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
+            <div class="rule-card-label">SZACUNEK</div>
+            <h2>Zakaz nękania, gróźb i obrażania</h2>
+            <p>Nie tolerujemy wyzwisk, gróźb, ośmieszania, uporczywego zaczepiania ani prowokowania innych osób. Jeśli chcesz uczestniczyć w czacie, rób to z kulturą i bez atakowania innych.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🚫</div></div>
+            <div class="rule-card-label">MOWA NIENAWIŚCI</div>
+            <h2>Zakazane są slury i obraźliwe określenia</h2>
+            <p>Nie używamy słów i zwrotów obrażających ludzi ze względu na pochodzenie, kolor skóry, narodowość, religię, płeć, orientację, tożsamość, niepełnosprawność czy stan zdrowia. Każda forma mowy nienawiści jest zabroniona.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">🔞</div></div>
+            <div class="rule-card-label">TREŚCI 18+</div>
+            <h2>Bez seksualnych, obscenicznych i NSFW treści</h2>
+            <p>Na czacie i podczas interakcji nie wrzucamy treści pornograficznych, seksualnych, obscenicznych ani linków do materiałów 18+. Niedozwolone są także sugestie nagości i nieodpowiednie treści wobec nieletnich.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">📣</div></div>
+            <div class="rule-card-label">SPAM / SCAM</div>
+            <h2>Bez spamu, reklam, scamów i szkodliwych linków</h2>
+            <p>Nie spamujemy, nie floodujemy, nie reklamujemy się bez zgody i nie wrzucamy podejrzanych linków. Zakazane są również próby oszustwa, wyłudzania danych oraz podszywania się pod inne osoby lub marki.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🛡️</div></div>
+            <div class="rule-card-label">BEZPIECZEŃSTWO</div>
+            <h2>Nie ujawniamy cudzych danych i nie zachęcamy do łamania prawa</h2>
+            <p>Zakazane jest publikowanie cudzych danych prywatnych, namawianie do przemocy, samookaleczeń, nielegalnych działań lub innych szkodliwych zachowań. Bezpieczeństwo społeczności zawsze ma pierwszeństwo.</p>
+          </section>
+
+          <section class="rule-card twitch-links-card">
+            <div class="rule-card-top"><div class="rule-card-number">06</div><div class="rule-card-icon" aria-hidden="true">🔗</div></div>
+            <div class="rule-card-label">OFICJALNE ŹRÓDŁA</div>
+            <h2>Sprawdź oficjalne zasady Twitcha</h2>
+            <p>Jeśli chcesz zobaczyć pełne i nadrzędne zasady platformy, skorzystaj z oficjalnych materiałów Twitcha:</p>
+            <div class="official-links-list">
+              <a class="official-link-card" href="https://legal.twitch.com/en/legal/community-guidelines/" target="_blank" rel="noopener">
+                <strong>Community Guidelines</strong>
+                <span>Główne zasady społeczności Twitcha</span>
+              </a>
+              <a class="official-link-card" href="https://legal.twitch.com/en/legal/terms-of-service/" target="_blank" rel="noopener">
+                <strong>Terms of Service</strong>
+                <span>Ogólne warunki korzystania z platformy</span>
+              </a>
+              <a class="official-link-card" href="https://safety.twitch.tv/articles/en_US/Knowledge/Community-Guidelines" target="_blank" rel="noopener">
+                <strong>Twitch Safety: Community Guidelines</strong>
+                <span>Przystępne omówienie zasad bezpieczeństwa</span>
+              </a>
+              <a class="official-link-card" href="https://blog.twitch.tv/en/2020/04/07/update-to-our-nudity-and-attire-policy/" target="_blank" rel="noopener">
+                <strong>Nudity & Attire Policy</strong>
+                <span>Oficjalne wyjaśnienie zasad dotyczących nagości i ubioru</span>
+              </a>
+            </div>
+          </section>
+        </div>
+
+        <div class="rules-summary-box">
+          <h2>Ważna uwaga</h2>
+          <p>Ten regulamin jest prostym skrótem na potrzeby naszej społeczności. Ostatecznie zawsze liczą się oficjalne zasady Twitcha oraz decyzje moderacji i platformy. Jeśli coś jest ewidentnie szkodliwe, obraźliwe lub ryzykowne — traktujemy to jako niedozwolone.</p>
         </div>
       </div>
     </div>
