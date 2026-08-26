@@ -1,0 +1,129 @@
+TWITCH — ZAKAZANE SŁOWA, ZWROTY I SPOSOBY UŻYCIA
+Praktyczna lista dla społeczności MATT'S WORLD
+Aktualizacja: 26.08.2026
+
+WAŻNE
+======
+Twitch NIE PUBLIKUJE pełnej listy wszystkich zakazanych slurów. Oficjalnie wyjaśnia, że nie udostępnia takiej listy, aby nie ułatwiać obchodzenia zasad.
+Dlatego nie istnieje uczciwy sposób na przygotowanie „pełnej listy wszystkich słów”. Poniższy plik zawiera publicznie opisane przez Twitcha kategorie oraz przykłady i praktyczne odpowiedniki, które na naszym kanale należy traktować jako niedozwolone.
+
+1. SLURY I MOWA NIENAWIŚCI
+==========================
+Zakazane jest używanie obelg/slurów skierowanych wobec osób lub grup ze względu na m.in.:
+- rasę i kolor skóry,
+- pochodzenie etniczne i narodowość,
+- kastę i status imigracyjny,
+- religię,
+- płeć i gender,
+- tożsamość płciową,
+- orientację seksualną,
+- niepełnosprawność,
+- poważny stan zdrowia,
+- status weterana,
+- w określonych przypadkach wiek.
+
+Twitch podaje wprost, że N-word z tzw. „hard R” jest niedozwolone w każdych okolicznościach.
+Pozostałych slurów Twitch celowo nie publikuje jako kompletnej listy.
+
+Zasada MATT'S WORLD: jeśli dane słowo jest powszechnie używane jako rasistowska, homofobiczna, transfobiczna, seksistowska, antyreligijna lub ableistyczna obelga — nie używaj go na czacie.
+
+2. ZACHĘCANIE DO SAMOBÓJSTWA / SAMOOKALECZENIA
+===============================================
+Zakazane są zwroty typu:
+- „kys”,
+- „kill yourself”,
+- „zabij się”,
+- „idź się zabij”,
+- „powinieneś się zabić”,
+- inne zwroty nakłaniające konkretną osobę do samobójstwa lub poważnego samookaleczenia.
+
+3. GROŹBY I ŻYCZENIE KRZYWDY
+=============================
+Zakazane są m.in. zwroty:
+- grożące pobiciem, zabiciem lub ciężkim zranieniem,
+- nawołujące innych do przemocy wobec konkretnej osoby lub grupy,
+- życzące komuś śmierci, ciężkiej choroby lub poważnego wypadku,
+- pochwalające realną krzywdę, która spotkała daną osobę.
+
+4. SEKSUALNE NĘKANIE I PONIŻANIE
+================================
+Twitch jako przykłady seksualnego nękania wskazuje m.in. uporczywe kierowanie do konkretnej osoby seksualnych obelg, w tym słów takich jak:
+- „whore”,
+- „virgin”,
+gdy są używane w celu seksualnego poniżania lub atakowania danej osoby.
+
+Zakazane są również:
+- prośby o nudesy lub rozbieranie się,
+- opisywanie chęci wykonania na konkretnej osobie graficznych aktów seksualnych,
+- komentarze o genitaliach, piersiach, pośladkach lub „zdolnościach seksualnych” danej osoby w celu nękania.
+
+5. ZWYKŁE SŁOWO UŻYTE JAKO OBELGA
+==================================
+Niektóre wyrazy nie są automatycznie zakazane, ale stają się naruszeniem, gdy są używane pogardliwie wobec grupy chronionej lub jako obraźliwy zamiennik sluru.
+
+Przykłady opisane przez Twitcha:
+- używanie określeń związanych z orientacją seksualną jako negatywnego określenia osoby,
+- używanie określeń związanych z autyzmem lub niepełnosprawnością intelektualną jako obelgi,
+- celowe i uporczywe zwracanie się do osoby za pomocą niewłaściwych zaimków po prośbie o zaprzestanie,
+- używanie słowa „Zionists” jako zastępczego określenia Żydów/Izraelczyków w nienawistnym kontekście.
+
+6. NAZWY UŻYTKOWNIKÓW I DISPLAY NAME
+====================================
+Twitch stosuje dodatkowo ostrzejsze zasady dla nazw kont. Nazwa nie może zawierać m.in.:
+- hateful slurs i nienawistnych określeń,
+- gróźb realnej przemocy,
+- nawoływania do samobójstwa lub samookaleczenia,
+- seksualnych obelg skierowanych wobec innych osób,
+- cudzych danych prywatnych,
+- podszywania się pod inną osobę lub Twitch,
+- odniesień do terroryzmu i wykorzystywania dzieci,
+- odniesień do aktów seksualnych, genitaliów lub płynów seksualnych,
+- gloryfikowania realnych tragedii i zabójców.
+
+7. TAGI
+=======
+W tagach Twitch dodatkowo zabrania m.in.:
+- slurów i nienawistnych stereotypów,
+- gróźb i nękania,
+- treści seksualnych i opisów aktów seksualnych,
+- opisów nagości/genitaliów,
+- odniesień do nielegalnych narkotyków,
+- wulgarności i obscenicznych wyrażeń.
+
+Twitch wskazuje również, że pewne często nadużywane słowa — np. „white”, „straight”, „cis”, „able” i ich pochodne — nie powinny być używane jako tagi. UWAGA: nie oznacza to, że te słowa są ogólnie zakazane w normalnej rozmowie na czacie.
+
+8. CO NIE JEST „AUTOMATYCZNIE ZAKAZANYM SŁOWEM”
+================================================
+Twitch ocenia kontekst. Słowo może być dozwolone, gdy:
+- opisujesz własne doświadczenie z dyskryminacją,
+- potępiasz użycie sluru,
+- omawiasz temat edukacyjnie,
+- jest użyte w wyraźnie pozytywnym/odzyskanym kontekście przez członka danej grupy,
+- występuje w dozwolonym materiale muzycznym w warunkach opisanych przez Twitch.
+
+Nie dotyczy to N-word z „hard R” — Twitch wskazuje, że ten wariant nie jest dozwolony w żadnych okolicznościach.
+
+9. PROSTA ZASADA NA KANALE MATTHEVC
+===================================
+Jeżeli masz wątpliwość, czy dane słowo jest obraźliwe:
+1) nie używaj go jako określenia drugiej osoby,
+2) nie próbuj obchodzić AutoModa literówkami, spacjami lub znakami,
+3) nie spamuj obraźliwymi emotkami/symbolami,
+4) zastosuj się do decyzji moderacji.
+
+Moderacja może usunąć wiadomość lub zastosować timeout/ban również wtedy, gdy konkretny wyraz nie znajduje się w żadnej publicznej liście, ale sposób jego użycia narusza zasady Twitcha lub zasady społeczności MATT'S WORLD.
+
+OFICJALNE ŹRÓDŁA TWITCH
+========================
+Community Guidelines:
+https://legal.twitch.com/en/legal/community-guidelines/
+
+Twitch Safety — Community Guidelines:
+https://safety.twitch.tv/articles/en_US/Knowledge/Community-Guidelines
+
+Terms of Service:
+https://legal.twitch.com/en/legal/terms-of-service/
+
+UWAGA KOŃCOWA
+==============
+To jest praktyczny skrót zasad dla społeczności, a nie oficjalna ani kompletna baza „zakazanych słów”. Twitch aktualizuje zasady i celowo nie ujawnia kompletnej listy slurów. W przypadku rozbieżności pierwszeństwo mają aktualne oficjalne zasady Twitcha.
