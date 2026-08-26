@@ -3277,3 +3277,153 @@ body.image-preview-open { overflow: hidden; }
     max-height: none;
   }
 }
+
+
+/* === NASZ DISCORD / OPIS KANAŁÓW I RÓL === */
+.discord-channels-panel { overflow: hidden; }
+
+.discord-channels-hero {
+  position: relative;
+  margin-bottom: 1.2rem;
+  padding: 1.45rem;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 24px;
+  background: radial-gradient(circle at 88% 20%, rgba(88,101,242,.18), transparent 34%), linear-gradient(135deg, rgba(191,36,45,.16), rgba(15,15,18,.97));
+}
+.discord-channels-hero::after {
+  content: "#";
+  position: absolute;
+  right: 1.2rem;
+  top: -.65rem;
+  color: rgba(255,255,255,.035);
+  font-size: 9rem;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+.discord-channels-kicker, .discord-section-number {
+  color: var(--accent);
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+.discord-channels-hero h1 { position: relative; z-index: 1; margin: .55rem 0 .7rem; }
+.discord-channels-hero p { position: relative; z-index: 1; max-width: 790px; margin: 0; line-height: 1.7; }
+.discord-channels-tags { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: .55rem; margin-top: 1rem; }
+.discord-channels-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: .42rem .68rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  color: #d7d7dc;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.discord-channel-section {
+  margin-top: 1.15rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  background: rgba(255,255,255,.025);
+}
+.discord-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .95rem;
+  padding-bottom: .85rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.discord-section-heading > div { min-width: 0; }
+.discord-section-heading h2 { margin: .2rem 0 0; font-size: 1.28rem; }
+.discord-section-heading > p { max-width: 390px; margin: 0; text-align: right; font-size: .92rem; line-height: 1.55; }
+.discord-channel-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.discord-channel-row {
+  display: grid;
+  grid-template-columns: minmax(155px, .72fr) minmax(0, 1.28fr);
+  gap: .85rem;
+  align-items: start;
+  min-height: 92px;
+  padding: .85rem;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.discord-channel-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(191,36,45,.28);
+  background: linear-gradient(180deg, rgba(191,36,45,.08), rgba(255,255,255,.018));
+}
+.discord-channel-row.featured { border-color: rgba(191,36,45,.28); background: linear-gradient(135deg, rgba(191,36,45,.11), rgba(255,255,255,.025)); }
+.discord-channel-name { display: flex; align-items: center; gap: .55rem; min-width: 0; color: #f0f0f3; }
+.discord-channel-name strong { overflow-wrap: anywhere; font-size: .94rem; }
+.discord-channel-symbol {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  border: 1px solid rgba(88,101,242,.24);
+  border-radius: 10px;
+  background: rgba(88,101,242,.09);
+  font-size: .9rem;
+}
+.voice-list .discord-channel-symbol { border-color: rgba(191,36,45,.27); background: rgba(191,36,45,.09); }
+.discord-channel-row p { margin: 0; color: var(--muted); font-size: .91rem; line-height: 1.6; }
+.discord-channel-row p strong { color: var(--text); }
+.discord-role-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; }
+.discord-role-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .8rem;
+  padding: .95rem;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 17px;
+  background: rgba(255,255,255,.035);
+}
+.discord-role-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(191,36,45,.3);
+  border-radius: 13px;
+  background: rgba(191,36,45,.1);
+  font-size: 1.05rem;
+}
+.discord-role-card strong { display: block; margin: .05rem 0 .3rem; color: var(--text); font-size: 1rem; }
+.discord-role-card p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
+.discord-role-card a { display: inline-block; margin-top: .55rem; color: var(--text); font-size: .74rem; font-weight: 900; letter-spacing: .08em; text-decoration: none; }
+.discord-role-card a:hover { color: var(--accent); }
+.discord-config-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: .8rem;
+  padding: .85rem .95rem;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 14px 14px 0;
+  background: rgba(191,36,45,.075);
+}
+.discord-config-note strong { flex: 0 0 auto; color: var(--text); }
+.discord-config-note span { color: var(--muted); font-size: .9rem; line-height: 1.55; }
+@media (max-width: 1050px) {
+  .discord-channel-list { grid-template-columns: 1fr; }
+  .discord-role-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .discord-channels-hero, .discord-channel-section { padding: 1rem; border-radius: 18px; }
+  .discord-section-heading { align-items: flex-start; flex-direction: column; gap: .45rem; }
+  .discord-section-heading > p { max-width: none; text-align: left; }
+  .discord-channel-row { grid-template-columns: 1fr; gap: .55rem; min-height: 0; }
+  .discord-config-note { align-items: flex-start; flex-direction: column; gap: .35rem; }
+}

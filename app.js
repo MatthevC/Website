@@ -190,8 +190,8 @@ const pages = {
     body: discordJoinPage()
   },
   "discord/roles": {
-    title: "NASZ DISCORD / <span>KANAŁY I ROLE</span>",
-    body: infoPage("OPIS KANAŁÓW ORAZ RÓL", "Opis struktury serwera Discord.", "Tutaj stworzymy kompletną listę kanałów, kategorii, rang oraz ich przeznaczenia.")
+    title: "NASZ DISCORD / <span>OPIS KANAŁÓW I RÓL</span>",
+    body: discordChannelsPage()
   },
 
   contact: {
@@ -406,6 +406,187 @@ function discordRulesPage() {
           <h2>Najważniejsza idea</h2>
           <p>Discord ma być miejscem wygodnym do rozmów, wspólnego grania i integracji. Jeśli zachowujemy kulturę, używamy właściwych kanałów i nie przeszkadzamy innym — wszystkim korzysta się z niego po prostu lepiej.</p>
         </div>
+      </div>
+    </div>
+  `;
+}
+
+
+function discordChannelsPage() {
+  return `
+    <div class="container content-wrap discord-channels-page">
+      <div class="page-panel discord-channels-panel">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <header class="discord-channels-hero">
+          <span class="discord-channels-kicker">NASZ DISCORD / OPIS KANAŁÓW I RÓL</span>
+          <h1>GDZIE CO <span>ZNAJDZIESZ?</span></h1>
+          <p>Krótka mapa serwera MATT'S WORLD. Sprawdź przeznaczenie kanału, zanim coś wyślesz — dzięki temu łatwiej utrzymać porządek i szybciej znaleźć to, czego szukasz.</p>
+          <div class="discord-channels-tags" aria-label="Najważniejsze kategorie">
+            <span>⚙️ KONFIGURACJA</span>
+            <span>💬 TEKSTOWE</span>
+            <span>🔊 GŁOSOWE</span>
+            <span>🎮 GRY</span>
+          </div>
+        </header>
+
+        <section class="discord-channel-section">
+          <div class="discord-section-heading">
+            <div>
+              <span class="discord-section-number">01</span>
+              <h2>TWITCH / KONFIGURACJA</h2>
+            </div>
+            <p>Najważniejsze informacje i ustawienia serwera.</p>
+          </div>
+
+          <div class="discord-channel-list">
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🔧</span><strong>konfiguracja-tickets</strong></div>
+              <p>Dostosuj Discord do swoich potrzeb i utwórz ticket, jeśli chcesz skontaktować się z Moderacją lub Streamerem.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">📣</span><strong>ogłoszenia</strong></div>
+              <p>Najważniejsze komunikaty i informacje dotyczące społeczności.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🔴</span><strong>live-alert</strong></div>
+              <p>Powiadomienia o startujących transmisjach.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🚫</span><strong>regulamin</strong></div>
+              <p>Zbiór zasad obowiązujących na naszym Discordzie.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="discord-channel-section">
+          <div class="discord-section-heading">
+            <div>
+              <span class="discord-section-number">02</span>
+              <h2>TEXT CHANNELS</h2>
+            </div>
+            <p>Rozmowy, materiały społeczności i przydatne informacje.</p>
+          </div>
+
+          <div class="discord-channel-list">
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">💬</span><strong>ogólny</strong></div>
+              <p>Główne miejsce do luźnych rozmów na każdy temat.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🔎</span><strong>szukam-do-gry</strong></div>
+              <p>Szukasz ekipy do wspólnej gry? Napisz tutaj. Kanał możesz wyłączyć w konfiguracji, jeśli go nie potrzebujesz.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">📷</span><strong>zdjęcia-grafika</strong></div>
+              <p>Miejsce na zdjęcia i grafiki, którymi chcesz się pochwalić na dłużej. Zwykłe lub mało wyróżniające się materiały oraz wiadomości tekstowe mogą zostać usunięte po 24 godzinach.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🎨</span><strong>wasze-arcydzieła</strong></div>
+              <p>Pochwal się własną twórczością — nie tylko grafiką. Projekty, rękodzieło, muzyka i inne kreatywne prace są mile widziane.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🤣</span><strong>memy</strong></div>
+              <p>Ciekawe i zabawne memy znalezione w Internecie.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🎥</span><strong>wideo</strong></div>
+              <p>Wasze klipy, materiały znajomych, klipy z Twitcha i inne ciekawe filmiki.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🎬</span><strong>matt-klip</strong></div>
+              <p>Kanał przeznaczony wyłącznie na klipy z transmisji MatthevC.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">💲</span><strong>promocje</strong></div>
+              <p>Ciekawe promocje związane z grami, sprzętem komputerowym i szeroko pojętym IT.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="discord-channel-section">
+          <div class="discord-section-heading">
+            <div>
+              <span class="discord-section-number">03</span>
+              <h2>VOICE ROOM</h2>
+            </div>
+            <p>Kanały do rozmów, wspólnej gry i transmisji.</p>
+          </div>
+
+          <div class="discord-channel-list voice-list">
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">⌛</span><strong>POCZEKALNIA</strong></div>
+              <p>Kanał oczekujący. Wejdź tutaj, jeśli chcesz zostać przeniesiony na <strong>STREAM ON</strong>.</p>
+            </article>
+            <article class="discord-channel-row featured">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🔴</span><strong>STREAM ON</strong></div>
+              <p>Kanał używany podczas transmisji. Prowadzącym nie zawsze musi być MatthevC — dlatego przed wejściem warto sprawdzić, kto aktualnie streamuje.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🎧</span><strong>Global Voice</strong></div>
+              <p>Luźne rozmowy o wszystkim — bez konieczności grania w konkretną grę.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">➕</span><strong>Add Voice</strong></div>
+              <p>Tworzy prywatny kanał głosowy. Zwykle korzystają z niego składy podczas gry, więc osoby oglądające prywatną transmisję prosimy, aby nie przeszkadzały w trakcie rozgrywki. Na luźne rozmowy najlepiej poczekać do lobby. 😉</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="discord-channel-section">
+          <div class="discord-section-heading">
+            <div>
+              <span class="discord-section-number">04</span>
+              <h2>DEAD BY DAYLIGHT / INNE GRY</h2>
+            </div>
+            <p>Aktualności, kody i materiały pomocne podczas gry.</p>
+          </div>
+
+          <div class="discord-channel-list">
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🛠️</span><strong>nowości</strong></div>
+              <p>Nowe posty i aktualności z Instagrama lub X związane z Dead by Daylight.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">🔑</span><strong>kodziki</strong></div>
+              <p>Aktywne kody do Dead by Daylight, którymi warto podzielić się z innymi.</p>
+            </article>
+            <article class="discord-channel-row">
+              <div class="discord-channel-name"><span class="discord-channel-symbol">📚</span><strong>poradnik</strong></div>
+              <p>Przydatne strony, konfiguracje i poradniki, które mogą ułatwić grę lub pomóc w jej lepszym zrozumieniu.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="discord-channel-section discord-roles-section">
+          <div class="discord-section-heading">
+            <div>
+              <span class="discord-section-number">05</span>
+              <h2>ROLE I DOSTĘP</h2>
+            </div>
+            <p>Najważniejsze role, które możesz spotkać na serwerze.</p>
+          </div>
+
+          <div class="discord-role-grid">
+            <article class="discord-role-card">
+              <span class="discord-role-icon">🎙️</span>
+              <div><strong>Streamer</strong><p>Osoba prowadząca transmisję. Na kanale STREAM ON Streamer i osoby z jego lobby mają pierwszeństwo.</p></div>
+            </article>
+            <article class="discord-role-card">
+              <span class="discord-role-icon">🛡️</span>
+              <div><strong>Moderacja</strong><p>Pomaga utrzymać porządek i reaguje na problemy. W razie potrzeby możesz skontaktować się z nią przez ticket.</p></div>
+            </article>
+            <article class="discord-role-card">
+              <span class="discord-role-icon">💎</span>
+              <div><strong>VIP</strong><p>Wyróżnienie dla aktywnych członków społeczności. VIP może otrzymać dodatkowe możliwości i dostęp do wybranych kanałów.</p><a href="#/viewer/vip">WIĘCEJ O VIP →</a></div>
+            </article>
+          </div>
+
+          <div class="discord-config-note">
+            <strong>Nie chcesz widzieć wszystkiego?</strong>
+            <span>Część kanałów i powiadomień możesz dopasować w <b>konfiguracja-tickets</b>, aby serwer był dla Ciebie czytelniejszy.</span>
+          </div>
+        </section>
       </div>
     </div>
   `;
