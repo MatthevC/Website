@@ -112,7 +112,11 @@ const pages = {
   },
   "rules/discord": {
     title: "REGULAMIN <span>DISCORD</span>",
-    body: rulesPage("REGULAMIN DISCORD", "Zasady korzystania z naszego serwera Discord.")
+    body: discordRulesPage()
+  },
+  "rules/vip": {
+    title: "REGULAMIN <span>VIP</span>",
+    body: vipRulesRulesPage()
   },
   "rules/twitch": {
     title: "REGULAMIN <span>TWITCH</span>",
@@ -277,6 +281,192 @@ function generalRulesPage() {
         <div class="rules-summary-box">
           <h2>Krótko mówiąc</h2>
           <p>Tworzymy społeczność, w której liczy się dobra zabawa, wzajemny szacunek i brak niepotrzebnych konfliktów. Jeśli każdy trzyma się tych 4 zasad, wszystkim jest po prostu przyjemniej.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function discordRulesPage() {
+  return `
+    <div class="container content-wrap">
+      <div class="page-panel rules-showcase discord-rules-page">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rules-hero">
+          <div class="rules-hero-badge">REGULAMIN DISCORDA</div>
+          <h1>JASNE ZASADY, <span>LEPSZA ATMOSFERA</span></h1>
+          <p>Nasz Discord ma być miejscem wygodnym do rozmów, wspólnej gry i integracji społeczności. Poniżej znajdziesz zasady przedstawione w przejrzysty sposób — tak, aby dało się je szybko przeczytać i łatwo zapamiętać.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">W skrócie najważniejsze:</div>
+          <div class="rules-memory-tags">
+            <span>SZACUNEK</span>
+            <span>BEZ SPAMU</span>
+            <span>BEZ REKLAM</span>
+            <span>BEZ KŁÓTNI</span>
+            <span>PORZĄDEK NA KANAŁACH</span>
+          </div>
+        </div>
+
+        <div class="channel-legend-box">
+          <div class="channel-legend-title">Kanały, o których mowa w regulaminie</div>
+          <div class="channel-legend-grid">
+            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">ogólny</span></span>
+            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">szukam-do-gry</span></span>
+            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">wideo</span></span>
+            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">matt-klip</span></span>
+            <span class="discord-channel-chip voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>
+            <span class="discord-channel-chip voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span>
+          </div>
+        </div>
+
+        <div class="rules-card-grid rules-card-grid-compact">
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
+            <div class="rule-card-label">STREAM ON</div>
+            <h2>Twitch obowiązuje także u nas</h2>
+            <p>Na profilach, kanałach tekstowych oraz na głosowym kanale <span class="discord-channel-chip inline voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span> przestrzegamy regulaminu Twitcha. Na tym kanale również nie krytykujemy streama.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
+            <div class="rule-card-label">SZACUNEK</div>
+            <h2>Szanuj innych użytkowników</h2>
+            <p>Jeśli nie chcesz być obrażany — nie obrażaj innych. Nagminne obrażanie może skutkować <strong>t/o</strong> lub nawet <strong>permanentnym banem</strong>.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">⏳</div></div>
+            <div class="rule-card-label">WEJŚCIE NA STREAM</div>
+            <h2>Na STREAM ON wchodzimy przez Poczekalnię</h2>
+            <p>Aby dostać się na <span class="discord-channel-chip inline voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span>, dołącz najpierw do <span class="discord-channel-chip inline voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>. Gdy będzie wolna chwila, ktoś przesunie Cię na kanał główny.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
+            <div class="rule-card-label">LOBBY</div>
+            <h2>STREAM ON jest dla Streamera i jego lobby</h2>
+            <p>Jeżeli aktualnie nie grasz z nami, przejdź na inny kanał, żeby nie przeszkadzać w rozgrywce. <span class="mention-pill">@Streamer</span> i osoby z lobby mają tam pierwszeństwo.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🧠</div></div>
+            <div class="rule-card-label">KULTURA</div>
+            <h2>W lobby zachowujemy kulturę</h2>
+            <p>Nie tolerujemy toxic zachowań, wyzwisk, negatywnej atmosfery ani jęczenia w stylu „nie chcę na to grać”. Gramy po to, żeby było przyjemnie wszystkim.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">06</div><div class="rule-card-icon" aria-hidden="true">📣</div></div>
+            <div class="rule-card-label">WZMIANKI</div>
+            <h2>Nie nadużywamy oznaczeń ról</h2>
+            <p>Zakaz nadużywania wzmianek ról oraz całkowity zakaz używania <span class="mention-pill">@everyone</span> i <span class="mention-pill">@here</span>. Automod nakłada za to <strong>1 godzinę t/o</strong>.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">07</div><div class="rule-card-icon" aria-hidden="true">🚫</div></div>
+            <div class="rule-card-label">PORZĄDEK</div>
+            <h2>Bez spamu i bez reklam</h2>
+            <p>Na kanałach tekstowych zabronione jest spamowanie oraz reklamowanie własnych kanałów i innych serwerów Discord.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">08</div><div class="rule-card-icon" aria-hidden="true">🕊️</div></div>
+            <div class="rule-card-label">TEMATY SPORNE</div>
+            <h2>Unikamy polityki i religii</h2>
+            <p>Nie wchodzimy w dyskusje o polityce, religii i innych kontrowersyjnych tematach, które mogą prowadzić do konfliktów i niepotrzebnych kłótni.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">09</div><div class="rule-card-icon" aria-hidden="true">🎬</div></div>
+            <div class="rule-card-label">KLIPY I WIDEO</div>
+            <h2>Każdy materiał wrzucamy we właściwe miejsce</h2>
+            <p>Kanał <span class="discord-channel-chip inline text"><span class="channel-icon">#</span><span class="channel-name">matt-klip</span></span> służy wyłącznie do klipów z transmisji <span class="mention-pill">@Streamer</span>. Prywatne klipy wrzucaj na <span class="discord-channel-chip inline text"><span class="channel-icon">#</span><span class="channel-name">wideo</span></span>. Materiały uznane za spam lub zwykłą rozgrywkę mogą zostać usunięte, a po powtarzającym się spamie możesz dostać ograniczenia na ten kanał.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">10</div><div class="rule-card-icon" aria-hidden="true">🔎</div></div>
+            <div class="rule-card-label">SZUKANIE EKIPY</div>
+            <h2>Do wspólnej gry używamy odpowiedniego kanału</h2>
+            <p>Szukasz osób do wspólnej gry? Korzystaj z kanału <span class="discord-channel-chip inline text"><span class="channel-icon">#</span><span class="channel-name">szukam-do-gry</span></span> oraz odpowiednich ról, np. <span class="mention-pill">@lethalowe</span>.</p>
+          </section>
+        </div>
+
+        <div class="rules-summary-box">
+          <h2>Najważniejsza idea</h2>
+          <p>Discord ma być miejscem wygodnym do rozmów, wspólnego grania i integracji. Jeśli zachowujemy kulturę, używamy właściwych kanałów i nie przeszkadzamy innym — wszystkim korzysta się z niego po prostu lepiej.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function vipRulesRulesPage() {
+  return `
+    <div class="container content-wrap">
+      <div class="page-panel rules-showcase vip-rules-page">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <div class="rules-hero">
+          <div class="rules-hero-badge">REGULAMIN VIP</div>
+          <h1>VIP TO <span>WYRÓŻNIENIE I ZAUFANIE</span></h1>
+          <p>Ranga VIP to nie tylko dodatkowe możliwości, ale też zaufanie, które budujemy wobec aktywnych i pozytywnych osób w naszej społeczności. Poniżej znajdziesz najważniejsze zasady związane z tą rangą.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">VIP w skrócie:</div>
+          <div class="rules-memory-tags">
+            <span>AKTYWNOŚĆ</span>
+            <span>ZAUFANIE</span>
+            <span>7TV</span>
+            <span>REGULARNA OBECNOŚĆ</span>
+          </div>
+        </div>
+
+        <div class="channel-legend-box narrow">
+          <div class="channel-legend-title">Najważniejsze miejsca dla VIP-ów</div>
+          <div class="channel-legend-grid">
+            <span class="discord-channel-chip voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>
+            <span class="discord-channel-chip voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span>
+            <span class="mention-pill">MatthevC</span>
+          </div>
+        </div>
+
+        <div class="rules-card-grid">
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">⭐</div></div>
+            <div class="rule-card-label">PRZYZNANIE RANGI</div>
+            <h2>VIP otrzymują osoby aktywne i pomocne</h2>
+            <p>Ranga ta jest przyznawana osobom, które często bywają na transmisjach, aktywnie uczestniczą w społeczności, są pomocne i udzielają się również na Discordzie.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🔴</div></div>
+            <div class="rule-card-label">DOSTĘP DO STREAM ON</div>
+            <h2>VIP może wejść bez Poczekalni — ale z głową</h2>
+            <p>VIP-y mogą wejść na <span class="discord-channel-chip inline voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span> bez przechodzenia przez <span class="discord-channel-chip inline voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>. To przywilej oparty na zaufaniu — nie wchodzimy tam z błahostkami ani bez zgody Streamera. Nagminne nadużywanie może skutkować utratą VIP-a.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">😄</div></div>
+            <div class="rule-card-label">EMOTKI 7TV</div>
+            <h2>Możesz dostać możliwość dodawania emotek</h2>
+            <p>Każdy VIP może uzyskać możliwość dodawania emotek 7TV. Jeśli chcesz mieć taką opcję, napisz do <span class="mention-pill">MatthevC</span>, a uprawnienie zostanie przypisane ręcznie.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">📅</div></div>
+            <div class="rule-card-label">AKTYWNOŚĆ</div>
+            <h2>Brak aktywności może oznaczać utratę rangi</h2>
+            <p>Ranga VIP jest odbierana przy około trzech tygodniach nieobecności. Jeśli jednak ponownie wrócisz do częstej aktywności, istnieje możliwość przywrócenia rangi.</p>
+          </section>
+        </div>
+
+        <div class="rules-summary-box">
+          <h2>VIP to coś więcej niż plakietka</h2>
+          <p>Ta ranga jest wyróżnieniem dla osób, które realnie budują klimat naszej społeczności. Dlatego zależy nam, aby korzystać z niej odpowiedzialnie i z szacunkiem do pozostałych osób.</p>
         </div>
       </div>
     </div>
