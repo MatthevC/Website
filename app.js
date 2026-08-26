@@ -123,7 +123,7 @@ const pages = {
     body: eventRulesPage()
   },
   "rules/game-picks": {
-    title: "ZASADY <span>WSPÓLNYCH GIER</span>",
+    title: "ZASADY WYBORU DO <span>WSPÓLNYCH GIER</span>",
     body: gamePickRulesPage()
   },
   "rules/twitch": {
@@ -570,7 +570,7 @@ function gamePickRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">ZASADY WSPÓLNYCH GIER</div>
+          <div class="rules-hero-badge">ZASADY WYBORU DO WSPÓLNYCH GIER</div>
           <h1>KTO MA <span>PIERWSZEŃSTWO DO GRY?</span></h1>
           <p>Żeby uniknąć nieporozumień i zachować porządek podczas wspólnych rozgrywek, obowiązuje poniższa kolejność wyboru osób do lobby. Im wyżej na liście, tym większy priorytet wejścia do wspólnej gry.</p>
         </div>
@@ -630,6 +630,47 @@ function twitchRulesPage() {
             <span>BEZ UJAWNIANIA DANYCH</span>
           </div>
         </div>
+
+        <section class="twitch-word-guide">
+          <div class="twitch-word-guide-head">
+            <div>
+              <div class="rule-card-label">SŁOWA I ZWROTY</div>
+              <h2>Co traktujemy jako zakazane na Twitchu?</h2>
+              <p>Twitch nie publikuje pełnej listy slurów, dlatego nie istnieje oficjalna kompletna lista „wszystkich zakazanych słów”. Poniżej masz praktyczną zasadę: jeśli słowo lub zwrot jest używany do nienawiści, poniżania, grożenia, seksualnego nękania albo zachęcania do samookaleczeń — traktujemy go jako niedozwolony.</p>
+            </div>
+            <a class="download-rules-btn" href="downloads/twitch-zakazane-slowa-i-zwroty.txt" download>POBIERZ LISTĘ SŁÓW I ZWROTÓW ↓</a>
+          </div>
+
+          <div class="twitch-word-grid">
+            <div class="twitch-word-card danger">
+              <strong>Slury i mowa nienawiści</strong>
+              <span>Zakazane są rasistowskie, etniczne, religijne, homofobiczne, transfobiczne, seksistowskie i ableistyczne slury. Twitch podaje, że N-word z „hard R” jest niedozwolone w każdych okolicznościach.</span>
+            </div>
+            <div class="twitch-word-card">
+              <strong>„kys”, „kill yourself”, „zabij się”</strong>
+              <span>Zwroty zachęcające inną osobę do samobójstwa lub samookaleczenia są niedozwolonym nękaniem i mogą prowadzić do reakcji moderacji.</span>
+            </div>
+            <div class="twitch-word-card">
+              <strong>Wyzwiska seksualne</strong>
+              <span>Zwroty takie jak „whore” czy „virgin”, kiedy są używane do uporczywego seksualnego poniżania konkretnej osoby, Twitch wskazuje jako przykład nękania seksualnego.</span>
+            </div>
+            <div class="twitch-word-card">
+              <strong>Słowa o grupach chronionych użyte jako obelga</strong>
+              <span>Nawet zwykłe określenia dotyczące orientacji, płci, niepełnosprawności, religii czy pochodzenia stają się problemem, jeśli używasz ich pogardliwie albo jako negatywnego określenia innej osoby.</span>
+            </div>
+            <div class="twitch-word-card">
+              <strong>Groźby i życzenie komuś krzywdy</strong>
+              <span>Zakazane są zwroty nawołujące do pobicia, zabicia, ciężkiego zranienia albo życzące komuś choroby, śmierci czy innej poważnej krzywdy.</span>
+            </div>
+            <div class="twitch-word-card">
+              <strong>Obsceniczne / seksualne określenia w nazwach i tagach</strong>
+              <span>Twitch nakłada dodatkowe ograniczenia na nazwy kont i tagi. Nie wolno tam stosować m.in. odniesień do aktów seksualnych, genitaliów, płynów seksualnych, wulgarnych treści czy nienawistnych określeń.</span>
+            </div>
+          </div>
+          <div class="twitch-word-note">
+            <strong>Ważne:</strong> kontekst ma znaczenie. Niektóre słowa mogą być dozwolone w neutralnej rozmowie, edukacji lub przy cytowaniu, ale niedozwolone jako obelga. Dlatego plik do pobrania zawiera kategorie i publicznie podane przykłady Twitcha, a nie zmyśloną „tajną listę”.
+          </div>
+        </section>
 
         <div class="rules-card-grid">
           <section class="rule-card">
