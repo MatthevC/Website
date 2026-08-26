@@ -2711,3 +2711,85 @@ button, a { -webkit-tap-highlight-color: transparent; }
     height: auto;
   }
 }
+
+
+/* === DLA WIDZA / DIXPER === */
+.dixper-shell { display: grid; gap: 1.4rem; overflow: visible; }
+.dixper-hero { display: grid; grid-template-columns: 1.45fr .85fr; gap: 1rem; }
+.dixper-hero-copy, .dixper-start-card { border: 1px solid rgba(255,255,255,.08); border-radius: 24px; padding: 1.35rem; background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025)); }
+.dixper-hero-copy { background: radial-gradient(circle at 85% 15%, rgba(41,224,186,.15), transparent 35%), linear-gradient(135deg, rgba(19,35,42,.92), rgba(12,12,15,.98)); }
+.dixper-kicker, .dixper-section-head > span { display: inline-flex; color: #45e6c4; font-size: .76rem; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+.dixper-hero-copy h1 { margin: .8rem 0; font: 700 46px Rajdhani, sans-serif; text-transform: uppercase; line-height: .98; }
+.dixper-hero-copy h1 span { color: #45e6c4; }
+.dixper-hero-copy p, .dixper-section-head p { max-width: 820px; }
+.dixper-hero-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
+.dixper-primary-link, .dixper-secondary-link { display: inline-flex; align-items: center; justify-content: center; padding: .82rem 1rem; border-radius: 14px; font-weight: 900; text-decoration: none; }
+.dixper-primary-link { background: #45e6c4; color: #07110f; }
+.dixper-secondary-link { border: 1px solid rgba(255,255,255,.11); color: var(--text); background: rgba(255,255,255,.04); }
+.dixper-start-card { display: grid; grid-template-columns: 58px 1fr; gap: 1rem; align-items: start; }
+.dixper-start-number { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 18px; background: rgba(69,230,196,.12); border: 1px solid rgba(69,230,196,.28); color: #45e6c4; font-weight: 900; }
+.dixper-start-card h2 { margin: 0 0 .55rem; }
+.dixper-section { display: grid; gap: 1rem; }
+.dixper-section-head h2 { margin: .35rem 0 .45rem; font: 700 29px Rajdhani, sans-serif; text-transform: uppercase; }
+.dixper-section-head p { margin: 0; }
+.dixper-methods-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+.dixper-method-card { position: relative; padding: 1.1rem; border-radius: 22px; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); }
+.dixper-method-wide { grid-column: 1 / -1; }
+.dixper-method-no { position: absolute; right: 1rem; top: 1rem; color: #45e6c4; font-weight: 900; letter-spacing: .12em; }
+.dixper-method-icon { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 16px; background: rgba(69,230,196,.10); border: 1px solid rgba(69,230,196,.20); font-size: 1.35rem; }
+.dixper-method-card h3 { margin: .85rem 0 .45rem; }
+.dixper-method-card p { margin: 0 0 .65rem; }
+.dixper-method-card a { color: #45e6c4; font-weight: 800; text-decoration: none; }
+.dixper-crates-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
+.dixper-crate-card { padding: 1.1rem; border-radius: 24px; border: 1px solid rgba(255,255,255,.08); background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); }
+.dixper-crate-art { position: relative; width: 116px; height: 102px; margin: .15rem auto 1rem; filter: drop-shadow(0 16px 20px rgba(0,0,0,.32)); }
+.dixper-crate-art .crate-body, .dixper-crate-art .crate-lid { position: absolute; left: 18px; right: 18px; border: 2px solid rgba(255,255,255,.16); }
+.dixper-crate-art .crate-body { bottom: 5px; height: 66px; border-radius: 12px 12px 18px 18px; transform: perspective(140px) rotateX(-4deg); }
+.dixper-crate-art .crate-lid { top: 4px; height: 34px; border-radius: 16px 16px 8px 8px; z-index: 2; transform: perspective(140px) rotateX(18deg); }
+.dixper-crate-art .crate-core { position: absolute; inset: 36px 0 auto; margin: auto; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: #10181a; border: 2px solid rgba(255,255,255,.20); color: #fff; z-index: 3; font-weight: 900; }
+.dixper-crate-card.basic .crate-body, .dixper-crate-card.basic .crate-lid { background: linear-gradient(135deg,#8a9497,#253337); }
+.dixper-crate-card.rarity .crate-body, .dixper-crate-card.rarity .crate-lid { background: linear-gradient(135deg,#a963ef,#3c1d5e); }
+.dixper-crate-card.skill .crate-body, .dixper-crate-card.skill .crate-lid { background: linear-gradient(135deg,#f7c94a,#6d4a05); }
+.dixper-crate-card.basic .crate-core { color: #45e6c4; }
+.dixper-crate-card.rarity .crate-core { color: #d59cff; }
+.dixper-crate-card.skill .crate-core { color: #ffd65a; }
+.dixper-crate-label { display: inline-flex; padding: .38rem .62rem; border-radius: 999px; background: rgba(255,255,255,.06); font-size: .72rem; font-weight: 900; letter-spacing: .12em; }
+.dixper-crate-card h3 { margin: .8rem 0 .4rem; }
+.dixper-crate-card p { margin: 0; }
+.dixper-doc-note { padding: .85rem 1rem; border-radius: 16px; border: 1px dashed rgba(69,230,196,.28); color: var(--muted); background: rgba(69,230,196,.05); }
+.dixper-doc-note a { color: #45e6c4; font-weight: 800; }
+.dixper-tutorial-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.dixper-tutorial-card { padding: 1rem; border-radius: 24px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.025); overflow: hidden; }
+.dixper-tutorial-step { display: inline-flex; padding: .35rem .55rem; border-radius: 999px; background: rgba(69,230,196,.10); color: #45e6c4; font-weight: 900; font-size: .74rem; letter-spacing: .12em; }
+.dixper-tutorial-card h3 { margin: .75rem 0 .35rem; }
+.dixper-shot-link { display: block; margin-top: .9rem; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,.09); background: #0b0e13; }
+.dixper-shot-link img { display: block; width: 100%; aspect-ratio: 16 / 8.1; object-fit: cover; transition: transform .25s ease; }
+.dixper-shot-link:hover img { transform: scale(1.018); }
+.dixper-cooldown-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.dixper-cooldown-card { display: grid; justify-items: center; text-align: center; gap: .35rem; padding: 1.25rem; border-radius: 24px; border: 1px solid rgba(69,230,196,.20); background: radial-gradient(circle at 50% 20%, rgba(69,230,196,.13), rgba(255,255,255,.02) 58%); }
+.dixper-cooldown-name { font-weight: 900; letter-spacing: .12em; font-size: .76rem; }
+.dixper-cooldown-card strong { font: 700 46px Rajdhani,sans-serif; color: #45e6c4; line-height: 1; }
+.dixper-cooldown-card small { color: var(--muted); }
+.dixper-clips-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+.dixper-clip-card { position: relative; z-index: 1; padding: .9rem; border-radius: 22px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.025); overflow: visible; }
+.dixper-clip-head { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-bottom: .7rem; }
+.dixper-clip-index { color: #45e6c4; font-size: .7rem; font-weight: 900; letter-spacing: .12em; }
+.dixper-clip-head h3 { margin: .15rem 0 0; }
+.dixper-clip-open { white-space: nowrap; text-decoration: none; color: var(--text); font-weight: 800; padding: .48rem .64rem; border-radius: 12px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.04); }
+.dixper-clip-frame { position: relative; width: 100%; min-height: 300px; overflow: hidden; border-radius: 16px; background: #07080a; }
+.dixper-clip-frame iframe { width: 100%; min-width: 400px; height: 330px; border: 0; display: block; }
+
+@media (max-width: 980px) {
+  .dixper-hero { grid-template-columns: 1fr; }
+  .dixper-crates-grid { grid-template-columns: 1fr; }
+  .dixper-tutorial-grid, .dixper-clips-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .dixper-methods-grid, .dixper-cooldown-grid { grid-template-columns: 1fr; }
+  .dixper-method-wide { grid-column: auto; }
+  .dixper-hero-copy h1 { font-size: 36px; }
+}
+@media (max-width: 480px) {
+  .dixper-start-card { grid-template-columns: 1fr; }
+  .dixper-clip-frame { overflow-x: auto; }
+}
