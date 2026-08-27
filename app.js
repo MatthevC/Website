@@ -2237,10 +2237,35 @@ function discordJoinPage() {
           </div>
         </header>
 
+<section class="discord-join-steps" id="discord-steps">
+          <div class="discord-section-title">
+            <div>
+              <span>01 / START</span>
+              <h2>TRZY KROKI I JESTEŚ U SIEBIE</h2>
+            </div>
+          </div>
+          <div class="discord-step-grid">
+            <article><b>01</b><div><h3>DOŁĄCZ</h3><p>Kliknij przycisk zaproszenia i zaakceptuj wejście na serwer MATT'S WORLD.</p></div></article>
+            <article><b>02</b><div><h3>SKONFIGURUJ</h3><p>Otwórz <strong>#konfiguracja-tickets</strong> i wybierz role, gry oraz powiadomienia, które chcesz otrzymywać.</p></div></article>
+            <article><b>03</b><div><h3>WPADAJ DO EKIPY</h3><p>Napisz na ogólnym, znajdź osoby do gry albo po prostu obserwuj, co aktualnie dzieje się w społeczności.</p></div></article>
+          </div>
+        </section>
+
+<section class="discord-configure-section" id="discord-configure">
+          <div class="discord-configure-icon" aria-hidden="true">⚙</div>
+          <div class="discord-configure-copy">
+            <span>02 / TWÓJ DISCORD, TWOJE ZASADY</span>
+            <h2>ZACZNIJ OD <strong>#konfiguracja-tickets</strong></h2>
+            <p>Po wejściu na serwer koniecznie zajrzyj na kanał <strong>#konfiguracja-tickets</strong>. To właśnie tam możesz dopasować Discorda pod siebie — wybrać interesujące Cię gry i powiadomienia, ograniczyć kanały, których nie potrzebujesz, oraz ustawić serwer tak, żeby był dla Ciebie wygodny zamiast przeładowany.</p>
+            <p class="discord-configure-highlight">Kilka kliknięć na początku i później widzisz przede wszystkim to, co naprawdę Cię interesuje.</p>
+          </div>
+          <a class="discord-configure-button" id="discord-configure-invite" href="#" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
+        </section>
+
 <section class="discord-preview-section" id="discord-preview">
   <div class="discord-section-title">
     <div>
-      <span>01 / PODGLĄD SERWERA</span>
+      <span>03 / PODGLĄD SERWERA</span>
       <h2>TAK WYGLĄDA MATT'S WORLD</h2>
     </div>
     <p>Przykładowy widok zbudowany na podstawie naszego prawdziwego układu Discorda. Pokazuje kategorie, kanały, powiadomienia i listę społeczności w stylu zbliżonym do tego, co zobaczysz po dołączeniu.</p>
@@ -2432,31 +2457,6 @@ function discordJoinPage() {
 
   </div>
 </section>
-
-<section class="discord-join-steps" id="discord-steps">
-          <div class="discord-section-title">
-            <div>
-              <span>02 / START</span>
-              <h2>TRZY KROKI I JESTEŚ U SIEBIE</h2>
-            </div>
-          </div>
-          <div class="discord-step-grid">
-            <article><b>01</b><div><h3>DOŁĄCZ</h3><p>Kliknij przycisk zaproszenia i zaakceptuj wejście na serwer MATT'S WORLD.</p></div></article>
-            <article><b>02</b><div><h3>SKONFIGURUJ</h3><p>Otwórz <strong>#konfiguracja-tickets</strong> i wybierz role, gry oraz powiadomienia, które chcesz otrzymywać.</p></div></article>
-            <article><b>03</b><div><h3>WPADAJ DO EKIPY</h3><p>Napisz na ogólnym, znajdź osoby do gry albo po prostu obserwuj, co aktualnie dzieje się w społeczności.</p></div></article>
-          </div>
-        </section>
-
-<section class="discord-configure-section" id="discord-configure">
-          <div class="discord-configure-icon" aria-hidden="true">⚙</div>
-          <div class="discord-configure-copy">
-            <span>03 / TWÓJ DISCORD, TWOJE ZASADY</span>
-            <h2>ZACZNIJ OD <strong>#konfiguracja-tickets</strong></h2>
-            <p>Po wejściu na serwer koniecznie zajrzyj na kanał <strong>#konfiguracja-tickets</strong>. To właśnie tam możesz dopasować Discorda pod siebie — wybrać interesujące Cię gry i powiadomienia, ograniczyć kanały, których nie potrzebujesz, oraz ustawić serwer tak, żeby był dla Ciebie wygodny zamiast przeładowany.</p>
-            <p class="discord-configure-highlight">Kilka kliknięć na początku i później widzisz przede wszystkim to, co naprawdę Cię interesuje.</p>
-          </div>
-          <a class="discord-configure-button" id="discord-configure-invite" href="#" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
-        </section>
 
         
       </div>
