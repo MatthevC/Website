@@ -5448,3 +5448,47 @@ body.image-preview-open { overflow: hidden; }
 .discord-channel-section[id] { scroll-margin-top: 112px; }
 .discord-members-expanded { overflow-y:auto; max-height:610px; scrollbar-width:thin; }
 .discord-alert-feed { overflow-y:auto; max-height:520px; scrollbar-width:thin; }
+
+
+/* Discord preview — kompaktowy wariant po poprawkach */
+.discord-app-preview-expanded {
+  grid-template-columns: 58px 235px minmax(0,1fr) 205px;
+  min-height: 560px;
+}
+.discord-rail-home {
+  background: #1c1d22 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.discord-rail-home .discord-rail-discord-logo {
+  width: 22px;
+  height: 22px;
+  color: #ffffff;
+}
+.discord-live-chat .discord-app-chat-head > div:first-child em {
+  display: none;
+}
+.discord-alert-feed {
+  padding: .55rem .8rem .6rem;
+}
+.discord-live-embed {
+  max-width: 355px;
+}
+.discord-live-preview-box {
+  height: 84px;
+}
+.discord-app-members {
+  padding: .55rem .45rem;
+}
+.discord-member {
+  min-height: 31px;
+}
+.discord-member strong {
+  font-size: 9px;
+}
+.discord-member small {
+  font-size: 7px;
+}
+.discord-member-group {
+  margin: .5rem 0 .25rem;
+}
