@@ -1043,7 +1043,6 @@ function moderatorTeamPage() {
           <div class="moderator-kicker">MODERATORZY MATT'S WORLD</div>
           <h1>NASZA <span>MODERACJA</span></h1>
           <p>To osoby, które pomagają utrzymać dobrą atmosferę, reagują wtedy, gdy jest to potrzebne, i wspierają naszą społeczność zarówno podczas transmisji, jak i poza nią.</p>
-          <div class="moderator-hero-note">Portrety moderatorów są na razie tymczasowe — później możemy podmienić je na właściwe zdjęcia bez zmiany układu strony.</div>
         </section>
 
         <div class="moderator-grid">${cards}</div>
