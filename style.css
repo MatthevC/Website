@@ -3965,8 +3965,8 @@ body.image-preview-open { overflow: hidden; }
 }
 
 .recommended-games {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: .65rem;
 }
 
@@ -3974,6 +3974,8 @@ body.image-preview-open { overflow: hidden; }
   display: inline-flex;
   align-items: center;
   gap: .55rem;
+  width: fit-content;
+  max-width: 100%;
   min-height: 52px;
   padding: .35rem .75rem .35rem .35rem;
   border-radius: 999px;

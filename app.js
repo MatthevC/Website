@@ -44,7 +44,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/farymvp/clip/OddSmilingSquirrelWholeWheat-A_MEU3fIXmNVdOyC?range=7d",
     tagline: "Energia, klimat i dobra zabawa — idealny wybór, kiedy szukasz twórcy do oglądania podczas mojej nieobecności.",
     description: "Jeśli lubisz luźną atmosferę, kontakt z widzami i ekipowy vibe, to FaryMVP zdecydowanie zasługuje na uwagę.",
-    games: ["Dead by Daylight", "Euro Truck Simulator 2"]
+    games: ["Dead by Daylight", "Euro Truck Simulator 2", "Among Us"]
   },
   {
     login: "sandynpc",
@@ -64,7 +64,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/blackstaryolow/clip/AmorphousCulturedRhinocerosStrawBeary-ayKKlTh2qkwDifgx?range=all",
     tagline: "Dobra atmosfera, sprawdzony twórca i treści, które dobrze wpisują się w klimat naszej społeczności.",
     description: "Blackstaryolow to jedna z osób, które śmiało mogę polecić mojej społeczności — wbijaj, oglądaj i zostaw po sobie dobre słowo na czacie.",
-    games: ["Dead by Daylight", "R.E.P.O."]
+    games: ["Dead by Daylight", "R.E.P.O.", "Mortal Kombat X", "Mortal Kombat 11"]
   },
   {
     login: "wazzzupek",
@@ -2562,7 +2562,10 @@ function recommendedStreamersPage() {
     "Teamfight Tactics": "https://static-cdn.jtvnw.net/ttv-boxart/Teamfight%20Tactics-144x192.jpg",
     "VALORANT": "https://static-cdn.jtvnw.net/ttv-boxart/VALORANT-144x192.jpg",
     "Counter-Strike 2": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/library_600x900_2x.jpg",
-    "R.E.P.O.": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3241660/library_600x900_2x.jpg"
+    "R.E.P.O.": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3241660/library_600x900_2x.jpg",
+    "Among Us": "https://static-cdn.jtvnw.net/ttv-boxart/Among%20Us-144x192.jpg",
+    "Mortal Kombat X": "https://static-cdn.jtvnw.net/ttv-boxart/Mortal%20Kombat%20X-144x192.jpg",
+    "Mortal Kombat 11": "https://static-cdn.jtvnw.net/ttv-boxart/Mortal%20Kombat%2011-144x192.jpg"
   };
 
   const gameBoxArt = (name) => GAME_ART_MAP[name] || `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(name)}-144x192.jpg`;
