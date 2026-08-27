@@ -3562,3 +3562,146 @@ body.image-preview-open { overflow: hidden; }
     border-radius: 18px;
   }
 }
+
+
+/* ===== DIXPER — spójna paleta z resztą strony ===== */
+.dixper-page {
+  --dixper-accent: var(--red);
+  --dixper-accent-bright: #ff5a5c;
+  --dixper-accent-soft: rgba(239, 43, 45, .09);
+  --dixper-accent-border: rgba(239, 43, 45, .22);
+}
+
+.dixper-kicker,
+.dixper-section-head > span,
+.dixper-intro h1 span,
+.dixper-clean-heading > span,
+.dixper-clean-callout a,
+.dixper-compact-list a,
+.dixper-compact-list b,
+.dixper-step-copy > span,
+.dixper-limits-row strong,
+.dixper-toc-link.active span,
+.dixper-clip-index,
+.dixper-clip-meta a,
+.dixper-preview-copy small {
+  color: var(--dixper-accent-bright);
+}
+
+.dixper-primary-link {
+  background: linear-gradient(135deg, var(--red), #ff4b4d);
+  color: #fff;
+  border: 1px solid rgba(255, 117, 119, .55);
+  box-shadow: 0 12px 30px var(--red-glow);
+}
+.dixper-primary-link:hover { background: #ff393b; }
+
+.dixper-toc-track span {
+  background: linear-gradient(var(--red), #ff7173);
+}
+.dixper-toc-link.active {
+  background: var(--dixper-accent-soft);
+}
+.dixper-clean-heading > span,
+.dixper-start-number,
+.dixper-compact-list b {
+  color: var(--dixper-accent-bright);
+  background: var(--dixper-accent-soft);
+  border-color: var(--dixper-accent-border);
+}
+.dixper-clean-callout {
+  border-color: var(--dixper-accent-border);
+  background: linear-gradient(180deg, rgba(239,43,45,.055), rgba(255,255,255,.02));
+}
+.dixper-hero-copy {
+  background: radial-gradient(circle at 85% 15%, rgba(239,43,45,.13), transparent 35%), linear-gradient(135deg, rgba(31,18,19,.94), rgba(12,12,15,.98));
+}
+.dixper-method-no,
+.dixper-method-card a,
+.dixper-doc-note a,
+.dixper-tutorial-step,
+.dixper-cooldown-card strong {
+  color: var(--dixper-accent-bright);
+}
+.dixper-method-icon,
+.dixper-tutorial-step {
+  background: var(--dixper-accent-soft);
+  border-color: var(--dixper-accent-border);
+}
+.dixper-doc-note,
+.dixper-cooldown-card {
+  border-color: var(--dixper-accent-border);
+  background: rgba(239,43,45,.045);
+}
+
+/* Twitch pozostaje rozpoznawalny, ale fiolet jest przygaszony, żeby nie gryzł się z czerwienią strony. */
+.dixper-clip-placeholder {
+  background: radial-gradient(circle at 85% 15%, rgba(145,71,255,.07), transparent 38%), #0a0b0e;
+}
+.dixper-play-mark,
+.dixper-preview-play {
+  background: linear-gradient(135deg, #8e55c7, #6e3aa6);
+  box-shadow: 0 12px 30px rgba(111,58,166,.18);
+}
+.dixper-play-button {
+  border-color: rgba(145,71,255,.24);
+  background: rgba(145,71,255,.08);
+}
+.dixper-clip-meta a { color: #d3a8ff; }
+
+/* Rodzaje skrzynek — wygenerowane grafiki */
+.dixper-crates-visual {
+  gap: 1rem;
+}
+.dixper-crates-visual .dixper-crate-item {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 1rem;
+  align-items: center;
+  min-height: 154px;
+  padding: 1rem;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.018));
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.dixper-crates-visual .dixper-crate-item:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.022));
+}
+.dixper-crate-image-wrap {
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  border-radius: 16px;
+  background: radial-gradient(circle, rgba(255,255,255,.04), transparent 68%);
+}
+.dixper-crate-image {
+  width: 122px;
+  height: 122px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 16px 22px rgba(0,0,0,.35));
+}
+.dixper-crate-type {
+  display: inline-block;
+  margin-bottom: .25rem;
+  font: 800 10px Rajdhani, sans-serif;
+  letter-spacing: .15em;
+  color: #8f8f95;
+}
+.dixper-crates-visual .basic { border-color: rgba(180,180,185,.15); }
+.dixper-crates-visual .rarity { border-color: rgba(183,88,229,.20); }
+.dixper-crates-visual .skill { border-color: rgba(224,176,42,.20); }
+.dixper-crates-visual .basic:hover { border-color: rgba(220,220,225,.28); }
+.dixper-crates-visual .rarity:hover { border-color: rgba(195,100,240,.36); }
+.dixper-crates-visual .skill:hover { border-color: rgba(235,189,57,.36); }
+
+@media (max-width: 720px) {
+  .dixper-crates-visual .dixper-crate-item {
+    grid-template-columns: 96px 1fr;
+    min-height: 126px;
+  }
+  .dixper-crate-image-wrap { width: 96px; height: 96px; }
+  .dixper-crate-image { width: 92px; height: 92px; }
+}

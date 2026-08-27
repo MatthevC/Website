@@ -1150,10 +1150,19 @@ function dixperPage() {
 
             <section class="dixper-clean-section" id="dixper-crates" data-dixper-section>
               <div class="dixper-clean-heading"><span>03</span><div><h2>RODZAJE SKRZYNEK</h2><p>Każda daje 3 karty. Różni się poziomem kontroli nad tym, co dostaniesz.</p></div></div>
-              <div class="dixper-crates-minimal">
-                <article><div class="dixper-crate-symbol basic">3×</div><div><strong>Basic Crate</strong><p>3 losowe karty.</p></div></article>
-                <article><div class="dixper-crate-symbol rarity">★</div><div><strong>Rarity Crate</strong><p>3 karty, w tym jedna o wybranej rzadkości.</p></div></article>
-                <article><div class="dixper-crate-symbol skill">✓</div><div><strong>Skill Crate</strong><p>3 karty, w tym jedna konkretna wybrana przez Ciebie.</p></div></article>
+              <div class="dixper-crates-minimal dixper-crates-visual">
+                <article class="dixper-crate-item basic">
+                  <div class="dixper-crate-image-wrap"><img class="dixper-crate-image" src="pictures/dixper/dixper-basic-crate.png" alt="Basic Crate Dixper" loading="lazy"></div>
+                  <div><span class="dixper-crate-type">BASIC</span><strong>Basic Crate</strong><p>3 losowe karty.</p></div>
+                </article>
+                <article class="dixper-crate-item rarity">
+                  <div class="dixper-crate-image-wrap"><img class="dixper-crate-image" src="pictures/dixper/dixper-rarity-crate.png" alt="Rarity Crate Dixper" loading="lazy"></div>
+                  <div><span class="dixper-crate-type">RARITY</span><strong>Rarity Crate</strong><p>3 karty, w tym jedna o wybranej rzadkości.</p></div>
+                </article>
+                <article class="dixper-crate-item skill">
+                  <div class="dixper-crate-image-wrap"><img class="dixper-crate-image" src="pictures/dixper/dixper-skill-crate.png" alt="Skill Crate Dixper" loading="lazy"></div>
+                  <div><span class="dixper-crate-type">SKILL</span><strong>Skill Crate</strong><p>3 karty, w tym jedna konkretna wybrana przez Ciebie.</p></div>
+                </article>
               </div>
             </section>
 
