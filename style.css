@@ -5594,3 +5594,19 @@ body.image-preview-open { overflow: hidden; }
 .discord-app-preview-expanded .discord-live-preview-box {
   height: 70px !important;
 }
+
+
+/* Discord preview — lekko wydłużony do końca pola „poradnik” */
+.discord-app-preview-expanded {
+  height: 510px !important;
+  min-height: 510px !important;
+  max-height: 510px !important;
+}
+
+.discord-app-preview-expanded .discord-app-rail,
+.discord-app-preview-expanded .discord-app-channels,
+.discord-app-preview-expanded .discord-app-chat,
+.discord-app-preview-expanded .discord-app-members {
+  height: 510px !important;
+  max-height: 510px !important;
+}
