@@ -2136,7 +2136,7 @@ function setupGlobalPageNavigation() {
   if (currentPath.startsWith("rules/") || currentPath === "moderator/team") return;
 
   // Dixper i Bingo mają własną, ręcznie dopracowaną nawigację.
-  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal, .recommended-page")) return;
+  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal, .recommended-page, .downloads-page")) return;
 
   const panel = document.querySelector("#app .page-panel");
   if (!panel || panel.dataset.globalNavReady === "1") return;
@@ -2255,7 +2255,11 @@ function downloadsPage() {
   ];
 
   const cards = downloadItems.map((item, index) => `
-    <article class="downloads-card" id="${item.id}">
+    <article
+      class="downloads-card"
+      id="${item.id}"
+      data-collection-item
+      data-search="${escapeHtml(`${item.title} ${item.type} ${item.meta} ${item.description}`.toLowerCase())}">
       <div class="downloads-card-icon">${item.icon}</div>
       <div class="downloads-card-main">
         <div class="downloads-card-topline">
@@ -2283,15 +2287,41 @@ function downloadsPage() {
           <h1>DO <span>POBRANIA</span></h1>
           <p>Wszystko, co warto mieć pod ręką, zebrałem w jednym miejscu. Bez przekopywania Discorda — wybierasz plik i pobierasz.</p>
           <div class="downloads-summary" aria-label="Podsumowanie sekcji">
-            <span><strong>3</strong> pliki</span>
+            <span><strong>${downloadItems.length}</strong> plików</span>
             <span><strong>1</strong> miejsce</span>
             <span><strong>0</strong> zbędnego szukania</span>
           </div>
         </header>
 
-        <section class="downloads-list" aria-label="Pliki do pobrania">
+        <section class="collection-toolbar downloads-toolbar" aria-label="Wyszukiwanie i widok plików">
+          <label class="collection-search">
+            <span>WYSZUKAJ PLIK</span>
+            <div class="collection-search-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20.6 19.2-4.4-4.4a7.3 7.3 0 1 0-1.4 1.4l4.4 4.4 1.4-1.4ZM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0Z"/></svg>
+              <input id="downloads-search" type="search" placeholder="Np. ReShade, Twitch, DBD..." autocomplete="off">
+            </div>
+          </label>
+
+          <label class="collection-limit">
+            <span>PLIKÓW NA STRONIE</span>
+            <select id="downloads-page-size" aria-label="Liczba plików na stronie">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+
+          <div class="collection-summary" id="downloads-result-summary" aria-live="polite"></div>
+        </section>
+
+        <section id="downloads-list" class="downloads-list" aria-label="Pliki do pobrania">
           ${cards}
         </section>
+
+        <div id="downloads-empty" class="collection-empty" hidden>Nie znaleziono plików pasujących do wyszukiwania.</div>
+        <nav id="downloads-pagination" class="collection-pagination" aria-label="Strony plików"></nav>
 
         <section class="downloads-help">
           <div>
@@ -2535,7 +2565,10 @@ function eventCard(event) {
        </div>`;
 
   return `
-    <article class="event-card${ended ? " event-ended" : ""}">
+    <article
+      class="event-card${ended ? " event-ended" : ""}"
+      data-collection-item
+      data-search="${escapeHtml(`${event.title} ${event.excerpt || ""} ${event.content || ""} ${event.date || ""}`.toLowerCase())}">
       ${cover}
       <div class="event-body">
         <div class="event-date">${formatDate(event.date)}</div>
@@ -2561,13 +2594,151 @@ function escapeHtml(text) {
     .replaceAll("'", "&#039;");
 }
 
+
+
+function collectionPageSequence(totalPages, currentPage) {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  const pages = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+  const sorted = [...pages].filter(page => page >= 1 && page <= totalPages).sort((a, b) => a - b);
+  const result = [];
+
+  sorted.forEach((page, index) => {
+    if (index > 0 && page - sorted[index - 1] > 1) result.push("…");
+    result.push(page);
+  });
+
+  return result;
+}
+
+function setupCollectionView({ storageKey, list, searchInput, pageSizeSelect, pagination, summary, empty, itemLabel }) {
+  if (!list || !pageSizeSelect || !pagination) return;
+
+  const items = [...list.querySelectorAll("[data-collection-item]")];
+  if (!items.length) {
+    if (pagination) pagination.innerHTML = "";
+    if (summary) summary.textContent = `0 ${itemLabel}`;
+    return;
+  }
+
+  const allowedSizes = [10, 20, 30, 40, 50];
+  const savedSize = Number(localStorage.getItem(storageKey));
+  let pageSize = allowedSizes.includes(savedSize) ? savedSize : 10;
+  let currentPage = 1;
+  let query = "";
+
+  pageSizeSelect.value = String(pageSize);
+
+  const renderCollection = () => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const filtered = items.filter(item => !normalizedQuery || (item.dataset.search || item.textContent).toLowerCase().includes(normalizedQuery));
+    const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    currentPage = Math.min(currentPage, totalPages);
+
+    items.forEach(item => { item.hidden = true; });
+
+    const start = (currentPage - 1) * pageSize;
+    const visible = filtered.slice(start, start + pageSize);
+    visible.forEach(item => { item.hidden = false; });
+
+    if (empty) empty.hidden = filtered.length !== 0;
+
+    if (summary) {
+      if (!filtered.length) {
+        summary.innerHTML = `<strong>0</strong> ${itemLabel}`;
+      } else {
+        const from = start + 1;
+        const to = Math.min(start + pageSize, filtered.length);
+        summary.innerHTML = `<strong>${from}–${to}</strong> z ${filtered.length} ${itemLabel} <span>•</span> strona ${currentPage} z ${totalPages}`;
+      }
+    }
+
+    const pageButtons = collectionPageSequence(totalPages, currentPage).map(page => {
+      if (page === "…") return `<span class="collection-page-ellipsis">…</span>`;
+      return `<button type="button" class="collection-page-button${page === currentPage ? " active" : ""}" data-page="${page}" aria-label="Przejdź do strony ${page}"${page === currentPage ? ' aria-current="page"' : ""}>${page}</button>`;
+    }).join("");
+
+    pagination.innerHTML = `
+      <button type="button" class="collection-page-arrow" data-page-action="prev" ${currentPage === 1 ? "disabled" : ""} aria-label="Poprzednia strona">←</button>
+      <div class="collection-page-numbers">${pageButtons}</div>
+      <button type="button" class="collection-page-arrow" data-page-action="next" ${currentPage === totalPages ? "disabled" : ""} aria-label="Następna strona">→</button>
+    `;
+
+    pagination.querySelectorAll("[data-page]").forEach(button => {
+      button.addEventListener("click", () => {
+        currentPage = Number(button.dataset.page);
+        renderCollection();
+        list.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    pagination.querySelector('[data-page-action="prev"]')?.addEventListener("click", () => {
+      if (currentPage <= 1) return;
+      currentPage -= 1;
+      renderCollection();
+      list.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    pagination.querySelector('[data-page-action="next"]')?.addEventListener("click", () => {
+      if (currentPage >= totalPages) return;
+      currentPage += 1;
+      renderCollection();
+      list.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  searchInput?.addEventListener("input", () => {
+    query = searchInput.value;
+    currentPage = 1;
+    renderCollection();
+  });
+
+  pageSizeSelect.addEventListener("change", () => {
+    const selected = Number(pageSizeSelect.value);
+    pageSize = allowedSizes.includes(selected) ? selected : 10;
+    localStorage.setItem(storageKey, String(pageSize));
+    currentPage = 1;
+    renderCollection();
+  });
+
+  renderCollection();
+}
+
+function setupDownloadsPage() {
+  const list = document.getElementById("downloads-list");
+  if (!list) return;
+
+  setupCollectionView({
+    storageKey: "downloadsPageSize",
+    list,
+    searchInput: document.getElementById("downloads-search"),
+    pageSizeSelect: document.getElementById("downloads-page-size"),
+    pagination: document.getElementById("downloads-pagination"),
+    summary: document.getElementById("downloads-result-summary"),
+    empty: document.getElementById("downloads-empty"),
+    itemLabel: "plików"
+  });
+}
+
 async function renderEvents() {
   const events = await loadEvents();
   const list = document.getElementById("events-list");
   if (!list) return;
+
   list.innerHTML = events.length
     ? events.map(eventCard).join("")
     : `<div class="empty">Brak eventów. Dodaj pierwszy wpis w pliku <strong>events/events.json</strong>.</div>`;
+
+  setupCollectionView({
+    storageKey: "eventsPageSize",
+    list,
+    searchInput: document.getElementById("events-search"),
+    pageSizeSelect: document.getElementById("events-page-size"),
+    pagination: document.getElementById("events-pagination"),
+    summary: document.getElementById("events-result-summary"),
+    empty: document.getElementById("events-empty"),
+    itemLabel: "eventów"
+  });
 }
 
 async function renderEventDetail(id) {
@@ -2616,12 +2787,38 @@ async function render() {
 
   if (path === "events") {
     app.innerHTML = `
-      <div class="container content-wrap">
-        <div class="section-heading">
+      <div class="container content-wrap events-page">
+        <div class="section-heading events-heading">
           <div><h2>NAJNOWSZE EVENTY</h2></div>
           <p>Najnowsze wpisy na górze</p>
         </div>
+
+        <section class="collection-toolbar events-toolbar" aria-label="Wyszukiwanie i widok eventów">
+          <label class="collection-search">
+            <span>WYSZUKAJ EVENT</span>
+            <div class="collection-search-box">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20.6 19.2-4.4-4.4a7.3 7.3 0 1 0-1.4 1.4l4.4 4.4 1.4-1.4ZM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0Z"/></svg>
+              <input id="events-search" type="search" placeholder="Szukaj po nazwie, opisie lub dacie..." autocomplete="off">
+            </div>
+          </label>
+
+          <label class="collection-limit">
+            <span>EVENTÓW NA STRONIE</span>
+            <select id="events-page-size" aria-label="Liczba eventów na stronie">
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+              <option value="40">40</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+
+          <div class="collection-summary" id="events-result-summary" aria-live="polite"></div>
+        </section>
+
         <div id="events-list" class="event-list"></div>
+        <div id="events-empty" class="collection-empty" hidden>Nie znaleziono eventów pasujących do wyszukiwania.</div>
+        <nav id="events-pagination" class="collection-pagination" aria-label="Strony eventów"></nav>
       </div>
     `;
     await renderEvents();
@@ -2651,6 +2848,7 @@ async function render() {
   setupDixperPage();
   setupBingoPage();
   setupRecommendedPage();
+  setupDownloadsPage();
   setupImagePreview();
   setupGlobalPageNavigation();
   closeMobileMenu();
