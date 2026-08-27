@@ -5439,3 +5439,12 @@ body.image-preview-open { overflow: hidden; }
   .discord-app-preview-expanded { grid-template-columns:190px minmax(430px,1fr); overflow-x:auto; }
   .discord-app-preview-expanded .discord-app-rail { display:none; }
 }
+
+
+/* Discord preview — final polish */
+.discord-rail-discord-logo { width: 22px; height: 22px; fill: currentColor; }
+.discord-app-channel { text-decoration:none; cursor:pointer; }
+.discord-app-channel:hover { color:#f1f1f2; background:#2f3136; }
+.discord-channel-section[id] { scroll-margin-top: 112px; }
+.discord-members-expanded { overflow-y:auto; max-height:610px; scrollbar-width:thin; }
+.discord-alert-feed { overflow-y:auto; max-height:520px; scrollbar-width:thin; }

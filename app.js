@@ -494,7 +494,7 @@ function discordChannelsPage() {
           </div>
         </header>
 
-        <section class="discord-channel-section">
+        <section class="discord-channel-section" id="discord-role-twitch">
           <div class="discord-section-heading">
             <div>
               <span class="discord-section-number">01</span>
@@ -523,7 +523,7 @@ function discordChannelsPage() {
           </div>
         </section>
 
-        <section class="discord-channel-section">
+        <section class="discord-channel-section" id="discord-role-text">
           <div class="discord-section-heading">
             <div>
               <span class="discord-section-number">02</span>
@@ -568,7 +568,7 @@ function discordChannelsPage() {
           </div>
         </section>
 
-        <section class="discord-channel-section">
+        <section class="discord-channel-section" id="discord-role-voice">
           <div class="discord-section-heading">
             <div>
               <span class="discord-section-number">03</span>
@@ -597,7 +597,7 @@ function discordChannelsPage() {
           </div>
         </section>
 
-        <section class="discord-channel-section">
+        <section class="discord-channel-section" id="discord-role-games">
           <div class="discord-section-heading">
             <div>
               <span class="discord-section-number">04</span>
@@ -622,7 +622,7 @@ function discordChannelsPage() {
           </div>
         </section>
 
-        <section class="discord-channel-section discord-roles-section">
+        <section class="discord-channel-section discord-roles-section" id="discord-role-roles">
           <div class="discord-section-heading">
             <div>
               <span class="discord-section-number">05</span>
@@ -2255,14 +2255,16 @@ function discordJoinPage() {
 
     <div class="discord-app-preview discord-app-preview-expanded" aria-label="Przykładowy podgląd serwera MATT'S WORLD">
       <aside class="discord-app-rail" aria-label="Przykładowe ikony serwerów">
-        <div class="discord-app-home discord-rail-icon discord-rail-home">☁</div>
+        <div class="discord-app-home discord-rail-icon discord-rail-home" aria-label="Discord">
+          <svg class="discord-rail-discord-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
+        </div>
+        <div class="discord-app-server discord-rail-icon discord-current-server" data-discord-rail-server-icon>
+          <img src="pictures/logo/matthevc-monkey.png" alt="MATT'S WORLD">
+        </div>
         <div class="discord-rail-icon rail-orange">🔥</div>
         <div class="discord-rail-icon rail-red">🎮</div>
         <div class="discord-rail-icon rail-blue">⚡</div>
         <div class="discord-rail-icon rail-purple">💀</div>
-        <div class="discord-app-server discord-rail-icon discord-current-server" data-discord-rail-server-icon>
-          <img src="pictures/logo/matthevc-monkey.png" alt="MATT'S WORLD">
-        </div>
         <div class="discord-rail-icon rail-green">🧪</div>
         <div class="discord-rail-icon rail-pink">✨</div>
         <div class="discord-rail-icon rail-gold">🏆</div>
@@ -2282,40 +2284,39 @@ function discordJoinPage() {
 
         <div class="discord-app-channel-section">
           <div class="discord-app-category">TWITCH/KONFIGURACJA <b>＋</b></div>
-          <div class="discord-app-channel"><span class="channel-icon ticket">🎫</span> konfiguracja-tickets</div>
-          <div class="discord-app-channel"><span class="channel-icon megaphone">📣</span> ogłoszenia</div>
-          <div class="discord-app-channel active live"><span class="channel-icon live">●</span> live-alert <b class="channel-live-pill">LIVE</b></div>
-          <div class="discord-app-channel"><span class="channel-icon rules">☑</span> regulamin</div>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon ticket">🎫</span> konfiguracja-tickets</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon megaphone">📣</span> ogłoszenia</a>
+          <a class="discord-app-channel active live" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon live">●</span> live-alert</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon rules">☑</span> regulamin</a>
         </div>
 
         <div class="discord-app-channel-section">
           <div class="discord-app-category">TEXT CHANNELS <b>＋</b></div>
-          <div class="discord-app-channel"><span>＃</span> ogólny</div>
-          <div class="discord-app-channel"><span>🎮</span> szukam-do-gry</div>
-          <div class="discord-app-channel"><span>🖼</span> zdjęcia-grafika</div>
-          <div class="discord-app-channel"><span>🎨</span> wasze-arcydzieła</div>
-          <div class="discord-app-channel"><span>🤣</span> memy</div>
-          <div class="discord-app-channel"><span>🎬</span> wideo</div>
-          <div class="discord-app-channel"><span>✂</span> matt-klip</div>
-          <div class="discord-app-channel"><span>📚</span> poradniki</div>
-          <div class="discord-app-channel"><span>💸</span> promocje</div>
-          <div class="discord-app-channel vip"><span>◆</span> vip</div>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>＃</span> ogólny</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🎮</span> szukam-do-gry</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🖼</span> zdjęcia-grafika</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🎨</span> wasze-arcydzieła</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🤣</span> memy</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🎬</span> wideo</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>✂</span> matt-klip</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>📚</span> poradniki</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>💸</span> promocje</a>
+          <a class="discord-app-channel vip" href="#/discord/roles?jump=discord-role-roles"><span>◆</span> vip</a>
         </div>
 
         <div class="discord-app-channel-section">
           <div class="discord-app-category">VOICE ROOM <b>＋</b></div>
-          <div class="discord-app-channel"><span>🔊</span> POCZEKALNIA</div>
-          <div class="discord-app-channel"><span>🛡</span> Moderacja</div>
-          <div class="discord-app-channel"><span>🔴</span> STREAM ON</div>
-          <div class="discord-app-channel"><span>🌍</span> Global Voice</div>
-          <div class="discord-app-channel"><span>➕</span> Add Voice</div>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>🔊</span> POCZEKALNIA</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>🔴</span> STREAM ON</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>🌍</span> Global Voice</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>➕</span> Add Voice</a>
         </div>
 
         <div class="discord-app-channel-section compact">
           <div class="discord-app-category">DEAD BY DAYLIGHT <b>＋</b></div>
-          <div class="discord-app-channel"><span>📰</span> nowości</div>
-          <div class="discord-app-channel"><span>🧰</span> kodziki</div>
-          <div class="discord-app-channel"><span>📖</span> poradnik</div>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-games"><span>📰</span> nowości</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-games"><span>🧰</span> kodziki</a>
+          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-games"><span>📖</span> poradnik</a>
         </div>
       </aside>
 
@@ -2326,6 +2327,27 @@ function discordJoinPage() {
         </header>
 
         <div class="discord-app-messages discord-alert-feed">
+          <div class="discord-app-date">10 CZERWCA 2026</div>
+
+          <article class="discord-message discord-alert-message">
+            <div class="discord-avatar avatar-alert">M</div>
+            <div>
+              <div class="discord-message-meta"><strong>Ojciec Mateusz</strong><span>17:14</span></div>
+              <p>Hejka <strong>@Viewer</strong>! MatthevC właśnie wystartował — wpadasz na chwilę?</p>
+              <div class="discord-live-embed">
+                <div class="discord-live-embed-accent"></div>
+                <div class="discord-live-embed-copy">
+                  <strong>MatthevC</strong>
+                  <a href="https://www.twitch.tv/MatthevC" target="_blank" rel="noopener">Wieczorne granie ze społecznością</a>
+                  <span>Wbij na stream, pogadaj z ekipą i zobacz co dziś ogrywamy.</span>
+                  <small>Viewers 18</small>
+                </div>
+                <img src="pictures/logo/matthevc-monkey.png" alt="MatthevC">
+                <div class="discord-live-preview-box">▶</div>
+              </div>
+            </div>
+          </article>
+
           <div class="discord-app-date">12 CZERWCA 2026</div>
 
           <article class="discord-message discord-alert-message">
@@ -2367,6 +2389,27 @@ function discordJoinPage() {
               </div>
             </div>
           </article>
+
+          <div class="discord-app-date">17 CZERWCA 2026</div>
+
+          <article class="discord-message discord-alert-message">
+            <div class="discord-avatar avatar-alert">M</div>
+            <div>
+              <div class="discord-message-meta"><strong>Ojciec Mateusz</strong><span>15:49</span></div>
+              <p><strong>@Viewer</strong> — nowy stream właśnie ruszył. Wbijasz?</p>
+              <div class="discord-live-embed">
+                <div class="discord-live-embed-accent"></div>
+                <div class="discord-live-embed-copy">
+                  <strong>MatthevC</strong>
+                  <a href="https://www.twitch.tv/MatthevC" target="_blank" rel="noopener">Dzisiaj gramy razem</a>
+                  <span>Lobby, community i trochę chaosu — wpadaj.</span>
+                  <small>Viewers 24</small>
+                </div>
+                <img src="pictures/logo/matthevc-monkey.png" alt="MatthevC">
+                <div class="discord-live-preview-box">▶</div>
+              </div>
+            </div>
+          </article>
         </div>
 
         <div class="discord-app-composer">＋ <span>Napisz na # live-alert</span><b>🎁　😊　＋</b></div>
@@ -2394,39 +2437,35 @@ function discordJoinPage() {
         <div class="discord-member"><span class="member-avatar vip avatar-teal">P</span><div><strong class="role-vip">PrzemisforMM</strong><small>● online</small></div></div>
         <div class="discord-member"><span class="member-avatar vip avatar-orange">B</span><div><strong class="role-vip">Brilian</strong><small>VIP</small></div></div>
 
-        <div class="discord-member-group">VIEWER — 45</div>
-        <div class="discord-member"><span class="member-avatar avatar-blue">A</span><div><strong>Albert Weser</strong><small>● online</small></div></div>
+        <div class="discord-member-group">VIEWER — 47</div>
+        <div class="discord-member"><span class="member-avatar avatar-gray">P</span><div><strong>.Pan_Niemowa</strong><small>🎮 ROBLOX</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-blue">X</span><div><strong>xMMKPLx</strong><small>😎 online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-green">A</span><div><strong>Albert Wesker</strong><small>● online</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-purple">A</span><div><strong>amel_xa</strong><small>● online</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-red">A</span><div><strong>Arces</strong><small>🎮 gra</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-green">B</span><div><strong>bartesonyt</strong><small>● online</small></div></div>
-        <div class="discord-member muted"><span class="member-avatar avatar-gold">B</span><div><strong>Becui</strong><small>offline</small></div></div>
-        <div class="discord-member muted"><span class="member-avatar avatar-pink">K</span><div><strong>korcia</strong><small>offline</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-gold">B</span><div><strong>Bc@ii</strong><small>🎮 online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-pink">B</span><div><strong>Border kicia X...</strong><small>💞 Wkibot in progress</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-orange">B</span><div><strong>Brilian</strong><small>● online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-teal">C</span><div><strong>cardi</strong><small>🌻 online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-red">C</span><div><strong>Centi</strong><small>🎮 online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-pink">C</span><div><strong>Ciocia_Alicja&lt;33</strong><small>👀 online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-red">D</span><div><strong>Deli</strong><small>● online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-gray">D</span><div><strong>Dżoker</strong><small>online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-green">G</span><div><strong>Grom</strong><small>🎮 online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-pink">G</span><div><strong>gucio1_</strong><small>● online</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-gold">H</span><div><strong>HugeEgo&amp;ToxicP...</strong><small>🎮 Screen Recording</small></div></div>
+        <div class="discord-member"><span class="member-avatar avatar-purple">H</span><div><strong>Hyuki</strong><small>🎮 Overwatch 2</small></div></div>
       </aside>
     </div>
 
-    <div class="discord-showcase-footer">
-      <div><span class="online-dot"></span><strong data-discord-online-count>—</strong><small>osób online teraz</small></div>
-      <div><span class="member-dot"></span><strong data-discord-member-count>—</strong><small>członków społeczności</small></div>
-      <a id="discord-widget-invite" href="#" target="_blank" rel="noopener">DOŁĄCZ I ZOBACZ PEŁNY SERWER →</a>
-    </div>
   </div>
 </section>
 
-<section class="discord-configure-section" id="discord-configure">
-          <div class="discord-configure-icon" aria-hidden="true">⚙</div>
-          <div class="discord-configure-copy">
-            <span>02 / TWÓJ DISCORD, TWOJE ZASADY</span>
-            <h2>ZACZNIJ OD <strong>#konfiguracja-tickets</strong></h2>
-            <p>Po wejściu na serwer koniecznie zajrzyj na kanał <strong>#konfiguracja-tickets</strong>. To właśnie tam możesz dopasować Discorda pod siebie — wybrać interesujące Cię gry i powiadomienia, ograniczyć kanały, których nie potrzebujesz, oraz ustawić serwer tak, żeby był dla Ciebie wygodny zamiast przeładowany.</p>
-            <p class="discord-configure-highlight">Kilka kliknięć na początku i później widzisz przede wszystkim to, co naprawdę Cię interesuje.</p>
-          </div>
-          <a class="discord-configure-button" id="discord-configure-invite" href="#" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
-        </section>
-
-        <section class="discord-join-steps" id="discord-steps">
+<section class="discord-join-steps" id="discord-steps">
           <div class="discord-section-title">
             <div>
-              <span>03 / START</span>
+              <span>02 / START</span>
               <h2>TRZY KROKI I JESTEŚ U SIEBIE</h2>
             </div>
           </div>
@@ -2436,6 +2475,19 @@ function discordJoinPage() {
             <article><b>03</b><div><h3>WPADAJ DO EKIPY</h3><p>Napisz na ogólnym, znajdź osoby do gry albo po prostu obserwuj, co aktualnie dzieje się w społeczności.</p></div></article>
           </div>
         </section>
+
+<section class="discord-configure-section" id="discord-configure">
+          <div class="discord-configure-icon" aria-hidden="true">⚙</div>
+          <div class="discord-configure-copy">
+            <span>03 / TWÓJ DISCORD, TWOJE ZASADY</span>
+            <h2>ZACZNIJ OD <strong>#konfiguracja-tickets</strong></h2>
+            <p>Po wejściu na serwer koniecznie zajrzyj na kanał <strong>#konfiguracja-tickets</strong>. To właśnie tam możesz dopasować Discorda pod siebie — wybrać interesujące Cię gry i powiadomienia, ograniczyć kanały, których nie potrzebujesz, oraz ustawić serwer tak, żeby był dla Ciebie wygodny zamiast przeładowany.</p>
+            <p class="discord-configure-highlight">Kilka kliknięć na początku i później widzisz przede wszystkim to, co naprawdę Cię interesuje.</p>
+          </div>
+          <a class="discord-configure-button" id="discord-configure-invite" href="#" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
+        </section>
+
+        
       </div>
     </div>
   `;
@@ -2995,7 +3047,9 @@ async function renderEventDetail(id) {
 
 async function render() {
   const raw = location.hash.replace(/^#\/?/, "");
-  const path = raw.replace(/^\/+|\/+$/g, "") || "";
+  const [rawPath, rawQuery = ""] = raw.split("?");
+  const path = rawPath.replace(/^\/+|\/+$/g, "") || "";
+  const routeQuery = new URLSearchParams(rawQuery);
   const eventMatch = path.match(/^events\/(.+)$/);
 
   if (eventMatch) {
@@ -3074,6 +3128,8 @@ async function render() {
   setupDownloadsPage();
   setupImagePreview();
   setupGlobalPageNavigation();
+  const jumpTarget = routeQuery.get("jump");
+  if (jumpTarget) requestAnimationFrame(() => document.getElementById(jumpTarget)?.scrollIntoView({ behavior: "smooth", block: "start" }));
   closeMobileMenu();
 }
 
