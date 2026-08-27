@@ -56,10 +56,11 @@ const pages = {
               <p>Dołącz do naszej społeczności, poznaj ludzi, korzystaj z kanałów i bądź na bieżąco z tym, co dzieje się w MATT'S WORLD.</p>
               <a class="red-link" id="hero-discord-link" href="#" target="_blank" rel="noopener">DOŁĄCZ NA DISCORDA →</a>
             </div>
-            <div class="side-card">
-              <h3>EVENTY</h3>
-              <p>Najnowsze informacje o eventach znajdziesz w naszym blogu. Najnowsze wpisy są zawsze na górze.</p>
-              <a class="red-link" href="#/events">ZOBACZ EVENTY →</a>
+            <div class="side-card contact-home-card">
+              <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
+              <h3>WNIOSKI / KONTAKT</h3>
+              <p>Wyślij prośbę o unbana, skargę lub zażalenie. Możesz też przesłać propozycję, zgłoszenie albo inną wiadomość do ekipy.</p>
+              <a class="red-link" href="#/contact">PRZEJDŹ DO FORMULARZA →</a>
             </div>
           </aside>
         </div>
@@ -89,10 +90,10 @@ const pages = {
             <h3>DIXPER</h3>
             <p>Informacje o interakcjach, akcjach i zabawie podczas streama.</p>
           </a>
-          <a class="quick-card" href="#/rules/general">
-            <div class="num">04 / REGULAMINY</div>
-            <h3>REGULAMIN OGÓLNY</h3>
-            <p>Najważniejsze zasady obowiązujące w naszej społeczności.</p>
+          <a class="quick-card" href="#/viewer/bingo">
+            <div class="num">04 / DLA WIDZA</div>
+            <h3>BINGO</h3>
+            <p>Sprawdź zasady Stream Bounty, sposób dołączenia do gry i informacje o rozgrywce Bingo.</p>
           </a>
         </div>
 
@@ -195,7 +196,7 @@ const pages = {
   },
 
   contact: {
-    title: "KONTAKT / <span>WNIOSKI</span>",
+    title: "WNIOSKI / <span>KONTAKT</span>",
     body: contactPage()
   }
 };
@@ -2137,8 +2138,8 @@ function contactPage() {
     <div class="container content-wrap">
       <div class="page-panel contact-panel">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
-        <h1>KONTAKT / <span>WNIOSKI</span></h1>
-        <p>Masz pytanie, propozycję, chcesz zgłosić swoją kandydaturę albo skontaktować się w sprawie współpracy? Wypełnij formularz, a wiadomość trafi na adres kontaktowy MATT'S WORLD.</p>
+        <h1>WNIOSKI / <span>KONTAKT</span></h1>
+        <p>Chcesz wysłać prośbę o unbana, skargę lub zażalenie? Tutaj możesz też przesłać propozycję, zgłosić kandydaturę, skontaktować się w sprawie współpracy albo napisać w innej sprawie. Wypełnij formularz, a wiadomość trafi do ekipy MATT'S WORLD.</p>
 
         <form id="contact-form" class="contact-form">
           <div class="form-grid">
