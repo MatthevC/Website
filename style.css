@@ -3518,14 +3518,7 @@ body.image-preview-open { overflow: hidden; }
 }
 
 .quick-card::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 74px;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--red));
-  opacity: .9;
+  display: none;
 }
 
 .quick-card:hover {
