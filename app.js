@@ -143,6 +143,11 @@ const pages = {
             <h3>POLECANI STREAMERZY</h3>
             <p>Sprawdź twórców, których polecam oglądać podczas mojej nieobecności.</p>
           </a>
+          <a class="quick-card" href="#/downloads">
+            <div class="num">06 / PRZYDATNE PLIKI</div>
+            <h3>DO POBRANIA</h3>
+            <p>Presety ReShade i materiały zebrane w jednym, przejrzystym miejscu.</p>
+          </a>
         </div>
 
         <div class="section-heading">
@@ -246,6 +251,11 @@ const pages = {
   recommended: {
     title: "SPOŁECZNOŚĆ / <span>POLECANI STREAMERZY</span>",
     body: recommendedStreamersPage()
+  },
+
+  downloads: {
+    title: "PRZYDATNE / <span>DO POBRANIA</span>",
+    body: downloadsPage()
   },
 
   contact: {
@@ -2209,6 +2219,91 @@ function discordJoinPage() {
 
 
 
+
+
+function downloadsPage() {
+  const downloadItems = [
+    {
+      id: "download-twitch-words",
+      type: "TXT",
+      meta: "6 KB • REGULAMIN TWITCH",
+      title: "Zakazane słowa na Twitchu",
+      description: "Czytelna lista słów i zwrotów powiązana z naszym regulaminem Twitch. Przydatna dla widzów, moderatorów i osób, które chcą szybko sprawdzić zasady.",
+      href: "downloads/twitch-zakazane-slowa-i-zwroty.txt",
+      secondaryHref: "#/rules/twitch",
+      secondaryLabel: "ZOBACZ REGULAMIN",
+      icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 5v6.2c0 4.7 3 8.9 7.5 10.8 4.5-1.9 7.5-6.1 7.5-10.8V5L12 2Zm0 2.2 5.4 2.1v4.9c0 3.7-2.1 7-5.4 8.6-3.3-1.6-5.4-4.9-5.4-8.6V6.3L12 4.2Zm-1 4h2v5h-2v-5Zm0 6.4h2v2h-2v-2Z"/></svg>`
+    },
+    {
+      id: "download-matt-reshade",
+      type: "INI",
+      meta: "4 KB • PRESET RESHADE",
+      title: "MattCreshade.ini",
+      description: "Uniwersalny preset ReShade od Matta. Gotowy plik konfiguracyjny do pobrania bez szukania ustawień po Discordzie i wiadomościach.",
+      href: "downloads/MattCreshade.ini",
+      icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h10v2H4V5Zm0 6h16v2H4v-2Zm0 6h12v2H4v-2Zm13-13h3v4h-3V4ZM9 10h3v4H9v-4Zm9 6h3v4h-3v-4Z"/></svg>`
+    },
+    {
+      id: "download-dbd-reshade",
+      type: "ZIP",
+      meta: "511 KB • DEAD BY DAYLIGHT",
+      title: "Reshade Filters DBD",
+      description: "Paczka filtrów ReShade od KinightLighta, polecana w społeczności Dead by Daylight. Wszystkie pliki są spakowane w jednym archiwum ZIP.",
+      href: "downloads/Reshade Filters DBD.zip",
+      icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h9l5 5v13H5V3Zm2 2v14h10V9h-4V5H7Zm8 .8V7h1.2L15 5.8ZM9 9h2v2H9V9Zm2 2h2v2h-2v-2Zm-2 2h2v2H9v-2Zm2 2h2v2h-2v-2Z"/></svg>`
+    }
+  ];
+
+  const cards = downloadItems.map((item, index) => `
+    <article class="downloads-card" id="${item.id}">
+      <div class="downloads-card-icon">${item.icon}</div>
+      <div class="downloads-card-main">
+        <div class="downloads-card-topline">
+          <span class="downloads-type">${item.type}</span>
+          <span class="downloads-meta">${item.meta}</span>
+        </div>
+        <h2>${item.title}</h2>
+        <p>${item.description}</p>
+        <div class="downloads-actions">
+          <a class="downloads-primary" href="${item.href}" download>POBIERZ PLIK ↓</a>
+          ${item.secondaryHref ? `<a class="downloads-secondary" href="${item.secondaryHref}">${item.secondaryLabel} →</a>` : ""}
+        </div>
+      </div>
+      <div class="downloads-card-number">0${index + 1}</div>
+    </article>
+  `).join("");
+
+  return `
+    <div class="container content-wrap downloads-page">
+      <div class="page-panel downloads-panel">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <header class="downloads-hero">
+          <div class="downloads-kicker">PLIKI DLA SPOŁECZNOŚCI</div>
+          <h1>DO <span>POBRANIA</span></h1>
+          <p>Wszystko, co warto mieć pod ręką, zebrałem w jednym miejscu. Bez przekopywania Discorda — wybierasz plik i pobierasz.</p>
+          <div class="downloads-summary" aria-label="Podsumowanie sekcji">
+            <span><strong>3</strong> pliki</span>
+            <span><strong>1</strong> miejsce</span>
+            <span><strong>0</strong> zbędnego szukania</span>
+          </div>
+        </header>
+
+        <section class="downloads-list" aria-label="Pliki do pobrania">
+          ${cards}
+        </section>
+
+        <section class="downloads-help">
+          <div>
+            <span class="downloads-help-label">WAŻNE</span>
+            <h2>PLIKI POBIERASZ BEZPOŚREDNIO ZE STRONY</h2>
+            <p>Jeżeli przeglądarka zamiast pobrać plik otworzy jego podgląd, użyj opcji „Zapisz jako” albo przycisku pobierania w przeglądarce.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  `;
+}
 
 function recommendedStreamersPage() {
   const clipParent = location.hostname || "matthevc.github.io";

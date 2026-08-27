@@ -4322,3 +4322,245 @@ body.image-preview-open { overflow: hidden; }
     scroll-margin-top: 136px;
   }
 }
+
+
+/* ===== DO POBRANIA ===== */
+.downloads-panel {
+  overflow: visible;
+}
+
+.downloads-hero {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  padding: 28px;
+  border: 1px solid #303030;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(239,43,45,.15), transparent 30%),
+    linear-gradient(135deg, #171717, #101010);
+}
+
+.downloads-hero::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -85px;
+  bottom: -120px;
+  border: 1px solid rgba(239,43,45,.18);
+  transform: rotate(45deg);
+}
+
+.downloads-kicker,
+.downloads-help-label {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  color: var(--red);
+  font: 800 11px Rajdhani, sans-serif;
+  letter-spacing: 1.6px;
+}
+
+.downloads-hero h1 {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 8px;
+  font: 700 clamp(38px, 5vw, 58px)/.95 Rajdhani, sans-serif;
+  text-transform: uppercase;
+}
+
+.downloads-hero h1 span { color: var(--red); }
+
+.downloads-hero > p {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0;
+  color: #aaa;
+  line-height: 1.65;
+}
+
+.downloads-summary {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.downloads-summary span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid #323232;
+  background: rgba(0,0,0,.24);
+  color: #8f8f8f;
+  font-size: 12px;
+}
+
+.downloads-summary strong {
+  color: #fff;
+  font: 800 18px Rajdhani, sans-serif;
+}
+
+.downloads-list {
+  display: grid;
+  gap: 10px;
+}
+
+.downloads-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 64px minmax(0,1fr) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid #2d2d2d;
+  background: linear-gradient(145deg, #161616, #101010);
+  transition: border-color .2s ease, transform .2s ease, background .2s ease;
+  scroll-margin-top: 112px;
+}
+
+.downloads-card:hover {
+  transform: translateY(-2px);
+  border-color: #5b2426;
+  background: linear-gradient(145deg, #181414, #101010);
+}
+
+.downloads-card-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #493033;
+  background: rgba(239,43,45,.07);
+  color: var(--red);
+}
+
+.downloads-card-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+}
+
+.downloads-card-topline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.downloads-type {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  background: var(--red);
+  color: #fff;
+  font: 800 10px Rajdhani, sans-serif;
+  letter-spacing: 1px;
+}
+
+.downloads-meta {
+  color: #6f6f6f;
+  font: 700 10px Rajdhani, sans-serif;
+  letter-spacing: .7px;
+}
+
+.downloads-card h2 {
+  margin: 0 0 5px;
+  font: 700 25px Rajdhani, sans-serif;
+}
+
+.downloads-card p {
+  max-width: 780px;
+  margin: 0;
+  color: #969696;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+.downloads-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.downloads-primary,
+.downloads-secondary {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  font: 800 11px Rajdhani, sans-serif;
+  letter-spacing: .45px;
+}
+
+.downloads-primary {
+  border: 1px solid #ff6668;
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(239,43,45,.12);
+}
+
+.downloads-primary:hover { background: #ff393b; }
+
+.downloads-secondary {
+  border: 1px solid #343434;
+  background: #141414;
+  color: #bdbdbd;
+}
+
+.downloads-secondary:hover {
+  color: #fff;
+  border-color: #555;
+}
+
+.downloads-card-number {
+  padding-top: 4px;
+  color: #454545;
+  font: 800 24px Rajdhani, sans-serif;
+  letter-spacing: 1px;
+}
+
+.downloads-help {
+  margin-top: 10px;
+  padding: 20px;
+  border: 1px dashed #343434;
+  background: #101010;
+}
+
+.downloads-help h2 {
+  margin: 4px 0 4px;
+  font: 700 20px Rajdhani, sans-serif;
+}
+
+.downloads-help p {
+  margin: 0;
+  color: #858585;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .downloads-hero { padding: 20px; }
+  .downloads-card {
+    grid-template-columns: 52px minmax(0,1fr);
+    gap: 13px;
+    padding: 16px;
+  }
+  .downloads-card-icon {
+    width: 50px;
+    height: 50px;
+  }
+  .downloads-card-number { display: none; }
+  .downloads-actions { grid-column: 1 / -1; }
+  .downloads-primary,
+  .downloads-secondary { flex: 1 1 170px; }
+}
