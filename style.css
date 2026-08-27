@@ -3705,3 +3705,92 @@ body.image-preview-open { overflow: hidden; }
   .dixper-crate-image-wrap { width: 96px; height: 96px; }
   .dixper-crate-image { width: 92px; height: 92px; }
 }
+
+/* ===== DIXPER — mocniejsza czerwień jak na pozostałych podstronach ===== */
+.dixper-page {
+  --dixper-accent: #ef2b2d;
+  --dixper-accent-bright: #ef2b2d;
+  --dixper-accent-soft: rgba(239, 43, 45, .17);
+  --dixper-accent-border: rgba(239, 43, 45, .46);
+}
+
+.dixper-kicker,
+.dixper-section-head > span,
+.dixper-intro h1 span,
+.dixper-clean-callout a,
+.dixper-compact-list a,
+.dixper-step-copy > span,
+.dixper-limits-row strong,
+.dixper-method-no,
+.dixper-method-card a,
+.dixper-doc-note a,
+.dixper-cooldown-card strong,
+.dixper-clip-index,
+.dixper-preview-copy small {
+  color: var(--red);
+}
+
+.dixper-primary-link {
+  background: var(--red);
+  border-color: #ff6668;
+  box-shadow: 0 0 25px var(--red-glow);
+  color: #fff;
+}
+
+.dixper-primary-link:hover {
+  background: #ff393b;
+}
+
+.dixper-clean-heading > span,
+.dixper-start-number,
+.dixper-compact-list b {
+  color: #fff;
+  background: var(--red);
+  border-color: #ff6668;
+  box-shadow: 0 8px 22px rgba(239,43,45,.18);
+}
+
+.dixper-toc-link.active {
+  color: #fff;
+  background: rgba(239,43,45,.16);
+  box-shadow: inset 3px 0 0 var(--red);
+}
+
+.dixper-toc-link.active span {
+  color: #ff6668;
+}
+
+.dixper-toc-track span {
+  background: var(--red);
+}
+
+.dixper-clean-callout {
+  border-color: #5b2426;
+  background:
+    linear-gradient(90deg, rgba(239,43,45,.12), rgba(239,43,45,.035) 38%, rgba(255,255,255,.018));
+  box-shadow: inset 3px 0 0 var(--red);
+}
+
+.dixper-method-icon,
+.dixper-tutorial-step {
+  color: #fff;
+  background: rgba(239,43,45,.15);
+  border-color: rgba(239,43,45,.42);
+}
+
+.dixper-doc-note,
+.dixper-cooldown-card {
+  border-color: rgba(239,43,45,.38);
+  background: rgba(239,43,45,.08);
+}
+
+.dixper-hero-copy {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(239,43,45,.20), transparent 36%),
+    linear-gradient(135deg, #1d1213, #0c0c0f 72%);
+}
+
+/* Fiolet zostaje wyłącznie przy klipach Twitcha. */
+.dixper-clip-meta a {
+  color: #c9a7f7;
+}
