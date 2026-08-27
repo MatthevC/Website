@@ -2352,26 +2352,6 @@ function discordJoinPage() {
         </header>
 
         <div class="discord-app-messages discord-alert-feed">
-          <div class="discord-app-date">10 CZERWCA 2026</div>
-
-          <article class="discord-message discord-alert-message">
-            <div class="discord-avatar avatar-alert">M</div>
-            <div>
-              <div class="discord-message-meta"><strong>Ojciec Mateusz</strong><span>17:14</span></div>
-              <p>Hejka <strong>@Viewer</strong>! MatthevC właśnie wystartował — wpadasz na chwilę?</p>
-              <div class="discord-live-embed">
-                <div class="discord-live-embed-accent"></div>
-                <div class="discord-live-embed-copy">
-                  <strong>MatthevC</strong>
-                  <a href="https://www.twitch.tv/MatthevC" target="_blank" rel="noopener">Wieczorne granie ze społecznością</a>
-                  <span>Wbij na stream, pogadaj z ekipą i zobacz co dziś ogrywamy.</span>
-                  <small>Viewers 18</small>
-                </div>
-                <img src="pictures/logo/matthevc-monkey.png" alt="MatthevC">
-                <div class="discord-live-preview-box">▶</div>
-              </div>
-            </div>
-          </article>
 
           <div class="discord-app-date">12 CZERWCA 2026</div>
 
@@ -2425,33 +2405,25 @@ function discordJoinPage() {
         <div class="discord-member-group">STREAMER — 1</div>
         <div class="discord-member"><img class="member-avatar member-photo streamer" src="pictures/logo/matthevc-monkey.png" alt="MatthevC"><div><strong class="role-streamer">MatthevC</strong><small>● streamer</small></div></div>
 
-        <div class="discord-member-group">MODERACJA — 3</div>
+        <div class="discord-member-group">MODERACJA — 4</div>
         <div class="discord-member"><img class="member-avatar member-photo mod" src="pictures/moderators/blackstaryolow.webp" alt="BlackStaryolow"><div><strong class="role-mod">BlackStaryolow</strong><small>Moderator główny</small></div></div>
-        <div class="discord-member"><img class="member-avatar member-photo mod" src="pictures/moderators/xorzech112.webp" alt="xorzech112"><div><strong class="role-mod">orzech</strong><small>Moderator</small></div></div>
-        <div class="discord-member"><img class="member-avatar member-photo mod" src="pictures/moderators/texturalorc.webp" alt="texturalorc"><div><strong class="role-mod">textural_</strong><small>Moderator</small></div></div>
+        <div class="discord-member"><img class="member-avatar member-photo mod" src="pictures/moderators/xorzech112.webp" alt="xorzech112"><div><strong class="role-mod">orzech</strong><small>Koordynator eventów</small></div></div>
+        <div class="discord-member"><img class="member-avatar member-photo mod" src="pictures/moderators/x_aeriel.webp" alt="x_aeriel"><div><strong class="role-mod">x_aeriel</strong><small>Opiekunka społeczności</small></div></div>
+        <div class="discord-member"><img class="member-avatar member-photo mod" src="pictures/moderators/texturalorc.webp" alt="texturalorc"><div><strong class="role-mod">textural_</strong><small>Strażnik Discorda</small></div></div>
 
-        <div class="discord-member-group">VIP — 5</div>
+        <div class="discord-member-group">VIP — 4</div>
         <div class="discord-member"><span class="member-avatar vip avatar-purple">N</span><div><strong class="role-vip">Nightmare</strong><small>🎮 Dead by Daylight</small></div></div>
         <div class="discord-member"><span class="member-avatar vip avatar-pink">S</span><div><strong class="role-vip">SandyNPC</strong><small>● online</small></div></div>
         <div class="discord-member"><span class="member-avatar vip avatar-green">W</span><div><strong class="role-vip">wazzzupek</strong><small>● online</small></div></div>
-        <div class="discord-member"><span class="member-avatar vip avatar-gold">R</span><div><strong class="role-vip">Ramksio</strong><small>🎮 gra ze społecznością</small></div></div>
-        <div class="discord-member"><span class="member-avatar vip avatar-blue">T</span><div><strong class="role-vip">Teren</strong><small>● online</small></div></div>
+        <div class="discord-member"><span class="member-avatar vip avatar-gold">R</span><div><strong class="role-vip">Ramksio</strong><small>🎮 ze społecznością</small></div></div>
 
-        <div class="discord-member-group">VIEWER — 14</div>
+        <div class="discord-member-group">VIEWER — 6</div>
         <div class="discord-member"><span class="member-avatar avatar-gray">P</span><div><strong>.Pan_Niemowa</strong><small>🎮 ROBLOX</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-blue">X</span><div><strong>xMMKPLx</strong><small>😎 online</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-green">A</span><div><strong>Albert Wesker</strong><small>● online</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-purple">A</span><div><strong>amel_xa</strong><small>● online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-red">A</span><div><strong>Arces</strong><small>🎮 gra</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-green">B</span><div><strong>bartesonyt</strong><small>● online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-gold">B</span><div><strong>Bc@ii</strong><small>🎮 online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-pink">B</span><div><strong>Border kicia X...</strong><small>💞 Wkibot in progress</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-teal">C</span><div><strong>cardi</strong><small>🌻 online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-red">C</span><div><strong>Centi</strong><small>🎮 online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-pink">C</span><div><strong>Ciocia_Alicja&lt;33</strong><small>👀 online</small></div></div>
         <div class="discord-member"><span class="member-avatar avatar-red">D</span><div><strong>Deli</strong><small>● online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-green">G</span><div><strong>Grom</strong><small>🎮 online</small></div></div>
-        <div class="discord-member"><span class="member-avatar avatar-purple">H</span><div><strong>Hyuki</strong><small>🎮 Overwatch 2</small></div></div>
       </aside>
     </div>
 

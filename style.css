@@ -5537,3 +5537,55 @@ body.image-preview-open { overflow: hidden; }
   display: block;
   margin: 0 auto;
 }
+
+
+/* Discord preview — końcowe wyrównanie do ostatniego kanału */
+.discord-app-preview-expanded {
+  height: 472px !important;
+  min-height: 472px !important;
+  max-height: 472px !important;
+  overflow: hidden !important;
+  align-items: stretch !important;
+}
+
+.discord-app-preview-expanded .discord-app-rail,
+.discord-app-preview-expanded .discord-app-channels,
+.discord-app-preview-expanded .discord-app-chat,
+.discord-app-preview-expanded .discord-app-members {
+  height: 472px !important;
+  max-height: 472px !important;
+  overflow: hidden !important;
+  align-self: stretch !important;
+}
+
+.discord-app-preview-expanded .discord-app-chat {
+  grid-template-rows: 46px minmax(0,1fr) 48px !important;
+}
+
+.discord-app-preview-expanded .discord-alert-feed,
+.discord-app-preview-expanded .discord-members-expanded {
+  overflow: hidden !important;
+  max-height: none !important;
+}
+
+.discord-app-preview-expanded .discord-member {
+  min-height: 27px !important;
+  padding-block: .12rem !important;
+}
+
+.discord-app-preview-expanded .discord-member-group {
+  margin: .38rem 0 .18rem !important;
+}
+
+.discord-app-preview-expanded .member-avatar {
+  width: 24px !important;
+  height: 24px !important;
+  flex-basis: 24px !important;
+}
+
+.discord-app-preview-expanded .discord-member strong { font-size: 8.8px !important; }
+.discord-app-preview-expanded .discord-member small { font-size: 6.8px !important; }
+
+.discord-app-preview-expanded .discord-live-preview-box {
+  height: 70px !important;
+}
