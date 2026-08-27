@@ -2237,67 +2237,51 @@ function discordJoinPage() {
           </div>
         </header>
 
-        <section class="discord-preview-section" id="discord-preview">
-          <div class="discord-section-title">
-            <div>
-              <span>01 / PODGLĄD SERWERA</span>
-              <h2>ZOBACZ, CO CZEKA NA CIEBIE W ŚRODKU</h2>
-            </div>
-            <p>Krótki podgląd najważniejszych miejsc na serwerze. Pełny opis wszystkich kanałów znajdziesz w osobnej podstronie.</p>
-          </div>
+<section class="discord-preview-section" id="discord-preview">
+  <div class="discord-section-title">
+    <div>
+      <span>01 / PODGLĄD SERWERA</span>
+      <h2>NASZ DISCORD — NA ŻYWO</h2>
+    </div>
+    <p>To oficjalny widget Discorda. Jeśli widget serwera jest włączony, zobaczysz tutaj aktualną nazwę, osoby online oraz udostępnione kanały.</p>
+  </div>
 
-          <div class="discord-widget-shell">
-            <aside class="discord-widget-rail" aria-hidden="true">
-              <div class="discord-widget-server-logo">M</div>
-              <span></span><span></span><span></span>
-            </aside>
+  <div class="discord-live-widget-layout">
+    <div class="discord-live-widget-card discord-live-widget-card-embedded">
+      <iframe
+        src="https://discord.com/widget?id=1284861826990866432&theme=dark"
+        width="350"
+        height="500"
+        allowtransparency="true"
+        frameborder="0"
+        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+        class="discord-official-widget"
+        title="Podgląd serwera Discord MATT'S WORLD">
+      </iframe>
+    </div>
 
-            <div class="discord-widget-main">
-              <div class="discord-widget-topbar">
-                <div>
-                  <strong data-discord-widget-name>MATT'S WORLD</strong>
-                  <span>Podgląd społeczności</span>
-                </div>
-                <div class="discord-widget-live"><i></i><span data-discord-widget-online>online: —</span></div>
-              </div>
+    <aside class="discord-live-widget-info">
+      <div class="discord-live-widget-info-card">
+        <span>CO MOŻE POKAZAĆ WIDGET?</span>
+        <ul>
+          <li>aktualną nazwę i ikonę serwera,</li>
+          <li>liczbę osób online,</li>
+          <li>publicznie udostępnione kanały,</li>
+          <li>osoby widoczne w publicznym widgetcie,</li>
+          <li>bezpośredni przycisk dołączenia.</li>
+        </ul>
+      </div>
 
-              <div class="discord-widget-content">
-                <div class="discord-widget-channels">
-                  <div class="discord-widget-category">
-                    <strong>TWITCH / KONFIGURACJA</strong>
-                    <a href="#/discord/roles"><span>#</span> konfiguracja-tickets</a>
-                    <a href="#/discord/roles"><span>#</span> ogłoszenia</a>
-                    <a href="#/discord/roles"><span>#</span> live-alert</a>
-                    <a href="#/discord/roles"><span>#</span> regulamin</a>
-                  </div>
-                  <div class="discord-widget-category">
-                    <strong>TEXT CHANNELS</strong>
-                    <a href="#/discord/roles"><span>#</span> ogólny</a>
-                    <a href="#/discord/roles"><span>#</span> szukam-do-gry</a>
-                    <a href="#/discord/roles"><span>#</span> memy</a>
-                    <a href="#/discord/roles"><span>#</span> matt-klip</a>
-                  </div>
-                  <div class="discord-widget-category">
-                    <strong>VOICE ROOM</strong>
-                    <a href="#/discord/roles"><span>🔊</span> POCZEKALNIA</a>
-                    <a class="active" href="#/discord/roles"><span>🔴</span> STREAM ON</a>
-                    <a href="#/discord/roles"><span>🔊</span> Global Voice</a>
-                  </div>
-                </div>
+      <div class="discord-live-widget-info-card accent">
+        <span>NAJPIERW USTAW SERWER POD SIEBIE</span>
+        <h3>#konfiguracja-tickets</h3>
+        <p>Po dołączeniu zajrzyj właśnie tam. W kilka chwil wybierzesz interesujące Cię gry, role i powiadomienia, dzięki czemu Discord będzie pokazywał przede wszystkim to, co faktycznie chcesz widzieć.</p>
+      </div>
+    </aside>
+  </div>
+</section>
 
-                <div class="discord-widget-welcome">
-                  <div class="discord-widget-welcome-icon">👋</div>
-                  <span>WITAJ W MATT'S WORLD</span>
-                  <h3>Znajdź swoje miejsce</h3>
-                  <p>Rozmawiaj, szukaj ekipy do gry, śledź eventy i wybierz kanały, które naprawdę chcesz widzieć.</p>
-                  <a id="discord-widget-invite" href="#" target="_blank" rel="noopener">DOŁĄCZ TERAZ →</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="discord-configure-section" id="discord-configure">
+<section class="discord-configure-section" id="discord-configure">
           <div class="discord-configure-icon" aria-hidden="true">⚙</div>
           <div class="discord-configure-copy">
             <span>02 / TWÓJ DISCORD, TWOJE ZASADY</span>
@@ -3078,7 +3062,7 @@ async function setupDiscordJoinPage() {
   page.dataset.discordReady = '1';
 
   const inviteUrl = SITE_CONFIG.discordUrl;
-  [document.getElementById('discord-widget-invite'), document.getElementById('discord-configure-invite')]
+  [document.getElementById('discord-widget-invite'), document.getElementById('discord-configure-invite'), document.getElementById('discord-widget-fallback-invite')]
     .forEach(link => { if (link) link.href = inviteUrl; });
 
   const getInviteCode = (url) => {
@@ -3116,6 +3100,8 @@ async function setupDiscordJoinPage() {
       const format = guild.icon.startsWith('a_') ? 'gif' : 'png';
       iconTarget.innerHTML = `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${format}?size=128" alt="Ikona serwera ${escapeHtml(serverName)}">`;
     }
+
+
   } catch (error) {
     console.info('[MATT\'S WORLD] Publiczne dane Discorda są chwilowo niedostępne:', error);
   }
