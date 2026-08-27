@@ -884,7 +884,9 @@ function vipPage() {
       <div class="page-panel">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
         <div class="vip-hero">
-          <div class="vip-badge">VIP</div>
+          <div class="vip-badge-media">
+            <img class="vip-badge-image" src="pictures/vip/twitch-vip-badge-custom.png" alt="Ikona VIP Twitch" loading="lazy">
+          </div>
           <div>
             <h1>DLA WIDZA / <span>VIP</span></h1>
             <p>VIP-a u naszej społeczności nie kupujesz. To wyróżnienie dla osób, które są aktywną i pozytywną częścią MATT'S WORLD.</p>
