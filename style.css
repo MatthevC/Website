@@ -3799,3 +3799,229 @@ body.image-preview-open { overflow: hidden; }
   .vip-badge-media { width: 72px; height: 72px; flex-basis: 72px; }
   .vip-badge-image { width: 72px; height: 72px; }
 }
+
+
+/* POLECANI STREAMERZY */
+.recommended-page .page-panel {
+  overflow: hidden;
+}
+
+.recommended-hero {
+  margin-bottom: 1.6rem;
+  padding: 1.2rem 1.2rem 1.4rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 26px;
+  background: radial-gradient(circle at 85% 12%, rgba(255,59,69,.16), transparent 35%), linear-gradient(135deg, rgba(239,43,45,.10), rgba(15,15,17,.96));
+}
+
+.recommended-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  color: #ff9bb1;
+  font: 800 11px Rajdhani, sans-serif;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.recommended-hero h1 {
+  margin: .55rem 0 .45rem;
+  font: 700 clamp(32px, 4.4vw, 54px)/.95 Rajdhani, sans-serif;
+  text-transform: uppercase;
+}
+
+.recommended-hero h1 span {
+  color: var(--red);
+}
+
+.recommended-hero p {
+  margin: 0;
+  max-width: 860px;
+  color: #b8b8bc;
+  line-height: 1.7;
+}
+
+.recommended-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.recommended-card {
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+}
+
+.recommended-head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.recommended-avatar-wrap {
+  width: 92px;
+  height: 92px;
+  padding: 4px;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(239,43,45,.55), rgba(255,122,132,.45));
+}
+
+.recommended-avatar {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 22px;
+  background: #111;
+}
+
+.recommended-index {
+  color: #9e9ea7;
+  font: 800 11px Rajdhani, sans-serif;
+  letter-spacing: .13em;
+}
+
+.recommended-meta h2 {
+  margin: .3rem 0 .35rem;
+  font: 700 29px Rajdhani, sans-serif;
+}
+
+.recommended-meta p,
+.recommended-note-box p {
+  margin: 0;
+  color: #ababaf;
+  line-height: 1.65;
+}
+
+.recommended-actions {
+  display: grid;
+  gap: .55rem;
+}
+
+.recommended-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.10);
+  color: #f4f4f4;
+  font: 800 12px Rajdhani, sans-serif;
+  letter-spacing: .05em;
+  text-decoration: none;
+}
+
+.recommended-action.primary {
+  background: linear-gradient(135deg, var(--red), #ff5b7f);
+  border-color: #ff8184;
+}
+
+.recommended-body {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, .9fr);
+  gap: 1rem;
+}
+
+.recommended-clip-frame {
+  overflow: hidden;
+  border-radius: 18px;
+  min-height: 320px;
+  background: #09090b;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.recommended-clip-frame iframe {
+  width: 100%;
+  min-width: 400px;
+  height: 340px;
+  border: 0;
+  display: block;
+}
+
+.recommended-side {
+  display: grid;
+  gap: 1rem;
+}
+
+.recommended-note-box {
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+}
+
+.recommended-note-box h3 {
+  margin: 0 0 .6rem;
+  font: 700 18px Rajdhani, sans-serif;
+}
+
+.recommended-games {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.recommended-game-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: 52px;
+  padding: .35rem .75rem .35rem .35rem;
+  border-radius: 999px;
+  background: #111216;
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.recommended-game-chip img {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: #000;
+}
+
+.recommended-game-chip strong {
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .recommended-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .recommended-head {
+    grid-template-columns: 1fr;
+  }
+
+  .recommended-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .recommended-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .recommended-clip-frame {
+    overflow-x: auto;
+  }
+
+  .recommended-clip-frame iframe {
+    min-width: 320px;
+    height: 260px;
+  }
+
+  .recommended-avatar-wrap {
+    width: 76px;
+    height: 76px;
+  }
+}

@@ -35,6 +35,49 @@ const MODERATOR_TEAM = [
   }
 ];
 
+const RECOMMENDED_STREAMERS = [
+  {
+    login: "farymvp",
+    displayName: "FaryMVP",
+    channelUrl: "https://www.twitch.tv/farymvp",
+    clipSlug: "OddSmilingSquirrelWholeWheat-A_MEU3fIXmNVdOyC",
+    clipUrl: "https://www.twitch.tv/farymvp/clip/OddSmilingSquirrelWholeWheat-A_MEU3fIXmNVdOyC?range=7d",
+    tagline: "Energia, klimat i dobra zabawa — idealny wybór, kiedy szukasz twórcy do oglądania podczas mojej nieobecności.",
+    description: "Jeśli lubisz luźną atmosferę, kontakt z widzami i ekipowy vibe, to FaryMVP zdecydowanie zasługuje na uwagę.",
+    games: ["Dead by Daylight", "Just Chatting"]
+  },
+  {
+    login: "sandynpc",
+    displayName: "SandyNPC",
+    channelUrl: "https://www.twitch.tv/sandynpc",
+    clipSlug: "BlightedGorgeousPeppermintTBTacoRight-fxMtdufblF0eCdpx",
+    clipUrl: "https://www.twitch.tv/sandynpc/clip/BlightedGorgeousPeppermintTBTacoRight-fxMtdufblF0eCdpx?range=7d",
+    tagline: "Świetny kontakt z czatem i bardzo przyjemny klimat transmisji.",
+    description: "SandyNPC to twórczyni, do której naprawdę warto zajrzeć — szczególnie jeśli cenisz pozytywną energię i regularne interakcje z widzami.",
+    games: ["Dead by Daylight", "Just Chatting"]
+  },
+  {
+    login: "blackstaryolow",
+    displayName: "Blackstaryolow",
+    channelUrl: "https://www.twitch.tv/blackstaryolow",
+    clipSlug: "AmorphousCulturedRhinocerosStrawBeary-ayKKlTh2qkwDifgx",
+    clipUrl: "https://www.twitch.tv/blackstaryolow/clip/AmorphousCulturedRhinocerosStrawBeary-ayKKlTh2qkwDifgx?range=all",
+    tagline: "Dobra atmosfera, sprawdzony twórca i treści, które dobrze wpisują się w klimat naszej społeczności.",
+    description: "Blackstaryolow to jedna z osób, które śmiało mogę polecić mojej społeczności — wbijaj, oglądaj i zostaw po sobie dobre słowo na czacie.",
+    games: ["Dead by Daylight", "Just Chatting"]
+  },
+  {
+    login: "wazzzupek",
+    displayName: "Wazzzupek",
+    channelUrl: "https://www.twitch.tv/wazzzupek",
+    clipSlug: "BlushingEsteemedChowderSwiftRage-iutMJCzKIAuQoU6E",
+    clipUrl: "https://www.twitch.tv/wazzzupek/clip/BlushingEsteemedChowderSwiftRage-iutMJCzKIAuQoU6E?range=7d",
+    tagline: "Twórca, którego warto mieć na radarze — szczególnie jeśli lubisz community vibe i regularne streamy.",
+    description: "Gdy mnie nie ma na live, Wazzzupek to bardzo dobry kierunek — sprawdzony twórca, fajna energia i miejsce, gdzie po prostu dobrze się siedzi.",
+    games: ["Dead by Daylight", "Just Chatting"]
+  }
+];
+
 const pages = {
   home: {
     title: "CENTRUM <span>SPOŁECZNOŚCI</span>",
@@ -94,6 +137,11 @@ const pages = {
             <div class="num">04 / DLA WIDZA</div>
             <h3>BINGO</h3>
             <p>Sprawdź zasady Stream Bounty, sposób dołączenia do gry i informacje o rozgrywce Bingo.</p>
+          </a>
+          <a class="quick-card" href="#/recommended">
+            <div class="num">05 / SPOŁECZNOŚĆ</div>
+            <h3>POLECANI STREAMERZY</h3>
+            <p>Sprawdź twórców, których polecam oglądać podczas mojej nieobecności.</p>
           </a>
         </div>
 
@@ -193,6 +241,11 @@ const pages = {
   "discord/roles": {
     title: "NASZ DISCORD / <span>OPIS KANAŁÓW I RÓL</span>",
     body: discordChannelsPage()
+  },
+
+  recommended: {
+    title: "SPOŁECZNOŚĆ / <span>POLECANI STREAMERZY</span>",
+    body: recommendedStreamersPage()
   },
 
   contact: {
@@ -2144,6 +2197,80 @@ function discordJoinPage() {
   `;
 }
 
+
+
+function recommendedStreamersPage() {
+  const clipParent = location.hostname || "matthevc.github.io";
+  const gameBoxArt = (name) => `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(name)}-52x72.jpg`;
+
+  const cards = RECOMMENDED_STREAMERS.map((streamer, index) => `
+    <article class="recommended-card" data-streamer-login="${streamer.login}" data-streamer-name="${streamer.displayName}">
+      <div class="recommended-head">
+        <div class="recommended-avatar-wrap">
+          <img class="recommended-avatar" data-streamer-avatar src="https://unavatar.io/twitch/${streamer.login}" alt="Avatar ${streamer.displayName}" loading="lazy">
+        </div>
+
+        <div class="recommended-meta">
+          <span class="recommended-index">0${index + 1} / POLECANY TWÓRCA</span>
+          <h2 data-streamer-name-target>${streamer.displayName}</h2>
+          <p>${streamer.tagline}</p>
+        </div>
+
+        <div class="recommended-actions">
+          <a class="recommended-action primary" href="${streamer.channelUrl}" target="_blank" rel="noopener">TWITCH ↗</a>
+          <a class="recommended-action" href="${streamer.clipUrl}" target="_blank" rel="noopener">OTWÓRZ KLIP ↗</a>
+        </div>
+      </div>
+
+      <div class="recommended-body">
+        <div class="recommended-clip-frame">
+          <iframe
+            src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(streamer.clipSlug)}&parent=${encodeURIComponent(clipParent)}&autoplay=false"
+            title="Polecany klip Twitch — ${streamer.displayName}"
+            loading="lazy"
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <div class="recommended-side">
+          <div class="recommended-note-box">
+            <h3>DLACZEGO POLECAM?</h3>
+            <p>${streamer.description}</p>
+          </div>
+
+          <div class="recommended-note-box">
+            <h3>OSTATNIO NA STREAMACH</h3>
+            <div class="recommended-games">
+              ${streamer.games.map(game => `
+                <span class="recommended-game-chip">
+                  <img src="${gameBoxArt(game)}" alt="${game}" loading="lazy">
+                  <strong>${game}</strong>
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  return `
+    <div class="container content-wrap recommended-page">
+      <div class="page-panel recommended-panel">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <header class="recommended-hero">
+          <div class="recommended-hero-badge">MÓJ WATCHLIST</div>
+          <h1>KIEDY MNIE NIE MA, <span>WPADAJ DO TYCH TWÓRCÓW</span></h1>
+          <p>Jeśli akurat nie jestem na żywo, śmiało zaglądaj do tych osób. To twórcy, których mogę z czystym sumieniem polecić mojej społeczności — za klimat, regularność i dobrą energię na streamach.</p>
+        </header>
+
+        <div class="recommended-grid">${cards}</div>
+      </div>
+    </div>
+  `;
+}
+
 function contactPage() {
   return `
     <div class="container content-wrap">
@@ -2381,6 +2508,7 @@ async function render() {
   setupRewardsSearch();
   setupDixperPage();
   setupBingoPage();
+  setupRecommendedPage();
   setupImagePreview();
   setupGlobalPageNavigation();
   closeMobileMenu();
@@ -2413,6 +2541,45 @@ function updateLinks() {
     const href = link.getAttribute("href");
     link.classList.toggle("active", href === location.hash);
   });
+}
+
+
+
+async function setupRecommendedPage() {
+  const cards = [...document.querySelectorAll('[data-streamer-login]')];
+  if (!cards.length) return;
+
+  await Promise.all(cards.map(async (card) => {
+    const login = card.dataset.streamerLogin;
+    const fallbackName = card.dataset.streamerName || login;
+    const avatar = card.querySelector('[data-streamer-avatar]');
+    const nameTarget = card.querySelector('[data-streamer-name-target]');
+
+    if (avatar) {
+      avatar.src = `https://unavatar.io/twitch/${login}`;
+      avatar.alt = `Avatar ${fallbackName}`;
+    }
+    if (nameTarget) nameTarget.textContent = fallbackName;
+
+    try {
+      const response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      const user = Array.isArray(data) ? data[0] : data;
+      if (!user) return;
+
+      const freshName = user.displayName || user.login || fallbackName;
+      const freshAvatar = user.logo || user.profileImageUrl || user.avatar;
+
+      if (nameTarget) nameTarget.textContent = freshName;
+      if (avatar && freshAvatar) {
+        avatar.src = freshAvatar;
+        avatar.alt = `Avatar ${freshName}`;
+      }
+    } catch (_) {
+      // Fallback działa na bazie unavatar + nazw zapisanych w kodzie.
+    }
+  }));
 }
 
 function setupContactForm() {
