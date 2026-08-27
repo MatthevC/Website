@@ -1265,6 +1265,9 @@ function setupDixperPage() {
   tocLinks.forEach(link => {
     link.addEventListener("click", () => {
       const target = document.getElementById(link.dataset.dixperTarget);
+      const activeIndex = sections.findIndex(section => section.id === link.dataset.dixperTarget);
+      tocLinks.forEach(item => item.classList.toggle("active", item === link));
+      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
@@ -1478,6 +1481,9 @@ function setupBingoPage() {
   links.forEach(link => {
     link.addEventListener("click", () => {
       const target = document.getElementById(link.dataset.bingoTarget);
+      const activeIndex = sections.findIndex(section => section.id === link.dataset.bingoTarget);
+      links.forEach(item => item.classList.toggle("active", item === link));
+      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
@@ -2165,7 +2171,11 @@ function setupGlobalPageNavigation() {
   const progress = aside.querySelector("[data-site-page-progress]");
 
   links.forEach(link => link.addEventListener("click", () => {
-    document.getElementById(link.dataset.sitePageTarget)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const targetId = link.dataset.sitePageTarget;
+    const activeIndex = headings.findIndex(heading => heading.id === targetId);
+    links.forEach(item => item.classList.toggle("active", item === link));
+    if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
+    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }));
 
   if ("IntersectionObserver" in window) {
@@ -2630,6 +2640,9 @@ async function setupRecommendedPage() {
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
       const target = document.getElementById(link.dataset.recommendedTarget);
+      const activeIndex = sections.findIndex(section => section.id === link.dataset.recommendedTarget);
+      navLinks.forEach(item => item.classList.toggle('active', item === link));
+      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });

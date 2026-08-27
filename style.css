@@ -4224,3 +4224,101 @@ body.image-preview-open { overflow: hidden; }
     height: 76px;
   }
 }
+
+
+/* === GLOBALNA POPRAWKA STICKY NAWIGACJI — wszystkie podstrony === */
+/* Każdy boczny spis treści zachowuje się jak ten z POLECANYCH STREAMERÓW:
+   pozostaje widoczny po lewej stronie podczas przewijania, a na telefonie
+   zmienia się w przyklejony poziomy pasek. */
+#app .dixper-shell,
+#app .bingo-shell,
+#app .recommended-panel,
+#app .page-panel.with-global-page-nav {
+  overflow: visible !important;
+}
+
+.dixper-reading-layout,
+.bingo-reading-layout,
+.site-page-nav-layout,
+.recommended-reading-layout {
+  align-items: start !important;
+  overflow: visible !important;
+}
+
+.dixper-toc,
+.bingo-toc,
+.site-page-toc,
+.recommended-toc {
+  position: sticky !important;
+  top: 104px !important;
+  align-self: start !important;
+  z-index: 30 !important;
+  max-height: calc(100vh - 128px) !important;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Sekcje zatrzymują się pod przyklejonym nagłówkiem strony. */
+[data-dixper-section],
+[data-bingo-section],
+[data-page-nav-heading],
+[data-recommended-section] {
+  scroll-margin-top: 112px;
+}
+
+@media (max-width: 900px) {
+  .dixper-reading-layout,
+  .bingo-reading-layout,
+  .site-page-nav-layout,
+  .recommended-reading-layout {
+    grid-template-columns: 1fr !important;
+    gap: .8rem !important;
+  }
+
+  .dixper-toc,
+  .bingo-toc,
+  .site-page-toc,
+  .recommended-toc {
+    position: sticky !important;
+    top: 72px !important;
+    z-index: 40 !important;
+    display: flex !important;
+    gap: .4rem !important;
+    width: 100%;
+    max-height: none !important;
+    padding: .55rem !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 14px !important;
+    background: rgba(12,12,15,.96) !important;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.28);
+  }
+
+  .dixper-toc-title,
+  .dixper-toc-track,
+  .recommended-toc-title,
+  .recommended-toc-track {
+    display: none !important;
+  }
+
+  .dixper-toc-link,
+  .site-page-toc-link,
+  .recommended-toc-link {
+    flex: 0 0 auto;
+    min-width: 110px;
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    text-align: center !important;
+  }
+
+  [data-dixper-section],
+  [data-bingo-section],
+  [data-page-nav-heading],
+  [data-recommended-section] {
+    scroll-margin-top: 136px;
+  }
+}
