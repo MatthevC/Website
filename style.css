@@ -4025,3 +4025,202 @@ body.image-preview-open { overflow: hidden; }
     height: 76px;
   }
 }
+
+
+/* === POLECANI STREAMERZY — sticky nawigacja i dynamiczne avatary === */
+.recommended-page .page-panel,
+.recommended-panel {
+  overflow: visible !important;
+}
+
+.recommended-reading-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.recommended-toc {
+  position: sticky;
+  top: 104px;
+  align-self: start;
+  display: grid;
+  gap: .3rem;
+  padding: .9rem 0 .9rem 1.35rem;
+  max-height: calc(100vh - 128px);
+  overflow-y: auto;
+  z-index: 18;
+}
+
+.recommended-toc-title {
+  margin: 0 0 .65rem .5rem;
+  color: #8b8b91;
+  font: 800 11px Rajdhani, sans-serif;
+  letter-spacing: .14em;
+}
+
+.recommended-toc-track {
+  position: absolute;
+  left: 7px;
+  top: 44px;
+  bottom: 15px;
+  width: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+}
+
+.recommended-toc-track span {
+  display: block;
+  width: 100%;
+  height: 25%;
+  border-radius: inherit;
+  background: linear-gradient(var(--red), #ff6365);
+  transition: height .25s ease;
+}
+
+.recommended-toc-link {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 31px 1fr;
+  gap: .4rem;
+  align-items: center;
+  width: 100%;
+  padding: .65rem .55rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #96969c;
+  text-align: left;
+  font-family: Rajdhani, sans-serif;
+  cursor: pointer;
+  transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.recommended-toc-link span {
+  color: #5f5f65;
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.recommended-toc-link strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.recommended-toc-link:hover {
+  color: #fff;
+  background: rgba(255,255,255,.035);
+  transform: translateX(2px);
+}
+
+.recommended-toc-link.active {
+  color: #fff;
+  background: rgba(239,43,45,.10);
+}
+
+.recommended-toc-link.active span {
+  color: var(--red);
+}
+
+.recommended-card {
+  scroll-margin-top: 105px;
+}
+
+.recommended-avatar-link {
+  position: relative;
+  display: inline-flex;
+  width: 92px;
+  height: 92px;
+  border-radius: 26px;
+  text-decoration: none;
+  outline: none;
+}
+
+.recommended-avatar-link .recommended-avatar-wrap {
+  display: block;
+  width: 92px;
+  height: 92px;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.recommended-avatar-hover {
+  position: absolute;
+  inset: auto 7px 7px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 0 .4rem;
+  border-radius: 8px;
+  background: rgba(8,8,8,.86);
+  color: #fff;
+  font: 800 9px Rajdhani, sans-serif;
+  letter-spacing: .08em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .18s ease, transform .18s ease;
+  pointer-events: none;
+}
+
+.recommended-avatar-link:hover .recommended-avatar-wrap,
+.recommended-avatar-link:focus-visible .recommended-avatar-wrap {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(239,43,45,.16);
+}
+
+.recommended-avatar-link:hover .recommended-avatar-hover,
+.recommended-avatar-link:focus-visible .recommended-avatar-hover {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 1050px) {
+  .recommended-reading-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .recommended-reading-layout {
+    grid-template-columns: 1fr;
+    gap: .8rem;
+  }
+
+  .recommended-toc {
+    position: sticky;
+    top: 72px;
+    display: flex;
+    gap: .4rem;
+    max-height: none;
+    padding: .55rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    background: rgba(12,12,15,.96);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.28);
+  }
+
+  .recommended-toc-title,
+  .recommended-toc-track {
+    display: none;
+  }
+
+  .recommended-toc-link {
+    min-width: 118px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    padding: .55rem .65rem;
+  }
+
+  .recommended-avatar-link,
+  .recommended-avatar-link .recommended-avatar-wrap {
+    width: 76px;
+    height: 76px;
+  }
+}

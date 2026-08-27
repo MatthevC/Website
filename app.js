@@ -44,7 +44,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/farymvp/clip/OddSmilingSquirrelWholeWheat-A_MEU3fIXmNVdOyC?range=7d",
     tagline: "Energia, klimat i dobra zabawa — idealny wybór, kiedy szukasz twórcy do oglądania podczas mojej nieobecności.",
     description: "Jeśli lubisz luźną atmosferę, kontakt z widzami i ekipowy vibe, to FaryMVP zdecydowanie zasługuje na uwagę.",
-    games: ["Dead by Daylight", "Just Chatting"]
+    games: ["Dead by Daylight", "Euro Truck Simulator 2"]
   },
   {
     login: "sandynpc",
@@ -54,7 +54,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/sandynpc/clip/BlightedGorgeousPeppermintTBTacoRight-fxMtdufblF0eCdpx?range=7d",
     tagline: "Świetny kontakt z czatem i bardzo przyjemny klimat transmisji.",
     description: "SandyNPC to twórczyni, do której naprawdę warto zajrzeć — szczególnie jeśli cenisz pozytywną energię i regularne interakcje z widzami.",
-    games: ["Dead by Daylight", "Just Chatting"]
+    games: ["Dead by Daylight", "VALORANT"]
   },
   {
     login: "blackstaryolow",
@@ -64,7 +64,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/blackstaryolow/clip/AmorphousCulturedRhinocerosStrawBeary-ayKKlTh2qkwDifgx?range=all",
     tagline: "Dobra atmosfera, sprawdzony twórca i treści, które dobrze wpisują się w klimat naszej społeczności.",
     description: "Blackstaryolow to jedna z osób, które śmiało mogę polecić mojej społeczności — wbijaj, oglądaj i zostaw po sobie dobre słowo na czacie.",
-    games: ["Dead by Daylight", "Just Chatting"]
+    games: ["Dead by Daylight", "R.E.P.O."]
   },
   {
     login: "wazzzupek",
@@ -74,7 +74,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/wazzzupek/clip/BlushingEsteemedChowderSwiftRage-iutMJCzKIAuQoU6E?range=7d",
     tagline: "Twórca, którego warto mieć na radarze — szczególnie jeśli lubisz community vibe i regularne streamy.",
     description: "Gdy mnie nie ma na live, Wazzzupek to bardzo dobry kierunek — sprawdzony twórca, fajna energia i miejsce, gdzie po prostu dobrze się siedzi.",
-    games: ["Dead by Daylight", "Just Chatting"]
+    games: ["Counter-Strike 2", "Euro Truck Simulator 2"]
   }
 ];
 
@@ -2120,7 +2120,7 @@ function setupGlobalPageNavigation() {
   if (currentPath.startsWith("rules/") || currentPath === "moderator/team") return;
 
   // Dixper i Bingo mają własną, ręcznie dopracowaną nawigację.
-  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal")) return;
+  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal, .recommended-page")) return;
 
   const panel = document.querySelector("#app .page-panel");
   if (!panel || panel.dataset.globalNavReady === "1") return;
@@ -2199,16 +2199,35 @@ function discordJoinPage() {
 
 
 
+
 function recommendedStreamersPage() {
   const clipParent = location.hostname || "matthevc.github.io";
   const gameBoxArt = (name) => `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(name)}-52x72.jpg`;
 
   const cards = RECOMMENDED_STREAMERS.map((streamer, index) => `
-    <article class="recommended-card" data-streamer-login="${streamer.login}" data-streamer-name="${streamer.displayName}">
+    <article
+      class="recommended-card"
+      id="streamer-${streamer.login}"
+      data-recommended-section
+      data-streamer-login="${streamer.login}"
+      data-streamer-name="${streamer.displayName}">
       <div class="recommended-head">
-        <div class="recommended-avatar-wrap">
-          <img class="recommended-avatar" data-streamer-avatar src="https://unavatar.io/twitch/${streamer.login}" alt="Avatar ${streamer.displayName}" loading="lazy">
-        </div>
+        <a
+          class="recommended-avatar-link"
+          href="${streamer.channelUrl}"
+          target="_blank"
+          rel="noopener"
+          aria-label="Otwórz kanał Twitch ${streamer.displayName}">
+          <span class="recommended-avatar-wrap">
+            <img
+              class="recommended-avatar"
+              data-streamer-avatar
+              src="https://unavatar.io/twitch/${streamer.login}"
+              alt="Avatar ${streamer.displayName}"
+              loading="lazy">
+          </span>
+          <span class="recommended-avatar-hover">TWITCH ↗</span>
+        </a>
 
         <div class="recommended-meta">
           <span class="recommended-index">0${index + 1} / POLECANY TWÓRCA</span>
@@ -2239,7 +2258,7 @@ function recommendedStreamersPage() {
           </div>
 
           <div class="recommended-note-box">
-            <h3>OSTATNIO NA STREAMACH</h3>
+            <h3>NAJCZĘŚCIEJ OGRYWANE</h3>
             <div class="recommended-games">
               ${streamer.games.map(game => `
                 <span class="recommended-game-chip">
@@ -2254,6 +2273,16 @@ function recommendedStreamersPage() {
     </article>
   `).join("");
 
+  const navigation = RECOMMENDED_STREAMERS.map((streamer, index) => `
+    <button
+      type="button"
+      class="recommended-toc-link${index === 0 ? " active" : ""}"
+      data-recommended-target="streamer-${streamer.login}">
+      <span>${String(index + 1).padStart(2, "0")}</span>
+      <strong>${streamer.displayName}</strong>
+    </button>
+  `).join("");
+
   return `
     <div class="container content-wrap recommended-page">
       <div class="page-panel recommended-panel">
@@ -2265,7 +2294,15 @@ function recommendedStreamersPage() {
           <p>Jeśli akurat nie jestem na żywo, śmiało zaglądaj do tych osób. To twórcy, których mogę z czystym sumieniem polecić mojej społeczności — za klimat, regularność i dobrą energię na streamach.</p>
         </header>
 
-        <div class="recommended-grid">${cards}</div>
+        <div class="recommended-reading-layout">
+          <aside class="recommended-toc" aria-label="Polecani streamerzy">
+            <div class="recommended-toc-title">TWÓRCY</div>
+            <div class="recommended-toc-track" aria-hidden="true"><span data-recommended-progress></span></div>
+            ${navigation}
+          </aside>
+
+          <main class="recommended-grid">${cards}</main>
+        </div>
       </div>
     </div>
   `;
@@ -2545,6 +2582,7 @@ function updateLinks() {
 
 
 
+
 async function setupRecommendedPage() {
   const cards = [...document.querySelectorAll('[data-streamer-login]')];
   if (!cards.length) return;
@@ -2555,14 +2593,18 @@ async function setupRecommendedPage() {
     const avatar = card.querySelector('[data-streamer-avatar]');
     const nameTarget = card.querySelector('[data-streamer-name-target]');
 
+    // Bez klucza API Twitcha korzystamy z proxy jako awaryjnego źródła,
+    // a następnie próbujemy pobrać aktualny profil i bezpośredni adres CDN Twitcha.
     if (avatar) {
-      avatar.src = `https://unavatar.io/twitch/${login}`;
+      avatar.src = `https://unavatar.io/twitch/${login}?v=${Date.now()}`;
       avatar.alt = `Avatar ${fallbackName}`;
     }
     if (nameTarget) nameTarget.textContent = fallbackName;
 
     try {
-      const response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`);
+      const response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`, {
+        cache: "no-store"
+      });
       if (!response.ok) return;
       const data = await response.json();
       const user = Array.isArray(data) ? data[0] : data;
@@ -2577,9 +2619,43 @@ async function setupRecommendedPage() {
         avatar.alt = `Avatar ${freshName}`;
       }
     } catch (_) {
-      // Fallback działa na bazie unavatar + nazw zapisanych w kodzie.
+      // Fallback unavatar pozostaje aktywny, więc avatar nadal jest pobierany dynamicznie.
     }
   }));
+
+  const sections = [...document.querySelectorAll('[data-recommended-section]')];
+  const navLinks = [...document.querySelectorAll('[data-recommended-target]')];
+  const progress = document.querySelector('[data-recommended-progress]');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      const target = document.getElementById(link.dataset.recommendedTarget);
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  const setActive = (section) => {
+    const index = sections.indexOf(section);
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.dataset.recommendedTarget === section.id);
+    });
+    if (progress && index >= 0) {
+      progress.style.height = `${((index + 1) / sections.length) * 100}%`;
+    }
+  };
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActive(visible.target);
+    }, {
+      rootMargin: '-18% 0px -58% 0px',
+      threshold: [0, .1, .25, .5]
+    });
+    sections.forEach(section => observer.observe(section));
+  }
 }
 
 function setupContactForm() {
