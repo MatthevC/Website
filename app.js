@@ -2203,21 +2203,128 @@ function setupGlobalPageNavigation() {
 
 function discordJoinPage() {
   return `
-    <div class="container content-wrap">
-      <div class="page-panel">
+    <div class="container content-wrap discord-join-page">
+      <div class="page-panel discord-join-panel">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
-        <h1>JAK DOSTAĆ SIĘ NA <span>DISCORD?</span></h1>
-        <p>Wszystkie informacje dotyczące dołączenia na serwer społeczności.</p>
-        <div class="notice">Link do Discorda jest ustawiany w pliku <strong>config.js</strong>, więc później zmienisz go w jednym miejscu.</div>
-        <a class="header-cta" id="page-discord-link" href="#" target="_blank" rel="noopener">DOŁĄCZ NA DISCORD →</a>
-        <h2>CO DAJE DISCORD?</h2>
-        <p>Tutaj możemy opisać kanały, role, powiadomienia o transmisjach, eventy oraz inne funkcje serwera.</p>
+
+        <header class="discord-join-hero">
+          <div class="discord-join-hero-copy">
+            <span class="discord-join-kicker">NASZ DISCORD / DOŁĄCZ DO SPOŁECZNOŚCI</span>
+            <h1>WBIJ DO <span>MATT'S WORLD</span></h1>
+            <p>Discord to centrum naszej społeczności poza transmisją — rozmowy, wspólne granie, eventy, ogłoszenia i szybki kontakt z ekipą. Zajrzyj do środka i ustaw serwer tak, żeby pokazywał dokładnie to, co Cię interesuje.</p>
+
+            <div class="discord-join-actions">
+              <a class="discord-join-primary" id="page-discord-link" href="#" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
+                DOŁĄCZ DO SERWERA
+              </a>
+              <a class="discord-join-secondary" href="#/discord/roles">ZOBACZ OPIS KANAŁÓW I RÓL →</a>
+            </div>
+          </div>
+
+          <div class="discord-server-summary" data-discord-server-summary>
+            <div class="discord-server-icon" data-discord-server-icon>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
+            </div>
+            <div>
+              <small>TWÓJ SERWER</small>
+              <strong data-discord-server-name>MATT'S WORLD</strong>
+              <div class="discord-live-stats">
+                <span><i class="online-dot"></i><b data-discord-online-count>—</b> online</span>
+                <span><i class="member-dot"></i><b data-discord-member-count>—</b> członków</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="discord-preview-section" id="discord-preview">
+          <div class="discord-section-title">
+            <div>
+              <span>01 / PODGLĄD SERWERA</span>
+              <h2>ZOBACZ, CO CZEKA NA CIEBIE W ŚRODKU</h2>
+            </div>
+            <p>Krótki podgląd najważniejszych miejsc na serwerze. Pełny opis wszystkich kanałów znajdziesz w osobnej podstronie.</p>
+          </div>
+
+          <div class="discord-widget-shell">
+            <aside class="discord-widget-rail" aria-hidden="true">
+              <div class="discord-widget-server-logo">M</div>
+              <span></span><span></span><span></span>
+            </aside>
+
+            <div class="discord-widget-main">
+              <div class="discord-widget-topbar">
+                <div>
+                  <strong data-discord-widget-name>MATT'S WORLD</strong>
+                  <span>Podgląd społeczności</span>
+                </div>
+                <div class="discord-widget-live"><i></i><span data-discord-widget-online>online: —</span></div>
+              </div>
+
+              <div class="discord-widget-content">
+                <div class="discord-widget-channels">
+                  <div class="discord-widget-category">
+                    <strong>TWITCH / KONFIGURACJA</strong>
+                    <a href="#/discord/roles"><span>#</span> konfiguracja-tickets</a>
+                    <a href="#/discord/roles"><span>#</span> ogłoszenia</a>
+                    <a href="#/discord/roles"><span>#</span> live-alert</a>
+                    <a href="#/discord/roles"><span>#</span> regulamin</a>
+                  </div>
+                  <div class="discord-widget-category">
+                    <strong>TEXT CHANNELS</strong>
+                    <a href="#/discord/roles"><span>#</span> ogólny</a>
+                    <a href="#/discord/roles"><span>#</span> szukam-do-gry</a>
+                    <a href="#/discord/roles"><span>#</span> memy</a>
+                    <a href="#/discord/roles"><span>#</span> matt-klip</a>
+                  </div>
+                  <div class="discord-widget-category">
+                    <strong>VOICE ROOM</strong>
+                    <a href="#/discord/roles"><span>🔊</span> POCZEKALNIA</a>
+                    <a class="active" href="#/discord/roles"><span>🔴</span> STREAM ON</a>
+                    <a href="#/discord/roles"><span>🔊</span> Global Voice</a>
+                  </div>
+                </div>
+
+                <div class="discord-widget-welcome">
+                  <div class="discord-widget-welcome-icon">👋</div>
+                  <span>WITAJ W MATT'S WORLD</span>
+                  <h3>Znajdź swoje miejsce</h3>
+                  <p>Rozmawiaj, szukaj ekipy do gry, śledź eventy i wybierz kanały, które naprawdę chcesz widzieć.</p>
+                  <a id="discord-widget-invite" href="#" target="_blank" rel="noopener">DOŁĄCZ TERAZ →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="discord-configure-section" id="discord-configure">
+          <div class="discord-configure-icon" aria-hidden="true">⚙</div>
+          <div class="discord-configure-copy">
+            <span>02 / TWÓJ DISCORD, TWOJE ZASADY</span>
+            <h2>ZACZNIJ OD <strong>#konfiguracja-tickets</strong></h2>
+            <p>Po wejściu na serwer koniecznie zajrzyj na kanał <strong>#konfiguracja-tickets</strong>. To właśnie tam możesz dopasować Discorda pod siebie — wybrać interesujące Cię gry i powiadomienia, ograniczyć kanały, których nie potrzebujesz, oraz ustawić serwer tak, żeby był dla Ciebie wygodny zamiast przeładowany.</p>
+            <p class="discord-configure-highlight">Kilka kliknięć na początku i później widzisz przede wszystkim to, co naprawdę Cię interesuje.</p>
+          </div>
+          <a class="discord-configure-button" id="discord-configure-invite" href="#" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
+        </section>
+
+        <section class="discord-join-steps" id="discord-steps">
+          <div class="discord-section-title">
+            <div>
+              <span>03 / START</span>
+              <h2>TRZY KROKI I JESTEŚ U SIEBIE</h2>
+            </div>
+          </div>
+          <div class="discord-step-grid">
+            <article><b>01</b><div><h3>DOŁĄCZ</h3><p>Kliknij przycisk zaproszenia i zaakceptuj wejście na serwer MATT'S WORLD.</p></div></article>
+            <article><b>02</b><div><h3>SKONFIGURUJ</h3><p>Otwórz <strong>#konfiguracja-tickets</strong> i wybierz role, gry oraz powiadomienia, które chcesz otrzymywać.</p></div></article>
+            <article><b>03</b><div><h3>WPADAJ DO EKIPY</h3><p>Napisz na ogólnym, znajdź osoby do gry albo po prostu obserwuj, co aktualnie dzieje się w społeczności.</p></div></article>
+          </div>
+        </section>
       </div>
     </div>
   `;
 }
-
-
 
 
 
@@ -2848,6 +2955,7 @@ async function render() {
   setupDixperPage();
   setupBingoPage();
   setupRecommendedPage();
+  setupDiscordJoinPage();
   setupDownloadsPage();
   setupImagePreview();
   setupGlobalPageNavigation();
@@ -2961,6 +3069,55 @@ async function setupRecommendedPage() {
       threshold: [0, .1, .25, .5]
     });
     sections.forEach(section => observer.observe(section));
+  }
+}
+
+async function setupDiscordJoinPage() {
+  const page = document.querySelector('.discord-join-page');
+  if (!page || page.dataset.discordReady === '1') return;
+  page.dataset.discordReady = '1';
+
+  const inviteUrl = SITE_CONFIG.discordUrl;
+  [document.getElementById('discord-widget-invite'), document.getElementById('discord-configure-invite')]
+    .forEach(link => { if (link) link.href = inviteUrl; });
+
+  const getInviteCode = (url) => {
+    try {
+      const parsed = new URL(url, location.href);
+      const parts = parsed.pathname.split('/').filter(Boolean);
+      return parts[parts.length - 1] || '';
+    } catch (_) {
+      return String(url).split('/').filter(Boolean).pop() || '';
+    }
+  };
+
+  const inviteCode = getInviteCode(inviteUrl);
+  if (!inviteCode) return;
+
+  try {
+    const response = await fetch(`https://discord.com/api/v10/invites/${encodeURIComponent(inviteCode)}?with_counts=true&with_expiration=true`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Discord invite HTTP ${response.status}`);
+    const data = await response.json();
+    const guild = data.guild || {};
+    const serverName = guild.name || "MATT'S WORLD";
+    const online = Number.isFinite(data.approximate_presence_count) ? data.approximate_presence_count : null;
+    const members = Number.isFinite(data.approximate_member_count) ? data.approximate_member_count : null;
+
+    document.querySelectorAll('[data-discord-server-name], [data-discord-widget-name]').forEach(el => { el.textContent = serverName; });
+    const onlineTarget = document.querySelector('[data-discord-online-count]');
+    const memberTarget = document.querySelector('[data-discord-member-count]');
+    const widgetOnline = document.querySelector('[data-discord-widget-online]');
+    if (onlineTarget && online !== null) onlineTarget.textContent = new Intl.NumberFormat('pl-PL').format(online);
+    if (memberTarget && members !== null) memberTarget.textContent = new Intl.NumberFormat('pl-PL').format(members);
+    if (widgetOnline && online !== null) widgetOnline.textContent = `online: ${new Intl.NumberFormat('pl-PL').format(online)}`;
+
+    const iconTarget = document.querySelector('[data-discord-server-icon]');
+    if (iconTarget && guild.id && guild.icon) {
+      const format = guild.icon.startsWith('a_') ? 'gif' : 'png';
+      iconTarget.innerHTML = `<img src="https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${format}?size=128" alt="Ikona serwera ${escapeHtml(serverName)}">`;
+    }
+  } catch (error) {
+    console.info('[MATT\'S WORLD] Publiczne dane Discorda są chwilowo niedostępne:', error);
   }
 }
 
