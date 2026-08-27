@@ -5610,3 +5610,27 @@ body.image-preview-open { overflow: hidden; }
   height: 510px !important;
   max-height: 510px !important;
 }
+
+
+/* Discord preview — przewijanie listy kanałów rolką */
+.discord-app-preview-expanded .discord-app-channels {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.14) transparent;
+}
+
+.discord-app-preview-expanded .discord-app-channels::-webkit-scrollbar {
+  width: 5px;
+}
+.discord-app-preview-expanded .discord-app-channels::-webkit-scrollbar-track {
+  background: transparent;
+}
+.discord-app-preview-expanded .discord-app-channels::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
+}
+.discord-app-preview-expanded .discord-app-channels::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.22);
+}
