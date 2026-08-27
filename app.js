@@ -2616,11 +2616,6 @@ function recommendedStreamersPage() {
 
         <div class="recommended-side">
           <div class="recommended-note-box">
-            <h3>DLACZEGO POLECAM?</h3>
-            <p>${streamer.description}</p>
-          </div>
-
-          <div class="recommended-note-box">
             <h3>NAJCZĘŚCIEJ OGRYWANE</h3>
             <div class="recommended-games">
               ${streamer.games.map(game => `
