@@ -54,7 +54,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/sandynpc/clip/BlightedGorgeousPeppermintTBTacoRight-fxMtdufblF0eCdpx?range=7d",
     tagline: "Świetny kontakt z czatem i bardzo przyjemny klimat transmisji.",
     description: "SandyNPC to twórczyni, do której naprawdę warto zajrzeć — szczególnie jeśli cenisz pozytywną energię i regularne interakcje z widzami.",
-    games: ["Dead by Daylight", "VALORANT"]
+    games: ["Dead by Daylight", "VALORANT", "Euro Truck Simulator 2", "League of Legends"]
   },
   {
     login: "blackstaryolow",
@@ -74,7 +74,7 @@ const RECOMMENDED_STREAMERS = [
     clipUrl: "https://www.twitch.tv/wazzzupek/clip/BlushingEsteemedChowderSwiftRage-iutMJCzKIAuQoU6E?range=7d",
     tagline: "Twórca, którego warto mieć na radarze — szczególnie jeśli lubisz community vibe i regularne streamy.",
     description: "Gdy mnie nie ma na live, Wazzzupek to bardzo dobry kierunek — sprawdzony twórca, fajna energia i miejsce, gdzie po prostu dobrze się siedzi.",
-    games: ["Counter-Strike 2", "Euro Truck Simulator 2"]
+    games: ["Counter-Strike 2", "Euro Truck Simulator 2", "Fortnite", "Teamfight Tactics"]
   }
 ];
 
@@ -2554,7 +2554,18 @@ function downloadsPage() {
 
 function recommendedStreamersPage() {
   const clipParent = location.hostname || "matthevc.github.io";
-  const gameBoxArt = (name) => `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(name)}-52x72.jpg`;
+  const GAME_ART_MAP = {
+    "Dead by Daylight": "https://static-cdn.jtvnw.net/ttv-boxart/Dead%20by%20Daylight-144x192.jpg",
+    "Euro Truck Simulator 2": "https://static-cdn.jtvnw.net/ttv-boxart/Euro%20Truck%20Simulator%202-144x192.jpg",
+    "League of Legends": "https://static-cdn.jtvnw.net/ttv-boxart/League%20of%20Legends-144x192.jpg",
+    "Fortnite": "https://static-cdn.jtvnw.net/ttv-boxart/Fortnite-144x192.jpg",
+    "Teamfight Tactics": "https://static-cdn.jtvnw.net/ttv-boxart/Teamfight%20Tactics-144x192.jpg",
+    "VALORANT": "https://static-cdn.jtvnw.net/ttv-boxart/VALORANT-144x192.jpg",
+    "Counter-Strike 2": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/library_600x900_2x.jpg",
+    "R.E.P.O.": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3241660/library_600x900_2x.jpg"
+  };
+
+  const gameBoxArt = (name) => GAME_ART_MAP[name] || `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(name)}-144x192.jpg`;
 
   const cards = RECOMMENDED_STREAMERS.map((streamer, index) => `
     <article
@@ -2614,7 +2625,7 @@ function recommendedStreamersPage() {
             <div class="recommended-games">
               ${streamer.games.map(game => `
                 <span class="recommended-game-chip">
-                  <img src="${gameBoxArt(game)}" alt="${game}" loading="lazy">
+                  <img src="${gameBoxArt(game)}" alt="${game}" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='https://static-cdn.jtvnw.net/ttv-static/404_boxart.jpg';">
                   <strong>${game}</strong>
                 </span>
               `).join("")}
