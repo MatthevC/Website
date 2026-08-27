@@ -2241,43 +2241,142 @@ function discordJoinPage() {
   <div class="discord-section-title">
     <div>
       <span>01 / PODGLĄD SERWERA</span>
-      <h2>NASZ DISCORD — NA ŻYWO</h2>
+      <h2>TAK WYGLĄDA MATT'S WORLD</h2>
     </div>
-    <p>To oficjalny widget Discorda. Jeśli widget serwera jest włączony, zobaczysz tutaj aktualną nazwę, osoby online oraz udostępnione kanały.</p>
+    <p>Przykładowy podgląd inspirowany naszym prawdziwym serwerem. To nie jest transmisja na żywo z Discorda — pokazuje układ, kanały i klimat, którego możesz się spodziewać po dołączeniu.</p>
   </div>
 
-  <div class="discord-live-widget-layout">
-    <div class="discord-live-widget-card discord-live-widget-card-embedded">
-      <iframe
-        src="https://discord.com/widget?id=1284861826990866432&theme=dark"
-        width="350"
-        height="500"
-        allowtransparency="true"
-        frameborder="0"
-        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-        class="discord-official-widget"
-        title="Podgląd serwera Discord MATT'S WORLD">
-      </iframe>
+  <div class="discord-showcase-wrap">
+    <div class="discord-showcase-note">
+      <span>PRZYKŁADOWY PODGLĄD</span>
+      <strong>Najważniejsze miejsca na serwerze w jednym kadrze</strong>
+      <p>Kanały mogą się zmieniać wraz z rozwojem społeczności. Po dołączeniu zobaczysz aktualny układ serwera.</p>
     </div>
 
-    <aside class="discord-live-widget-info">
-      <div class="discord-live-widget-info-card">
-        <span>CO MOŻE POKAZAĆ WIDGET?</span>
-        <ul>
-          <li>aktualną nazwę i ikonę serwera,</li>
-          <li>liczbę osób online,</li>
-          <li>publicznie udostępnione kanały,</li>
-          <li>osoby widoczne w publicznym widgetcie,</li>
-          <li>bezpośredni przycisk dołączenia.</li>
-        </ul>
-      </div>
+    <div class="discord-app-preview" aria-label="Przykładowy podgląd serwera MATT'S WORLD">
+      <aside class="discord-app-rail" aria-hidden="true">
+        <div class="discord-app-home">◉</div>
+        <span></span><span></span><span></span>
+        <div class="discord-app-server">M</div>
+        <span></span><span></span><span></span>
+      </aside>
 
-      <div class="discord-live-widget-info-card accent">
-        <span>NAJPIERW USTAW SERWER POD SIEBIE</span>
-        <h3>#konfiguracja-tickets</h3>
-        <p>Po dołączeniu zajrzyj właśnie tam. W kilka chwil wybierzesz interesujące Cię gry, role i powiadomienia, dzięki czemu Discord będzie pokazywał przede wszystkim to, co faktycznie chcesz widzieć.</p>
-      </div>
-    </aside>
+      <aside class="discord-app-channels">
+        <div class="discord-app-server-title">
+          <strong data-discord-widget-name>MATT'S WORLD</strong>
+          <span>⌄</span>
+        </div>
+
+        <div class="discord-app-boost">✦ <span>cel dot. wzmocnienia</span><b>2/3</b></div>
+
+        <div class="discord-app-channel-section">
+          <div class="discord-app-category">TICKET <b>＋</b></div>
+        </div>
+
+        <div class="discord-app-channel-section">
+          <div class="discord-app-category">TWITCH/KONFIGURACJA <b>＋</b></div>
+          <div class="discord-app-channel"><span>#</span> konfiguracja-tickets</div>
+          <div class="discord-app-channel"><span>📣</span> ogłoszenia</div>
+          <div class="discord-app-channel"><span>🔴</span> live-alert</div>
+          <div class="discord-app-channel"><span>🔊</span> regulamin</div>
+        </div>
+
+        <div class="discord-app-channel-section">
+          <div class="discord-app-category">TEXT CHANNELS <b>＋</b></div>
+          <div class="discord-app-channel active"><span>#</span> ogólny</div>
+          <div class="discord-app-channel"><span>#</span> szukam-do-gry</div>
+          <div class="discord-app-channel"><span>#</span> zdjęcia-grafika</div>
+          <div class="discord-app-channel"><span>#</span> wasze-arcydzieła</div>
+          <div class="discord-app-channel"><span>#</span> memy</div>
+          <div class="discord-app-channel"><span>#</span> wideo</div>
+          <div class="discord-app-channel"><span>#</span> matt-klip</div>
+          <div class="discord-app-channel"><span>#</span> poradniki</div>
+          <div class="discord-app-channel"><span>$</span> promocje</div>
+          <div class="discord-app-channel vip"><span>◆</span> vip</div>
+        </div>
+
+        <div class="discord-app-channel-section">
+          <div class="discord-app-category">VOICE ROOM <b>＋</b></div>
+          <div class="discord-app-channel"><span>🔊</span> POCZEKALNIA</div>
+          <div class="discord-app-channel"><span>🔊</span> Moderacja</div>
+          <div class="discord-app-channel"><span>🔴</span> STREAM ON</div>
+          <div class="discord-app-channel"><span>🔊</span> Global Voice</div>
+        </div>
+
+        <div class="discord-app-channel-section compact">
+          <div class="discord-app-category">DEAD BY DAYLIGHT <b>＋</b></div>
+          <div class="discord-app-channel"><span>#</span> nowości</div>
+          <div class="discord-app-channel"><span>#</span> rodziki</div>
+          <div class="discord-app-channel"><span>#</span> poradnik</div>
+        </div>
+      </aside>
+
+      <main class="discord-app-chat">
+        <header class="discord-app-chat-head">
+          <div><span>#</span><strong>ogólny</strong></div>
+          <div class="discord-app-chat-icons" aria-hidden="true">⌕　♟　☻</div>
+        </header>
+
+        <div class="discord-app-messages">
+          <div class="discord-app-date">DZISIAJ</div>
+
+          <article class="discord-message">
+            <div class="discord-avatar avatar-a">K</div>
+            <div><div class="discord-message-meta"><strong>korcia</strong><span>10:43</span></div><p>Dzień dobry</p><div class="discord-reactions"><span>💜 1</span><span>🙂 1</span></div></div>
+          </article>
+
+          <article class="discord-message">
+            <div class="discord-avatar avatar-b">M</div>
+            <div><div class="discord-message-meta"><strong>MatthevC</strong><span>13:47</span></div><p>Doberek wszystkim 🐵</p></div>
+          </article>
+
+          <article class="discord-message">
+            <div class="discord-avatar avatar-c">B</div>
+            <div><div class="discord-message-meta"><strong>BlackStaryolow</strong><span>14:27</span></div><p>hi</p><div class="discord-reactions"><span>💜 1</span><span>🙂 1</span></div></div>
+          </article>
+
+          <article class="discord-message">
+            <div class="discord-avatar avatar-d">W</div>
+            <div><div class="discord-message-meta"><strong>Walex</strong><span>17:41</span></div><p>Czy ktoś jeszcze nie ma 60+ FPS obracając dowolną postać?</p></div>
+          </article>
+
+          <article class="discord-message highlight">
+            <div class="discord-avatar avatar-b">M</div>
+            <div><div class="discord-message-meta"><strong>MatthevC</strong><span>18:25</span></div><p>Na ogólnym zawsze znajdziesz kogoś do pogadania albo grania 👋</p></div>
+          </article>
+        </div>
+
+        <div class="discord-app-composer">＋ <span>Napisz na # ogólny</span><b>🎁　😊</b></div>
+      </main>
+
+      <aside class="discord-app-members">
+        <div class="discord-members-search">Szukaj MATT'S WORLD</div>
+
+        <div class="discord-member-group">STREAMER — 1</div>
+        <div class="discord-member"><span class="member-avatar streamer">M</span><div><strong>MatthevC</strong><small>● online</small></div></div>
+
+        <div class="discord-member-group">MODERACJA — 3</div>
+        <div class="discord-member"><span class="member-avatar mod">B</span><div><strong>BlackStaryolow</strong><small>Moderator główny</small></div></div>
+        <div class="discord-member"><span class="member-avatar mod">O</span><div><strong>orzech</strong><small>Moderator</small></div></div>
+        <div class="discord-member"><span class="member-avatar mod">T</span><div><strong>textural_</strong><small>Moderator</small></div></div>
+
+        <div class="discord-member-group">VIP — 4</div>
+        <div class="discord-member"><span class="member-avatar vip">N</span><div><strong>Nightmare</strong><small>Dead by Daylight</small></div></div>
+        <div class="discord-member"><span class="member-avatar vip">S</span><div><strong>SandyNPC</strong><small>● online</small></div></div>
+        <div class="discord-member"><span class="member-avatar vip">W</span><div><strong>wazzzupek</strong><small>● online</small></div></div>
+        <div class="discord-member"><span class="member-avatar vip">G</span><div><strong>Ghost</strong><small>VIP</small></div></div>
+
+        <div class="discord-member-group">VIEWER — 44</div>
+        <div class="discord-member muted"><span class="member-avatar">A</span><div><strong>Albert</strong><small>członek społeczności</small></div></div>
+        <div class="discord-member muted"><span class="member-avatar">B</span><div><strong>bartesonyt</strong><small>offline</small></div></div>
+      </aside>
+    </div>
+
+    <div class="discord-showcase-footer">
+      <div><span class="online-dot"></span><strong data-discord-online-count>—</strong><small>osób online teraz</small></div>
+      <div><span class="member-dot"></span><strong data-discord-member-count>—</strong><small>członków społeczności</small></div>
+      <a id="discord-widget-invite" href="#" target="_blank" rel="noopener">DOŁĄCZ I ZOBACZ PEŁNY SERWER →</a>
+    </div>
   </div>
 </section>
 
@@ -3062,7 +3161,7 @@ async function setupDiscordJoinPage() {
   page.dataset.discordReady = '1';
 
   const inviteUrl = SITE_CONFIG.discordUrl;
-  [document.getElementById('discord-widget-invite'), document.getElementById('discord-configure-invite'), document.getElementById('discord-widget-fallback-invite')]
+  [document.getElementById('discord-widget-invite'), document.getElementById('discord-configure-invite')]
     .forEach(link => { if (link) link.href = inviteUrl; });
 
   const getInviteCode = (url) => {
