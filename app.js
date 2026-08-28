@@ -199,6 +199,10 @@ const pages = {
     title: "DLA WIDZA / <span>KOMENDY</span>",
     body: commandsPage()
   },
+  "viewer/downloads": {
+    title: "DLA WIDZA / <span>DO POBRANIA</span>",
+    body: downloadsPage()
+  },
   "vip/commands": {
     title: "DLA WIDZA / <span>KOMENDY</span>",
     body: commandsPage()
@@ -276,17 +280,15 @@ const pages = {
 
 
 function getCommandFilterDefaults() {
-  const preset = sessionStorage.getItem("commandsPreset");
-  if (preset) sessionStorage.removeItem("commandsPreset");
-
-  if (preset === "moderator") {
-    return { viewer: false, vip: false, mod: true };
-  }
-
   const route = window.location.hash.split("?")[0];
+
+  // Każda podstrona komend ustawia własny widok filtrów.
+  // Dzięki temu przejście MODERACJA/KOMENDY -> DLA WIDZA/KOMENDY
+  // natychmiast wraca do filtrów widza i VIP-a.
   if (route === "#/moderator/commands") {
     return { viewer: false, vip: false, mod: true };
   }
+
   return { viewer: true, vip: true, mod: false };
 }
 
@@ -3549,7 +3551,6 @@ document.addEventListener("click", (event) => {
   const link = event.target.closest('a[data-command-preset="moderator"]');
   if (!link) return;
 
-  sessionStorage.setItem("commandsPreset", "moderator");
   const targetHash = "#/viewer/commands";
   if (location.hash.split("?")[0] === targetHash) {
     event.preventDefault();
