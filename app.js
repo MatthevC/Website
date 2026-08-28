@@ -143,20 +143,20 @@ const pages = {
             <h3>JAK DOSTAĆ SIĘ NA DISCORD</h3>
             <p>Krótka instrukcja dołączenia do MATT'S WORLD i najważniejsze informacje na start.</p>
           </a>
-          <a class="quick-card" href="#/contact">
-            <div class="num">06 / WNIOSKI I KONTAKT</div>
-            <h3>KONTAKT / WNIOSKI</h3>
-            <p>Podanie o unbana, skarga, informacja z kim nie chcesz grać, propozycje zmian, współprace i inne sprawy.</p>
+          <a class="quick-card" href="#/downloads">
+            <div class="num">06 / PRZYDATNE PLIKI</div>
+            <h3>DO POBRANIA</h3>
+            <p>Presety ReShade i materiały zebrane w jednym, przejrzystym miejscu.</p>
           </a>
           <a class="quick-card" href="#/recommended">
             <div class="num">07 / SPOŁECZNOŚĆ</div>
             <h3>POLECANI STREAMERZY</h3>
             <p>Sprawdź twórców, których polecam oglądać podczas mojej nieobecności.</p>
           </a>
-          <a class="quick-card" href="#/downloads">
-            <div class="num">08 / PRZYDATNE PLIKI</div>
-            <h3>DO POBRANIA</h3>
-            <p>Presety ReShade i materiały zebrane w jednym, przejrzystym miejscu.</p>
+          <a class="quick-card" href="#/contact">
+            <div class="num">08 / WNIOSKI I KONTAKT</div>
+            <h3>KONTAKT / WNIOSKI</h3>
+            <p>Podanie o unbana, skarga, informacja z kim nie chcesz grać, propozycje zmian, współprace i inne sprawy.</p>
           </a>
         </div>
 
