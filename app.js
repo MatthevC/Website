@@ -3545,19 +3545,6 @@ document.querySelectorAll(".nav-dropdown > button").forEach(button => {
 
 window.addEventListener("hashchange", render);
 
-// Wejście do komend z menu MODERACJA otwiera tę samą stronę komend,
-// ale jednorazowo zaznacza wyłącznie filtr MODERACJA.
-document.addEventListener("click", (event) => {
-  const link = event.target.closest('a[data-command-preset="moderator"]');
-  if (!link) return;
-
-  const targetHash = "#/viewer/commands";
-  if (location.hash.split("?")[0] === targetHash) {
-    event.preventDefault();
-    render();
-  }
-});
-
 // Fallback dla przeglądarek/cache: kliknięcie linku Kontakt zawsze uruchamia router.
 document.addEventListener("click", (event) => {
   const link = event.target.closest('a[href="#/contact"]');
