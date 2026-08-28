@@ -3037,7 +3037,9 @@ function notFoundPage(path = "") {
             <div class="error-path">Nie znaleziono: <code>${escapeHtml(prettyPath)}</code></div>
           </div>
           <div class="error-visual" aria-hidden="true">
-            ${errorMonkeySceneSvg()}
+            <div class="error-visual-frame">
+              <img class="error-monkey-render" src="pictures/error/404-monkey-render.png" alt="">
+            </div>
           </div>
         </div>
       </section>

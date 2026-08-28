@@ -5808,6 +5808,31 @@ body.image-preview-open { overflow: hidden; }
   place-items: center;
 }
 
+
+.error-visual-frame {
+  position: relative;
+  width: 100%;
+  max-width: 930px;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.06);
+  box-shadow: 0 18px 45px rgba(0,0,0,.3);
+  background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+}
+
+.error-monkey-render {
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: monkeyRenderIdle 3.6s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes monkeyRenderIdle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.008); }
+}
+
 .error-monkey-svg {
   width: 100%;
   max-width: 640px;
