@@ -5824,7 +5824,7 @@ body.image-preview-open { overflow: hidden; }
   display: block;
   width: 100%;
   height: auto;
-  animation: monkeyRenderIdle 3.6s ease-in-out infinite;
+  animation: none;
   transform-origin: center bottom;
 }
 
