@@ -110,7 +110,7 @@ const pages = {
       </div>
 
       <div class="container content-wrap">
-        <div class="section-heading">
+        <div class="section-heading" id="home-sections">
           <div>
             <h2>NAJWAŻNIEJSZE SEKCJE</h2>
           </div>
@@ -3011,6 +3011,192 @@ async function renderEventDetail(id) {
   `;
 }
 
+
+function notFoundPage(path = "") {
+  const prettyPath = path ? `#/${path}` : "#/(brak ścieżki)";
+  return `
+    <div class="container content-wrap error-page-wrap">
+      <section class="error-panel" aria-labelledby="error-page-title">
+        <div class="error-layout">
+          <div class="error-copy">
+            <div class="error-kicker">STRONA BŁĘDU / MATT'S WORLD</div>
+            <div class="error-code">404</div>
+            <h1 id="error-page-title">UPS... COŚ POSZŁO <span>NIE TAK</span></h1>
+            <div class="error-divider" aria-hidden="true"></div>
+            <p>Wygląda na to, że ta podstrona zniknęła, nigdy nie istniała albo jest chwilowo w remoncie. Nasza kapucynka-budowlaniec dalej próbuje ogarnąć, co się tu wydarzyło.</p>
+            <div class="error-actions">
+              <a class="error-btn primary" href="#/">
+                <span class="error-btn-icon" aria-hidden="true">⌂</span>
+                <span>WRÓĆ NA START</span>
+              </a>
+              <a class="error-btn secondary" href="#/?jump=home-sections">
+                <span class="error-btn-icon" aria-hidden="true">▦</span>
+                <span>NAJWAŻNIEJSZE SEKCJE</span>
+              </a>
+            </div>
+            <div class="error-path">Nie znaleziono: <code>${escapeHtml(prettyPath)}</code></div>
+          </div>
+          <div class="error-visual" aria-hidden="true">
+            ${errorMonkeySceneSvg()}
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function errorMonkeySceneSvg() {
+  return `
+    <svg class="error-monkey-svg" viewBox="0 0 640 500" role="img" aria-label="Kapucynka budowlaniec drapiąca się po głowie">
+      <defs>
+        <linearGradient id="vestGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffd34d"></stop>
+          <stop offset="100%" stop-color="#c98613"></stop>
+        </linearGradient>
+        <linearGradient id="helmetGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffd968"></stop>
+          <stop offset="100%" stop-color="#d58b16"></stop>
+        </linearGradient>
+        <linearGradient id="signGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#151515"></stop>
+          <stop offset="100%" stop-color="#231313"></stop>
+        </linearGradient>
+        <radialGradient id="bgGlow" cx="50%" cy="48%" r="60%">
+          <stop offset="0%" stop-color="rgba(239,43,45,.32)"></stop>
+          <stop offset="100%" stop-color="rgba(239,43,45,0)"></stop>
+        </radialGradient>
+      </defs>
+      <ellipse cx="318" cy="448" rx="215" ry="34" fill="rgba(0,0,0,.36)"></ellipse>
+      <circle cx="382" cy="172" r="140" fill="url(#bgGlow)"></circle>
+      <g class="warning-tape" opacity=".65">
+        <rect x="95" y="340" width="440" height="18" rx="9" fill="#4b1112"></rect>
+        <g fill="#ef2b2d">
+          <rect x="105" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="155" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="205" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="255" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="305" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="355" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="405" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+          <rect x="455" y="343" width="24" height="12" transform="skewX(-28)"></rect>
+        </g>
+      </g>
+
+      <g class="cone cone-left">
+        <ellipse cx="118" cy="428" rx="34" ry="10" fill="rgba(0,0,0,.22)"></ellipse>
+        <path d="M97 418L116 352h16l19 66Z" fill="#f46c2d"></path>
+        <rect x="108" y="373" width="35" height="11" rx="4" fill="#fff"></rect>
+        <rect x="104" y="399" width="43" height="12" rx="4" fill="#fff"></rect>
+        <rect x="89" y="418" width="58" height="12" rx="6" fill="#d55a24"></rect>
+      </g>
+      <g class="cone cone-right">
+        <ellipse cx="566" cy="430" rx="36" ry="10" fill="rgba(0,0,0,.22)"></ellipse>
+        <path d="M544 420l20-68h16l20 68Z" fill="#f46c2d"></path>
+        <rect x="555" y="374" width="37" height="11" rx="4" fill="#fff"></rect>
+        <rect x="551" y="401" width="45" height="12" rx="4" fill="#fff"></rect>
+        <rect x="536" y="420" width="60" height="12" rx="6" fill="#d55a24"></rect>
+      </g>
+
+      <g class="warning-sign">
+        <ellipse cx="498" cy="421" rx="70" ry="16" fill="rgba(0,0,0,.25)"></ellipse>
+        <polygon points="455,235 548,235 578,414 430,414" fill="#101010" stroke="#5d2324" stroke-width="3"></polygon>
+        <polygon points="464,246 540,246 564,404 442,404" fill="url(#signGrad)" stroke="#ef2b2d" stroke-width="2"></polygon>
+        <g opacity=".95">
+          <rect x="467" y="249" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+          <rect x="493" y="249" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+          <rect x="519" y="249" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+          <rect x="449" y="387" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+          <rect x="475" y="387" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+          <rect x="501" y="387" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+          <rect x="527" y="387" width="14" height="10" fill="#ef2b2d" transform="skewX(-30)"></rect>
+        </g>
+        <path d="M500 285l28 49h-56Z" fill="none" stroke="#ef2b2d" stroke-width="6" stroke-linejoin="round"></path>
+        <rect x="496" y="295" width="8" height="22" rx="4" fill="#ef2b2d"></rect>
+        <circle cx="500" cy="324" r="4.5" fill="#ef2b2d"></circle>
+        <text x="500" y="362" fill="#ef2b2d" text-anchor="middle" font-family="Rajdhani, sans-serif" font-size="26" font-weight="700">STRONA</text>
+        <text x="500" y="389" fill="#ef2b2d" text-anchor="middle" font-family="Rajdhani, sans-serif" font-size="26" font-weight="700">W REMONCIE</text>
+      </g>
+
+      <g class="error-thought-bubble">
+        <circle cx="470" cy="122" r="10" fill="rgba(239,43,45,.18)" stroke="#ef2b2d" stroke-width="2"></circle>
+        <circle cx="490" cy="102" r="14" fill="rgba(239,43,45,.14)" stroke="#ef2b2d" stroke-width="2"></circle>
+        <path d="M510 50c0-18 18-32 40-32h38c22 0 40 14 40 32v8c0 18-18 32-40 32h-8l-15 18-8-18h-7c-22 0-40-14-40-32z" fill="rgba(18,18,18,.95)" stroke="#ef2b2d" stroke-width="3"></path>
+        <text x="569" y="67" fill="#ef2b2d" text-anchor="middle" font-family="Rajdhani, sans-serif" font-size="44" font-weight="700">...?</text>
+      </g>
+
+      <g class="monkey-tail">
+        <path d="M290 398c44 16 66 47 46 68-17 17-58 2-56-28 1-18 18-28 35-27" fill="none" stroke="#4b2418" stroke-width="14" stroke-linecap="round"></path>
+        <path d="M292 398c35 13 53 34 40 49-8 10-31 6-34-10" fill="none" stroke="#6a3621" stroke-width="8" stroke-linecap="round"></path>
+      </g>
+
+      <g class="monkey-legs">
+        <rect x="286" y="376" width="28" height="58" rx="14" fill="#231917"></rect>
+        <rect x="334" y="376" width="28" height="58" rx="14" fill="#231917"></rect>
+        <ellipse cx="300" cy="437" rx="20" ry="10" fill="#8d6047"></ellipse>
+        <ellipse cx="348" cy="437" rx="20" ry="10" fill="#8d6047"></ellipse>
+      </g>
+
+      <g class="monkey-body">
+        <rect x="268" y="236" width="112" height="154" rx="46" fill="#181818"></rect>
+        <path d="M262 242h124l-8 125c-16 14-32 21-48 21s-32-7-48-21z" fill="url(#vestGrad)"></path>
+        <rect x="317" y="241" width="18" height="132" rx="9" fill="#3a3123"></rect>
+        <rect x="276" y="280" width="96" height="12" rx="6" fill="#d8dcc9" opacity=".85"></rect>
+        <rect x="280" y="320" width="88" height="12" rx="6" fill="#d8dcc9" opacity=".85"></rect>
+        <circle cx="330" cy="230" r="74" fill="#4b2418"></circle>
+        <circle cx="266" cy="227" r="24" fill="#8a5a44"></circle>
+        <circle cx="394" cy="227" r="24" fill="#8a5a44"></circle>
+        <circle cx="330" cy="235" r="54" fill="#d2a585"></circle>
+        <ellipse cx="306" cy="222" rx="16" ry="18" fill="#fff"></ellipse>
+        <ellipse cx="354" cy="222" rx="16" ry="18" fill="#fff"></ellipse>
+        <circle cx="310" cy="224" r="8.5" fill="#2b1c1a"></circle>
+        <circle cx="350" cy="224" r="8.5" fill="#2b1c1a"></circle>
+        <circle cx="313" cy="221" r="2.5" fill="#fff"></circle>
+        <circle cx="353" cy="221" r="2.5" fill="#fff"></circle>
+        <ellipse cx="330" cy="256" rx="18" ry="14" fill="#c38b67"></ellipse>
+        <path d="M320 252c5 4 14 4 20 0" fill="none" stroke="#8d6047" stroke-width="3" stroke-linecap="round"></path>
+        <path d="M318 274c9 6 18 6 26 0" fill="none" stroke="#6f4734" stroke-width="3" stroke-linecap="round"></path>
+        <g class="monkey-helmet">
+          <path d="M261 183c0-34 30-61 69-61s69 27 69 61v14H261z" fill="url(#helmetGrad)"></path>
+          <rect x="255" y="179" width="150" height="20" rx="10" fill="#f0a71e"></rect>
+          <rect x="323" y="129" width="14" height="44" rx="7" fill="#f1bc43"></rect>
+          <circle cx="330" cy="174" r="17" fill="#1a1515" stroke="#ef2b2d" stroke-width="3"></circle>
+          <circle cx="330" cy="174" r="12" fill="#f2d79c"></circle>
+          <circle cx="330" cy="174" r="8" fill="#6c3c21"></circle>
+        </g>
+      </g>
+
+      <g class="monkey-toolbelt">
+        <rect x="273" y="350" width="102" height="18" rx="9" fill="#5d4331"></rect>
+        <rect x="267" y="355" width="20" height="48" rx="8" fill="#8e5c38"></rect>
+        <rect x="364" y="355" width="20" height="42" rx="8" fill="#8e5c38"></rect>
+      </g>
+
+      <g class="monkey-wrench-arm">
+        <path d="M369 275c26 9 40 25 42 48 1 16-3 33-7 49" fill="none" stroke="#4b2418" stroke-width="26" stroke-linecap="round"></path>
+        <path d="M369 275c26 9 40 25 42 48 1 16-3 33-7 49" fill="none" stroke="#6a3621" stroke-width="16" stroke-linecap="round"></path>
+        <circle cx="399" cy="374" r="14" fill="#8d6047"></circle>
+        <rect x="401" y="326" width="14" height="66" rx="7" fill="#c2c8d0" transform="rotate(8 408 359)"></rect>
+        <path d="M415 318c12-6 23 8 16 18-7 9-17 5-20 1l-6 6-7-7 6-6c-4-8 4-17 11-12z" fill="#c2c8d0"></path>
+      </g>
+
+      <g class="monkey-scratch-arm">
+        <path d="M288 275c-21 10-34 26-36 46-1 17 4 26 11 35" fill="none" stroke="#4b2418" stroke-width="24" stroke-linecap="round"></path>
+        <path d="M288 275c-21 10-34 26-36 46-1 17 4 26 11 35" fill="none" stroke="#6a3621" stroke-width="14" stroke-linecap="round"></path>
+        <circle cx="269" cy="353" r="13" fill="#8d6047"></circle>
+        <path d="M263 356c-2-16 2-32 11-47 9-14 20-25 34-35" fill="none" stroke="#8d6047" stroke-width="2" opacity=".45"></path>
+      </g>
+
+      <g class="debris" fill="#5a3737">
+        <polygon points="166,432 176,422 183,434"></polygon>
+        <polygon points="199,442 211,431 219,445"></polygon>
+        <polygon points="235,426 244,418 250,430"></polygon>
+        <polygon points="456,437 465,427 473,440"></polygon>
+        <polygon points="518,438 529,427 537,441"></polygon>
+      </g>
+    </svg>
+  `;
+}
+
 async function render() {
   const raw = location.hash.replace(/^#\/?/, "");
   const [rawPath, rawQuery = ""] = raw.split("?");
@@ -3071,7 +3257,17 @@ async function render() {
     return;
   }
 
-  const page = pages[path] || pages.home;
+  const page = path === "" ? pages.home : pages[path];
+
+  if (path !== "" && !page) {
+    app.innerHTML = notFoundPage(path);
+    updateLinks();
+    setupContactForm();
+    setupImagePreview();
+    setupGlobalPageNavigation();
+    closeMobileMenu();
+    return;
+  }
 
   if (path === "") {
     app.innerHTML = page.body;
