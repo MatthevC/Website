@@ -2150,7 +2150,11 @@ function setupGlobalPageNavigation() {
   const panel = document.querySelector("#app .page-panel");
   if (!panel || panel.dataset.globalNavReady === "1") return;
 
-  const headings = [...panel.querySelectorAll("h1, h2")]
+  // Na stronie komend w nawigacji pokazujemy wyłącznie sekcje z kategoriami.
+  // Dzięki temu nie pojawia się sztuczna pozycja „Początek” odnosząca się do nagłówka H1.
+  const isCommandsPage = /(?:^|\/)commands$/.test(currentPath);
+  const headingSelector = isCommandsPage ? ".command-category-heading h2" : "h1, h2";
+  const headings = [...panel.querySelectorAll(headingSelector)]
     .filter(heading => !heading.closest(".site-page-toc") && heading.offsetParent !== null);
   if (headings.length < 2) return;
 
@@ -2176,7 +2180,7 @@ function setupGlobalPageNavigation() {
     <div class="dixper-toc-track" aria-hidden="true"><span data-site-page-progress></span></div>
     ${headings.map((heading, index) => {
       const raw = heading.textContent.replace(/\s+/g, " ").trim();
-      const label = index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw);
+      const label = !isCommandsPage && index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw);
       return `<button type="button" class="dixper-toc-link site-page-toc-link${index === 0 ? " active" : ""}" data-site-page-target="${heading.id}"><span>${String(index + 1).padStart(2, "0")}</span>${label}</button>`;
     }).join("")}`;
 
