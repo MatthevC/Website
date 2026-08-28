@@ -260,7 +260,7 @@ const pages = {
     body: discordJoinPage()
   },
   "discord/roles": {
-    title: "NASZ DISCORD / <span>OPIS KANAŁÓW I RÓL</span>",
+    title: "NASZ DISCORD / <span>OPIS KANAŁÓW</span>",
     body: discordChannelsPage()
   },
 
@@ -497,7 +497,7 @@ function discordChannelsPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <header class="discord-channels-hero">
-          <span class="discord-channels-kicker">NASZ DISCORD / OPIS KANAŁÓW I RÓL</span>
+          <span class="discord-channels-kicker">NASZ DISCORD / OPIS KANAŁÓW</span>
           <h1>GDZIE CO <span>ZNAJDZIESZ?</span></h1>
           <p>Krótka mapa serwera MATT'S WORLD. Sprawdź przeznaczenie kanału, zanim coś wyślesz — dzięki temu łatwiej utrzymać porządek i szybciej znaleźć to, czego szukasz.</p>
           <div class="discord-channels-tags" aria-label="Najważniejsze kategorie">
@@ -636,35 +636,6 @@ function discordChannelsPage() {
           </div>
         </section>
 
-        <section class="discord-channel-section discord-roles-section" id="discord-role-roles">
-          <div class="discord-section-heading">
-            <div>
-              <span class="discord-section-number">05</span>
-              <h2>ROLE I DOSTĘP</h2>
-            </div>
-            <p>Najważniejsze role, które możesz spotkać na serwerze.</p>
-          </div>
-
-          <div class="discord-role-grid">
-            <article class="discord-role-card">
-              <span class="discord-role-icon">🎙️</span>
-              <div><strong>Streamer</strong><p>Osoba prowadząca transmisję. Na kanale STREAM ON Streamer i osoby z jego lobby mają pierwszeństwo.</p></div>
-            </article>
-            <article class="discord-role-card">
-              <span class="discord-role-icon">🛡️</span>
-              <div><strong>Moderacja</strong><p>Pomaga utrzymać porządek i reaguje na problemy. W razie potrzeby możesz skontaktować się z nią przez ticket.</p></div>
-            </article>
-            <article class="discord-role-card">
-              <span class="discord-role-icon">💎</span>
-              <div><strong>VIP</strong><p>Wyróżnienie dla aktywnych członków społeczności. VIP może otrzymać dodatkowe możliwości i dostęp do wybranych kanałów.</p><a href="#/viewer/vip">WIĘCEJ O VIP →</a></div>
-            </article>
-          </div>
-
-          <div class="discord-config-note">
-            <strong>Nie chcesz widzieć wszystkiego?</strong>
-            <span>Część kanałów i powiadomień możesz dopasować w <b>konfiguracja-tickets</b>, aby serwer był dla Ciebie czytelniejszy.</span>
-          </div>
-        </section>
       </div>
     </div>
   `;
@@ -2244,7 +2215,7 @@ function discordJoinPage() {
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
                 DOŁĄCZ DO SERWERA
               </a>
-              <a class="discord-join-secondary" href="#/discord/roles">ZOBACZ OPIS KANAŁÓW I RÓL →</a>
+              <a class="discord-join-secondary" href="#/discord/roles">ZOBACZ OPIS KANAŁÓW →</a>
             </div>
           </div>
 
