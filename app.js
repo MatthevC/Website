@@ -3373,14 +3373,23 @@ async function setupRecommendedPage() {
   const sections = [...document.querySelectorAll('[data-recommended-section]')];
   const navLinks = [...document.querySelectorAll('[data-recommended-target]')];
   const progress = document.querySelector('[data-recommended-progress]');
+  let manualNavigation = false;
+  let manualTimer = null;
+
+  const activateLink = (id) => {
+    const activeIndex = sections.findIndex(section => section.id === id);
+    navLinks.forEach(item => item.classList.toggle('active', item.dataset.recommendedTarget === id));
+    if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+  };
 
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
       const target = document.getElementById(link.dataset.recommendedTarget);
-      const activeIndex = sections.findIndex(section => section.id === link.dataset.recommendedTarget);
-      navLinks.forEach(item => item.classList.toggle('active', item === link));
-      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+      manualNavigation = true;
+      clearTimeout(manualTimer);
+      activateLink(link.dataset.recommendedTarget);
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      manualTimer = setTimeout(() => { manualNavigation = false; }, 900);
     });
   });
 
@@ -3399,7 +3408,7 @@ async function setupRecommendedPage() {
       const visible = entries
         .filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) setActive(visible.target);
+      if (visible && !manualNavigation) setActive(visible.target);
     }, {
       rootMargin: '-18% 0px -58% 0px',
       threshold: [0, .1, .25, .5]
