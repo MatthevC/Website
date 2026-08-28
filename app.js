@@ -1,3 +1,5 @@
+let tocScrollLock = false;
+
 const app = document.getElementById("app");
 
 const MODERATOR_TEAM = [
@@ -1289,12 +1291,15 @@ function setupDixperPage() {
       const activeIndex = sections.findIndex(section => section.id === link.dataset.dixperTarget);
       tocLinks.forEach(item => item.classList.toggle("active", item === link));
       if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+      tocScrollLock = true;
+      setTimeout(() => { tocScrollLock = false; }, 1000);
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 
   if ("IntersectionObserver" in window && sections.length) {
     const observer = new IntersectionObserver(entries => {
+      if (tocScrollLock) return;
       const visible = entries
         .filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -1505,12 +1510,15 @@ function setupBingoPage() {
       const activeIndex = sections.findIndex(section => section.id === link.dataset.bingoTarget);
       links.forEach(item => item.classList.toggle("active", item === link));
       if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+      tocScrollLock = true;
+      setTimeout(() => { tocScrollLock = false; }, 1000);
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 
   if ("IntersectionObserver" in window && sections.length) {
     const observer = new IntersectionObserver(entries => {
+      if (tocScrollLock) return;
       const visible = entries.filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
       if (!visible) return;
@@ -2200,11 +2208,14 @@ function setupGlobalPageNavigation() {
     const activeIndex = headings.findIndex(heading => heading.id === targetId);
     links.forEach(item => item.classList.toggle("active", item === link));
     if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
+    tocScrollLock = true;
+    setTimeout(() => { tocScrollLock = false; }, 1000);
     document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }));
 
   if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(entries => {
+      if (tocScrollLock) return;
       const visible = entries.filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
       if (!visible) return;
@@ -3405,6 +3416,7 @@ async function setupRecommendedPage() {
 
   if ('IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {
+      if (tocScrollLock) return;
       const visible = entries
         .filter(entry => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
