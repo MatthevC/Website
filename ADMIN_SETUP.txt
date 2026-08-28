@@ -1,0 +1,10 @@
+PANEL EVENTÓW
+Dodano panel /admin.
+
+Aby moderacja mogła bezpiecznie dodawać eventy:
+- należy podłączyć backend (Supabase/Firebase),
+- utworzyć role moderatorów,
+- przechowywać hasła jako hash,
+- zabezpieczyć API tokenami.
+
+Nie przechowuj haseł administratora w JavaScript frontendowym.
