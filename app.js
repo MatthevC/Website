@@ -3025,7 +3025,7 @@ function notFoundPage(path = "") {
             <div class="error-code">404</div>
             <h1 id="error-page-title">UPS... COŚ POSZŁO <span>NIE TAK</span></h1>
             <div class="error-divider" aria-hidden="true"></div>
-            <p>Wygląda na to, że ta podstrona zniknęła, nigdy nie istniała albo jest chwilowo w remoncie. Nasza kapucynka-budowlaniec dalej próbuje ogarnąć, co się tu wydarzyło.</p>
+            <p>Wygląda na to, że ta podstrona zniknęła, nigdy nie istniała albo jest chwilowo w remoncie. Pjoter dalej próbuje ogarnąć, co się tu wydarzyło zanim przyjdzie Janusz oraz Pan Wiesio.</p>
             <div class="error-actions">
               <a class="error-btn primary" href="#/">
                 <span class="error-btn-icon" aria-hidden="true">⌂</span>

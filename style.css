@@ -5859,27 +5859,27 @@ body.image-preview-open { overflow: hidden; }
 }
 
 .error-monkey-svg .monkey-scratch-arm {
-  animation: monkeyScratch 1.55s ease-in-out infinite;
+  animation: none;
 }
 
 .error-monkey-svg .monkey-helmet {
-  animation: monkeyHelmet 1.55s ease-in-out infinite;
+  animation: none;
 }
 
 .error-monkey-svg .error-thought-bubble {
-  animation: thoughtPulse 2.3s ease-in-out infinite;
+  animation: none;
 }
 
 .error-monkey-svg .warning-sign {
-  animation: signSway 3.6s ease-in-out infinite;
+  animation: none;
 }
 
 .error-monkey-svg .cone-left {
-  animation: coneBob 3.2s ease-in-out infinite;
+  animation: none;
 }
 
 .error-monkey-svg .cone-right {
-  animation: coneBob 3.2s ease-in-out infinite reverse;
+  animation: none;
 }
 
 .error-monkey-svg .monkey-body,
@@ -5887,7 +5887,7 @@ body.image-preview-open { overflow: hidden; }
 .error-monkey-svg .monkey-legs,
 .error-monkey-svg .monkey-tail,
 .error-monkey-svg .monkey-wrench-arm {
-  animation: monkeyBodyBob 2.8s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes monkeyScratch {
