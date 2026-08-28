@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><title>Panel eventów</title><link rel="stylesheet" href="../style.css"></head>
+<body><main class="container"><h1>Panel moderatora - Eventy</h1>
+<form id="eventForm">
+<label>Tytuł<input name="title" required></label>
+<label>Data rozpoczęcia<input name="start" type="datetime-local" required></label>
+<label>Data zakończenia<input name="end" type="datetime-local" required></label>
+<label>Grafika<input name="image" type="file" accept="image/*"></label>
+<label>Opis<textarea name="description" required></textarea></label>
+<button>Dodaj event</button>
+</form>
+<p>Panel wymaga podpięcia bezpiecznego backendu (Supabase/Firebase) przed publikacją.</p>
+<script src="admin.js"></script></main></body></html>
