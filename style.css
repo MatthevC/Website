@@ -190,15 +190,32 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 .header-cta {
   flex-shrink: 0;
-  background: var(--red);
-  border: 1px solid #ff6668;
-  padding: 12px 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #9146ff;
+  border: 1px solid #a970ff;
+  padding: 10px 16px;
   border-radius: 4px;
+  color: #fff;
   font: 700 12px Rajdhani, sans-serif;
-  box-shadow: 0 0 25px var(--red-glow);
+  box-shadow: 0 0 25px rgba(145, 70, 255, .30);
 }
 
-.header-cta:hover { background: #ff393b; }
+.header-twitch-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  object-fit: contain;
+  display: block;
+}
+
+.header-cta:hover {
+  background: #772ce8;
+  border-color: #bf94ff;
+  box-shadow: 0 0 30px rgba(145, 70, 255, .42);
+}
 
 .mobile-menu-btn {
   display: none;

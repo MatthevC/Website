@@ -102,7 +102,7 @@ const pages = {
             <div class="side-card contact-home-card">
               <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
               <h3>WNIOSKI / KONTAKT</h3>
-              <p>Wyślij prośbę o unbana, skargę lub zażalenie. Możesz też przesłać propozycję, zgłoszenie albo inną wiadomość do ekipy.</p>
+              <p>Napisz podanie o unbana, złóż skargę, wskaż z kim nie chcesz grać, zaproponuj zmiany lub współpracę albo wyślij inną wiadomość do ekipy.</p>
               <a class="red-link" href="#/contact">PRZEJDŹ DO FORMULARZA →</a>
             </div>
           </aside>
@@ -138,13 +138,23 @@ const pages = {
             <h3>BINGO</h3>
             <p>Sprawdź zasady Stream Bounty, sposób dołączenia do gry i informacje o rozgrywce Bingo.</p>
           </a>
+          <a class="quick-card" href="#/discord/join">
+            <div class="num">05 / NASZ DISCORD</div>
+            <h3>JAK DOSTAĆ SIĘ NA DISCORD</h3>
+            <p>Krótka instrukcja dołączenia do MATT'S WORLD i najważniejsze informacje na start.</p>
+          </a>
+          <a class="quick-card" href="#/contact">
+            <div class="num">06 / WNIOSKI I KONTAKT</div>
+            <h3>KONTAKT / WNIOSKI</h3>
+            <p>Podanie o unbana, skarga, informacja z kim nie chcesz grać, propozycje zmian, współprace i inne sprawy.</p>
+          </a>
           <a class="quick-card" href="#/recommended">
-            <div class="num">05 / SPOŁECZNOŚĆ</div>
+            <div class="num">07 / SPOŁECZNOŚĆ</div>
             <h3>POLECANI STREAMERZY</h3>
             <p>Sprawdź twórców, których polecam oglądać podczas mojej nieobecności.</p>
           </a>
           <a class="quick-card" href="#/downloads">
-            <div class="num">06 / PRZYDATNE PLIKI</div>
+            <div class="num">08 / PRZYDATNE PLIKI</div>
             <h3>DO POBRANIA</h3>
             <p>Presety ReShade i materiały zebrane w jednym, przejrzystym miejscu.</p>
           </a>
@@ -2674,7 +2684,7 @@ function contactPage() {
       <div class="page-panel contact-panel">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
         <h1>WNIOSKI / <span>KONTAKT</span></h1>
-        <p>Chcesz wysłać prośbę o unbana, skargę lub zażalenie? Tutaj możesz też przesłać propozycję, zgłosić kandydaturę, skontaktować się w sprawie współpracy albo napisać w innej sprawie. Wypełnij formularz, a wiadomość trafi do ekipy MATT'S WORLD.</p>
+        <p>To miejsce do wszystkich ważniejszych spraw dotyczących społeczności. Możesz tutaj napisać podanie o unbana, złożyć skargę lub zażalenie, poinformować z kim nie chcesz grać, zaproponować zmiany i usprawnienia, przesłać propozycję współpracy, zgłosić kandydaturę albo napisać w innej sprawie. Wypełnij formularz, a wiadomość trafi do ekipy MATT'S WORLD.</p>
 
         <form id="contact-form" class="contact-form">
           <div class="form-grid">
@@ -2692,13 +2702,14 @@ function contactPage() {
             <span>TEMAT <b>*</b></span>
             <select name="topic" id="contact-topic" required>
               <option value="" selected disabled>Wybierz temat</option>
-              <option>Współprace i marketing</option>
-              <option>Prośba o unbana</option>
+              <option>Podanie o unbana</option>
+              <option>Skarga lub zażalenie</option>
+              <option>Informacja — z kim nie chcę grać</option>
+              <option>Propozycja zmian lub usprawnień</option>
+              <option>Propozycja współpracy / marketing</option>
               <option>Zgłoszenie swojej kandydatury na moderatora</option>
               <option>Prośba o przydzielenie uprawnień</option>
-              <option>Skargi i zażalenia</option>
-              <option>Propozycje</option>
-              <option>Inne</option>
+              <option>Inna sprawa</option>
             </select>
           </label>
 
