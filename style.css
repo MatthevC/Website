@@ -6084,3 +6084,83 @@ body.image-preview-open { overflow: hidden; }
 .login-submit,.forgot-btn{width:100%;padding:12px;margin-top:10px;cursor:pointer}
 .login-submit{background:#ef2b2d;color:white;border:0}
 .login-close{position:absolute;right:15px;top:10px;background:none;color:white;border:0;font-size:25px}
+
+
+/* LOGIN MODAL FIX */
+.admin-login-bar {
+  position:absolute;
+  top:10px;
+  right:40px;
+  z-index:1100;
+}
+
+.header-login {
+  background:#111;
+  border:1px solid #333;
+  color:#fff;
+  padding:8px 18px;
+  border-radius:5px;
+  cursor:pointer;
+  font:700 12px Rajdhani,sans-serif;
+}
+
+.header-login.logged {
+  border-color:#ef2b2d;
+  color:#ef2b2d;
+}
+
+.login-overlay {
+  position:fixed !important;
+  inset:0;
+  width:100%;
+  height:100vh;
+  background:rgba(0,0,0,.78);
+  backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+.login-modal {
+  position:relative;
+  width:380px;
+  padding:35px;
+  background:#111;
+  border:1px solid #333;
+  border-top:3px solid #ef2b2d;
+  border-radius:12px;
+  box-shadow:0 20px 70px #000;
+  z-index:100000;
+}
+
+.login-modal input {
+ width:100%;
+ margin:8px 0;
+ padding:12px;
+ background:#080808;
+ border:1px solid #333;
+ color:white;
+}
+
+.login-submit {
+ width:100%;
+ margin-top:15px;
+ padding:12px;
+ background:#ef2b2d;
+ color:white;
+ border:0;
+ cursor:pointer;
+ font-weight:700;
+}
+
+.login-close {
+ position:absolute;
+ right:15px;
+ top:10px;
+ background:none;
+ color:white;
+ border:0;
+ font-size:25px;
+ cursor:pointer;
+}
