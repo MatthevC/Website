@@ -147,8 +147,25 @@ function setDefaultPublishDate(){
  }
 }
 
+
+function initPickerIcons(){
+ document.querySelectorAll(".picker-icon").forEach(icon=>{
+   icon.addEventListener("click",()=>{
+     const wrapper=icon.closest(".input-icon");
+     const input=wrapper?.querySelector("input");
+     if(!input) return;
+     if(typeof input.showPicker === "function"){
+       input.showPicker();
+     }else{
+       input.focus();
+     }
+   });
+ });
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
  setDefaultPublishDate();
+ initPickerIcons();
  initEvents();
  checkAdmin();
 

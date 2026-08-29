@@ -6741,3 +6741,45 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   white-space:nowrap;
   margin-left:4px;
 }
+
+
+/* Event creator date/time polish */
+.datetime-field{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:0;
+}
+.datetime-field .input-icon{
+  position:relative;
+  flex:1;
+}
+.datetime-field .input-icon input{
+  padding-right:42px!important;
+  margin-bottom:12px;
+  height:42px;
+}
+.datetime-field .picker-icon{
+  position:absolute;
+  right:13px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  cursor:pointer;
+  pointer-events:auto;
+  opacity:.85;
+  font-size:15px;
+  transition:.2s;
+}
+.datetime-field .picker-icon:hover{
+  opacity:1;
+  transform:translateY(-50%) scale(1.12);
+}
+.event-ended-toggle{
+  height:42px;
+  margin-bottom:12px;
+}
+.event-fields input,
+.event-fields textarea{
+  border-radius:6px;
+}
