@@ -2808,9 +2808,17 @@ function eventCard(event) {
   `;
 }
 function formatDate(date) {
+  if (!date) return "Brak daty";
+
+  const parsed = new Date(date);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return "Brak daty";
+  }
+
   return new Intl.DateTimeFormat("pl-PL", {
     day: "numeric", month: "long", year: "numeric"
-  }).format(new Date(date));
+  }).format(parsed);
 }
 
 function escapeHtml(text) {

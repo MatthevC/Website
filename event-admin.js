@@ -1,46 +1,82 @@
+document.addEventListener("DOMContentLoaded", async ()=>{
 
-document.addEventListener("DOMContentLoaded",()=>{
  const modal=document.getElementById("eventModal");
  const close=document.getElementById("closeEvent");
  const save=document.getElementById("saveEvent");
- const adminLink=document.getElementById("adminLink");
+ const addButton=document.getElementById("addEventButton");
 
- const bindAddButton=()=>{
-   const addButton=document.getElementById("addEventButton");
-   if(addButton){
-     addButton.style.display="none";
-     addButton.onclick=()=>{modal.style.display="flex";};
+ if(addButton){
+   addButton.style.display="none";
+ }
+
+ let isAdmin=false;
+
+ try{
+   const {data:{session}} = await supabaseClient.auth.getSession();
+
+   if(session){
+     const {data:profile}=await supabaseClient
+       .from("profiles")
+       .select("role")
+       .eq("email",session.user.email)
+       .maybeSingle();
+
+     if(profile?.role==="admin"){
+       isAdmin=true;
+       if(addButton){
+          addButton.style.display="inline-flex";
+          addButton.onclick=()=>{
+             if(modal) modal.style.display="flex";
+          };
+       }
+     }
    }
-   return addButton;
- };
- let addButton=bindAddButton();
+ }catch(e){
+   console.error("Admin check error",e);
+ }
 
- supabaseClient.auth.getSession().then(async({data})=>{
-  if(!data.session)return;
-  const {data:p}=await supabaseClient.from("profiles").select("role").eq("email",data.session.user.email).maybeSingle();
-  if(p?.role==="admin"){ addButton=bindAddButton() || addButton; if(addButton) addButton.style.display="inline-flex"; }
- });
+ if(close){
+   close.onclick=()=>{
+      if(modal) modal.style.display="none";
+   };
+ }
 
- close.onclick=()=>modal.style.display="none";
-
+ if(save){
  save.onclick=async()=>{
-  const msg=document.getElementById("eventMsg");
-  const file=document.getElementById("eventImage").files[0];
-  let image="";
-  if(file){
-    const name=Date.now()+"_"+file.name;
-    const upload=await supabaseClient.storage.from("events").upload(name,file);
-    if(upload.error){msg.textContent=upload.error.message;return;}
-    image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
-  }
-  const {error}=await supabaseClient.from("events").insert({
-    title:document.getElementById("eventTitle").value,
-    description:document.getElementById("eventDesc").value,
-    start_date:document.getElementById("eventStart").value,
-    end_date:document.getElementById("eventEnd").value,
-    publish_date:document.getElementById("eventPublish").value,
-    image_url:image
-  });
-  msg.textContent=error?error.message:"Dodano event";
+   if(!isAdmin){
+     alert("Brak uprawnień");
+     return;
+   }
+
+   const msg=document.getElementById("eventMsg");
+   const file=document.getElementById("eventImage")?.files[0];
+   let image="";
+
+   if(file){
+     const name=Date.now()+"_"+file.name;
+     const upload=await supabaseClient.storage.from("events").upload(name,file);
+     if(upload.error){
+       msg.textContent=upload.error.message;
+       return;
+     }
+     image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
+   }
+
+   const {error}=await supabaseClient.from("events").insert({
+     title:document.getElementById("eventTitle").value,
+     description:document.getElementById("eventDesc").value,
+     start_date:document.getElementById("eventStart").value,
+     end_date:document.getElementById("eventEnd").value,
+     publish_date:document.getElementById("eventPublish").value,
+     image_url:image
+   });
+
+   msg.textContent=error ? error.message : "Dodano event";
+
+   if(!error){
+     setTimeout(()=>location.reload(),800);
+   }
  };
+ }
+
 });
