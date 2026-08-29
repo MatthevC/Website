@@ -7312,3 +7312,73 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   height:auto!important;
   padding:0!important;
 }
+
+
+/* FINAL SIMPLE EVENT CREATOR ALIGNMENT */
+.event-form-modern{
+  display:grid !important;
+  grid-template-columns:190px minmax(0,1fr) !important;
+  column-gap:22px !important;
+  row-gap:10px !important;
+  align-items:center !important;
+}
+
+.event-form-modern label{
+  grid-column:1 !important;
+  margin:0 !important;
+  align-self:center !important;
+}
+
+.event-form-modern > input,
+.event-form-modern > textarea,
+.event-form-modern > .datetime-field,
+.event-form-modern > button,
+.event-form-modern > p{
+  grid-column:2 !important;
+}
+
+.datetime-field{
+  display:flex !important;
+  gap:10px !important;
+  width:100%;
+  align-items:center !important;
+}
+
+.datetime-field .input-icon{
+  position:relative !important;
+  flex:1 !important;
+}
+
+.datetime-field .input-icon input{
+  width:100% !important;
+  height:42px !important;
+  padding-right:48px !important;
+}
+
+.datetime-field .picker-icon{
+  position:absolute !important;
+  right:0 !important;
+  top:0 !important;
+  width:42px !important;
+  height:42px !important;
+  border-radius:0 6px 6px 0 !important;
+  margin:0 !important;
+  transform:none !important;
+  font-size:18px !important;
+  background:#111 !important;
+  border:1px solid #333 !important;
+}
+
+.event-ended-toggle{
+  height:42px !important;
+  margin-left:8px !important;
+}
+
+.event-form-modern textarea{
+  min-height:190px !important;
+  resize:vertical;
+}
+
+.event-form-modern > button{
+  margin-top:8px;
+}
