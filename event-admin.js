@@ -201,6 +201,7 @@ async function openEdit(id){
  editEventId.value=data.id;
  editEventTitle.value=data.title||"";
  editEventDesc.value=data.description||"";
+ if(document.getElementById("editEventImageFit")) document.getElementById("editEventImageFit").value=data.image_fit||"contain";
  const setDT=(val,dateId,timeId)=>{
    if(!val)return;
    let d=new Date(val);
@@ -214,7 +215,7 @@ async function openEdit(id){
 }
 document.addEventListener("click",e=>{
  const b=e.target.closest(".edit-event-btn");
- if(b) openEdit(b.dataset.id);
+ if(b){ e.preventDefault(); e.stopPropagation(); openEdit(b.dataset.id); }
 });
 window.addEventListener("matt-auth-change",()=>{
  document.querySelectorAll(".edit-event-btn").forEach(x=>{
@@ -232,7 +233,7 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
   image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
  }
  const combine=(d,t)=>{let a=document.getElementById(d).value,b=document.getElementById(t).value||"00:00";return a?`${a}T${b}:00`:null};
- const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime")};
+ const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain"};
  if(image) upd.image_url=image;
  const {error}=await supabaseClient.from("events").update(upd).eq("id",editEventId.value);
  editEventMsg.textContent=error?error.message:"Zapisano";

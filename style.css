@@ -7426,4 +7426,4 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 /* Admin event edit */
 .event-title-admin-row{display:flex;justify-content:space-between;align-items:center;gap:20px}
 .edit-event-btn{padding:10px 16px;font-size:12px;white-space:nowrap}
-.event-detail-image img{width:100%;max-height:500px;object-fit:cover}
+.event-detail-image img{width:100%;max-height:500px;object-fit:contain;object-position:center}
