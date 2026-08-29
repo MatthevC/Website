@@ -296,8 +296,16 @@ function getCommandFilterDefaults() {
 
 function isEventEnded(event) {
   if (!event || !event.endDate) return false;
-  const end = new Date(`${event.endDate}T23:59:59`);
-  return Date.now() >= end.getTime();
+
+  // Event kończy się dopiero po wskazanej dacie zakończenia.
+  // Porównujemy same daty, aby uniknąć problemów ze strefą czasową.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const end = new Date(event.endDate);
+  end.setHours(0, 0, 0, 0);
+
+  return today > end;
 }
 
 function generalRulesPage() {
