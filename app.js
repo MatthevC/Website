@@ -2794,7 +2794,6 @@ function eventCard(event) {
   const ended = isEventEnded(event);
   const cover = event.image
     ? `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}">
-         <div class="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div>
          <img style="object-fit:${escapeHtml(event.imageFit || "contain")}" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}" loading="lazy">
          ${ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : ""}
        </div>`
