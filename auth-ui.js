@@ -129,3 +129,59 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
  }
 });
+
+
+document.addEventListener("DOMContentLoaded",()=>{
+ const edit=document.getElementById("editProfileBtn");
+ const modal=document.getElementById("profileModal");
+ const close=document.getElementById("closeProfile");
+ const save=document.getElementById("saveProfile");
+ if(edit) edit.onclick=()=>modal.classList.add("active");
+ if(close) close.onclick=()=>modal.classList.remove("active");
+
+ if(save) save.onclick=async()=>{
+   const oldEmail=document.getElementById("profileOldEmail").value.trim();
+   const oldPassword=document.getElementById("profileOldPassword").value;
+   const newNick=document.getElementById("profileNewNick").value.trim();
+   const newEmail=document.getElementById("profileNewEmail").value.trim();
+   const newPassword=document.getElementById("profileNewPassword").value;
+   const msg=document.getElementById("profileMsg");
+
+   const {error:verifyError}=await supabaseClient.auth.signInWithPassword({
+     email:oldEmail,
+     password:oldPassword
+   });
+
+   if(verifyError){
+     msg.textContent="Niepoprawny obecny e-mail lub hasło.";
+     return;
+   }
+
+   const {data:{user}}=await supabaseClient.auth.getUser();
+   if(!user) return;
+
+   // Zmiana nicku wymaga potwierdzenia - zapisujemy prośbę zamiast zmieniać od razu
+   if(newNick){
+     await supabaseClient.from("profiles").update({
+       pending_username: newNick,
+       profile_change_requested_at: new Date().toISOString()
+     }).eq("email",oldEmail);
+   }
+
+   if(newEmail || newPassword){
+     const updates={};
+     if(newEmail) updates.email=newEmail;
+     if(newPassword) updates.password=newPassword;
+
+     const {error}=await supabaseClient.auth.updateUser(updates);
+     if(error){
+       msg.textContent="Błąd zmiany danych: "+error.message;
+       return;
+     }
+     msg.textContent="Wysłano potwierdzenie zmiany na e-mail.";
+     return;
+   }
+
+   msg.textContent="Zapisano prośbę o zmianę. Potwierdź zmianę przez wiadomość e-mail, aby została aktywowana.";
+ };
+});

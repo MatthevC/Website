@@ -7412,3 +7412,13 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .edit-event-btn{cursor:pointer}
 .event-cover{position:relative}
 #editEventImageFit{width:100%;padding:12px;background:#111;color:#fff;border:1px solid #333;border-radius:8px;margin:8px 0}
+
+
+.profile-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center}
+.profile-modal.active{display:flex}
+.profile-box{background:#111;border:1px solid #333;border-top:2px solid #f22;width:420px;padding:30px;position:relative;color:white}
+.profile-box h2{margin-top:0}
+.profile-box label{display:block;margin-top:12px;font-size:14px}
+.profile-box input{width:100%;box-sizing:border-box;background:#050505;border:1px solid #333;color:white;padding:12px}
+.profile-box button{margin-top:15px;background:#f22;color:white;border:0;padding:12px;width:100%;cursor:pointer}
+.profile-close{position:absolute;right:10px;top:10px!important;width:auto!important;background:none!important;font-size:22px}

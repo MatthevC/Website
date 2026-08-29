@@ -74,11 +74,36 @@
           <button id="openLogin" class="header-login">LOGIN</button>
           <div id="userMenu" class="user-menu">
             <a id="adminLink" style="display:none" href="admin/">Panel administratora</a>
+            <button id="editProfileBtn">Edytuj profil</button>
             <button id="logoutBtn">Wyloguj</button>
           </div>
         </div>
     </div>
   </header>
+
+  
+<div id="profileModal" class="profile-modal">
+  <div class="profile-box">
+    <button id="closeProfile" class="profile-close">×</button>
+    <h2>EDYTUJ PROFIL</h2>
+    <label>Stary e-mail</label>
+    <input id="profileOldEmail" type="email" placeholder="Twój obecny e-mail">
+    <label>Obecne hasło</label>
+    <input id="profileOldPassword" type="password" placeholder="Twoje obecne hasło">
+
+    <label>Nowy nick</label>
+    <input id="profileNewNick" placeholder="Nowy nick">
+
+    <label>Nowy e-mail</label>
+    <input id="profileNewEmail" type="email" placeholder="Nowy e-mail">
+
+    <label>Nowe hasło</label>
+    <input id="profileNewPassword" type="password" placeholder="Nowe hasło">
+
+    <button id="saveProfile">ZAPISZ ZMIANY</button>
+    <p id="profileMsg"></p>
+  </div>
+</div>
 
   <main id="app"></main>
 
