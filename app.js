@@ -3044,6 +3044,7 @@ async function renderEventDetail(id) {
           ${formatDate(event.publishDate)}
         </div>
         <h1>${escapeHtml(event.title)}</h1>
+        <div class="admin-edit-event" id="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div>
         ${event.image ? `<div class="event-detail-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}</strong></div>

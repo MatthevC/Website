@@ -163,6 +163,22 @@
 </div>
 </div></div>
 
+
+<div id="editEventModal" class="event-overlay" style="display:none">
+<div class="event-modal">
+<button id="closeEditEvent" class="login-close">×</button>
+<h2>EDYTUJ EVENT</h2>
+<div class="event-fields">
+<input id="editEventId" type="hidden">
+<input id="editEventTitle" placeholder="Nazwa eventu">
+<input id="editEventStart" type="date"><input id="editEventStartTime" type="time">
+<input id="editEventEnd" type="date"><input id="editEventEndTime" type="time">
+<input id="editEventPublish" type="date"><input id="editEventPublishTime" type="time">
+<input id="editEventImage" type="file" accept="image/*">
+<textarea id="editEventDesc" placeholder="Opis eventu"></textarea>
+<button id="saveEditEvent" class="login-submit">ZAPISZ ZMIANY</button>
+<p id="editEventMsg"></p>
+</div></div></div>
 <script src="event-admin.js"></script>
 </body>
 </html>
