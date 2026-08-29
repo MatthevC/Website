@@ -2810,7 +2810,7 @@ function eventCard(event) {
         <div class="event-date">${formatDate(event.date)}</div>
         <h2>${escapeHtml(event.title)}</h2>
         <p>${escapeHtml(event.excerpt)}</p>
-        <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>
+        <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>\n        <div class="admin-edit-event" class="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div>
       </div>
     </article>
   `;
@@ -3044,7 +3044,7 @@ async function renderEventDetail(id) {
           ${formatDate(event.publishDate)}
         </div>
         <h1>${escapeHtml(event.title)}</h1>
-        <div class="admin-edit-event" id="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div>
+        <div class="admin-edit-event" class="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div>
         ${event.image ? `<div class="event-detail-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}</strong></div>

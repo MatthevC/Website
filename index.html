@@ -131,32 +131,35 @@
 <div class="event-modal">
 <button id="closeEvent" class="login-close">×</button>
 <h2>DODAJ NOWY EVENT</h2>
-<div class="event-grid">
-<div class="event-labels">
-<p><b>Nazwa wydarzenia:</b><br>Widoczna nazwa eventu.</p>
-<p><b>Data rozpoczęcia:</b><br>Początek wydarzenia.</p>
-<p><b>Data zakończenia:</b><br>Koniec wydarzenia.</p>
-<p><b>Data publikacji:</b><br>Kiedy wpis pojawi się na stronie.</p>
-<p><b>Grafika:</b><br>Wybierz plik z komputera.</p>
-<p><b>Opis:</b><br>Informacje dla społeczności.</p>
-</div>
-<div class="event-fields">
+<div class="event-form-modern">
+<label>Nazwa wydarzenia:<small>Widoczna nazwa eventu.</small></label>
 <input id="eventTitle" placeholder="Nazwa eventu">
-<div class="datetime-field icon-date">
-<div class="input-icon date-box"><input id="eventStart" type="date"><button type="button" class="picker-icon date-trigger" aria-label="Wybierz datę">📅</button></div>
-<div class="input-icon time-box"><input id="eventStartTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger" aria-label="Wybierz godzinę">🕒</button></div>
+
+<label>Data rozpoczęcia:<small>Początek wydarzenia.</small></label>
+<div class="datetime-field">
+<div class="input-icon"><input id="eventStart" type="date"><button type="button" class="picker-icon date-trigger">📅</button></div>
+<div class="input-icon"><input id="eventStartTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger">🕒</button></div>
 </div>
-<div class="datetime-field end-row icon-date">
-<div class="input-icon date-box"><input id="eventEnd" type="date"><button type="button" class="picker-icon date-trigger" aria-label="Wybierz datę">📅</button></div>
-<div class="input-icon time-box"><input id="eventEndTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger" aria-label="Wybierz godzinę">🕒</button></div>
+
+<label>Data zakończenia:<small>Koniec wydarzenia.</small></label>
+<div class="datetime-field">
+<div class="input-icon"><input id="eventEnd" type="date"><button type="button" class="picker-icon date-trigger">📅</button></div>
+<div class="input-icon"><input id="eventEndTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger">🕒</button></div>
 <label class="event-ended-toggle"><input id="eventEndedManual" type="checkbox"> Zakończony</label>
 </div>
-<div class="datetime-field icon-date">
-<div class="input-icon date-box"><input id="eventPublish" type="date"><button type="button" class="picker-icon date-trigger" aria-label="Wybierz datę">📅</button></div>
-<div class="input-icon time-box"><input id="eventPublishTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger" aria-label="Wybierz godzinę">🕒</button></div>
+
+<label>Data publikacji:<small>Kiedy wpis pojawi się na stronie.</small></label>
+<div class="datetime-field">
+<div class="input-icon"><input id="eventPublish" type="date"><button type="button" class="picker-icon date-trigger">📅</button></div>
+<div class="input-icon"><input id="eventPublishTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger">🕒</button></div>
 </div>
+
+<label>Grafika:<small>Wybierz plik z komputera.</small></label>
 <input id="eventImage" type="file" accept="image/*">
+
+<label>Opis:<small>Informacje dla społeczności.</small></label>
 <textarea id="eventDesc" placeholder="Opis eventu"></textarea>
+
 <button id="saveEvent" class="login-submit">DODAJ EVENT</button>
 <p id="eventMsg"></p>
 </div>

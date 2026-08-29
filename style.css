@@ -6957,3 +6957,75 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .event-fields textarea {
   border-radius: 6px;
 }
+
+
+/* Modern event creator */
+.event-form-modern{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.event-form-modern label{
+  color:#f1f1f1;
+  font-family:Rajdhani,sans-serif;
+  font-weight:700;
+  font-size:15px;
+  margin-top:4px;
+}
+.event-form-modern label small{
+  display:block;
+  color:#9c9c9c;
+  font-family:"Space Grotesk",sans-serif;
+  font-weight:400;
+  font-size:13px;
+}
+.event-form-modern input,
+.event-form-modern textarea{
+  width:100%;
+}
+.datetime-field{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.input-icon{
+  position:relative;
+  flex:1;
+}
+.input-icon input{
+  padding-right:48px !important;
+}
+.picker-icon{
+  position:absolute;
+  right:0;
+  top:0;
+  width:42px;
+  height:100%;
+  border:1px solid #2a2a2a;
+  border-left:1px solid #333;
+  background:#111;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:20px;
+}
+.picker-icon:hover{
+  background:#1d1d1d;
+  border-color:#ef2b2d;
+}
+.event-ended-toggle{
+  white-space:nowrap;
+  display:flex!important;
+  align-items:center;
+  gap:7px;
+  font-weight:500!important;
+}
+.admin-edit-event{
+  margin:8px 0;
+}
+.edit-event-btn{
+  cursor:pointer;
+  border:1px solid #ef2b2d;
+}
