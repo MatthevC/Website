@@ -2,7 +2,7 @@
 const SUPABASE_URL = "https://hbfgiecmyzgldgbbgwds.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_DQHt3NmJnRXkNIaM-Fmj7Q_5YT7yyA9";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: true }
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
 window.supabaseClient = supabaseClient;
 
