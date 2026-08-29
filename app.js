@@ -2991,7 +2991,7 @@ async function renderEvents() {
 
 async function renderEventDetail(id) {
   const events = await loadEvents();
-  const event = events.find(e => e.id === id);
+  const event = events.find(e => String(e.id) === String(id));
 
   if (!event) {
     app.innerHTML = `
@@ -3009,12 +3009,16 @@ async function renderEventDetail(id) {
       <div class="page-panel event-detail">
         <a class="back-link" href="#/events">← WRÓĆ DO EVENTÓW</a>
         ${event.image ? `<div class="event-cover event-cover-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : `<div class="event-cover"></div>`}
-        <div class="event-detail-info" style="padding-top:24px">
-          <div class="event-date">Opublikowano: ${formatDate(event.publishDate)}</div>
-          <div class="event-date">Rozpoczęcie: ${formatDate(event.date)}</div>
-          <div class="event-date">Zakończenie: ${formatDate(event.endDate)}</div>
+        <div class="event-detail-info">
           <h1>${escapeHtml(event.title)}</h1>
-          <p>${escapeHtml(event.content).replace(/\n/g, "<br><br>")}</p>
+          <div class="event-detail-meta">
+            <div><strong>Data publikacji:</strong> ${formatDate(event.publishDate)}</div>
+            <div><strong>Rozpoczęcie:</strong> ${formatDate(event.date)}</div>
+            <div><strong>Zakończenie:</strong> ${formatDate(event.endDate)}</div>
+          </div>
+          <div class="event-detail-description">
+            ${escapeHtml(event.content).replace(/\n/g, "<br><br>")}
+          </div>
         </div>
       </div>
     </div>
