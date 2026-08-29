@@ -1,21 +1,34 @@
 <!doctype html>
-<html lang="pl"><head><meta charset="utf-8"><title>Logowanie administratora</title>
-<link rel="stylesheet" href="../style.css"></head>
-<body><main class="admin-panel">
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Panel administratora</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="admin-login-page">
+<main class="admin-login-card">
 <h1>Panel administratora</h1>
+<p>Zaloguj się, aby zarządzać eventami.</p>
 <input id="email" placeholder="Email administratora">
 <input id="pass" type="password" placeholder="Hasło">
-<button onclick="login()">Zaloguj</button><p id="msg"></p>
+<button id="loginBtn">ZALOGUJ</button>
+<p id="msg"></p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase.js"></script>
 <script>
-async function login(){
- const {error}=await supabaseClient.auth.signInWithPassword({
-  email:document.getElementById('email').value,
-  password:document.getElementById('pass').value
- });
- if(error) document.getElementById('msg').innerText=error.message;
- else location.href='index.html';
-}
-</script></body></html>
+document.getElementById("loginBtn").onclick = async () => {
+ const email=document.getElementById("email").value;
+ const password=document.getElementById("pass").value;
+ const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+ if(error){document.getElementById("msg").innerText=error.message;return;}
+ if(data.user.email!=="matthewc.twitc@gmail.com"){
+   await supabaseClient.auth.signOut();
+   document.getElementById("msg").innerText="Brak uprawnień administratora";
+   return;
+ }
+ location.href="index.html";
+};
+</script>
+</body>
+</html>
