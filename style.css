@@ -6883,3 +6883,77 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     height:42px;
     cursor:pointer;
 }
+
+/* ===== FINAL ADMIN EVENT CREATOR CLEANUP ===== */
+.event-modal {
+  max-width: 920px;
+  padding: 32px;
+}
+
+.event-grid {
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+}
+
+.event-labels p {
+  margin: 0 0 20px;
+  color: #bdbdbd;
+}
+
+.event-fields {
+  gap: 10px;
+}
+
+.datetime-field {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.datetime-field .input-icon {
+  position: relative;
+  flex: 1;
+  height: 42px;
+}
+
+.datetime-field .input-icon input {
+  height: 42px;
+  padding-right: 55px !important;
+  margin: 0;
+}
+
+.datetime-field .picker-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 42px;
+  width: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #101010;
+  border: 1px solid #333;
+  border-left: 1px solid #333;
+  border-radius: 0 6px 6px 0;
+  font-size: 20px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.datetime-field .picker-icon:hover {
+  background: #181818;
+  border-color: #ef2b2d;
+}
+
+.event-ended-toggle {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.event-fields input,
+.event-fields textarea {
+  border-radius: 6px;
+}
