@@ -5,16 +5,20 @@ document.addEventListener("DOMContentLoaded",()=>{
  const save=document.getElementById("saveEvent");
  const adminLink=document.getElementById("adminLink");
 
- const addButton=document.getElementById("addEventButton");
- if(addButton){
-   addButton.style.display="none";
-   addButton.onclick=()=>{modal.style.display="flex";};
- }
+ const bindAddButton=()=>{
+   const addButton=document.getElementById("addEventButton");
+   if(addButton){
+     addButton.style.display="none";
+     addButton.onclick=()=>{modal.style.display="flex";};
+   }
+   return addButton;
+ };
+ let addButton=bindAddButton();
 
  supabaseClient.auth.getSession().then(async({data})=>{
   if(!data.session)return;
   const {data:p}=await supabaseClient.from("profiles").select("role").eq("email",data.session.user.email).maybeSingle();
-  if(p?.role==="admin") addButton.style.display="inline-flex";
+  if(p?.role==="admin"){ addButton=bindAddButton() || addButton; if(addButton) addButton.style.display="inline-flex"; }
  });
 
  close.onclick=()=>modal.style.display="none";

@@ -2955,7 +2955,7 @@ async function renderEvents() {
 
   list.innerHTML = events.length
     ? events.map(eventCard).join("")
-    : `<div class="empty">Brak eventów. Dodaj pierwszy wpis w pliku <strong>events/events.json</strong>.</div>`;
+    : `<div class="empty">Brak eventów. Dodaj pierwszy wpis w panelu administratora.</div>`;
 
   setupCollectionView({
     storageKey: "eventsPageSize",
@@ -3208,7 +3208,7 @@ async function render() {
       <div class="container content-wrap events-page">
         <div class="section-heading events-heading">
           <div><h2>NAJNOWSZE EVENTY</h2></div>
-          <a class="admin-add-event" id="admin-add-event" href="admin/index.html" style="display:none">+ NOWY EVENT</a>
+          <button class="admin-add-event" id="addEventButton" style="display:none">+ DODAJ EVENT</button>
           <p>Najnowsze wpisy na górze</p>
         </div>
 
