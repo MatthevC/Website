@@ -6592,8 +6592,17 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .home-event-slider .event-cover-image img {
   height: 100%;
   width: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
 }
+
+.home-event-slider .event-cover-image {
+  background: #080808;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 
 .event-cover-ended::before {
   content: "";
