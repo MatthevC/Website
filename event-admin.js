@@ -135,7 +135,20 @@ function initEvents(){
 
 }
 
+function setDefaultPublishDate(){
+ const input=document.getElementById("eventPublish");
+ const time=document.getElementById("eventPublishTime");
+ const now=new Date();
+ if(input && !input.value){
+   input.value=now.toISOString().slice(0,10);
+ }
+ if(time && time.value==="00:00"){
+   time.value=now.toTimeString().slice(0,5);
+ }
+}
+
 document.addEventListener("DOMContentLoaded",()=>{
+ setDefaultPublishDate();
  initEvents();
  checkAdmin();
 
