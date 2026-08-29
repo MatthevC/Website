@@ -2747,31 +2747,34 @@ function getEventsUrl() {
 }
 
 async function loadEvents() {
-  const url = getEventsUrl();
-  console.log("[MATT'S WORLD] Ładowanie eventów:", url);
+  console.log("[MATT'S WORLD] Ładowanie eventów z Supabase...");
 
   try {
-    const response = await fetch(url, {
-      cache: "no-store",
-      headers: { "Accept": "application/json" }
-    });
+    const { data, error } = await supabaseClient
+      .from("events")
+      .select("*")
+      .order("start_date", { ascending: false });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status} — ${url}`);
+    if (error) {
+      throw error;
     }
 
-    const events = await response.json();
+    const events = (data || []).map(event => ({
+      id: event.id,
+      title: event.title,
+      date: event.start_date,
+      endDate: event.end_date,
+      image: event.image_url,
+      excerpt: event.description,
+      content: event.description
+    }));
 
-    if (!Array.isArray(events)) {
-      throw new Error("events.json nie zawiera tablicy eventów.");
-    }
+    console.log("[MATT'S WORLD] Pobrano eventów z Supabase:", events.length);
 
-    console.log("[MATT'S WORLD] Pobrano eventów:", events.length);
-    return events.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return events.length ? events : FALLBACK_EVENTS;
+
   } catch (error) {
-    // Nawet jeśli GitHub Pages / cache / ścieżka chwilowo nie pozwoli
-    // pobrać JSON-a, pierwszy event nadal będzie widoczny.
-    console.error("[MATT'S WORLD] Nie udało się pobrać events.json:", error);
+    console.error("[MATT'S WORLD] Nie udało się pobrać eventów z Supabase:", error);
     console.warn("[MATT'S WORLD] Używam wbudowanego eventu awaryjnego.");
     return FALLBACK_EVENTS;
   }
