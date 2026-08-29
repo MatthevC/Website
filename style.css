@@ -6634,3 +6634,12 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .event-ended-toggle input {
   accent-color:#ff3030;
 }
+
+/* Przyciski administracyjne niewidoczne przed weryfikacją sesji */
+.admin-add-event[hidden] {
+  display: none !important;
+}
+
+.admin-add-event {
+  visibility: hidden;
+}
