@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
    if(logout){
      logout.onclick=async()=>{
        await supabaseClient.auth.signOut();
-       location.reload();
+       window.dispatchEvent(new Event('authChanged'));
      };
    }
  }

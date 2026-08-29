@@ -2767,7 +2767,9 @@ async function loadEvents() {
       image: event.image_url,
       excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
       content: event.description || "",
-      publishDate: event.publish_date
+      publishDate: event.publish_date,
+      endDate: event.end_date,
+      date: event.start_date
     }));
 
     console.log("[MATT'S WORLD] Pobrano eventów z Supabase:", events.length);
@@ -3000,16 +3002,27 @@ async function renderEventDetail(id) {
     <div class="container content-wrap">
       <div class="page-panel event-detail">
         <a class="back-link" href="#/events">← WRÓĆ DO EVENTÓW</a>
-        ${event.image ? `<div class="event-cover event-cover-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : `<div class="event-cover"></div>`}
-        <div style="padding-top:24px">
-          <div class="event-date">Data wydarzenia: ${formatDate(event.date)}</div>
-          <div class="event-date">Opublikowano: ${formatDate(event.publishDate)}</div>
+
+        ${event.image ? `<div class="event-detail-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
+
+        <div class="event-detail-content">
+          <div class="event-date">${formatDate(event.publishDate)}</div>
           <h1>${escapeHtml(event.title)}</h1>
-          <p>${escapeHtml(event.content).replace(/\n/g, "<br><br>")}</p>
+
+          <div class="event-info-box">
+            <p><b>Data publikacji:</b> ${formatDate(event.publishDate)}</p>
+            <p><b>Rozpoczęcie:</b> ${formatDate(event.date)}</p>
+            <p><b>Zakończenie:</b> ${formatDate(event.endDate)}</p>
+          </div>
+
+          <div class="event-full-description">
+            ${escapeHtml(event.content).replace(/\n/g, "<br><br>")}
+          </div>
         </div>
       </div>
     </div>
   `;
+}
 }
 
 

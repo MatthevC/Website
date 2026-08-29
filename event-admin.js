@@ -87,3 +87,17 @@ document.addEventListener("DOMContentLoaded", async ()=>{
  }
 
 });
+
+
+window.addEventListener("authChanged", async ()=>{
+ const {data:{session}} = await supabaseClient.auth.getSession();
+ if(!session) return;
+ const {data:profile}=await supabaseClient.from("profiles").select("role").eq("email",session.user.email).maybeSingle();
+ const btn=document.getElementById("addEventButton");
+ if(btn && profile?.role==="admin"){
+   btn.hidden=false;
+   btn.disabled=false;
+   btn.style.setProperty("display","inline-flex","important");
+   btn.style.setProperty("visibility","visible","important");
+ }
+});
