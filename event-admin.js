@@ -194,7 +194,7 @@ document.addEventListener("click", function(e){
 (() => {
 function admin(){ return window.currentUserIsAdmin === true; }
 
-async function openEdit(id){
+async async function openEdit(id){
  if(!admin()) return;
  const {data}=await supabaseClient.from("events").select("*").eq("id",id).single();
  if(!data) return;
@@ -228,11 +228,15 @@ document.addEventListener("click",e=>{
  const b=e.target.closest(".edit-event-btn");
  if(b){ e.preventDefault(); e.stopPropagation(); openEdit(b.dataset.id); }
 });
-window.addEventListener("matt-auth-change",()=>{
+function updateEditButtons(){
  document.querySelectorAll(".edit-event-btn").forEach(x=>{
   x.style.display=window.currentUserIsAdmin?"inline-flex":"none";
  });
-});
+}
+window.updateEditButtons=updateEditButtons;
+window.addEventListener("matt-auth-change",updateEditButtons);
+window.addEventListener("matt-events-rendered",updateEditButtons);
+document.addEventListener("DOMContentLoaded",updateEditButtons);
 document.getElementById("closeEditEvent")?.addEventListener("click",()=>editEventModal.style.display="none");
 document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  if(!admin()) return;

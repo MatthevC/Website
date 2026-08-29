@@ -2813,7 +2813,7 @@ function eventCard(event) {
         <p>${escapeHtml(event.excerpt)}</p>
         <div class="event-actions">
           <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>
-          <button class="edit-event-btn" data-id="${escapeHtml(event.id)}" style="display:none">✎ EDYTUJ POST</button>
+          <button class="edit-event-btn" data-id="${escapeHtml(event.id)}">✎ EDYTUJ POST</button>
         </div>
 
       </div>
@@ -3020,6 +3020,8 @@ async function renderEvents() {
   list.innerHTML = events.length
     ? events.map(eventCard).join("")
     : `<div class="empty">Brak eventów. Dodaj pierwszy wpis w panelu administratora.</div>`;
+
+  window.dispatchEvent(new CustomEvent("matt-events-rendered"));
 
   setupCollectionView({
     storageKey: "eventsPageSize",
