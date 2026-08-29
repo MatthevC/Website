@@ -3292,7 +3292,7 @@ async function render() {
     app.innerHTML = page.body;
     const events = await loadEvents();
     const homeEvents = document.getElementById("home-events");
-    if (homeEvents) homeEvents.innerHTML = events.slice(0, 5).map(eventCard).join("");
+    if (homeEvents) homeEvents.innerHTML = events.slice(0, 3).map(eventCard).join("");
   } else {
     app.innerHTML = page.body;
   }

@@ -427,6 +427,34 @@ button, a { -webkit-tap-highlight-color: transparent; }
   gap: 20px;
 }
 
+
+
+.home-event-slider {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+}
+
+.home-event-slider::-webkit-scrollbar {
+  height: 8px;
+}
+
+.home-event-slider .event-card {
+  flex: 0 0 100%;
+  max-width: 100%;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 900px) {
+  .home-event-slider .event-card {
+    flex: 0 0 100%;
+  }
+}
+
 .event-card {
   display: grid;
   grid-template-columns: 280px 1fr;
