@@ -1,13 +1,20 @@
 <!doctype html>
-<html lang="pl"><head><meta charset="utf-8"><title>Panel eventów</title><link rel="stylesheet" href="../style.css"></head>
-<body><main class="container"><h1>Panel moderatora - Eventy</h1>
+<html lang="pl"><head><meta charset="utf-8"><title>Dodaj event</title><link rel="stylesheet" href="../style.css"></head>
+<body><main class="container">
+<h1>Administrator - EVENTY</h1>
 <form id="eventForm">
-<label>Tytuł<input name="title" required></label>
-<label>Data rozpoczęcia<input name="start" type="datetime-local" required></label>
-<label>Data zakończenia<input name="end" type="datetime-local" required></label>
-<label>Grafika<input name="image" type="file" accept="image/*"></label>
-<label>Opis<textarea name="description" required></textarea></label>
-<button>Dodaj event</button>
+<label>Nazwa eventu<input name="title" required></label>
+<label>Data rozpoczęcia<input name="date" type="date" required></label>
+<label>Data zakończenia<input name="endDate" type="date" required></label>
+<label>Opis<textarea name="content" required></textarea></label>
+<label>Grafika URL<input name="image" placeholder="np. pictures/events/event.png"></label>
+<button>NOWY EVENT</button>
 </form>
-<p>Panel wymaga podpięcia bezpiecznego backendu (Supabase/Firebase) przed publikacją.</p>
-<script src="admin.js"></script></main></body></html>
+<p id="msg"></p>
+<button onclick="logout()">Wyloguj</button>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase.js"></script>
+<script src="auth.js"></script>
+<script src="admin.js"></script>
+</body></html>

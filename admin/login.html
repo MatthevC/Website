@@ -1,1 +1,21 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Logowanie moderacji</title><link rel="stylesheet" href="../style.css"></head><body><main class="admin-panel"><h1>Panel moderacji</h1><p>Zaloguj się aby zarządzać eventami.</p><input id="login" placeholder="Login"><input id="pass" type="password" placeholder="Hasło"><button onclick="login()">Zaloguj</button><p id="msg"></p></main><script>async function login(){const l=document.getElementById('login').value;const p=document.getElementById('pass').value;if(l&&p){sessionStorage.setItem('farymvp_admin_session','ok');location.href='index.html'}else document.getElementById('msg').innerText='Podaj dane';}</script></body></html>
+<!doctype html>
+<html lang="pl"><head><meta charset="utf-8"><title>Logowanie administratora</title>
+<link rel="stylesheet" href="../style.css"></head>
+<body><main class="admin-panel">
+<h1>Panel administratora</h1>
+<input id="email" placeholder="Email administratora">
+<input id="pass" type="password" placeholder="Hasło">
+<button onclick="login()">Zaloguj</button><p id="msg"></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase.js"></script>
+<script>
+async function login(){
+ const {error}=await supabaseClient.auth.signInWithPassword({
+  email:document.getElementById('email').value,
+  password:document.getElementById('pass').value
+ });
+ if(error) document.getElementById('msg').innerText=error.message;
+ else location.href='index.html';
+}
+</script></body></html>
