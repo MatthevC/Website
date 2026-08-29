@@ -5,12 +5,11 @@ document.addEventListener("DOMContentLoaded",()=>{
  const save=document.getElementById("saveEvent");
  const adminLink=document.getElementById("adminLink");
 
- const addButton=document.createElement("button");
- addButton.textContent="+ DODAJ EVENT";
- addButton.className="admin-add-event";
- addButton.style.display="none";
- addButton.onclick=()=>{modal.style.display="flex";};
- document.querySelector(".site-header")?.after(addButton);
+ const addButton=document.getElementById("addEventButton");
+ if(addButton){
+   addButton.style.display="none";
+   addButton.onclick=()=>{modal.style.display="flex";};
+ }
 
  supabaseClient.auth.getSession().then(async({data})=>{
   if(!data.session)return;

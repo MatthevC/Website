@@ -2766,7 +2766,8 @@ async function loadEvents() {
       endDate: event.end_date,
       image: event.image_url,
       excerpt: event.description,
-      content: event.description
+      content: event.description,
+      publishDate: event.publish_date
     }));
 
     console.log("[MATT'S WORLD] Pobrano eventów z Supabase:", events.length);

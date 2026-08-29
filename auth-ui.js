@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
    if(!profile) return;
 
-   open.textContent=profile.username + " ▾";
+   open.textContent=profile.username;
    open.classList.add("logged");
 
    open.onclick=(e)=>{
