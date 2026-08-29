@@ -6279,3 +6279,13 @@ padding:10px;min-width:180px;z-index:2000;
 color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 }
 .user-menu a:hover,.user-menu button:hover{background:#ef2b2d;}
+
+/* USER MENU FINAL */
+.user-area{position:relative;display:flex;align-items:center;margin-left:10px;}
+.header-login{background:#111;color:#fff;border:1px solid #ef2b2d;padding:9px 18px;border-radius:5px;font:700 12px Rajdhani;cursor:pointer;}
+.header-login:hover,.header-login.logged{background:#ef2b2d;color:#fff;}
+.user-menu{display:none;position:absolute;right:0;top:42px;background:#111;border:1px solid #333;border-top:2px solid #ef2b2d;padding:8px;min-width:190px;z-index:9999;box-shadow:0 15px 40px #000;}
+.user-menu.show{display:flex;flex-direction:column;gap:5px;}
+.user-menu a,.user-menu button{background:none;border:0;color:#fff;text-align:left;padding:10px;cursor:pointer;font-family:Rajdhani;}
+.user-menu a:hover,.user-menu button:hover{background:#ef2b2d;}
+.admin-add-event{display:inline-flex!important;padding:8px 14px;background:#ef2b2d;color:white;border-radius:4px;font-weight:700;}

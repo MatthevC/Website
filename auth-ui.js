@@ -6,61 +6,68 @@ const btn=document.getElementById("loginBtn");
 const nick=document.getElementById("loginNick");
 const pass=document.getElementById("loginPass");
 const msg=document.getElementById("loginMsg");
+const menu=document.getElementById("userMenu");
+const admin=document.getElementById("adminLink");
+const logout=document.getElementById("logoutBtn");
 
 if(!open) return;
+
+function closeMenu(){ menu?.classList.remove("show"); }
 
 async function refreshUser(){
  const {data:{session}}=await supabaseClient.auth.getSession();
  if(!session){
    open.textContent="LOGIN";
-   open.className="header-login";
+   open.classList.remove("logged");
    return;
  }
  const {data:profile}=await supabaseClient.from("profiles")
-  .select("username,role")
-  .eq("email",session.user.email)
-  .maybeSingle();
+ .select("username,role")
+ .eq("email",session.user.email)
+ .maybeSingle();
+
  if(profile){
-   open.innerHTML=`${profile.username} ▾`;
-   open.className="header-login logged";
-   open.onclick=()=>{
-     const menu=document.getElementById("userMenu");
-     menu.classList.toggle("show");
+   open.textContent=profile.username;
+   open.classList.add("logged");
+   open.onclick=(e)=>{
+     e.stopPropagation();
+     menu?.classList.toggle("show");
    };
-   const menu=document.getElementById("userMenu");
-   const admin=document.getElementById("adminLink");
-   if(profile.role==="admin") admin.style.display="block";
-   document.getElementById("logoutBtn").onclick=async()=>{
-    await supabaseClient.auth.signOut();
-    location.reload();
+   if(profile.role==="admin" && admin) {
+ admin.style.display="block";
+ const add=document.getElementById("admin-add-event");
+ if(add) add.style.display="inline-flex";
+}
+   if(logout) logout.onclick=async()=>{
+      await supabaseClient.auth.signOut();
+      location.reload();
    };
-   return;
  }
- open.textContent="LOGIN";
 }
 
 await refreshUser();
 
-open.onclick=()=>{
- if(!open.classList.contains("logged")){
-  modal.style.display="flex";
- }
-};
+document.addEventListener("click",e=>{
+ if(!e.target.closest(".user-area")) closeMenu();
+});
 
-if(close) close.onclick=()=>modal.style.display="none";
+if(open && !open.classList.contains("logged")){
+ open.onclick=()=> modal.classList.add("active");
+}
+if(close) close.onclick=()=>modal.classList.remove("active");
+
 if(btn) btn.onclick=async()=>{
  msg.textContent="Logowanie...";
  const {data:profile}=await supabaseClient.from("profiles")
- .select("email,username,role")
+ .select("email")
  .eq("username",nick.value.trim())
  .maybeSingle();
  if(!profile){msg.textContent="Nie znaleziono użytkownika";return;}
  const {error}=await supabaseClient.auth.signInWithPassword({
- email:profile.email,password:pass.value});
+ email:profile.email,
+ password:pass.value
+ });
  if(error){msg.textContent="Błędne hasło";return;}
  location.reload();
-};
-document.getElementById("forgotPass").onclick=()=>{
- msg.textContent="Skontaktuj się z administratorem.";
 };
 });
