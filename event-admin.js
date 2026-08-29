@@ -80,3 +80,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
  }
 
 });
+
+
+supabaseClient.auth.onAuthStateChange(async () => {
+ const btn=document.getElementById("addEventButton");
+ if(!btn) return;
+ const {data:{session}}=await supabaseClient.auth.getSession();
+ if(!session){
+   btn.style.display="none";
+ }
+});

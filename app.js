@@ -2765,8 +2765,8 @@ async function loadEvents() {
       date: event.start_date,
       endDate: event.end_date,
       image: event.image_url,
-      excerpt: event.description,
-      content: event.description,
+      excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
+      content: event.description || "",
       publishDate: event.publish_date
     }));
 
@@ -2816,9 +2816,13 @@ function formatDate(date) {
     return "Brak daty";
   }
 
-  return new Intl.DateTimeFormat("pl-PL", {
-    day: "numeric", month: "long", year: "numeric"
-  }).format(parsed);
+  try {
+    return new Intl.DateTimeFormat("pl-PL", {
+      day: "numeric", month: "long", year: "numeric"
+    }).format(parsed);
+  } catch (e) {
+    return "Brak daty";
+  }
 }
 
 function escapeHtml(text) {
@@ -2998,7 +3002,8 @@ async function renderEventDetail(id) {
         <a class="back-link" href="#/events">← WRÓĆ DO EVENTÓW</a>
         ${event.image ? `<div class="event-cover event-cover-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : `<div class="event-cover"></div>`}
         <div style="padding-top:24px">
-          <div class="event-date">${formatDate(event.date)}</div>
+          <div class="event-date">Data wydarzenia: ${formatDate(event.date)}</div>
+          <div class="event-date">Opublikowano: ${formatDate(event.publishDate)}</div>
           <h1>${escapeHtml(event.title)}</h1>
           <p>${escapeHtml(event.content).replace(/\n/g, "<br><br>")}</p>
         </div>
