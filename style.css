@@ -7382,3 +7382,16 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .event-form-modern > button{
   margin-top:8px;
 }
+
+
+/* Poprawka pola grafiki eventu - usuwa wrażenie dodatkowego pustego pola */
+.event-fields input[type="file"]{
+    height:46px;
+    padding:8px 12px;
+    margin-bottom:12px;
+    background:#080808;
+    color:white;
+    border:1px solid #333;
+    border-radius:5px;
+    box-sizing:border-box;
+}
