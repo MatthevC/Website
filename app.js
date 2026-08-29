@@ -2960,6 +2960,14 @@ function setupDownloadsPage() {
   });
 }
 
+function updateEventAdminButton(isAdmin) {
+  const btn = document.getElementById("addEventButton");
+  if (!btn) return;
+  btn.hidden = !isAdmin;
+  btn.style.display = isAdmin ? "inline-flex" : "none";
+  btn.style.visibility = isAdmin ? "visible" : "hidden";
+}
+
 async function renderEvents() {
   const events = await loadEvents();
   const list = document.getElementById("events-list");
@@ -3001,9 +3009,10 @@ async function renderEventDetail(id) {
       <div class="page-panel event-detail">
         <a class="back-link" href="#/events">← WRÓĆ DO EVENTÓW</a>
         ${event.image ? `<div class="event-cover event-cover-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : `<div class="event-cover"></div>`}
-        <div style="padding-top:24px">
-          <div class="event-date">Data wydarzenia: ${formatDate(event.date)}</div>
+        <div class="event-detail-info" style="padding-top:24px">
           <div class="event-date">Opublikowano: ${formatDate(event.publishDate)}</div>
+          <div class="event-date">Rozpoczęcie: ${formatDate(event.date)}</div>
+          <div class="event-date">Zakończenie: ${formatDate(event.endDate)}</div>
           <h1>${escapeHtml(event.title)}</h1>
           <p>${escapeHtml(event.content).replace(/\n/g, "<br><br>")}</p>
         </div>
@@ -3221,7 +3230,7 @@ async function render() {
       <div class="container content-wrap events-page">
         <div class="section-heading events-heading">
           <div><h2>NAJNOWSZE EVENTY</h2></div>
-          <button class="admin-add-event" id="addEventButton" hidden style="display:none !important;visibility:hidden!important">+ DODAJ EVENT</button>
+          <button class="admin-add-event" id="addEventButton" hidden>+ DODAJ EVENT</button>
           <p>Najnowsze wpisy na górze</p>
         </div>
 
@@ -3254,6 +3263,7 @@ async function render() {
       </div>
     `;
     await renderEvents();
+    updateEventAdminButton(window.currentUserIsAdmin === true);
     updateLinks();
     setupContactForm();
     setupImagePreview();
@@ -3551,6 +3561,11 @@ document.querySelectorAll(".nav-dropdown > button").forEach(button => {
       button.parentElement.classList.toggle("open");
     }
   });
+});
+
+window.addEventListener("matt-auth-change", (e) => {
+  window.currentUserIsAdmin = e.detail?.isAdmin === true;
+  updateEventAdminButton(window.currentUserIsAdmin);
 });
 
 window.addEventListener("hashchange", render);

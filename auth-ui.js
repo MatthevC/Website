@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", async () => {
    const {data:{session}}=await supabaseClient.auth.getSession();
 
    if(!session){
+     window.currentUserIsAdmin = false;
+     window.dispatchEvent(new CustomEvent("matt-auth-change", {detail:{isAdmin:false}}));
      open.textContent="LOGIN";
      open.classList.remove("logged");
      open.onclick=()=>modal?.classList.add("active");
@@ -32,6 +34,9 @@ document.addEventListener("DOMContentLoaded", async () => {
      .maybeSingle();
 
    if(!profile) return;
+
+   window.currentUserIsAdmin = profile.role === "admin";
+   window.dispatchEvent(new CustomEvent("matt-auth-change", {detail:{isAdmin: window.currentUserIsAdmin}}));
 
    open.textContent=profile.username;
    open.classList.add("logged");
