@@ -7474,3 +7474,20 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .edit-event-btn:hover{
   filter:brightness(1.1);
 }
+
+
+.event-time {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #c8c8c8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.event-time span {
+  opacity: .9;
+}
+.event-dates-box strong {
+  display: block;
+}

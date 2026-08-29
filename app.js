@@ -2861,6 +2861,14 @@ function formatDate(date) {
   }
 }
 
+
+function formatTime(date) {
+  if (!date) return "--:--";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "--:--";
+  return new Intl.DateTimeFormat("pl-PL", {hour:"2-digit", minute:"2-digit", hour12:false}).format(parsed);
+}
+
 function escapeHtml(text) {
   return String(text)
     .replaceAll("&", "&amp;")
@@ -3046,14 +3054,14 @@ async function renderEventDetail(id) {
         <a class="back-link" href="#/events">← WRÓĆ DO EVENTÓW</a>
         <div class="event-publish-top">
           <span>OPUBLIKOWANO</span>
-          ${formatDate(event.publishDate)}
+          ${formatDate(event.publishDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.publishDate)}</div>
         </div>
         <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1></div>
         
         ${event.image ? `<div class="event-detail-image"><img style="object-fit:${event.imageFit || "contain"};object-position:center" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
-          <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}</strong></div>
-          <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}</strong></div>
+          <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}<div class="event-time"><span>🕒</span> ${formatTime(event.date)}</div></strong></div>
+          <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div></strong></div>
         </div>
         <div class="event-detail-description article-text">
           ${escapeHtml(event.content || event.excerpt || "").replace(/\n/g, "<br><br>")}
