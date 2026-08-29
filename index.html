@@ -208,17 +208,24 @@
 <h2>EDYTUJ EVENT</h2>
 <div class="event-fields">
 <input id="editEventId" type="hidden">
+<label class="edit-field-label">Tytuł wydarzenia</label>
 <input id="editEventTitle" placeholder="Nazwa eventu">
-<input id="editEventStart" type="date"><input id="editEventStartTime" type="time">
-<input id="editEventEnd" type="date"><input id="editEventEndTime" type="time">
-<input id="editEventPublish" type="date"><input id="editEventPublishTime" type="time">
+
+<label class="edit-field-label">Data rozpoczęcia</label>
+<div class="edit-date-row"><input id="editEventStart" type="date"><input id="editEventStartTime" type="time"></div>
+
+<label class="edit-field-label">Data zakończenia</label>
+<div class="edit-date-row"><input id="editEventEnd" type="date"><input id="editEventEndTime" type="time"></div>
+
+<label class="edit-field-label">Data publikacji</label>
+<div class="edit-date-row"><input id="editEventPublish" type="date"><input id="editEventPublishTime" type="time"></div>
 <div class="file-upload-box edit-file-box">
   <label class="custom-file-btn">📁 ZMIEŃ GRAFIKĘ<input id="editEventImage" type="file" accept="image/*" hidden></label>
   <span id="editEventImageName">Nie wybrano nowej grafiki</span>
 </div>
 <div id="editEventImagePreview" class="event-image-preview edit-preview"><img id="editEventPreviewImg" src="" alt="Podgląd grafiki"></div>
-<select id="editEventImageFit"><option value="contain">Dopasuj całość</option><option value="cover">Przytnij do ramki</option><option value="fill">Rozciągnij</option><option value="scale-down">Zmniejsz bez powiększania</option></select>
-<textarea id="editEventDesc" placeholder="Opis eventu"></textarea>
+<label class="edit-field-label">Sposób wyświetlania grafiki</label><select id="editEventImageFit"><option value="contain">Dopasuj całość</option><option value="cover">Przytnij do ramki</option><option value="fill">Rozciągnij</option><option value="scale-down">Zmniejsz bez powiększania</option></select>
+<label class="edit-field-label">Opis wydarzenia</label><textarea id="editEventDesc" placeholder="Opis eventu"></textarea>
 <button id="saveEditEvent" class="login-submit">ZAPISZ ZMIANY</button>
 <p id="editEventMsg"></p>
 </div></div></div>
