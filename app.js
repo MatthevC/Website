@@ -297,15 +297,14 @@ function getCommandFilterDefaults() {
 function isEventEnded(event) {
   if (!event || !event.endDate) return false;
 
-  // Event kończy się dopiero po wskazanej dacie zakończenia.
-  // Porównujemy same daty, aby uniknąć problemów ze strefą czasową.
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+  // Automatyczne zakończenie: data ORAZ godzina zakończenia muszą minąć.
+  // Przykład: 29.08.2026 21:00 -> event kończy się dopiero po 21:00.
+  const now = new Date();
   const end = new Date(event.endDate);
-  end.setHours(0, 0, 0, 0);
 
-  return today > end;
+  if (Number.isNaN(end.getTime())) return false;
+
+  return now >= end;
 }
 
 function generalRulesPage() {
