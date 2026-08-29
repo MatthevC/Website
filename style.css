@@ -5966,3 +5966,15 @@ body.image-preview-open { overflow: hidden; }
     word-break: break-word;
   }
 }
+
+
+/* ADMIN LOGIN */
+.admin-login-link{position:absolute;top:14px;left:0;z-index:20;}
+.admin-login-link button{background:transparent;border:0;color:#777;font-size:12px;letter-spacing:1px;cursor:pointer;transition:.2s;}
+.admin-login-link button:hover{color:var(--red);}
+.admin-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.admin-box{width:min(420px,90vw);background:#111;border:1px solid #333;padding:35px;box-shadow:0 0 40px rgba(239,43,45,.25);}
+.admin-box h2{margin-top:0;color:white;}
+.admin-box input,.admin-box textarea{width:100%;margin:8px 0;padding:12px;background:#090909;border:1px solid #333;color:white;}
+.admin-box button{background:var(--red);border:0;color:white;padding:12px 20px;cursor:pointer;}
+.admin-add-event{margin-left:auto;background:var(--red);padding:10px 18px;color:white;font-weight:700;}

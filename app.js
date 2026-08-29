@@ -3207,6 +3207,7 @@ async function render() {
       <div class="container content-wrap events-page">
         <div class="section-heading events-heading">
           <div><h2>NAJNOWSZE EVENTY</h2></div>
+          <a class="admin-add-event" id="admin-add-event" href="admin/index.html" style="display:none">+ NOWY EVENT</a>
           <p>Najnowsze wpisy na górze</p>
         </div>
 
@@ -3553,3 +3554,7 @@ document.addEventListener("click", (event) => {
 });
 
 render();
+
+
+async function setupAdminButton(){const b=document.getElementById("admin-login-btn");if(!b)return;const {data}=await supabaseClient.auth.getSession();b.textContent=data.session?"ADMIN":"ZALOGUJ";b.onclick=()=>{if(data.session)location.href="admin/index.html";else location.href="admin/login.html";};}
+setupAdminButton();
