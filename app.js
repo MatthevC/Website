@@ -167,7 +167,7 @@ const pages = {
           <a class="red-link" href="#/events">WSZYSTKIE EVENTY →</a>
         </div>
 
-        <div id="home-events" class="event-list"></div>
+        <div id="home-events" class="home-event-slider"></div>
       </div>
     `
   },
@@ -3006,21 +3006,22 @@ async function renderEventDetail(id) {
 
   app.innerHTML = `
     <div class="container content-wrap">
-      <div class="page-panel event-detail">
+      <article class="page-panel event-detail-modern">
         <a class="back-link" href="#/events">← WRÓĆ DO EVENTÓW</a>
-        ${event.image ? `<div class="event-cover event-cover-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : `<div class="event-cover"></div>`}
-        <div class="event-detail-info">
-          <h1>${escapeHtml(event.title)}</h1>
-          <div class="event-detail-meta">
-            <div><strong>Data publikacji:</strong> ${formatDate(event.publishDate)}</div>
-            <div><strong>Rozpoczęcie:</strong> ${formatDate(event.date)}</div>
-            <div><strong>Zakończenie:</strong> ${formatDate(event.endDate)}</div>
-          </div>
-          <div class="event-detail-description">
-            ${escapeHtml(event.content).replace(/\n/g, "<br><br>")}
-          </div>
+        <div class="event-publish-top">
+          <span>OPUBLIKOWANO</span>
+          ${formatDate(event.publishDate)}
         </div>
-      </div>
+        <h1>${escapeHtml(event.title)}</h1>
+        ${event.image ? `<div class="event-detail-image"><img src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
+        <div class="event-dates-box">
+          <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}</strong></div>
+          <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}</strong></div>
+        </div>
+        <div class="event-detail-description article-text">
+          ${escapeHtml(event.content || event.excerpt || "").replace(/\n/g, "<br><br>")}
+        </div>
+      </article>
     </div>
   `;
 }
@@ -3291,7 +3292,7 @@ async function render() {
     app.innerHTML = page.body;
     const events = await loadEvents();
     const homeEvents = document.getElementById("home-events");
-    if (homeEvents) homeEvents.innerHTML = events.slice(0, 3).map(eventCard).join("");
+    if (homeEvents) homeEvents.innerHTML = events.slice(0, 5).map(eventCard).join("");
   } else {
     app.innerHTML = page.body;
   }
