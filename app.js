@@ -2811,7 +2811,7 @@ function eventCard(event) {
         <div class="event-date">${formatDate(event.date)}</div>
         <h2>${escapeHtml(event.title)}</h2>
         <p>${escapeHtml(event.excerpt)}</p>
-        <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>\n        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1><div class="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div></div>
+        <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>\n        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1><div class="detailEditEventSlot" data-event-id="${escapeHtml(event.id)}"></div></div>
       </div>
     </article>
   `;
@@ -3044,8 +3044,8 @@ async function renderEventDetail(id) {
           <span>OPUBLIKOWANO</span>
           ${formatDate(event.publishDate)}
         </div>
-        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1><div class="editEventSlot" data-event-id="${escapeHtml(event.id)}"></div></div>
-        ${event.image ? `<div class="event-detail-image"><img style="object-fit:${escapeHtml(event.imageFit || "cover")}" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
+        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1><div class="detailEditEventSlot" data-event-id="${escapeHtml(event.id)}"></div></div>
+        ${event.image ? `<div class="event-detail-image"><img style="object-fit:${escapeHtml(event.imageFit || "contain")}" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}</strong></div>
           <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}</strong></div>

@@ -243,7 +243,7 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
 })();
 
 function renderEditButtons(){
- document.querySelectorAll(".editEventSlot").forEach(slot=>{
+ document.querySelectorAll(".detailEditEventSlot").forEach(slot=>{
   if(window.currentUserIsAdmin){
    slot.innerHTML=`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button>`;
   } else slot.innerHTML="";
