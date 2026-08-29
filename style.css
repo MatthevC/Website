@@ -7422,3 +7422,8 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .profile-box input{width:100%;box-sizing:border-box;background:#050505;border:1px solid #333;color:white;padding:12px}
 .profile-box button{margin-top:15px;background:#f22;color:white;border:0;padding:12px;width:100%;cursor:pointer}
 .profile-close{position:absolute;right:10px;top:10px!important;width:auto!important;background:none!important;font-size:22px}
+
+/* Admin event edit */
+.event-title-admin-row{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.edit-event-btn{padding:10px 16px;font-size:12px;white-space:nowrap}
+.event-detail-image img{width:100%;max-height:500px;object-fit:cover}
