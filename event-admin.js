@@ -249,3 +249,18 @@ function renderEditButtons(){
 }
 window.addEventListener("matt-auth-change",renderEditButtons);
 document.addEventListener("DOMContentLoaded",renderEditButtons);
+
+const eventImageInput=document.getElementById("eventImage");
+if(eventImageInput){
+ eventImageInput.addEventListener("change",()=>{
+  const file=eventImageInput.files[0];
+  const name=document.getElementById("eventImageName");
+  const preview=document.getElementById("eventImagePreview");
+  const img=preview?.querySelector("img");
+  if(!file){ if(name) name.textContent="Nie wybrano pliku"; if(preview) preview.style.display="none"; return; }
+  if(name) name.textContent=file.name;
+  const reader=new FileReader();
+  reader.onload=e=>{if(img){img.src=e.target.result;preview.style.display="block";}};
+  reader.readAsDataURL(file);
+ });
+}
