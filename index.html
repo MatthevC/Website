@@ -10,7 +10,7 @@
 <body>
   <header class="site-header">
     <div class="container admin-login-bar">
-      <a class="admin-login-btn" href="admin/login.html">🔒 ZALOGUJ</a>
+      <button id="openLogin" class="header-login">LOGIN</button>
     </div>
     <div class="container header-inner">
       <a class="brand" href="#/">
@@ -103,7 +103,10 @@
   </footer>
 
   <script src="config.js?v=9"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n<script src="supabase.js"></script>\n<script src="app.js?v=54"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="app.js?v=54"></script>
+<script src="auth-ui.js"></script>
 
 <div id="loginModal" class="login-overlay" style="display:none">
 <div class="login-modal">
@@ -116,5 +119,5 @@
 <button id="forgotPass" class="forgot-btn">Zapomniałeś hasła?</button>
 <p id="loginMsg"></p>
 </div></div>
-<button id="openLogin" class="header-login">LOGIN</button></body>
+</body>
 </html>
