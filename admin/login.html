@@ -1,99 +1,32 @@
 <!doctype html>
 <html lang="pl">
-
 <head>
 <meta charset="utf-8">
 <title>LOGIN - MatthevC</title>
-
-<link rel="stylesheet" href="../style.css">
-
-<style>
-body {
-    background:#050505;
-}
-
-.login-overlay {
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-.login-modal {
-    width:380px;
-    background:#111;
-    border:1px solid #ff3030;
-    padding:35px;
-    border-radius:12px;
-    box-shadow:0 0 30px rgba(255,0,0,.25);
-    text-align:center;
-}
-
-.login-modal h2 {
-    color:white;
-    margin-bottom:25px;
-}
-
-.login-modal input {
-    width:100%;
-    margin-bottom:15px;
-    padding:12px;
-    background:#080808;
-    border:1px solid #333;
-    color:white;
-}
-
-.login-submit {
-    width:100%;
-    padding:12px;
-    background:#ff3030;
-    color:white;
-    border:0;
-    cursor:pointer;
-    font-weight:bold;
-}
-
-.login-submit:hover {
-    background:#ff5555;
-}
-
-#msg {
-    color:#ff5555;
-    margin-top:15px;
-}
-</style>
-
+<link rel="stylesheet" href="login.css">
 </head>
 
 <body>
 
-<div class="login-overlay">
+<div class="login-page">
+    <div class="login-modal">
+        <h1>LOGIN</h1>
 
-<div class="login-modal">
+        <input id="nick" placeholder="Nick">
 
-<h2>LOGIN</h2>
+        <input id="pass" type="password" placeholder="Hasło">
 
-<input id="nick" placeholder="Nick">
+        <button id="loginBtn" class="login-submit">
+            ZALOGUJ
+        </button>
 
-<input id="pass" type="password" placeholder="Hasło">
-
-<button id="loginBtn" class="login-submit">
-ZALOGUJ
-</button>
-
-<p id="msg"></p>
-
+        <p id="msg"></p>
+    </div>
 </div>
-
-</div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script src="../supabase.js"></script>
-
 <script src="login.js"></script>
-
 
 </body>
 </html>
