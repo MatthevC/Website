@@ -1,55 +1,84 @@
-document.addEventListener("DOMContentLoaded", async ()=>{
+(() => {
+
+let isAdmin = false;
+
+async function checkAdmin(){
+  try{
+    const {data:{session}} = await supabaseClient.auth.getSession();
+
+    if(!session){
+      isAdmin=false;
+      hideAddButton();
+      return;
+    }
+
+    const {data:profile}=await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("email",session.user.email)
+      .maybeSingle();
+
+    isAdmin = profile?.role === "admin";
+
+    if(isAdmin) showAddButton();
+    else hideAddButton();
+
+  }catch(e){
+    console.error("Admin check error",e);
+    hideAddButton();
+  }
+}
+
+function getAddButton(){
+  return document.getElementById("addEventButton");
+}
+
+function hideAddButton(){
+  const btn=getAddButton();
+  if(btn){
+    btn.style.display="none";
+    btn.hidden=true;
+  }
+}
+
+function showAddButton(){
+  const btn=getAddButton();
+  if(btn){
+    btn.style.display="inline-flex";
+    btn.hidden=false;
+  }
+}
+
+function initEvents(){
 
  const modal=document.getElementById("eventModal");
  const close=document.getElementById("closeEvent");
  const save=document.getElementById("saveEvent");
- const addButton=document.getElementById("addEventButton");
 
- if(addButton){
-   // Ukryty domyślnie - pojawia się wyłącznie po potwierdzeniu admina
-   addButton.style.setProperty("display","none","important");
-   addButton.style.setProperty("visibility","hidden","important");
-   addButton.hidden = true;
-   addButton.disabled = true;
- }
+ // delegacja - działa nawet gdy przycisk pojawi się później
+ document.addEventListener("click",(e)=>{
+   const btn=e.target.closest("#addEventButton");
 
- let isAdmin=false;
+   if(btn){
+      e.preventDefault();
 
- try{
-   const {data:{session}} = await supabaseClient.auth.getSession();
+      if(!isAdmin){
+        return;
+      }
 
-   if(session){
-     const {data:profile}=await supabaseClient
-       .from("profiles")
-       .select("role")
-       .eq("email",session.user.email)
-       .maybeSingle();
-
-     if(profile?.role==="admin"){
-       isAdmin=true;
-       if(addButton){
-          addButton.hidden = false;
-          addButton.disabled = false;
-          addButton.style.setProperty("display","inline-flex","important");
-          addButton.style.setProperty("visibility","visible","important");
-          addButton.onclick=()=>{
-             if(modal) modal.style.display="flex";
-          };
-       }
-     }
+      if(modal){
+        modal.style.display="flex";
+      }
    }
- }catch(e){
-   console.error("Admin check error",e);
- }
+ });
 
  if(close){
-   close.onclick=()=>{
-      if(modal) modal.style.display="none";
-   };
+   close.onclick=()=>modal.style.display="none";
  }
 
  if(save){
  save.onclick=async()=>{
+
    if(!isAdmin){
      alert("Brak uprawnień");
      return;
@@ -62,35 +91,34 @@ document.addEventListener("DOMContentLoaded", async ()=>{
    if(file){
      const name=Date.now()+"_"+file.name;
      const upload=await supabaseClient.storage.from("events").upload(name,file);
+
      if(upload.error){
        msg.textContent=upload.error.message;
        return;
      }
-     image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
+
+     image=supabaseClient.storage
+       .from("events")
+       .getPublicUrl(name).data.publicUrl;
    }
 
-   const combineDateTime=(dateId,timeId)=>{
-     const date=document.getElementById(dateId)?.value;
-     const time=document.getElementById(timeId)?.value || "00:00";
-     return date ? `${date}T${time}:00` : null;
+   const combine=(date,time)=>{
+      const d=document.getElementById(date)?.value;
+      const t=document.getElementById(time)?.value || "00:00";
+      return d ? `${d}T${t}:00` : null;
    };
 
-   const startDate=combineDateTime("eventStart","eventStartTime");
-   const endDate=combineDateTime("eventEnd","eventEndTime");
-   const publishDate=combineDateTime("eventPublish","eventPublishTime");
-
-   if(startDate && endDate && new Date(endDate) < new Date(startDate)){
-     msg.textContent="Data zakończenia nie może być wcześniejsza niż rozpoczęcia";
-     return;
-   }
+   const start=combine("eventStart","eventStartTime");
+   const end=combine("eventEnd","eventEndTime");
+   const publish=combine("eventPublish","eventPublishTime");
 
    const {error}=await supabaseClient.from("events").insert({
-     title:document.getElementById("eventTitle").value,
-     description:document.getElementById("eventDesc").value,
-     start_date:startDate,
-     end_date:endDate,
-     publish_date:publishDate,
-     image_url:image
+      title:document.getElementById("eventTitle").value,
+      description:document.getElementById("eventDesc").value,
+      start_date:start,
+      end_date:end,
+      publish_date:publish,
+      image_url:image
    });
 
    msg.textContent=error ? error.message : "Dodano event";
@@ -101,4 +129,14 @@ document.addEventListener("DOMContentLoaded", async ()=>{
  };
  }
 
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+ initEvents();
+ checkAdmin();
+
+ // ponowne sprawdzenie po logowaniu bez odświeżania
+ window.addEventListener("matt-auth-change",checkAdmin);
 });
+
+})();
