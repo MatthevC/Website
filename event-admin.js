@@ -219,10 +219,28 @@ async function openEdit(id){
   applyEditPreviewFit();
  }
  const setDT=(val,dateId,timeId)=>{
-   if(!val)return;
-   let d=new Date(val);
-   document.getElementById(dateId).value=d.toISOString().slice(0,10);
-   document.getElementById(timeId).value=d.toTimeString().slice(0,5);
+   const dateEl=document.getElementById(dateId);
+   const timeEl=document.getElementById(timeId);
+   if(!dateEl || !timeEl) return;
+
+   if(!val){
+     dateEl.value="";
+     timeEl.value="";
+     return;
+   }
+
+   const d=new Date(val);
+   if(Number.isNaN(d.getTime())){
+     console.warn("Niepoprawna data eventu:", val);
+     dateEl.value="";
+     timeEl.value="";
+     return;
+   }
+
+   // lokalny czas zamiast UTC (unikamy przesunięć godzin)
+   const pad=n=>String(n).padStart(2,"0");
+   dateEl.value=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+   timeEl.value=`${pad(d.getHours())}:${pad(d.getMinutes())}`;
  };
  setDT(data.start_date,"editEventStart","editEventStartTime");
  setDT(data.end_date,"editEventEnd","editEventEndTime");
