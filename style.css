@@ -6643,3 +6643,48 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .admin-add-event {
   visibility: hidden;
 }
+
+/* ===== POPRAWIONY KREATOR EVENTÓW ===== */
+.event-modal {
+  max-width: 900px;
+  width: calc(100% - 40px);
+}
+.event-grid {
+  display:grid;
+  grid-template-columns: 260px 1fr;
+  gap:35px;
+  align-items:start;
+}
+.event-fields {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.event-fields input,
+.event-fields textarea {
+  width:100%;
+  box-sizing:border-box;
+}
+.datetime-field {
+  display:grid;
+  grid-template-columns:1fr 150px;
+  gap:10px;
+}
+.datetime-field input[type=date],
+.datetime-field input[type=time] {
+  cursor:pointer;
+}
+.end-row {
+  grid-template-columns:1fr 150px auto;
+  align-items:center;
+}
+.event-ended-toggle {
+  white-space:nowrap;
+  margin:0;
+  padding:0 8px;
+  color:#ddd;
+}
+@media(max-width:800px){
+ .event-grid{grid-template-columns:1fr;}
+ .end-row{grid-template-columns:1fr;}
+}
