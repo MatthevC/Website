@@ -201,7 +201,18 @@ async function openEdit(id){
  editEventId.value=data.id;
  editEventTitle.value=data.title||"";
  editEventDesc.value=data.description||"";
- if(document.getElementById("editEventImageFit")) document.getElementById("editEventImageFit").value=data.image_fit||"contain";
+ const preview=document.getElementById("editEventPreviewImg");
+ const previewBox=document.getElementById("editEventImagePreview");
+ if(preview && data.image_url){
+   preview.src=data.image_url;
+   previewBox.style.display="block";
+ }
+ const name=document.getElementById("editEventImageName");
+ if(name) name.textContent="Aktualna grafika eventu";
+ if(document.getElementById("editEventImageFit")) {
+  document.getElementById("editEventImageFit").value=data.image_fit||"contain";
+  applyEditPreviewFit();
+ }
  const setDT=(val,dateId,timeId)=>{
    if(!val)return;
    let d=new Date(val);
@@ -240,6 +251,36 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  if(!error)setTimeout(()=>location.reload(),700);
 });
 })();
+
+
+function applyEditPreviewFit(){
+ const img=document.getElementById("editEventPreviewImg");
+ const select=document.getElementById("editEventImageFit");
+ if(!img || !select) return;
+ img.style.objectFit=select.value;
+ img.style.objectPosition="center";
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+ const input=document.getElementById("editEventImage");
+ const select=document.getElementById("editEventImageFit");
+ if(select) select.addEventListener("change",applyEditPreviewFit);
+ if(input){
+  input.addEventListener("change",()=>{
+   const file=input.files[0];
+   const name=document.getElementById("editEventImageName");
+   const img=document.getElementById("editEventPreviewImg");
+   const box=document.getElementById("editEventImagePreview");
+   if(!file) return;
+   if(name) name.textContent=file.name;
+   const reader=new FileReader();
+   reader.onload=e=>{
+    if(img){img.src=e.target.result; box.style.display="block"; applyEditPreviewFit();}
+   };
+   reader.readAsDataURL(file);
+  });
+ }
+});
 
 function renderEditButtons(){
  document.querySelectorAll(".detailEditEventSlot").forEach(slot=>{
