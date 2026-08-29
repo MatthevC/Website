@@ -19,3 +19,46 @@ if(login) login.onclick=async()=>{
 const forgot=document.getElementById("forgotPass");
 if(forgot) forgot.onclick=()=>{};
 });
+
+// Automatyczne wylogowanie po braku aktywności
+(function(){
+ let idleTimer=null;
+ let logoutTimer=null;
+ const IDLE_LIMIT=5*60*1000;
+ const WARNING_TIME=60;
+ function resetIdle(){
+   clearTimeout(idleTimer);
+   clearTimeout(logoutTimer);
+   const box=document.getElementById('idleLogoutModal');
+   if(box) box.style.display='none';
+   idleTimer=setTimeout(showWarning, IDLE_LIMIT);
+ }
+ async function forceLogout(){
+   await supabaseClient.auth.signOut();
+   location.reload();
+ }
+ function showWarning(){
+   const box=document.getElementById('idleLogoutModal');
+   if(!box) return;
+   box.style.display='flex';
+   let sec=WARNING_TIME;
+   const counter=document.getElementById('idleCounter');
+   counter.textContent=sec;
+   logoutTimer=setInterval(()=>{
+     sec--;
+     counter.textContent=sec;
+     if(sec<=0){ clearInterval(logoutTimer); forceLogout(); }
+   },1000);
+ }
+ window.resetIdleTimer=resetIdle;
+ ['mousemove','mousedown','keydown','scroll','touchstart'].forEach(e=>document.addEventListener(e,()=>{
+   resetIdle();
+ },{passive:true}));
+ document.addEventListener('click',e=>{
+   if(e.target.id==='stayLoggedBtn') resetIdle();
+ });
+ supabaseClient.auth.getSession().then(({data})=>{ if(data.session) resetIdle(); });
+ window.addEventListener('beforeunload',()=>{
+   supabaseClient.auth.signOut();
+ });
+})();
