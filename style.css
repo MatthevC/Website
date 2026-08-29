@@ -7112,3 +7112,95 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
    grid-column:1;
  }
 }
+
+/* FINAL EVENT MODAL ALIGNMENT - keep icons integrated inside fields */
+.event-form-modern{
+  display:grid;
+  grid-template-columns:210px 1fr;
+  column-gap:28px;
+  row-gap:10px;
+  align-items:center;
+}
+.event-form-modern h2{grid-column:1/-1}
+.event-form-modern label{
+  margin:0;
+  align-self:center;
+}
+.event-form-modern label small{
+  display:block;
+  margin-top:4px;
+}
+.event-form-modern input,
+.event-form-modern textarea,
+.event-form-modern .input-icon input{
+  background:#080808;
+  border:1px solid #343434;
+  color:#fff;
+  border-radius:4px;
+}
+.event-form-modern > input,
+.event-form-modern > textarea,
+.event-form-modern > .datetime-field,
+.event-form-modern > button,
+.event-form-modern > p{
+  grid-column:2;
+}
+.datetime-field{
+  width:100%;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.input-icon{
+  position:relative;
+  flex:1;
+  height:40px;
+}
+.input-icon input{
+  width:100%;
+  height:40px;
+  padding-right:52px!important;
+  box-sizing:border-box;
+}
+.picker-icon{
+  position:absolute;
+  right:0;
+  top:0;
+  height:40px;
+  width:46px;
+  border:0;
+  border-left:1px solid #343434;
+  background:#151515;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:20px;
+  border-radius:0 4px 4px 0;
+}
+.picker-icon:hover{
+  background:#ef2b2d;
+}
+.event-ended-toggle{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  white-space:nowrap;
+}
+.event-form-modern textarea{
+  min-height:180px;
+  resize:vertical;
+}
+.event-form-modern .login-submit{
+  width:100%;
+  margin-top:8px;
+}
+@media(max-width:800px){
+ .event-form-modern{grid-template-columns:1fr}
+ .event-form-modern > input,
+ .event-form-modern > textarea,
+ .event-form-modern > .datetime-field,
+ .event-form-modern > button,
+ .event-form-modern > p{grid-column:1}
+}
