@@ -124,7 +124,8 @@ function initEvents(){
       start_date:start,
       end_date:finalEnd,
       publish_date:publish,
-      image_url:image
+      image_url:image,
+      image_fit:"contain"
    });
 
    msg.textContent=error ? error.message : "Dodano event";
@@ -195,7 +196,7 @@ document.addEventListener("click", function(e){
 // Edycja eventów dla administratora
 (() => {
 function admin(){ 
- return window.currentUserIsAdmin === true || isAdmin === true; 
+ return window.currentUserIsAdmin === true; 
 }
 
 async function openEdit(id){
