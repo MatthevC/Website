@@ -6351,3 +6351,12 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .header-login{
   white-space:nowrap;
 }
+
+
+/* EVENT ADMIN MODAL */
+.event-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:10000;align-items:center;justify-content:center}
+.event-modal{width:min(900px,92%);background:#111;border:1px solid #333;border-top:3px solid #ef2b2d;border-radius:12px;padding:30px;position:relative;color:white}
+.event-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:30px}
+.event-labels p{color:#aaa;line-height:1.4}
+.event-fields input,.event-fields textarea{width:100%;margin-bottom:12px;padding:12px;background:#080808;color:white;border:1px solid #333;border-radius:5px}
+.event-fields textarea{min-height:120px}
