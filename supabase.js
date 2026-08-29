@@ -1,4 +1,4 @@
 // UZUPEŁNIJ DANYMI Z SUPABASE (Settings -> API)
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://hbfgiecmyzgldgbbgwds.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_DQHt3NmJnRXkNIaM-Fmj7Q_5YT7yyA9";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
