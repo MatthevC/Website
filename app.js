@@ -2807,6 +2807,29 @@ function eventCard(event) {
     </article>
   `;
 }
+
+function setupHomeEventSlider(root) {
+  const track = root.querySelector(".home-event-track");
+  if (!track) return;
+  const cards = [...track.children];
+  if (!cards.length) return;
+
+  let index = 0;
+  const move = () => {
+    track.style.transform = `translateX(-${index * 100}%)`;
+  };
+
+  root.querySelector(".right")?.addEventListener("click", () => {
+    index = Math.min(index + 1, cards.length - 1);
+    move();
+  });
+
+  root.querySelector(".left")?.addEventListener("click", () => {
+    index = Math.max(index - 1, 0);
+    move();
+  });
+}
+
 function formatDate(date) {
   if (!date) return "Brak daty";
 
@@ -3292,7 +3315,7 @@ async function render() {
     app.innerHTML = page.body;
     const events = await loadEvents();
     const homeEvents = document.getElementById("home-events");
-    if (homeEvents) homeEvents.innerHTML = events.slice(0, 3).map(eventCard).join("");
+    if (homeEvents) { homeEvents.innerHTML = `<div class="home-event-track">${events.slice(0,3).map(eventCard).join("")}</div><button class="home-event-arrow left" aria-label="Poprzedni event">←</button><button class="home-event-arrow right" aria-label="Następny event">→</button>`; setupHomeEventSlider(homeEvents); }
   } else {
     app.innerHTML = page.body;
   }

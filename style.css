@@ -6491,3 +6491,46 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 }
 
 .datetime-field{display:flex;gap:10px}.datetime-field input{flex:1}
+
+
+/* Home event carousel */
+.home-event-slider {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #222;
+}
+.home-event-track {
+  display: flex;
+  width: 100%;
+  transition: transform .35s ease;
+}
+.home-event-track .event-card {
+  min-width: 100%;
+  display:flex;
+  flex-shrink:0;
+}
+.home-event-arrow {
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  background:#151515;
+  color:white;
+  border:1px solid #333;
+  padding:10px 14px;
+  cursor:pointer;
+}
+.home-event-arrow.left{left:10px}
+.home-event-arrow.right{right:10px}
+.event-cover-ended img {
+  filter: grayscale(100%);
+  opacity:.55;
+}
+.event-ended .event-body h2,
+.event-ended .event-body p {
+  opacity:.7;
+}
+.event-ended .event-cover {
+  position:relative;
+}
