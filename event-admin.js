@@ -7,7 +7,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
  if(addButton){
    // Ukryty domyślnie - pojawia się wyłącznie po potwierdzeniu admina
-   addButton.style.display="none";
+   addButton.style.setProperty("display","none","important");
+   addButton.style.setProperty("visibility","hidden","important");
    addButton.hidden = true;
    addButton.disabled = true;
  }
@@ -29,7 +30,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
        if(addButton){
           addButton.hidden = false;
           addButton.disabled = false;
-          addButton.style.display="inline-flex";
+          addButton.style.setProperty("display","inline-flex","important");
+          addButton.style.setProperty("visibility","visible","important");
           addButton.onclick=()=>{
              if(modal) modal.style.display="flex";
           };
