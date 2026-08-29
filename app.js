@@ -3065,8 +3065,7 @@ async function renderEventDetail(id) {
           <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div></strong></div>
         </div>
         <div class="event-detail-description article-text">
-          ${escapeHtml(event.content || event.excerpt || "").replace(/
-/g, "<br><br>")}
+          ${escapeHtml(event.content || event.excerpt || "").replace(/\n/g, "<br><br>")}
         </div>
       </article>
     </div>
