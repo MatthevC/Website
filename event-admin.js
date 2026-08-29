@@ -18,7 +18,7 @@ async function checkAdmin(){
       .eq("email",session.user.email)
       .maybeSingle();
 
-    isAdmin = profile?.role === "admin";
+    isAdmin = profile?.role === "admin";\n    window.currentUserIsAdmin = isAdmin;\n    window.dispatchEvent(new CustomEvent("matt-auth-change",{detail:{isAdmin}}));
 
     if(isAdmin) showAddButton();
     else hideAddButton();
@@ -192,7 +192,9 @@ document.addEventListener("click", function(e){
 
 // Edycja eventów dla administratora
 (() => {
-function admin(){ return window.currentUserIsAdmin === true; }
+function admin(){ 
+ return window.currentUserIsAdmin === true || isAdmin === true; 
+}
 
 async function openEdit(id){
  if(!admin()) return;
