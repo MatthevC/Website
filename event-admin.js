@@ -8,7 +8,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
  if(addButton){
    // Ukryty domyślnie - pojawia się wyłącznie po potwierdzeniu admina
    addButton.style.display="none";
-   addButton.setAttribute("hidden", "true");
+   addButton.hidden = true;
+   addButton.disabled = true;
  }
 
  let isAdmin=false;
@@ -26,7 +27,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
      if(profile?.role==="admin"){
        isAdmin=true;
        if(addButton){
-          addButton.removeAttribute("hidden");
+          addButton.hidden = false;
+          addButton.disabled = false;
           addButton.style.display="inline-flex";
           addButton.onclick=()=>{
              if(modal) modal.style.display="flex";

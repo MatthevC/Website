@@ -3221,7 +3221,7 @@ async function render() {
       <div class="container content-wrap events-page">
         <div class="section-heading events-heading">
           <div><h2>NAJNOWSZE EVENTY</h2></div>
-          <button class="admin-add-event" id="addEventButton" style="display:none">+ DODAJ EVENT</button>
+          <button class="admin-add-event" id="addEventButton" hidden style="display:none">+ DODAJ EVENT</button>
           <p>Najnowsze wpisy na górze</p>
         </div>
 
