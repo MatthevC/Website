@@ -6613,3 +6613,15 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     height: 210px;
   }
 }
+
+.event-ended-toggle {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  color:#aaa;
+  font-size:14px;
+}
+.event-ended-toggle input {
+  accent-color:#ff3030;
+}

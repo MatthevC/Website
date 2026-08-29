@@ -110,13 +110,17 @@ function initEvents(){
 
    const start=combine("eventStart","eventStartTime");
    const end=combine("eventEnd","eventEndTime");
+   const manualEnded=document.getElementById("eventEndedManual")?.checked;
+
+   // Przy ręcznym oznaczeniu zakończenia ustawiamy datę zakończenia na dziś
+   const finalEnd = manualEnded ? new Date().toISOString() : end;
    const publish=combine("eventPublish","eventPublishTime");
 
    const {error}=await supabaseClient.from("events").insert({
       title:document.getElementById("eventTitle").value,
       description:document.getElementById("eventDesc").value,
       start_date:start,
-      end_date:end,
+      end_date:finalEnd,
       publish_date:publish,
       image_url:image
    });
