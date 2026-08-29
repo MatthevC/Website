@@ -42,14 +42,15 @@ open.onclick=()=>{
             supabaseClient.auth.signOut().then(()=>location.reload());
         }
     } else {
+        modal.style.display="flex";
         modal.classList.add("active");
     }
 };
 
-close.onclick=()=>modal.classList.remove("active");
+close.onclick=()=>{modal.classList.remove("active"); modal.style.display="none";};
 
 modal.onclick=(e)=>{
-    if(e.target===modal) modal.classList.remove("active");
+    if(e.target===modal){ modal.classList.remove("active"); modal.style.display="none"; }
 };
 
 btn.onclick=async()=>{

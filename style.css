@@ -6200,3 +6200,59 @@ body.image-preview-open { overflow: hidden; }
 .login-modal input {
     width:100%;
 }
+
+
+/* FINAL LOGIN MODAL FIX */
+.login-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,.78) !important;
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 99999 !important;
+}
+
+.login-overlay.active {
+    display:flex !important;
+}
+
+.login-modal {
+    position: relative;
+    width: min(420px,90vw);
+    background:#111;
+    border:1px solid #ef2b2d;
+    border-radius:14px;
+    padding:35px;
+    z-index:100000;
+    box-shadow:0 20px 80px rgba(0,0,0,.8);
+}
+
+.login-modal input {
+    width:100%;
+    margin:8px 0;
+    padding:12px;
+    background:#090909;
+    color:white;
+    border:1px solid #333;
+}
+
+.login-submit {
+    width:100%;
+    margin-top:15px;
+    padding:12px;
+    background:#ef2b2d;
+    color:white;
+    border:0;
+    cursor:pointer;
+}
+
+.login-close {
+    position:absolute;
+    right:15px;
+    top:10px;
+    background:none;
+    color:white;
+    border:0;
+    font-size:25px;
+}
