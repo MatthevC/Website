@@ -6534,3 +6534,82 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .event-ended .event-cover {
   position:relative;
 }
+
+
+/* ===== HOME EVENT CARD - wygląd sekcji "CO NOWEGO?" ===== */
+.home-event-slider {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.home-event-track {
+  display: flex;
+  width: 100%;
+  transition: transform .35s ease;
+}
+
+.home-event-track .event-card {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+.home-event-slider .event-card {
+  display: grid;
+  grid-template-columns: 255px 1fr;
+  min-height: 185px;
+  background: #111;
+  border: 1px solid #292929;
+}
+
+.home-event-slider .event-cover,
+.home-event-slider .event-cover-image {
+  min-height: 185px;
+  height: 185px;
+}
+
+.home-event-slider .event-body {
+  padding: 22px 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-event-slider .event-body h2 {
+  font-size: 25px;
+  margin-bottom: 8px;
+}
+
+.home-event-slider .event-body p {
+  margin-bottom: 15px;
+  font-size: 15px;
+}
+
+.home-event-slider .event-read {
+  align-self: flex-start;
+}
+
+.home-event-slider .event-cover-image img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.event-cover-ended::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.18);
+  z-index: 2;
+}
+
+@media (max-width: 700px) {
+  .home-event-slider .event-card {
+    grid-template-columns: 1fr;
+  }
+
+  .home-event-slider .event-cover,
+  .home-event-slider .event-cover-image {
+    height: 210px;
+  }
+}
