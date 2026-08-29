@@ -6289,3 +6289,41 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .user-menu a,.user-menu button{background:none;border:0;color:#fff;text-align:left;padding:10px;cursor:pointer;font-family:Rajdhani;}
 .user-menu a:hover,.user-menu button:hover{background:#ef2b2d;}
 .admin-add-event{display:inline-flex!important;padding:8px 14px;background:#ef2b2d;color:white;border-radius:4px;font-weight:700;}
+
+
+/* FINAL USER HEADER FIX */
+.header-inner{
+  justify-content:flex-start;
+}
+.site-header .header-cta{
+  margin-left:auto;
+}
+.user-area{
+  position:relative;
+  margin-left:14px;
+  z-index:2000;
+}
+.header-login{
+  height:40px;
+  min-width:90px;
+  padding:0 18px;
+  background:#111;
+  border:1px solid #ef2b2d;
+  color:#fff;
+  border-radius:6px;
+}
+.header-login.logged{
+  background:#111;
+  color:#fff;
+}
+.header-login.logged:hover{
+  background:#ef2b2d;
+}
+.user-menu{
+  display:none !important;
+  top:48px;
+  right:0;
+}
+.user-menu.show{
+  display:flex !important;
+}
