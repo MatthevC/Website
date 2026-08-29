@@ -194,7 +194,7 @@ document.addEventListener("click", function(e){
 (() => {
 function admin(){ return window.currentUserIsAdmin === true; }
 
-async async function openEdit(id){
+async function openEdit(id){
  if(!admin()) return;
  const {data}=await supabaseClient.from("events").select("*").eq("id",id).single();
  if(!data) return;
@@ -229,8 +229,15 @@ document.addEventListener("click",e=>{
  if(b){ e.preventDefault(); e.stopPropagation(); openEdit(b.dataset.id); }
 });
 function updateEditButtons(){
+ const allowed = window.currentUserIsAdmin === true;
  document.querySelectorAll(".edit-event-btn").forEach(x=>{
-  x.style.display=window.currentUserIsAdmin?"inline-flex":"none";
+  if(allowed){
+    x.style.display="inline-flex";
+    x.hidden=false;
+  }else{
+    x.style.display="none";
+    x.hidden=true;
+  }
  });
 }
 window.updateEditButtons=updateEditButtons;
