@@ -17,5 +17,5 @@ if(login) login.onclick=async()=>{
  location.href="admin/";
 };
 const forgot=document.getElementById("forgotPass");
-if(forgot) forgot.onclick=()=>alert("Reset hasła zostanie dodany po konfiguracji maili Supabase.");
+if(forgot) forgot.onclick=()=>{};
 });
