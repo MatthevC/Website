@@ -7454,3 +7454,23 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
  object-fit:contain !important;
  object-position:center !important;
 }
+
+/* Edycja eventu z listy - tylko administrator */
+.event-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:14px;
+}
+.edit-event-btn{
+  background:#ef2b2d;
+  color:white;
+  border:0;
+  padding:9px 14px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+}
+.edit-event-btn:hover{
+  filter:brightness(1.1);
+}
