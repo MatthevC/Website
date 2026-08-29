@@ -6783,3 +6783,50 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .event-fields textarea{
   border-radius:6px;
 }
+
+
+/* ===== EVENT DATE PICKER FINAL STYLE ===== */
+.datetime-field .input-icon{
+ position:relative;
+ display:flex;
+ align-items:center;
+}
+.datetime-field .input-icon input{
+ padding-right:42px!important;
+}
+.datetime-field .picker-icon{
+ position:absolute;
+ right:10px;
+ top:50%;
+ transform:translateY(-50%);
+ width:28px;
+ height:28px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ background:#151515;
+ border:1px solid #333;
+ border-radius:6px;
+ color:#fff;
+ cursor:pointer;
+ font-size:14px;
+ padding:0;
+ z-index:5;
+ transition:.2s;
+}
+.datetime-field .picker-icon:hover{
+ border-color:#ef2b2d;
+ background:#222;
+}
+.datetime-field .input-icon input::-webkit-calendar-picker-indicator{
+ opacity:0;
+ position:absolute;
+ right:10px;
+ width:28px;
+ height:28px;
+ cursor:pointer;
+}
+.event-ended-toggle{
+ height:42px;
+ margin-top:0;
+}

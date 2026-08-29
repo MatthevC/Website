@@ -174,3 +174,18 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 })();
+
+// Custom calendar/time buttons
+document.addEventListener("click", function(e){
+ const btn=e.target.closest(".date-trigger, .time-trigger");
+ if(!btn) return;
+ const wrapper=btn.closest(".input-icon");
+ const input=wrapper?.querySelector("input");
+ if(!input) return;
+ if(typeof input.showPicker==="function"){
+   input.showPicker();
+ }else{
+   input.focus();
+   input.click();
+ }
+});
