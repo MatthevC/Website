@@ -69,12 +69,27 @@ document.addEventListener("DOMContentLoaded", async ()=>{
      image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
    }
 
+   const combineDateTime=(dateId,timeId)=>{
+     const date=document.getElementById(dateId)?.value;
+     const time=document.getElementById(timeId)?.value || "00:00";
+     return date ? `${date}T${time}:00` : null;
+   };
+
+   const startDate=combineDateTime("eventStart","eventStartTime");
+   const endDate=combineDateTime("eventEnd","eventEndTime");
+   const publishDate=combineDateTime("eventPublish","eventPublishTime");
+
+   if(startDate && endDate && new Date(endDate) < new Date(startDate)){
+     msg.textContent="Data zakończenia nie może być wcześniejsza niż rozpoczęcia";
+     return;
+   }
+
    const {error}=await supabaseClient.from("events").insert({
      title:document.getElementById("eventTitle").value,
      description:document.getElementById("eventDesc").value,
-     start_date:document.getElementById("eventStart").value,
-     end_date:document.getElementById("eventEnd").value,
-     publish_date:document.getElementById("eventPublish").value,
+     start_date:startDate,
+     end_date:endDate,
+     publish_date:publishDate,
      image_url:image
    });
 
