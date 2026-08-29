@@ -7029,3 +7029,86 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   cursor:pointer;
   border:1px solid #ef2b2d;
 }
+
+
+/* ===== EVENT CREATOR FINAL LAYOUT ===== */
+.event-form-modern{
+  display:grid;
+  grid-template-columns:230px minmax(0,1fr);
+  column-gap:28px;
+  row-gap:12px;
+  align-items:center;
+}
+
+.event-form-modern label{
+  grid-column:1;
+  margin:0;
+  align-self:center;
+}
+
+.event-form-modern > input,
+.event-form-modern > textarea,
+.event-form-modern > .datetime-field,
+.event-form-modern > button,
+.event-form-modern > p{
+  grid-column:2;
+}
+
+.event-form-modern > input,
+.event-form-modern > textarea,
+.event-form-modern .input-icon input{
+  height:44px;
+}
+
+.event-form-modern textarea{
+  min-height:220px!important;
+  resize:vertical;
+  padding:16px!important;
+}
+
+.datetime-field{
+  width:100%;
+  gap:12px;
+}
+
+.datetime-field .input-icon{
+  height:44px;
+}
+
+.datetime-field .input-icon input{
+  height:44px;
+  padding-right:55px!important;
+  margin:0!important;
+}
+
+.picker-icon{
+  width:52px!important;
+  height:42px!important;
+  right:1px!important;
+  top:1px!important;
+  border-radius:0 5px 5px 0;
+  font-size:22px!important;
+  background:#151515!important;
+}
+
+.event-ended-toggle{
+  align-self:center;
+  height:44px;
+}
+
+.event-modal{
+  width:min(950px,94%);
+}
+
+@media(max-width:750px){
+ .event-form-modern{
+   grid-template-columns:1fr;
+ }
+ .event-form-modern > input,
+ .event-form-modern > textarea,
+ .event-form-modern > .datetime-field,
+ .event-form-modern > button,
+ .event-form-modern > p{
+   grid-column:1;
+ }
+}
