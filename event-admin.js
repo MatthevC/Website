@@ -6,7 +6,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
  const addButton=document.getElementById("addEventButton");
 
  if(addButton){
+   // Ukryty domyślnie - pojawia się wyłącznie po potwierdzeniu admina
    addButton.style.display="none";
+   addButton.setAttribute("hidden", "true");
  }
 
  let isAdmin=false;
@@ -24,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
      if(profile?.role==="admin"){
        isAdmin=true;
        if(addButton){
+          addButton.removeAttribute("hidden");
           addButton.style.display="inline-flex";
           addButton.onclick=()=>{
              if(modal) modal.style.display="flex";
@@ -79,14 +82,4 @@ document.addEventListener("DOMContentLoaded", async ()=>{
  };
  }
 
-});
-
-
-supabaseClient.auth.onAuthStateChange(async () => {
- const btn=document.getElementById("addEventButton");
- if(!btn) return;
- const {data:{session}}=await supabaseClient.auth.getSession();
- if(!session){
-   btn.style.display="none";
- }
 });
