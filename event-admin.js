@@ -18,7 +18,9 @@ async function checkAdmin(){
       .eq("email",session.user.email)
       .maybeSingle();
 
-    isAdmin = profile?.role === "admin";\n    window.currentUserIsAdmin = isAdmin;\n    window.dispatchEvent(new CustomEvent("matt-auth-change",{detail:{isAdmin}}));
+    isAdmin = profile?.role === "admin";
+    window.currentUserIsAdmin = isAdmin;
+    window.dispatchEvent(new CustomEvent("matt-auth-change",{detail:{isAdmin}}));
 
     if(isAdmin) showAddButton();
     else hideAddButton();
