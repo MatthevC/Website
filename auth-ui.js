@@ -42,8 +42,10 @@ document.addEventListener("DOMContentLoaded", async () => {
      menu?.classList.toggle("show");
    };
 
-   if(profile.role==="admin" && admin){
-     admin.style.display="block";
+   // Panel administratora usunięty z menu użytkownika.
+   // Dostęp administracyjny pozostaje przez osobny mechanizm.
+   if(admin){
+     admin.style.display="none";
    }
 
    if(logout){
