@@ -1129,82 +1129,163 @@ function moderatorBenefitsPage() {
 
 function sevenTvEmotesPage() {
   return `
-    <div class="container content-wrap">
-      <div class="page-panel">
-        <div class="section-heading">
-          <div>
-            <h2>EMOTKI <span>7TV</span></h2>
-          </div>
-          <p>Lepszy wygląd czatu Twitch oraz dodatkowe emotki społeczności.</p>
-        </div>
+    <div class="container content-wrap dixper-page">
+      <div class="page-panel dixper-shell">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
-        <div class="article-layout">
-          <aside class="article-sidebar">
-            <h3>EMOTKI 7TV</h3>
-            <a href="#emotes-why">Dlaczego warto?</a>
-            <a href="#emotes-install">Instalacja</a>
-            <a href="#emotes-settings">Konfiguracja</a>
-            <a href="#emotes-menu">Menu emotek</a>
-            <a href="#emotes-tab">Autouzupełnianie TAB</a>
+        <header class="dixper-intro">
+          <div>
+            <span class="dixper-kicker">DLA WIDZA / EMOTKI 7TV</span>
+            <h1>EMOTKI <span>7TV NA CZACIE</span></h1>
+            <p>
+              Nie widzisz emotek, których używają inni widzowie?
+              Dowiedz się jak włączyć dodatkowe emotki Twitcha oraz skonfigurować
+              BetterTTV, 7TV i pozostałe dodatki.
+            </p>
+          </div>
+        </header>
+
+        <div class="dixper-reading-layout">
+          <aside class="dixper-toc">
+            <div class="dixper-toc-title">NA TEJ STRONIE</div>
+            <a href="#emotes-why">01 Dlaczego nie widzę emotek?</a>
+            <a href="#emotes-choice">02 BetterTTV czy 7TV?</a>
+            <a href="#emotes-install">03 Instalacja</a>
+            <a href="#emotes-settings">04 Konfiguracja</a>
+            <a href="#emotes-menu">05 Menu emotek</a>
+            <a href="#emotes-tab">06 TAB i podpowiedzi</a>
           </aside>
 
-          <main class="article-content">
-            <section id="emotes-why">
-              <h2>Masz taki chat i nie rozumiesz o co chodzi?</h2>
-              <p>
-                Widzisz u innych użytkowników kolorowe animowane emotki, których nie masz?
-                To dlatego, że korzystają oni z dodatkowych rozszerzeń do Twitcha.
-              </p>
-              <p>
-                Najlepszym rozwiązaniem jest <strong>BetterTTV</strong>, ponieważ posiada obsługę
-                BetterTTV, 7TV oraz FrankerFaceZ w jednym rozszerzeniu.
-              </p>
+          <main class="dixper-content">
+
+            <section class="dixper-section" id="emotes-why">
+              <div class="dixper-section-head">
+                <span>01</span>
+                <div>
+                  <h2>Masz taki chat i nie rozumiesz o co chodzi?</h2>
+                  <p>Nie widzisz emotek, które wysyłają inni?</p>
+                </div>
+              </div>
+
+              <div class="dixper-step-card">
+                <div>
+                  <strong>Problem</strong>
+                  <p>
+                    Twitch standardowo nie pokazuje wszystkich dodatkowych emotek.
+                    Widzowie korzystają z rozszerzeń takich jak 7TV, BetterTTV
+                    oraz FrankerFaceZ.
+                  </p>
+                </div>
+                <div class="dixper-image-placeholder">CHAT Z DODATKOWYMI EMOTKAMI</div>
+              </div>
             </section>
 
-            <section id="emotes-install">
-              <h2>Jak zainstalować?</h2>
-              <p>
-                Wejdź w poniższy link i dodaj rozszerzenie do swojej przeglądarki:
-              </p>
-              <a class="red-link" target="_blank" href="https://betterttv.com/">betterttv.com →</a>
-              <ol>
-                <li>Zainstaluj rozszerzenie BetterTTV.</li>
-                <li>Upewnij się, że plugin jest aktywny w rozszerzeniach przeglądarki.</li>
-              </ol>
-            </section>
+            <section class="dixper-section" id="emotes-choice">
+              <div class="dixper-section-head">
+                <span>02</span>
+                <div>
+                  <h2>Co wybrać?</h2>
+                  <p>Najlepsze rozwiązanie dla większości użytkowników.</p>
+                </div>
+              </div>
 
-            <section id="emotes-settings">
-              <h2>Konfiguracja BetterTTV</h2>
-              <ol>
-                <li>Wejdź na dowolny chat Twitch.</li>
-                <li>Kliknij ikonę koła zębatego w oknie czatu.</li>
-                <li>Na samym dole wybierz <strong>Ustawienia BetterTTV</strong>.</li>
-                <li>Przejdź do ustawień emotek.</li>
-                <li>Zaznacz koniecznie:
+              <div class="dixper-step-card">
+                <div>
+                  <strong>⭐ BetterTTV — polecana opcja</strong>
+                  <p>
+                    Jedno rozszerzenie łączy:
+                  </p>
                   <ul>
-                    <li><strong>Emotki 7TV</strong></li>
-                    <li><strong>Emotki BetterTTV</strong></li>
+                    <li>BetterTTV Emotes</li>
+                    <li>7TV Emotes</li>
+                    <li>FrankerFaceZ Emotes</li>
                   </ul>
-                </li>
-              </ol>
+                  <p>
+                    Dodatkowo pozwala edytować wygląd czatu oraz posiada funkcje
+                    automatycznego odbierania punktów kanału za określone ciągi oglądania
+                    (np. „Odbierz specjalne bonusy”).
+                  </p>
+                  <a class="red-link" target="_blank" href="https://betterttv.com/">ZAINSTALUJ BETTERTTV →</a>
+                </div>
+                <div class="dixper-image-placeholder">BETTERTTV</div>
+              </div>
+
+              <div class="dixper-step-card">
+                <div>
+                  <strong>Alternatywa — samo 7TV</strong>
+                  <p>
+                    Jeżeli chcesz tylko emotki 7TV, możesz pobrać samo rozszerzenie.
+                  </p>
+                  <a class="red-link" target="_blank" href="https://7tv.app/">ZAINSTALUJ 7TV →</a>
+                </div>
+                <div class="dixper-image-placeholder">7TV</div>
+              </div>
             </section>
 
-            <section id="emotes-menu">
-              <h2>Menu emotek</h2>
-              <p>
-                W ustawieniach możesz również włączyć Menu Emotek. Dzięki temu wszystkie
-                dostępne emotki z rozszerzeń pojawią się w jednym miejscu obok pola wpisywania wiadomości.
-              </p>
+            <section class="dixper-section" id="emotes-install">
+              <div class="dixper-section-head">
+                <span>03</span>
+                <div>
+                  <h2>Jak zainstalować?</h2>
+                  <p>Kilka prostych kroków.</p>
+                </div>
+              </div>
+
+              <div class="dixper-step-card">
+                <div>
+                  <strong>KROK 1</strong>
+                  <p>Wejdź na stronę BetterTTV i dodaj rozszerzenie do swojej przeglądarki.</p>
+                  <strong>KROK 2</strong>
+                  <p>Po instalacji upewnij się, że plugin jest aktywny w rozszerzeniach.</p>
+                </div>
+                <div class="dixper-image-placeholder">INSTALACJA ROZSZERZENIA</div>
+              </div>
             </section>
 
-            <section id="emotes-tab">
-              <h2>Autouzupełnianie klawiszem TAB</h2>
-              <p>
-                Warto zaznaczyć opcję <strong>Priorytetyzuj Emotki</strong>.
-                Dzięki temu po wpisaniu np. <strong>xdd</strong> i kliknięciu TAB,
-                Twitch najpierw podpowie emotkę zamiast zwykłego tekstu.
-              </p>
+            <section class="dixper-section" id="emotes-settings">
+              <div class="dixper-section-head">
+                <span>04</span>
+                <div>
+                  <h2>Jak skonfigurować BetterTTV?</h2>
+                  <p>Włącz wszystkie potrzebne emotki.</p>
+                </div>
+              </div>
+
+              <div class="dixper-step-card">
+                <div>
+                  <strong>KROK 1</strong>
+                  <p>Otwórz chat Twitch i kliknij koło zębate.</p>
+                  <strong>KROK 2</strong>
+                  <p>Wybierz na dole „Ustawienia BetterTTV”.</p>
+                  <strong>KROK 3</strong>
+                  <p>Zaznacz Emotki 7TV oraz BetterTTV.</p>
+                </div>
+                <div class="dixper-image-placeholder">USTAWIENIA EMOTEK</div>
+              </div>
             </section>
+
+            <section class="dixper-section" id="emotes-menu">
+              <div class="dixper-section-head">
+                <span>05</span>
+                <div>
+                  <h2>Menu emotek</h2>
+                  <p>Wszystkie emotki w jednym miejscu.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="dixper-section" id="emotes-tab">
+              <div class="dixper-section-head">
+                <span>06</span>
+                <div>
+                  <h2>TAB i szybkie podpowiedzi</h2>
+                  <p>
+                    Włącz opcję „Priorytetyzuj Emotki”, aby TAB najpierw proponował emotki.
+                  </p>
+                </div>
+              </div>
+            </section>
+
           </main>
         </div>
       </div>
