@@ -214,6 +214,11 @@ const pages = {
     body: commandsPage()
   },
 
+  "viewer/emotes7tv": {
+    title: "DLA WIDZA / <span>EMOTKI 7TV</span>",
+    body: emotes7tvPage()
+  },
+
   "viewer/dixper": {
     title: "DLA WIDZA / <span>DIXPER</span>",
     body: dixperPage()
@@ -1119,6 +1124,191 @@ function moderatorBenefitsPage() {
       </div>
     </div>
   `;
+}
+
+
+function emotes7tvPage() {
+  const steps = [
+    {
+      id: "emotes-install",
+      title: "JAK ZAINSTALOWAĆ?",
+      subtitle: "Zacznij od jednego rozszerzenia.",
+      step: "KROK 1",
+      heading: "Zainstaluj BetterTTV",
+      text: `Wejdź na stronę <a href="https://betterttv.com/" target="_blank" rel="noopener"><strong>BetterTTV</strong> ↗</a> i dodaj rozszerzenie do swojej przeglądarki. To rozwiązanie jest przez nas polecane, ponieważ oprócz własnych funkcji obsługuje także emotki 7TV oraz FrankerFaceZ.`,
+      image: "pictures/emotes7tv/step-1.png",
+      alt: "Widok czatu Twitch przed zainstalowaniem rozszerzeń do emotek."
+    },
+    {
+      id: "emotes-result",
+      title: "CO ZOBACZYSZ PO INSTALACJI?",
+      subtitle: "Chat zaczyna rozpoznawać dodatkowe emotki.",
+      step: "KROK 2",
+      heading: "Emotki pojawią się na czacie",
+      text: `Po poprawnej instalacji i włączeniu rozszerzenia dodatkowe emotki będą widoczne bezpośrednio w wiadomościach na Twitchu. Na poniższym przykładzie możesz zobaczyć, jak wygląda chat z obsługą dodatkowych emotek.`,
+      image: "pictures/emotes7tv/step-2.png",
+      alt: "Przykład czatu Twitch z dodatkowymi emotkami."
+    },
+    {
+      id: "emotes-bttv",
+      title: "WŁĄCZ BETTERTTV",
+      subtitle: "Sprawdź, czy rozszerzenie jest aktywne.",
+      step: "KROK 3",
+      heading: "Otwórz ustawienia BetterTTV",
+      text: `Po instalacji upewnij się, że <strong>BetterTTV jest włączony</strong> w rozszerzeniach Twojej przeglądarki. Następnie na czacie Twitcha otwórz <strong>Ustawienia</strong> (koło zębate) i wybierz <strong>Ustawienia BetterTTV</strong>, które znajdziesz na samym dole menu.`,
+      image: "pictures/emotes7tv/step-3.png",
+      alt: "Ustawienia BetterTTV dostępne z poziomu czatu Twitch."
+    },
+    {
+      id: "emotes-enable",
+      title: "WŁĄCZ EMOTKI 7TV",
+      subtitle: "To najważniejsza opcja w całej konfiguracji.",
+      step: "KROK 4",
+      heading: "Zaznacz 7TV i BetterTTV",
+      text: `Zjedź do ustawień <strong>EMOTKI</strong> i zaznacz koniecznie <strong>Emotki 7TV</strong> oraz <strong>BetterTTV</strong>. Pozostałe opcje możesz ustawić według własnych upodobań.`,
+      image: "pictures/emotes7tv/step-4.png",
+      alt: "Ustawienia emotek BetterTTV z zaznaczonymi opcjami 7TV i BetterTTV."
+    },
+    {
+      id: "emotes-menu",
+      title: "MENU EMOTEK",
+      subtitle: "Dodaj wszystkie dostępne emotki w jedno miejsce.",
+      step: "KROK 5",
+      heading: "Uruchom ikonkę menu emotek",
+      text: `W <strong>Menu Emotek</strong> możesz włączyć ikonkę, która pozwoli Ci zebrać wszystkie dostępne emotki z obsługiwanych rozszerzeń w jednym miejscu na twitchowym chacie. Dzięki temu łatwiej je znaleźć i używać podczas pisania.`,
+      image: "pictures/emotes7tv/step-5.png",
+      alt: "Ustawienie ikonki menu emotek w BetterTTV."
+    },
+    {
+      id: "emotes-tab",
+      title: "SZYBSZE WYSZUKIWANIE",
+      subtitle: "Jedna opcja, która bardzo ułatwia pisanie.",
+      step: "KROK 6",
+      heading: "Priorytetyzuj emotki pod klawiszem TAB",
+      text: `Warto zaznaczyć opcję <strong>Priorytetyzuj Emotki pod klawiszem Tab</strong>. Dzięki temu, gdy wpiszesz np. <strong>xdd</strong> i naciśniesz <strong>TAB</strong>, Twitch w pierwszej kolejności podpowie Ci pasującą emotkę zamiast zwykłego tekstu.`,
+      image: "pictures/emotes7tv/step-6.png",
+      alt: "Opcja priorytetyzowania emotek pod klawiszem Tab."
+    },
+    {
+      id: "emotes-bonus",
+      title: "BONUSOWE FUNKCJE",
+      subtitle: "Nie tylko emotki — wygodniejszy chat.",
+      step: "KROK 7",
+      heading: "Włącz bonusowe punkty kanału i dropy",
+      text: `Na samym chacie warto także zaznaczyć sobie <strong>BONUSOWE punkty kanału</strong> oraz <strong>dropy</strong>. Od tej pory nie będziesz musiał klikać ich ręcznie za każdym razem, gdy pojawią się podczas transmisji.`,
+      image: "pictures/emotes7tv/step-7.png",
+      alt: "Opcje automatycznego odbierania bonusowych punktów kanału i dropów."
+    }
+  ];
+
+  return `
+    <div class="container content-wrap emotes7tv-page">
+      <div class="page-panel dixper-shell dixper-shell-minimal emotes7tv-shell">
+        <a class="back-link" href="#/">← WRÓĆ NA START</a>
+
+        <header class="dixper-intro emotes7tv-intro" id="emotes7tv-top">
+          <div>
+            <span class="dixper-kicker">DLA WIDZA / EMOTKI 7TV</span>
+            <h1>EMOTKI <span>7TV W 7 KROKACH</span></h1>
+            <p>Masz taki chat, że nie rozumiesz, o co chodzi innym? Zainstaluj BetterTTV i odblokuj dodatkowe emotki oraz wygodne funkcje do zarządzania czatem.</p>
+          </div>
+          <div class="emotes7tv-intro-actions">
+            <a class="dixper-primary-link" href="https://betterttv.com/" target="_blank" rel="noopener">OTWÓRZ BETTERTTV ↗</a>
+            <a class="emotes7tv-secondary-link" href="https://7tv.app/" target="_blank" rel="noopener">LUB ZAINSTALUJ SAMO 7TV ↗</a>
+          </div>
+        </header>
+
+        <div class="emotes7tv-recommendation">
+          <div class="emotes7tv-recommendation-icon">✓</div>
+          <div>
+            <strong>POLECAMY BETTERTTV</strong>
+            <p>Możesz zainstalować samo <a href="https://7tv.app/" target="_blank" rel="noopener">7TV</a>, ale bardziej polecamy <a href="https://betterttv.com/" target="_blank" rel="noopener">BetterTTV</a> — daje więcej możliwości zarządzania chatem i pozwala korzystać z 7TV, BetterTTV oraz FrankerFaceZ w jednym miejscu.</p>
+          </div>
+        </div>
+
+        <div class="dixper-reading-layout emotes7tv-reading-layout">
+          <aside class="dixper-toc emotes7tv-toc" aria-label="Nawigacja po stronie Emotki 7TV">
+            <div class="dixper-toc-title">NA TEJ STRONIE</div>
+            <div class="dixper-toc-track" aria-hidden="true"><span data-emotes7tv-progress></span></div>
+            ${steps.map((step, index) => `
+              <button type="button" class="dixper-toc-link${index === 0 ? " active" : ""}" data-emotes7tv-target="${step.id}">
+                <span>${String(index + 1).padStart(2, "0")}</span>${step.title}
+              </button>
+            `).join("")}
+          </aside>
+
+          <main class="dixper-reading-content emotes7tv-reading-content">
+            ${steps.map((step, index) => `
+              <section class="dixper-clean-section emotes7tv-section" id="${step.id}" data-emotes7tv-section>
+                <div class="dixper-clean-heading">
+                  <span>${String(index + 1).padStart(2, "0")}</span>
+                  <div>
+                    <h2>${step.title}</h2>
+                    <p>${step.subtitle}</p>
+                  </div>
+                </div>
+
+                <div class="dixper-tutorial-minimal emotes7tv-tutorial">
+                  <article>
+                    <div class="dixper-step-copy">
+                      <span>${step.step}</span>
+                      <h3>${step.heading}</h3>
+                      <p>${step.text}</p>
+                    </div>
+                    <button type="button" class="dixper-shot-link emotes7tv-shot" data-image-preview="${step.image}" data-image-alt="${step.alt}">
+                      <img src="${step.image}" alt="${step.alt}" loading="lazy">
+                      <span class="emotes7tv-image-note">Kliknij, aby powiększyć</span>
+                    </button>
+                  </article>
+                </div>
+              </section>
+            `).join("")}
+          </main>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setupEmotes7tvPage() {
+  const root = document.querySelector(".emotes7tv-page");
+  if (!root) return;
+
+  const links = [...root.querySelectorAll("[data-emotes7tv-target]")];
+  const sections = [...root.querySelectorAll("[data-emotes7tv-section]")];
+  const progress = root.querySelector("[data-emotes7tv-progress]");
+  if (!links.length || !sections.length) return;
+
+  function activate(id) {
+    const index = sections.findIndex(section => section.id === id);
+    links.forEach(link => link.classList.toggle("active", link.dataset.emotes7tvTarget === id));
+    if (progress && index >= 0) {
+      progress.style.height = `${((index + 1) / sections.length) * 100}%`;
+    }
+  }
+
+  links.forEach(link => {
+    link.addEventListener("click", () => {
+      const target = document.getElementById(link.dataset.emotes7tvTarget);
+      activate(link.dataset.emotes7tvTarget);
+      tocScrollLock = true;
+      setTimeout(() => { tocScrollLock = false; }, 1000);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(entries => {
+      if (tocScrollLock) return;
+      const visible = entries
+        .filter(entry => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) activate(visible.target.id);
+    }, { rootMargin: "-25% 0px -55% 0px", threshold: [0, .15, .35, .6] });
+    sections.forEach(section => observer.observe(section));
+  }
+
+  activate(sections[0].id);
 }
 
 function dixperPage() {
@@ -2133,7 +2323,7 @@ function setupGlobalPageNavigation() {
   if (currentPath.startsWith("rules/") || currentPath === "moderator/team") return;
 
   // Dixper i Bingo mają własną, ręcznie dopracowaną nawigację.
-  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal, .recommended-page, .downloads-page")) return;
+  if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal, .emotes7tv-page, .recommended-page, .downloads-page")) return;
 
   const panel = document.querySelector("#app .page-panel");
   if (!panel || panel.dataset.globalNavReady === "1") return;
@@ -3352,6 +3542,7 @@ async function render() {
   setupCommandsPage();
   setupRewardsSearch();
   setupDixperPage();
+  setupEmotes7tvPage();
   setupBingoPage();
   setupRecommendedPage();
   setupDiscordJoinPage();
