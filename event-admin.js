@@ -218,6 +218,15 @@ async function openEdit(id){
   document.getElementById("editEventImageFit").value=data.image_fit||"contain";
   applyEditPreviewFit();
  }
+ const mainPreview=document.getElementById("editMainPreviewImg");
+ const mainBox=document.getElementById("editMainEventImagePreview");
+ if(mainPreview && data.main_image_url){
+   mainPreview.src=data.main_image_url;
+   mainBox.style.display="block";
+ }
+ if(document.getElementById("editEventMainImageFit")){
+   document.getElementById("editEventMainImageFit").value=data.main_image_fit||"contain";
+ }
  const setDT=(val,dateId,timeId)=>{
    const dateEl=document.getElementById(dateId);
    const timeEl=document.getElementById(timeId);
@@ -278,8 +287,15 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
   image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
  }
  const combine=(d,t)=>{let a=document.getElementById(d).value,b=document.getElementById(t).value||"00:00";return a?`${a}T${b}:00`:null};
- const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain"};
+ const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain",
+ main_image_fit:document.getElementById("editEventMainImageFit")?.value || "contain"};
  if(image) upd.image_url=image;
+ const mainFile=document.getElementById("editMainEventImage")?.files[0];
+ if(mainFile){
+   const mainName=Date.now()+"_main_"+mainFile.name;
+   await supabaseClient.storage.from("events").upload(mainName,mainFile);
+   upd.main_image_url=supabaseClient.storage.from("events").getPublicUrl(mainName).data.publicUrl;
+ }
  const {error}=await supabaseClient.from("events").update(upd).eq("id",editEventId.value);
  editEventMsg.textContent=error?error.message:"Zapisano";
  if(!error)setTimeout(()=>location.reload(),700);
@@ -342,4 +358,17 @@ document.addEventListener("DOMContentLoaded",()=>{
    reader.readAsDataURL(file);
   });
  }
+});
+
+document.addEventListener("DOMContentLoaded",()=>{
+ const input=document.getElementById("editMainEventImage");
+ if(input) input.addEventListener("change",()=>{
+  const file=input.files[0]; if(!file)return;
+  document.getElementById("editMainEventImageName").textContent=file.name;
+  const reader=new FileReader();
+  reader.onload=e=>{document.getElementById("editMainPreviewImg").src=e.target.result;document.getElementById("editMainEventImagePreview").style.display="block";}
+  reader.readAsDataURL(file);
+ });
+ const sel=document.getElementById("editEventMainImageFit");
+ if(sel) sel.addEventListener("change",()=>{const i=document.getElementById("editMainPreviewImg"); if(i)i.style.objectFit=sel.value;});
 });

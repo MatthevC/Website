@@ -2773,6 +2773,8 @@ async function loadEvents() {
       endDate: event.end_date,
       image: event.image_url,
       imageFit: event.image_fit || "contain",
+      mainImage: event.main_image_url || event.image_url,
+      mainImageFit: event.main_image_fit || "contain",
       excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
       content: event.description || "",
       publishDate: event.publish_date
@@ -3059,7 +3061,7 @@ async function renderEventDetail(id) {
         </div>
         <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1></div>
         
-        ${event.image ? `<div class="event-detail-image"><img style="object-fit:${event.imageFit || "contain"};object-position:center" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}"></div>` : ""}
+        ${event.mainImage ? `<div class="event-detail-image"><img style="object-fit:${event.mainImageFit || "contain"};object-position:center" src="${escapeHtml(event.mainImage)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}<div class="event-time"><span>🕒</span> ${formatTime(event.date)}</div></strong></div>
           <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div></strong></div>
