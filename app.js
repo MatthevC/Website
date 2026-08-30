@@ -1165,7 +1165,7 @@ function sevenTvEmotesPage() {
                 <strong>Problem</strong>
                 <p>Twitch standardowo nie pokazuje wszystkich dodatkowych emotek. Widzowie korzystają z rozszerzeń takich jak 7TV, BetterTTV oraz FrankerFaceZ.</p>
               </div>
-              <img src="assets/emotes7tv/step-1.png">
+              <img src="pictures/emotes7tv/step-1.png">
             </div>
           </section>
 
@@ -1205,18 +1205,18 @@ function sevenTvEmotesPage() {
 
           <section class="dixper-section" id="emotes-settings">
             <div class="dixper-section-head"><span>04</span><div><h2>Jak skonfigurować BetterTTV?</h2></div></div>
-            <div class="dixper-step-card"><div><strong>KROK 1</strong><p>Na czacie kliknij koło zębate i wybierz „Ustawienia BetterTTV”.</p><strong>KROK 2</strong><p>W ustawieniach emotek zaznacz koniecznie Emotki 7TV oraz BetterTTV.</p></div><img src="assets/emotes7tv/step-4.png"></div>
-            <div class="dixper-step-card"><div><strong>KROK 3</strong><p>Możesz dodatkowo dostosować pozostałe opcje według własnych preferencji.</p></div><img src="assets/emotes7tv/step-5.png"></div>
+            <div class="dixper-step-card"><div><strong>KROK 1</strong><p>Na czacie kliknij koło zębate i wybierz „Ustawienia BetterTTV”.</p><strong>KROK 2</strong><p>W ustawieniach emotek zaznacz koniecznie Emotki 7TV oraz BetterTTV.</p></div><img src="pictures/emotes7tv/step-4.png"></div>
+            <div class="dixper-step-card"><div><strong>KROK 3</strong><p>Możesz dodatkowo dostosować pozostałe opcje według własnych preferencji.</p></div><img src="pictures/emotes7tv/step-5.png"></div>
           </section>
 
           <section class="dixper-section" id="emotes-menu">
             <div class="dixper-section-head"><span>05</span><div><h2>Menu emotek</h2></div></div>
-            <div class="dixper-step-card"><div><p>Włącz Menu Emotek, aby mieć wszystkie dostępne emotki w jednym miejscu.</p></div><img src="assets/emotes7tv/step-6.png"></div>
+            <div class="dixper-step-card"><div><p>Włącz Menu Emotek, aby mieć wszystkie dostępne emotki w jednym miejscu.</p></div><img src="pictures/emotes7tv/step-6.png"></div>
           </section>
 
           <section class="dixper-section" id="emotes-tab">
             <div class="dixper-section-head"><span>06</span><div><h2>TAB i automatyczne odbieranie</h2></div></div>
-            <div class="dixper-step-card"><div><p>Zaznacz „Priorytetyzuj Emotki”, aby TAB podpowiadał najpierw emotki.</p><p>Warto również włączyć automatyczne odbieranie bonusowych punktów kanału i dropów.</p></div><img src="assets/emotes7tv/step-7.png"></div>
+            <div class="dixper-step-card"><div><p>Zaznacz „Priorytetyzuj Emotki”, aby TAB podpowiadał najpierw emotki.</p><p>Warto również włączyć automatyczne odbieranie bonusowych punktów kanału i dropów.</p></div><img src="pictures/emotes7tv/step-7.png"></div>
           </section>
 
           </main>
