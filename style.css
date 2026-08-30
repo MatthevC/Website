@@ -7540,3 +7540,35 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .emotes7tv-final-note span { color:var(--muted); }
 @media (max-width:900px) { .emotes7tv-comparison { grid-template-columns:1fr; } .emotes7tv-compare-arrow { transform:rotate(90deg); } .emotes7tv-tutorial-step { grid-template-columns:1fr; } .emotes7tv-step-shot img { max-height:500px; } }
 @media (max-width:620px) { .emotes7tv-recommendation { grid-template-columns:1fr; } .emotes7tv-recommendation strong { grid-row:auto; } .emotes7tv-shot img { height:240px; } .emotes7tv-tutorial-step { padding:15px; } }
+
+
+/* ===== HOME EVENT IMAGE - FINAL SIZE FIX ===== */
+.home-event-slider .event-card {
+  grid-template-columns: 310px 1fr;
+  min-height: 220px;
+}
+
+.home-event-slider .event-cover,
+.home-event-slider .event-cover-image {
+  min-height: 220px;
+  height: 220px;
+  overflow: hidden;
+}
+
+.home-event-slider .event-cover-image {
+  background: transparent;
+}
+
+.home-event-slider .event-cover-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(1.12);
+}
+
+@media (max-width:700px){
+  .home-event-slider .event-cover,
+  .home-event-slider .event-cover-image {
+    height: 240px;
+  }
+}
