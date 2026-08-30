@@ -199,7 +199,7 @@ function admin(){
  return window.currentUserIsAdmin === true; 
 }
 
-async function openEdit(id){
+async async function openEdit(id){
  if(!admin()) return;
  const editEventModal = document.getElementById("editEventModal");
  const editEventId = document.getElementById("editEventId");
