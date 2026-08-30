@@ -199,7 +199,7 @@ function admin(){
  return window.currentUserIsAdmin === true; 
 }
 
-async async function openEdit(id){
+async function openEdit(id){
  if(!admin()) return;
  const editEventModal = document.getElementById("editEventModal");
  const editEventId = document.getElementById("editEventId");
@@ -258,7 +258,7 @@ async async function openEdit(id){
  setDT(data.start_date,"editEventStart","editEventStartTime");
  setDT(data.end_date,"editEventEnd","editEventEndTime");
  setDT(data.publish_date,"editEventPublish","editEventPublishTime");
- editEventModal.style.display="flex";
+ if(editEventModal) editEventModal.style.display="flex";
 }
 document.addEventListener("click",e=>{
  const b=e.target.closest(".edit-event-btn");
@@ -280,7 +280,10 @@ window.updateEditButtons=updateEditButtons;
 window.addEventListener("matt-auth-change",updateEditButtons);
 window.addEventListener("matt-events-rendered",updateEditButtons);
 document.addEventListener("DOMContentLoaded",updateEditButtons);
-document.getElementById("closeEditEvent")?.addEventListener("click",()=>editEventModal.style.display="none");
+document.getElementById("closeEditEvent")?.addEventListener("click",()=>{
+ const modal=document.getElementById("editEventModal");
+ if(modal) modal.style.display="none";
+});
 document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  if(!admin()) return;
  let image;
@@ -294,7 +297,8 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain", main_image_fit:document.getElementById("editEventMainImageFit")?.value || "contain"};
  if(image) upd.image_url=image;
  const {error}=await supabaseClient.from("events").update(upd).eq("id",editEventId.value);
- editEventMsg.textContent=error?error.message:"Zapisano";
+ const msg=document.getElementById("editEventMsg");
+ if(msg) msg.textContent=error?error.message:"Zapisano";
  if(!error)setTimeout(()=>location.reload(),700);
 });
 })();
