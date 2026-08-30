@@ -201,6 +201,10 @@ function admin(){
 
 async function openEdit(id){
  if(!admin()) return;
+ const editEventModal = document.getElementById("editEventModal");
+ const editEventId = document.getElementById("editEventId");
+ const editEventTitle = document.getElementById("editEventTitle");
+ const editEventDesc = document.getElementById("editEventDesc");
  const {data}=await supabaseClient.from("events").select("*").eq("id",id).single();
  if(!data) return;
  editEventId.value=data.id;
