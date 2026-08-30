@@ -1136,59 +1136,67 @@ function sevenTvEmotesPage() {
         <header class="dixper-intro">
           <span class="dixper-kicker">DLA WIDZA / EMOTKI 7TV</span>
           <h1>EMOTKI <span>7TV NA CZACIE</span></h1>
-          <p>Nie widzisz emotek, których używają inni widzowie? Sprawdź jak włączyć dodatkowe emotki Twitcha oraz skonfigurować BetterTTV.</p>
+          <p>Nie widzisz emotek, których używają inni widzowie? Dowiedz się jak je włączyć oraz skonfigurować BetterTTV.</p>
         </header>
 
         <div class="dixper-reading-layout">
           <aside class="dixper-toc">
             <div class="dixper-toc-title">NA TEJ STRONIE</div>
-            <a href="#emotes-why">01 Dlaczego nie widzę emotek?</a>
+            <a href="#emotes-why">01 Problem z emotkami</a>
             <a href="#emotes-choice">02 Co wybrać?</a>
             <a href="#emotes-install">03 Instalacja</a>
-            <a href="#emotes-settings">04 Konfiguracja</a>
-            <a href="#emotes-menu">05 Menu emotek</a>
-            <a href="#emotes-tab">06 TAB i bonusy</a>
+            <a href="#emotes-config">04 Konfiguracja</a>
+            <a href="#emotes-extra">05 Dodatkowe opcje</a>
           </aside>
 
           <main class="dixper-content">
 
 <section class="dixper-section" id="emotes-why">
-<div class="dixper-section-head"><span>01</span><div><h2>Masz taki chat i nie rozumiesz o co chodzi?</h2><p>Nie widzisz emotek, które wysyłają inni?</p></div></div>
-<div class="dixper-step-card"><div><strong>Problem</strong><p>Twitch nie pokazuje wszystkich dodatkowych emotek. Widzowie korzystają z rozszerzeń 7TV, BetterTTV oraz FrankerFaceZ.</p></div><img src="pictures/emotes7tv/step-1.png"></div>
+<div class="dixper-section-head"><span>01</span><div><h2>Masz taki chat i nie rozumiesz o co chodzi?</h2><p>Dlaczego inni widzą emotki, których Ty nie masz?</p></div></div>
+<div class="dixper-step-card"><div><strong>PROBLEM</strong><p>Twitch domyślnie nie pokazuje wszystkich dodatkowych emotek. Widzowie korzystają z rozszerzeń takich jak 7TV, BetterTTV oraz FrankerFaceZ.</p></div><img src="pictures/emotes7tv/step-1.png"></div>
 </section>
 
 <section class="dixper-section" id="emotes-choice">
-<div class="dixper-section-head"><span>02</span><div><h2>Co wybrać?</h2><p>Najlepsze rozwiązanie dla większości użytkowników.</p></div></div>
-<div class="dixper-step-card"><div><strong>⭐ BetterTTV — polecana opcja</strong><p>Jedno rozszerzenie łączy:</p><ul><li>BetterTTV Emotes</li><li>7TV Emotes</li><li>FrankerFaceZ Emotes</li></ul><p>Dodatkowo pozwala zmieniać wygląd czatu oraz automatycznie odbierać bonusowe punkty kanału i dostępne nagrody.</p><a class="red-link" href="https://betterttv.com/" target="_blank">ZAINSTALUJ BETTERTTV →</a></div></div>
-<div class="dixper-step-card"><div><strong>Alternatywa — samo 7TV</strong><p>Jeżeli chcesz tylko emotki 7TV, możesz pobrać samo rozszerzenie.</p><a class="red-link" href="https://7tv.app/" target="_blank">ZAINSTALUJ 7TV →</a></div></div>
+<div class="dixper-section-head"><span>02</span><div><h2>Co wybrać?</h2><p>Najlepsza opcja dla większości użytkowników.</p></div></div>
+
+<div class="dixper-step-card"><div><strong>⭐ BETTERTTV — POLECANA OPCJA</strong><p>Jedno rozszerzenie łączy trzy najpopularniejsze systemy emotek:</p>
+<ul><li>BetterTTV</li><li>7TV</li><li>FrankerFaceZ</li></ul>
+<p>Dodatkowo pozwala edytować wygląd czatu oraz automatycznie odbierać bonusowe punkty kanału i dostępne nagrody.</p>
+<a class="red-link" href="https://betterttv.com/" target="_blank">POBIERZ BETTERTTV →</a></div></div>
+
+<div class="dixper-step-card"><div><strong>ALTERNATYWA — SAMO 7TV</strong><p>Jeżeli chcesz korzystać wyłącznie z emotek 7TV, możesz pobrać osobne rozszerzenie.</p><a class="red-link" href="https://7tv.app/" target="_blank">POBIERZ 7TV →</a></div></div>
 </section>
 
 <section class="dixper-section" id="emotes-install">
-<div class="dixper-section-head"><span>03</span><div><h2>Jak zainstalować?</h2><p>Dodanie rozszerzenia zajmuje kilka sekund.</p></div></div>
-<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Pobierz BetterTTV</h3><p>Wejdź na stronę BetterTTV i dodaj rozszerzenie do swojej przeglądarki.</p></div><img src="pictures/emotes7tv/step-2.png"></div>
-<div class="dixper-step-card"><div><strong>KROK 2</strong><h3>Sprawdź rozszerzenie</h3><p>Po instalacji upewnij się, że plugin BetterTTV jest aktywny.</p></div><img src="pictures/emotes7tv/step-3.png"></div>
+<div class="dixper-section-head"><span>03</span><div><h2>Jak zainstalować?</h2><p>Dodanie rozszerzenia zajmuje kilka chwil.</p></div></div>
+
+<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Pobierz rozszerzenie</h3><p>Wejdź na stronę BetterTTV i dodaj rozszerzenie do swojej przeglądarki.</p></div><img src="pictures/emotes7tv/step-2.png"></div>
+<div class="dixper-step-card"><div><strong>KROK 2</strong><h3>Sprawdź aktywność</h3><p>Po instalacji upewnij się, że plugin BetterTTV jest włączony w rozszerzeniach przeglądarki.</p></div><img src="pictures/emotes7tv/step-3.png"></div>
 </section>
 
-<section class="dixper-section" id="emotes-settings">
-<div class="dixper-section-head"><span>04</span><div><h2>Jak skonfigurować BetterTTV?</h2><p>Włącz wszystkie potrzebne źródła emotek.</p></div></div>
-<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Otwórz ustawienia BetterTTV</h3><p>Na czacie kliknij koło zębate i wybierz Ustawienia BetterTTV znajdujące się na dole.</p></div><img src="pictures/emotes7tv/step-4.png"></div>
-<div class="dixper-step-card"><div><strong>KROK 2</strong><h3>Włącz dostawców emotek</h3><p>Zaznacz koniecznie Emotki 7TV oraz BetterTTV. Pozostałe opcje ustaw według własnych preferencji.</p></div><img src="pictures/emotes7tv/step-5.png"></div>
+<section class="dixper-section" id="emotes-config">
+<div class="dixper-section-head"><span>04</span><div><h2>Jak skonfigurować BetterTTV?</h2><p>Kilka prostych ustawień i gotowe.</p></div></div>
+
+<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Otwórz ustawienia BetterTTV</h3><p>Na czacie kliknij koło zębate, a następnie wybierz „Ustawienia BetterTTV”.</p></div><img src="pictures/emotes7tv/step-4.png"></div>
+
+<div class="dixper-step-card"><div><strong>KROK 2</strong><h3>Włącz dostawców emotek</h3><p>Zaznacz koniecznie Emotki 7TV oraz BetterTTV. Resztę ustawień możesz dopasować według własnych preferencji.</p></div><img src="pictures/emotes7tv/step-5.png"></div>
+
+<div class="dixper-step-card"><div><strong>KROK 3</strong><h3>Dodaj menu emotek</h3><p>Włącz Menu Emotek, aby mieć dostęp do wszystkich dostępnych emotek bezpośrednio na czacie.</p></div><img src="pictures/emotes7tv/step-6.png"></div>
 </section>
 
-<section class="dixper-section" id="emotes-menu">
-<div class="dixper-section-head"><span>05</span><div><h2>Menu emotek</h2><p>Miej wszystkie emotki pod ręką.</p></div></div>
-<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Włącz Menu Emotek</h3><p>Opcja dodaje dostępne emotki z rozszerzeń do menu emotek Twitcha.</p></div><img src="pictures/emotes7tv/step-6.png"></div>
-</section>
+<section class="dixper-section" id="emotes-extra">
+<div class="dixper-section-head"><span>05</span><div><h2>Dodatkowe usprawnienia</h2><p>Warto włączyć te opcje.</p></div></div>
 
-<section class="dixper-section" id="emotes-tab">
-<div class="dixper-section-head"><span>06</span><div><h2>TAB i automatyczne bonusy</h2><p>Dodatkowe funkcje BetterTTV.</p></div></div>
-<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Priorytetyzuj Emotki</h3><p>Po wpisaniu np. xdd i użyciu TAB najpierw pojawią się emotki zamiast zwykłych podpowiedzi.</p><h3>Automatyczne odbieranie</h3><p>Warto włączyć automatyczne odbieranie bonusowych punktów kanału oraz dropów.</p></div><img src="pictures/emotes7tv/step-7.png"></div>
+<div class="dixper-step-card"><div><strong>KROK 1</strong><h3>Priorytetyzuj emotki pod TAB</h3><p>Po wpisaniu np. xdd i kliknięciu TAB w pierwszej kolejności pojawi się emotka zamiast zwykłego tekstu.</p></div><img src="pictures/emotes7tv/step-7.png"></div>
+
+<div class="dixper-step-card"><div><strong>KROK 2</strong><h3>Automatyczne odbieranie</h3><p>W ustawieniach czatu możesz włączyć automatyczne odbieranie bonusowych punktów kanału oraz dropów.</p></div><img src="pictures/emotes7tv/step-7.png"></div>
 </section>
 
           </main>
         </div>
       </div>
-    </div>`;
+    </div>
+  `;
 }
 
 function dixperPage() {
