@@ -211,7 +211,7 @@ async function openEdit(id){
  editEventTitle.value=data.title||"";
  editEventDesc.value=data.description||"";
  const preview=document.getElementById("editEventPreviewImg");
- const previewBox=document.getElementById("editEventImagePreview");
+ const previewBox=document.getElementById("editEventPreviewImg")?.parentElement;
  if(preview && data.image_url){
    preview.src=data.image_url;
    previewBox.style.display="block";
@@ -223,7 +223,7 @@ async function openEdit(id){
   applyEditPreviewFit();
  }
  const mainPreview=document.getElementById("editMainPreviewImg");
- const mainBox=document.getElementById("editMainEventImagePreview");
+ const mainBox=document.getElementById("editMainPreviewImg")?.parentElement;
  if(mainPreview && data.image_url){
    mainPreview.src=data.image_url;
    if(mainBox) mainBox.style.display="block";
