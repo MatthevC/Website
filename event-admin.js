@@ -220,9 +220,9 @@ async function openEdit(id){
  }
  const mainPreview=document.getElementById("editMainPreviewImg");
  const mainBox=document.getElementById("editMainEventImagePreview");
- if(mainPreview && data.main_image_url){
-   mainPreview.src=data.main_image_url;
-   mainBox.style.display="block";
+ if(mainPreview && data.image_url){
+   mainPreview.src=data.image_url;
+   if(mainBox) mainBox.style.display="block";
  }
  if(document.getElementById("editEventMainImageFit")){
    document.getElementById("editEventMainImageFit").value=data.main_image_fit||"contain";
@@ -287,7 +287,7 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
   image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
  }
  const combine=(d,t)=>{let a=document.getElementById(d).value,b=document.getElementById(t).value||"00:00";return a?`${a}T${b}:00`:null};
- const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain"};
+ const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain", main_image_fit:document.getElementById("editEventMainImageFit")?.value || "contain"};
  if(image) upd.image_url=image;
  const {error}=await supabaseClient.from("events").update(upd).eq("id",editEventId.value);
  editEventMsg.textContent=error?error.message:"Zapisano";
@@ -308,6 +308,8 @@ document.addEventListener("DOMContentLoaded",()=>{
  const input=document.getElementById("editEventImage");
  const select=document.getElementById("editEventImageFit");
  if(select) select.addEventListener("change",applyEditPreviewFit);
+ const mainSelect=document.getElementById("editEventMainImageFit");
+ if(mainSelect) mainSelect.addEventListener("change",()=>{const img=document.getElementById("editMainPreviewImg"); if(img) img.style.objectFit=mainSelect.value;});
  if(input){
   input.addEventListener("change",()=>{
    const file=input.files[0];
