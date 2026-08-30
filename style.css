@@ -7451,7 +7451,6 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
  flex:1;
 }
 .event-detail-image img{
- object-fit:contain !important;
  object-position:center !important;
 }
 
