@@ -7947,3 +7947,41 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     max-height:calc(100vh - 20px) !important;
   }
 }
+
+/* ===== EVENTY: FILTRY + PODSUMOWANIE W JEDNEJ LINII ===== */
+@media (min-width: 851px) {
+  .events-toolbar {
+    grid-template-columns: minmax(220px, 1fr) 140px 112px auto;
+    align-items: end;
+  }
+
+  .events-toolbar .collection-search {
+    min-width: 0;
+  }
+
+  .events-toolbar .collection-search-box {
+    min-width: 0;
+  }
+
+  .events-toolbar .collection-summary {
+    min-width: max-content;
+    justify-content: flex-end;
+    padding-left: 4px;
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 851px) {
+  .events-toolbar {
+    grid-template-columns: minmax(190px, 1fr) 132px 104px auto;
+    gap: 9px;
+    padding: 12px;
+  }
+
+  .events-toolbar .collection-summary {
+    font-size: 10px;
+  }
+
+  .events-toolbar .collection-summary strong {
+    font-size: 13px;
+  }
+}
