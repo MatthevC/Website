@@ -7885,3 +7885,65 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     max-height:calc(100vh - 20px);
   }
 }
+
+/* ===== PRZEWIJANIE KREATORA I EDYTORA EVENTU / POSTA =====
+   Ten sam mechanizm działa dla "DODAJ EVENT" oraz "EDYTUJ POST / EDYTUJ EVENT".
+   Na małych ekranach lub przy dużym zoomie cała zawartość formularza pozostaje dostępna. */
+#eventModal,
+#editEventModal{
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding:20px !important;
+  box-sizing:border-box !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+}
+
+#eventModal > .event-modal,
+#editEventModal > .event-modal{
+  width:min(900px,92vw) !important;
+  max-width:900px !important;
+  max-height:calc(100vh - 40px) !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:auto !important;
+  box-sizing:border-box !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  flex:0 0 auto !important;
+  scrollbar-width:thin;
+  scrollbar-color:#555 #111;
+}
+
+#eventModal > .event-modal::-webkit-scrollbar,
+#editEventModal > .event-modal::-webkit-scrollbar{
+  width:8px;
+}
+
+#eventModal > .event-modal::-webkit-scrollbar-track,
+#editEventModal > .event-modal::-webkit-scrollbar-track{
+  background:#111;
+}
+
+#eventModal > .event-modal::-webkit-scrollbar-thumb,
+#editEventModal > .event-modal::-webkit-scrollbar-thumb{
+  background:#444;
+  border-radius:8px;
+}
+
+#eventModal > .event-modal::-webkit-scrollbar-thumb:hover,
+#editEventModal > .event-modal::-webkit-scrollbar-thumb:hover{
+  background:#666;
+}
+
+@media(max-height:700px){
+  #eventModal,
+  #editEventModal{
+    padding:10px !important;
+  }
+
+  #eventModal > .event-modal,
+  #editEventModal > .event-modal{
+    max-height:calc(100vh - 20px) !important;
+  }
+}
