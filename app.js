@@ -1140,9 +1140,11 @@ function emotes7tvPage() {
       <div class="page-panel dixper-shell emotes7tv-shell">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
         <header class="dixper-intro emotes7tv-intro">
-          <span class="dixper-kicker">DLA WIDZA / EMOTKI 7TV</span>
-          <h1>EMOTKI 7TV <span>W KILKU PROSTYCH KROKACH</span></h1>
-          <p>Nie rozumiesz czasem, co dzieje się na czacie? Dzięki rozszerzeniom 7TV i BetterTTV możesz zobaczyć emotki, których używa nasza społeczność, oraz korzystać z dużo wygodniejszego Twitchowego chatu.</p>
+          <div class="emotes7tv-intro-main">
+            <span class="dixper-kicker">DLA WIDZA / EMOTKI 7TV</span>
+            <h1>EMOTKI 7TV <span>W KILKU PROSTYCH KROKACH</span></h1>
+            <p>Nie rozumiesz czasem, co dzieje się na czacie? Dzięki rozszerzeniom 7TV i BetterTTV możesz zobaczyć emotki, których używa nasza społeczność, oraz korzystać z dużo wygodniejszego Twitchowego chatu.</p>
+          </div>
           <div class="emotes7tv-links">
             <a class="dixper-primary-link" href="https://betterttv.com/" target="_blank" rel="noopener">ZAINSTALUJ BETTERTTV ↗</a>
             <a class="emotes7tv-secondary-link" href="https://7tv.app/" target="_blank" rel="noopener">ZAINSTALUJ SAMO 7TV ↗</a>
