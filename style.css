@@ -4677,6 +4677,16 @@ body.image-preview-open { overflow: hidden; }
 
 .collection-search-box input::placeholder { color: #5f5f5f; }
 
+
+.events-status-filter select {
+  min-width: 140px;
+}
+
+.events-status-filter select option {
+  background: #0e0e0e;
+  color: #eee;
+}
+
 .collection-limit select {
   min-width: 112px;
   height: 44px;

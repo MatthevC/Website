@@ -3019,7 +3019,7 @@ function collectionPageSequence(totalPages, currentPage) {
   return result;
 }
 
-function setupCollectionView({ storageKey, list, searchInput, pageSizeSelect, pagination, summary, empty, itemLabel }) {
+function setupCollectionView({ storageKey, list, searchInput, pageSizeSelect, pagination, summary, empty, itemLabel, statusFilter }) {
   if (!list || !pageSizeSelect || !pagination) return;
 
   const items = [...list.querySelectorAll("[data-collection-item]")];
@@ -3039,7 +3039,15 @@ function setupCollectionView({ storageKey, list, searchInput, pageSizeSelect, pa
 
   const renderCollection = () => {
     const normalizedQuery = query.trim().toLowerCase();
-    const filtered = items.filter(item => !normalizedQuery || (item.dataset.search || item.textContent).toLowerCase().includes(normalizedQuery));
+    const selectedStatus = statusFilter?.value || "all";
+    const filtered = items.filter(item => {
+      const matchesSearch = !normalizedQuery || (item.dataset.search || item.textContent).toLowerCase().includes(normalizedQuery);
+      const isEnded = item.classList.contains("event-ended");
+      const matchesStatus = selectedStatus === "all"
+        || (selectedStatus === "active" && !isEnded)
+        || (selectedStatus === "ended" && isEnded);
+      return matchesSearch && matchesStatus;
+    });
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
     currentPage = Math.min(currentPage, totalPages);
 
@@ -3101,6 +3109,11 @@ function setupCollectionView({ storageKey, list, searchInput, pageSizeSelect, pa
     renderCollection();
   });
 
+  statusFilter?.addEventListener("change", () => {
+    currentPage = 1;
+    renderCollection();
+  });
+
   pageSizeSelect.addEventListener("change", () => {
     const selected = Number(pageSizeSelect.value);
     pageSize = allowedSizes.includes(selected) ? selected : 10;
@@ -3155,7 +3168,8 @@ async function renderEvents() {
     pagination: document.getElementById("events-pagination"),
     summary: document.getElementById("events-result-summary"),
     empty: document.getElementById("events-empty"),
-    itemLabel: "eventów"
+    itemLabel: "eventów",
+    statusFilter: document.getElementById("events-status-filter")
   });
 }
 
@@ -3411,13 +3425,22 @@ async function render() {
           <p>Najnowsze wpisy na górze</p>
         </div>
 
-        <section class="collection-toolbar events-toolbar" aria-label="Wyszukiwanie i widok eventów">
+        <section class="collection-toolbar events-toolbar" aria-label="Wyszukiwanie i filtrowanie eventów">
           <label class="collection-search">
             <span>WYSZUKAJ EVENT</span>
             <div class="collection-search-box">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20.6 19.2-4.4-4.4a7.3 7.3 0 1 0-1.4 1.4l4.4 4.4 1.4-1.4ZM5 10.5a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0Z"/></svg>
               <input id="events-search" type="search" placeholder="Szukaj po nazwie, opisie lub dacie..." autocomplete="off">
             </div>
+          </label>
+
+          <label class="collection-limit events-status-filter">
+            <span>STATUS EVENTÓW</span>
+            <select id="events-status-filter" aria-label="Filtruj eventy po statusie">
+              <option value="all">Wszystkie</option>
+              <option value="active">Aktywne</option>
+              <option value="ended">Zakończone</option>
+            </select>
           </label>
 
           <label class="collection-limit">
