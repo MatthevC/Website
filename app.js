@@ -2915,12 +2915,43 @@ function eventCard(event) {
 function setupHomeEventSlider(root) {
   const track = root.querySelector(".home-event-track");
   if (!track) return;
+
   const cards = [...track.children];
   if (!cards.length) return;
 
   let index = 0;
+
+  // Nawigacja pokazuje dokładnie tyle pozycji, ile eventów
+  // jest aktualnie wyświetlanych na stronie głównej (maks. 3).
+  const dotsWrap = document.createElement("div");
+  dotsWrap.className = "home-event-dots";
+  dotsWrap.setAttribute("aria-label", "Wybór eventu");
+
+  cards.forEach((_, i) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "home-event-dot";
+    dot.setAttribute("aria-label", `Event ${i + 1}`);
+    dot.addEventListener("click", () => {
+      index = i;
+      move();
+    });
+    dotsWrap.appendChild(dot);
+  });
+
+  root.appendChild(dotsWrap);
+
+  const updateDots = () => {
+    dotsWrap.querySelectorAll(".home-event-dot").forEach((dot, i) => {
+      const active = i === index;
+      dot.classList.toggle("active", active);
+      dot.setAttribute("aria-current", active ? "true" : "false");
+    });
+  };
+
   const move = () => {
     track.style.transform = `translateX(-${index * 100}%)`;
+    updateDots();
   };
 
   root.querySelector(".right")?.addEventListener("click", () => {
@@ -2932,6 +2963,8 @@ function setupHomeEventSlider(root) {
     index = Math.max(index - 1, 0);
     move();
   });
+
+  move();
 }
 
 function formatDate(date) {
@@ -3431,7 +3464,13 @@ async function render() {
     app.innerHTML = page.body;
     const events = await loadEvents();
     const homeEvents = document.getElementById("home-events");
-    if (homeEvents) { homeEvents.innerHTML = `<div class="home-event-track">${events.slice(0,3).map(eventCard).join("")}</div><button class="home-event-arrow left" aria-label="Poprzedni event">←</button><button class="home-event-arrow right" aria-label="Następny event">→</button>`; setupHomeEventSlider(homeEvents); }
+    if (homeEvents) {
+      const visibleEvents = events.slice(0, 3);
+      homeEvents.innerHTML = `<div class="home-event-track">${visibleEvents.map(eventCard).join("")}</div>
+        <button class="home-event-arrow left" aria-label="Poprzedni event">‹</button>
+        <button class="home-event-arrow right" aria-label="Następny event">›</button>`;
+      setupHomeEventSlider(homeEvents);
+    }
   } else {
     app.innerHTML = page.body;
   }
