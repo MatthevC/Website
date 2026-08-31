@@ -96,12 +96,12 @@ const pages = {
           </section>
           <aside class="hero-side">
             <div class="side-card discord-card">
-              <svg class="discord-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M102.4 13.2A93.2 93.2 0 0 0 78.7 6l-3.4 7.1a86.2 86.2 0 0 0-22.6 0L49.3 6a93.6 93.6 0 0 0-23.8 7.3C10.4 36.1 6.2 58.5 8.3 80.6a94.8 94.8 0 0 0 29.2 14.7l7.1-9.7c-3.9-1.4-7.6-3.1-11.1-5.1l2.7-2.1c21.4 10 44.6 10 65.8 0l2.8 2.1c-3.5 2-7.2 3.7-11.1 5.1l7.1 9.7a94.8 94.8 0 0 0 29.2-14.7c2.4-25.6-4.1-47.8-17.6-67.4ZM42.8 68.1c-6.4 0-11.6-5.9-11.6-13.1s5.1-13.1 11.6-13.1 11.7 5.9 11.6 13.1c0 7.2-5.1 13.1-11.6 13.1Zm42.4 0c-6.4 0-11.6-5.9-11.6-13.1s5.1-13.1 11.6-13.1 11.7 5.9 11.6 13.1c0 7.2-5.1 13.1-11.6 13.1Z"/></svg>
               <h3>NASZ DISCORD</h3>
               <p>Dołącz do naszej społeczności, poznaj ludzi, korzystaj z kanałów i bądź na bieżąco z tym, co dzieje się w MATT'S WORLD.</p>
               <a class="red-link" href="#/discord/join">JAK DOSTAĆ SIĘ NA DISCORD →</a>
             </div>
             <div class="side-card contact-home-card">
+              <svg class="contact-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M10 20c0-5.5 4.5-10 10-10h88c5.5 0 10 4.5 10 10v56c0 5.5-4.5 10-10 10H20c-5.5 0-10-4.5-10-10V20Zm12 1v54h84V21L64 57 22 21Zm10 0 32 27 32-27H32Z"/></svg>
               <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
               <h3>WNIOSKI / KONTAKT</h3>
               <p>Napisz podanie o unbana, złóż skargę, wskaż z kim nie chcesz grać, zaproponuj zmiany lub współpracę albo wyślij inną wiadomość do ekipy.</p>
