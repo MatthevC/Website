@@ -7534,7 +7534,9 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .emotes7tv-step-description { margin-top:13px; color:var(--muted); font-size:14px; line-height:1.65; }
 .emotes7tv-step-description a { color:#ff5254; }
 .emotes7tv-step-shot { width:100%; min-height:0; height:420px; display:flex; align-items:center; justify-content:center; border:0; padding:6px; box-sizing:border-box; background:#090909; border-radius:9px; overflow:hidden; cursor:zoom-in; }
-.emotes7tv-step-shot img { display:block; width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; }
+/* Zachowujemy stałe okno podglądu, ale pokazujemy możliwie największy fragment grafiki bez cropowania. */
+.emotes7tv-tutorial-step .dixper-shot-link.emotes7tv-step-shot img { display:block; width:auto !important; height:auto !important; max-width:100% !important; max-height:100% !important; object-fit:contain !important; object-position:center !important; flex:0 0 auto; }
+.emotes7tv-tutorial-step .dixper-shot-link.emotes7tv-step-shot { background:#090909; }
 .emotes7tv-empty-shot { min-height:230px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; border:1px dashed rgba(255,255,255,.20); border-radius:9px; background:repeating-linear-gradient(135deg,rgba(255,255,255,.018),rgba(255,255,255,.018) 10px,rgba(255,255,255,.035) 10px,rgba(255,255,255,.035) 20px); color:rgba(255,255,255,.55); text-align:center; }
 .emotes7tv-empty-shot span { font-size:11px; font-weight:900; letter-spacing:1px; }
 .emotes7tv-empty-shot small { font-size:12px; color:var(--muted); }
@@ -7760,5 +7762,23 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     width: 16px;
     height: 16px;
     border-width: 3px;
+  }
+}
+
+
+/* ===== EMOTKI 7TV — IMAGE FIT FIX ===== */
+.emotes7tv-tutorial-step .dixper-shot-link.emotes7tv-step-shot img {
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+@media (max-width:620px) {
+  .emotes7tv-tutorial-step .dixper-shot-link.emotes7tv-step-shot img {
+    max-width: 100% !important;
+    max-height: 100% !important;
   }
 }
