@@ -96,13 +96,12 @@ const pages = {
           </section>
           <aside class="hero-side">
             <div class="side-card discord-card">
-              <svg class="home-card-watermark home-discord-watermark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
+              <svg class="discord-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M102.4 13.2A93.2 93.2 0 0 0 78.7 6l-3.4 7.1a86.2 86.2 0 0 0-22.6 0L49.3 6a93.6 93.6 0 0 0-23.8 7.3C10.4 36.1 6.2 58.5 8.3 80.6a94.8 94.8 0 0 0 29.2 14.7l7.1-9.7c-3.9-1.4-7.6-3.1-11.1-5.1l2.7-2.1c21.4 10 44.6 10 65.8 0l2.8 2.1c-3.5 2-7.2 3.7-11.1 5.1l7.1 9.7a94.8 94.8 0 0 0 29.2-14.7c2.4-25.6-4.1-47.8-17.6-67.4ZM42.8 68.1c-6.4 0-11.6-5.9-11.6-13.1s5.1-13.1 11.6-13.1 11.7 5.9 11.6 13.1c0 7.2-5.1 13.1-11.6 13.1Zm42.4 0c-6.4 0-11.6-5.9-11.6-13.1s5.1-13.1 11.6-13.1 11.7 5.9 11.6 13.1c0 7.2-5.1 13.1-11.6 13.1Z"/></svg>
               <h3>NASZ DISCORD</h3>
               <p>Dołącz do naszej społeczności, poznaj ludzi, korzystaj z kanałów i bądź na bieżąco z tym, co dzieje się w MATT'S WORLD.</p>
               <a class="red-link" href="#/discord/join">JAK DOSTAĆ SIĘ NA DISCORD →</a>
             </div>
             <div class="side-card contact-home-card">
-              <svg class="home-card-watermark home-envelope-watermark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-13ZM5.5 5a.5.5 0 0 0-.5.5v.28l7 5.25 7-5.25V5.5a.5.5 0 0 0-.5-.5h-13Zm13.5 3.28-6.4 4.8a1 1 0 0 1-1.2 0L5 8.28v10.22c0 .28.22.5.5.5h13c.28 0 .5-.22.5-.5V8.28Z"/></svg>
               <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
               <h3>WNIOSKI / KONTAKT</h3>
               <p>Napisz podanie o unbana, złóż skargę, wskaż z kim nie chcesz grać, zaproponuj zmiany lub współpracę albo wyślij inną wiadomość do ekipy.</p>

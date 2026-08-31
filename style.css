@@ -662,34 +662,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
   isolation: isolate;
 }
 
-/* Home side cards: clean presentation without corner circles. */
-.home-card-watermark {
+.discord-watermark {
   position: absolute;
-  right: -8px;
-  bottom: -22px;
-  width: 174px;
-  height: 140px;
-  color: rgba(239,43,45,.105);
+  right: -18px;
+  bottom: -26px;
+  width: 205px;
+  height: 154px;
+  color: rgba(239,43,45,.11);
+  opacity: 1;
+  transform: rotate(-8deg);
   pointer-events: none;
   z-index: 0;
 }
 
-.home-discord-watermark {
-  width: 184px;
-  height: 184px;
-  right: -24px;
-  bottom: -66px;
-}
-
-.home-envelope-watermark {
-  width: 172px;
-  height: 172px;
-  right: -22px;
-  bottom: -62px;
-}
-
-.side-card > * { position: relative; z-index: 1; }
-.side-card > .home-card-watermark { position: absolute; z-index: 0; }
+.discord-card > *:not(.discord-watermark) { position: relative; z-index: 1; }
 
 .contact-panel { max-width: 920px; margin-left: auto; margin-right: auto; }
 .contact-form { margin-top: 30px; display: grid; gap: 18px; }
@@ -3531,9 +3517,24 @@ body.image-preview-open { overflow: hidden; }
   box-shadow: 0 16px 40px rgba(0,0,0,.18);
 }
 
-/* No decorative circles in the home side cards. */
-.side-card > * { position: relative; z-index: 1; }
+.side-card::after {
+  content: "";
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  right: -42px;
+  bottom: -48px;
+  border: 1px solid rgba(239,43,45,.18);
+  border-radius: 50%;
+  box-shadow: 0 0 0 18px rgba(239,43,45,.025), 0 0 0 38px rgba(239,43,45,.018);
+  pointer-events: none;
+  z-index: 0;
+}
 
+.side-card > *:not(.discord-watermark) {
+  position: relative;
+  z-index: 1;
+}
 
 .side-card-kicker {
   margin-bottom: 8px;
@@ -3543,7 +3544,9 @@ body.image-preview-open { overflow: hidden; }
 }
 
 .contact-home-card {
-  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  background:
+    radial-gradient(circle at 100% 0, rgba(239,43,45,.10), transparent 42%),
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
 }
 
 .quick-grid {
