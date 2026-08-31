@@ -96,12 +96,13 @@ const pages = {
           </section>
           <aside class="hero-side">
             <div class="side-card discord-card">
+              <svg class="home-card-watermark home-discord-watermark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
               <h3>NASZ DISCORD</h3>
               <p>Dołącz do naszej społeczności, poznaj ludzi, korzystaj z kanałów i bądź na bieżąco z tym, co dzieje się w MATT'S WORLD.</p>
               <a class="red-link" href="#/discord/join">JAK DOSTAĆ SIĘ NA DISCORD →</a>
             </div>
             <div class="side-card contact-home-card">
-              <svg class="contact-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M10 20c0-5.5 4.5-10 10-10h88c5.5 0 10 4.5 10 10v56c0 5.5-4.5 10-10 10H20c-5.5 0-10-4.5-10-10V20Zm12 1v54h84V21L64 57 22 21Zm10 0 32 27 32-27H32Z"/></svg>
+              <svg class="home-card-watermark home-envelope-watermark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 5.5A2.5 2.5 0 0 1 5.5 3h13A2.5 2.5 0 0 1 21 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 18.5v-13ZM5.5 5a.5.5 0 0 0-.5.5v.28l7 5.25 7-5.25V5.5a.5.5 0 0 0-.5-.5h-13Zm13.5 3.28-6.4 4.8a1 1 0 0 1-1.2 0L5 8.28v10.22c0 .28.22.5.5.5h13c.28 0 .5-.22.5-.5V8.28Z"/></svg>
               <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
               <h3>WNIOSKI / KONTAKT</h3>
               <p>Napisz podanie o unbana, złóż skargę, wskaż z kim nie chcesz grać, zaproponuj zmiany lub współpracę albo wyślij inną wiadomość do ekipy.</p>

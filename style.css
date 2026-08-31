@@ -663,18 +663,33 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* Home side cards: clean presentation without corner circles. */
-.contact-watermark {
+.home-card-watermark {
   position: absolute;
-  right: -12px;
-  bottom: -18px;
-  width: 170px;
-  height: 128px;
-  color: rgba(239,43,45,.10);
+  right: -8px;
+  bottom: -22px;
+  width: 174px;
+  height: 140px;
+  color: rgba(239,43,45,.105);
   pointer-events: none;
   z-index: 0;
 }
 
-.contact-home-card > *:not(.contact-watermark) { position: relative; z-index: 1; }
+.home-discord-watermark {
+  width: 184px;
+  height: 184px;
+  right: -24px;
+  bottom: -66px;
+}
+
+.home-envelope-watermark {
+  width: 172px;
+  height: 172px;
+  right: -22px;
+  bottom: -62px;
+}
+
+.side-card > * { position: relative; z-index: 1; }
+.side-card > .home-card-watermark { position: absolute; z-index: 0; }
 
 .contact-panel { max-width: 920px; margin-left: auto; margin-right: auto; }
 .contact-form { margin-top: 30px; display: grid; gap: 18px; }
@@ -3518,7 +3533,7 @@ body.image-preview-open { overflow: hidden; }
 
 /* No decorative circles in the home side cards. */
 .side-card > * { position: relative; z-index: 1; }
-.contact-home-card > .contact-watermark { position: absolute; z-index: 0; }
+
 
 .side-card-kicker {
   margin-bottom: 8px;
