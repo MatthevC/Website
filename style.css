@@ -7837,3 +7837,51 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   object-fit: contain !important;
   object-position: center center !important;
 }
+
+
+/* ===== ULEPSZONY PRZEWIJANY KREATOR EVENTÓW =====
+   Kreator i edytor mieszczą się w viewport, a przy małych monitorach
+   można przewijać zawartość samego okna bez obcinania pól formularza. */
+.event-overlay{
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:20px;
+  box-sizing:border-box;
+  align-items:flex-start !important;
+}
+
+.event-overlay .event-modal{
+  box-sizing:border-box;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  margin:auto;
+}
+
+/* Cienki scrollbar wewnątrz kreatora */
+.event-overlay .event-modal{
+  scrollbar-width:thin;
+  scrollbar-color:#555 #111;
+}
+.event-overlay .event-modal::-webkit-scrollbar{
+  width:8px;
+}
+.event-overlay .event-modal::-webkit-scrollbar-track{
+  background:#111;
+}
+.event-overlay .event-modal::-webkit-scrollbar-thumb{
+  background:#444;
+  border-radius:8px;
+}
+.event-overlay .event-modal::-webkit-scrollbar-thumb:hover{
+  background:#666;
+}
+
+@media(max-height:700px){
+  .event-overlay{
+    padding:10px;
+  }
+  .event-overlay .event-modal{
+    max-height:calc(100vh - 20px);
+  }
+}
