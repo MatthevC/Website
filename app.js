@@ -155,10 +155,10 @@ const pages = {
             <h3>POLECANI STREAMERZY</h3>
             <p>Sprawdź twórców, których polecam oglądać podczas mojej nieobecności.</p>
           </a>
-          <a class="quick-card" href="#/contact">
-            <div class="num">08 / WNIOSKI I KONTAKT</div>
-            <h3>KONTAKT / WNIOSKI</h3>
-            <p>Podanie o unbana, skarga, informacja z kim nie chcesz grać, propozycje zmian, współprace i inne sprawy.</p>
+          <a class="quick-card" href="#/viewer/emotes7tv">
+            <div class="num">08 / DLA WIDZA</div>
+            <h3>EMOTKI 7TV</h3>
+            <p>Dowiedz się, jak włączyć i korzystać z emotek 7TV oraz BetterTTV podczas transmisji.</p>
           </a>
         </div>
 
