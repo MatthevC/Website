@@ -1975,6 +1975,7 @@ const COMMANDS_DATA = [
   { command: "!klip", description: "Wykonuje automatycznego klipa.", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
   { command: "!lurk", description: "Pochwal się, że idziesz lurkować.", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
   { command: "!miasto (!city)", description: "Info skąd jest Mati.", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
+  { command: "!queuedbd (!dbd/!qdbd)", description: "Sprawdź kolejki na Dead by Daylght.", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
   { command: "!tip (!donate)", description: "Link do wsparcia kanału (napiwki na Tipply).", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
   { command: "!social", description: "Link do strony z wszystkimi socialami Matiego.", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
   { command: "!steam (!kod)", description: "Link/kodzik do profilu Steam oraz nick na DBD.", category: "Ogólne", roles: ["viewer", "vip", "moderator"] },
