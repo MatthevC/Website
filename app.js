@@ -183,7 +183,7 @@ const pages = {
   },
   "rules/vip": {
     title: "REGULAMIN <span>VIP</span>",
-    body: vipRulesRulesPage()
+    body: vipPage()
   },
   "rules/events": {
     title: "REGULAMIN <span>EVENTÓW</span>",
