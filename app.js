@@ -63,7 +63,7 @@ const RECOMMENDED_STREAMERS = [
     displayName: "Blackstaryolow",
     channelUrl: "https://www.twitch.tv/blackstaryolow",
     clipSlug: "AmorphousCulturedRhinocerosStrawBeary-ayKKlTh2qkwDifgx",
-    clipUrl: "https://www.twitch.tv/blackstaryolow/clip/AmorphousCulturedRhinocerosStrawBeary-ayKKlTh2qkwDifgx?range=all",
+    clipUrl: "https://www.twitch.tv/blackstaryolow/clip/BoredTardyJalapenoPogChamp-Zd-CjuR4sruTx3vU?range=all",
     tagline: "Dobra atmosfera, sprawdzony twórca i treści, które dobrze wpisują się w klimat naszej społeczności.",
     description: "Blackstaryolow to jedna z osób, które śmiało mogę polecić mojej społeczności — wbijaj, oglądaj i zostaw po sobie dobre słowo na czacie.",
     games: ["Dead by Daylight", "R.E.P.O.", "Mortal Kombat X", "Mortal Kombat 11"]
