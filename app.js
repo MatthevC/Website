@@ -342,7 +342,7 @@ function generalRulesPage() {
             </div>
             <div class="rule-card-label">ATMOSFERA</div>
             <h2>Baw się dobrze i nie bądź dzbanem</h2>
-            <p>Najważniejsza zasada naszej społeczności: bawimy się wspólnie i nie psujemy innym humoru. Szacunek, luz i pozytywna energia zawsze wygrywają.</p>
+            <p>Najważniejsza zasada naszej społeczności: bawimy się wspólnie i nie psujemy innym humoru. Szacunek, luz i pozytywna energia zawsze są mile widziane.</p>
           </section>
 
           <section class="rule-card">
@@ -372,7 +372,18 @@ function generalRulesPage() {
             </div>
             <div class="rule-card-label">PLATFORMA</div>
             <h2>Przestrzegamy regulaminu Twitcha</h2>
-            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p>
+            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji. <a href="#/rules/twitch">Zobacz pełny regulamin Twitcha →</a></p>
+          </section>
+
+
+          <section class="rule-card">
+            <div class="rule-card-top">
+              <div class="rule-card-number">05</div>
+              <div class="rule-card-icon" aria-hidden="true">🎮</div>
+            </div>
+            <div class="rule-card-label">LOBBY</div>
+            <h2>Gramy dla dobrej atmosfery</h2>
+            <p>W lobby zachowujemy kulturę. Nie tolerujemy toxic zachowań, wyzwisk, negatywnej atmosfery ani jęczenia w stylu „nie chcę na to grać”. Gramy po to, żeby było przyjemnie wszystkim.</p>
           </section>
         </div>
 
