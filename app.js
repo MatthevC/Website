@@ -102,6 +102,7 @@ const pages = {
               <a class="red-link" href="#/discord/join">JAK DOSTAĆ SIĘ NA DISCORD →</a>
             </div>
             <div class="side-card contact-home-card">
+              <svg class="contact-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M12 20h104v56H12V20Zm8 8v4l44 28 44-28v-4l-44 28L20 28Zm0 16v22h88V44L64 72 20 44Z"/></svg>
               <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
               <h3>WNIOSKI / KONTAKT</h3>
               <p>Napisz podanie o unbana, złóż skargę, wskaż z kim nie chcesz grać, zaproponuj zmiany lub współpracę albo wyślij inną wiadomość do ekipy.</p>
