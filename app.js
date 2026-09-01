@@ -859,15 +859,26 @@ function twitchRulesPage() {
         <div class="rules-hero">
           <div class="rules-hero-badge">REGULAMIN TWITCH</div>
           <h1>PROSTO: <span>SZANUJ INNYCH I ZASADY TWITCHA</span></h1>
-          <p>Na czacie i podczas transmisji obowiązują zasady naszej społeczności oraz oficjalne zasady Twitcha. Poniżej znajdziesz tylko najważniejsze punkty.</p>
+          <p>Podczas transmisji obowiązują zasady naszej społeczności oraz oficjalny regulamin Twitcha. Poniżej znajdziesz najważniejsze zasady, których przestrzegamy.</p>
+        </div>
+
+        <div class="rules-memory-strip">
+          <div class="rules-memory-title">W skrócie najważniejsze:</div>
+          <div class="rules-memory-tags">
+            <span>REGULAMIN TWITCHA</span>
+            <span>REGULAMIN OGÓLNY</span>
+            <span>BEZPIECZEŃSTWO</span>
+            <span>KULTURA</span>
+            <span>ODPOWIEDZIALNOŚĆ</span>
+          </div>
         </div>
 
         <div class="rules-card-grid twitch-minimal-grid">
           <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
-            <div class="rule-card-label">SZACUNEK</div>
-            <h2>Bez obrażania, nękania i mowy nienawiści</h2>
-            <p>Nie atakujemy innych osób, nie prowokujemy i nie używamy treści naruszających zasady Twitcha.</p>
+            <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📜</div></div>
+            <div class="rule-card-label">ZASADY SPOŁECZNOŚCI</div>
+            <h2>Przestrzegamy regulaminu ogólnego</h2>
+            <p>Oprócz zasad Twitcha obowiązuje nas także regulamin ogólny MATT'S WORLD. Dbamy o dobrą atmosferę, wzajemny szacunek i odpowiednie zachowanie.</p>
           </section>
 
           <section class="rule-card">
