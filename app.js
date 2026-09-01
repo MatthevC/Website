@@ -3498,7 +3498,18 @@ async function render() {
     const events = await loadEvents();
     const homeEvents = document.getElementById("home-events");
     if (homeEvents) {
-      const visibleEvents = events.slice(0, 3);
+      const visibleEvents = [...events]
+        .sort((a, b) => {
+          const aEnded = isEventEnded(a) ? 1 : 0;
+          const bEnded = isEventEnded(b) ? 1 : 0;
+
+          // Najpierw pokazujemy aktywne eventy, potem zakończone.
+          if (aEnded !== bEnded) return aEnded - bEnded;
+
+          // W obrębie tej samej grupy najnowsze wydarzenia wyżej.
+          return new Date(b.date || 0) - new Date(a.date || 0);
+        })
+        .slice(0, 5);
       homeEvents.innerHTML = `<div class="home-event-track">${visibleEvents.map(eventCard).join("")}</div>
         <button class="home-event-arrow left" aria-label="Poprzedni event">‹</button>
         <button class="home-event-arrow right" aria-label="Następny event">›</button>`;
