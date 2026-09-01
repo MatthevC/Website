@@ -8105,3 +8105,24 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .event-body button {
   margin-top: auto;
 }
+
+
+.event-body {
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  box-sizing:border-box;
+}
+
+.event-body p {
+  flex:1;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  margin-bottom:17px;
+}
+
+.event-actions {
+  margin-top:auto !important;
+}
