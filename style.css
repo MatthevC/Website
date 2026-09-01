@@ -7975,10 +7975,10 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .contact-home-card { isolation: isolate; overflow:hidden; }
 .contact-watermark {
  position:absolute;
- right:-18px;
- bottom:-26px;
- width:205px;
- height:154px;
+ right:-45px;
+ bottom:-45px;
+ width:260px;
+ height:195px;
  color:rgba(239,43,45,.11);
  opacity:1;
  transform:rotate(-8deg);
