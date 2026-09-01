@@ -396,101 +396,62 @@ function discordRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
-            <span>SZACUNEK</span>
+            <span>STREAM ON</span>
             <span>BEZ SPAMU</span>
             <span>BEZ REKLAM</span>
-            <span>BEZ KŁÓTNI</span>
-            <span>PORZĄDEK NA KANAŁACH</span>
-          </div>
-        </div>
-
-        <div class="channel-legend-box">
-          <div class="channel-legend-title">Kanały, o których mowa w regulaminie</div>
-          <div class="channel-legend-grid">
-            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">ogólny</span></span>
-            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">szukam-do-gry</span></span>
-            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">wideo</span></span>
-            <span class="discord-channel-chip text"><span class="channel-icon">#</span><span class="channel-name">matt-klip</span></span>
-            <span class="discord-channel-chip voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>
-            <span class="discord-channel-chip voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span>
+            <span>KULTURA</span>
+            <span>WSPÓLNA GRA</span>
           </div>
         </div>
 
         <div class="rules-card-grid rules-card-grid-compact">
           <section class="rule-card">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
+            <div class="rule-card-label">TWITCH</div>
+            <h2>Przestrzegamy zasad Twitcha</h2>
+            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym STREAM ON przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy.</p>
+          </section>
+
+          <section class="rule-card">
+            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
             <div class="rule-card-label">STREAM ON</div>
-            <h2>Twitch obowiązuje także u nas</h2>
-            <p>Na profilach, kanałach tekstowych oraz na głosowym kanale <span class="discord-channel-chip inline voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span> przestrzegamy regulaminu Twitcha. Na tym kanale również nie krytykujemy streama.</p>
+            <h2>To miejsce dla Streamera i jego lobby</h2>
+            <p>STREAM ON jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę.</p>
           </section>
 
           <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
-            <div class="rule-card-label">SZACUNEK</div>
-            <h2>Szanuj innych użytkowników</h2>
-            <p>Jeśli nie chcesz być obrażany — nie obrażaj innych. Nagminne obrażanie może skutkować <strong>t/o</strong> lub nawet <strong>permanentnym banem</strong>.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">⏳</div></div>
-            <div class="rule-card-label">WEJŚCIE NA STREAM</div>
-            <h2>Na STREAM ON wchodzimy przez Poczekalnię</h2>
-            <p>Aby dostać się na <span class="discord-channel-chip inline voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span>, dołącz najpierw do <span class="discord-channel-chip inline voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>. Gdy będzie wolna chwila, ktoś przesunie Cię na kanał główny.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
-            <div class="rule-card-label">LOBBY</div>
-            <h2>STREAM ON jest dla Streamera i jego lobby</h2>
-            <p>Jeżeli aktualnie nie grasz z nami, przejdź na inny kanał, żeby nie przeszkadzać w rozgrywce. <span class="mention-pill">@Streamer</span> i osoby z lobby mają tam pierwszeństwo.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🧠</div></div>
-            <div class="rule-card-label">KULTURA</div>
-            <h2>W lobby zachowujemy kulturę</h2>
-            <p>Nie tolerujemy toxic zachowań, wyzwisk, negatywnej atmosfery ani jęczenia w stylu „nie chcę na to grać”. Gramy po to, żeby było przyjemnie wszystkim.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">06</div><div class="rule-card-icon" aria-hidden="true">📣</div></div>
+            <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">📣</div></div>
             <div class="rule-card-label">WZMIANKI</div>
             <h2>Nie nadużywamy oznaczeń ról</h2>
-            <p>Zakaz nadużywania wzmianek ról oraz całkowity zakaz używania <span class="mention-pill">@everyone</span> i <span class="mention-pill">@here</span>. Automod nakłada za to <strong>1 godzinę t/o</strong>.</p>
+            <p>Zakazane jest nadużywanie wzmianek ról oraz używanie <span class="mention-pill">@everyone</span> i <span class="mention-pill">@here</span>. Automod nakłada za takie działania automatyczną karę <strong>1 godziny t/o</strong>.</p>
           </section>
 
           <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">07</div><div class="rule-card-icon" aria-hidden="true">🚫</div></div>
-            <div class="rule-card-label">PORZĄDEK</div>
-            <h2>Bez spamu i bez reklam</h2>
-            <p>Na kanałach tekstowych zabronione jest spamowanie oraz reklamowanie własnych kanałów i innych serwerów Discord.</p>
+            <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🚫</div></div>
+            <div class="rule-card-label">SPAM I REKLAMY</div>
+            <h2>Dbamy o porządek na kanałach</h2>
+            <p>Zabronione jest spamowanie wiadomościami oraz reklamowanie własnych kanałów, serwerów Discord i innych treści bez zgody administracji.</p>
           </section>
 
           <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">08</div><div class="rule-card-icon" aria-hidden="true">🕊️</div></div>
-            <div class="rule-card-label">TEMATY SPORNE</div>
-            <h2>Unikamy polityki i religii</h2>
-            <p>Nie wchodzimy w dyskusje o polityce, religii i innych kontrowersyjnych tematach, które mogą prowadzić do konfliktów i niepotrzebnych kłótni.</p>
+            <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🎬</div></div>
+            <div class="rule-card-label">MATERIAŁY</div>
+            <h2>Każdy materiał trafia w odpowiednie miejsce</h2>
+            <p>Materiały publikujemy zgodnie z ich przeznaczeniem. Klipy z transmisji Streamera oraz prywatne materiały powinny trafiać do odpowiednich miejsc. Spam lub niepasujące treści mogą zostać usunięte.</p>
           </section>
 
           <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">09</div><div class="rule-card-icon" aria-hidden="true">🎬</div></div>
-            <div class="rule-card-label">KLIPY I WIDEO</div>
-            <h2>Każdy materiał wrzucamy we właściwe miejsce</h2>
-            <p>Kanał <span class="discord-channel-chip inline text"><span class="channel-icon">#</span><span class="channel-name">matt-klip</span></span> służy wyłącznie do klipów z transmisji <span class="mention-pill">@Streamer</span>. Prywatne klipy wrzucaj na <span class="discord-channel-chip inline text"><span class="channel-icon">#</span><span class="channel-name">wideo</span></span>. Materiały uznane za spam lub zwykłą rozgrywkę mogą zostać usunięte, a po powtarzającym się spamie możesz dostać ograniczenia na ten kanał.</p>
-          </section>
-
-          <section class="rule-card">
-            <div class="rule-card-top"><div class="rule-card-number">10</div><div class="rule-card-icon" aria-hidden="true">🔎</div></div>
-            <div class="rule-card-label">SZUKANIE EKIPY</div>
-            <h2>Do wspólnej gry używamy odpowiedniego kanału</h2>
-            <p>Szukasz osób do wspólnej gry? Korzystaj z kanału <span class="discord-channel-chip inline text"><span class="channel-icon">#</span><span class="channel-name">szukam-do-gry</span></span> oraz odpowiednich ról, np. <span class="mention-pill">@lethalowe</span>.</p>
+            <div class="rule-card-top"><div class="rule-card-number">06</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
+            <div class="rule-card-label">WSPÓLNA GRA</div>
+            <h2>Szukamy ekipy w odpowiedni sposób</h2>
+            <p>Do wspólnej gry korzystamy z przeznaczonych do tego miejsc oraz odpowiednich ról. Dzięki temu łatwiej znaleźć osoby chętne do wspólnej zabawy.</p>
           </section>
         </div>
 
         <div class="rules-summary-box">
           <h2>Najważniejsza idea</h2>
-          <p>Discord ma być miejscem wygodnym do rozmów, wspólnego grania i integracji. Jeśli zachowujemy kulturę, używamy właściwych kanałów i nie przeszkadzamy innym — wszystkim korzysta się z niego po prostu lepiej.</p>
+          <p>Discord ma być miejscem wygodnym do rozmów, wspólnej gry i integracji społeczności. Szanujemy innych, dbamy o porządek i korzystamy z serwera tak, aby każdy czuł się tutaj dobrze.</p>
+        </div>
         </div>
       </div>
     </div>
