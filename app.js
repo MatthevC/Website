@@ -2926,12 +2926,14 @@ function setupHomeEventSlider(root) {
   };
 
   root.querySelector(".right")?.addEventListener("click", () => {
-    index = Math.min(index + 1, cards.length - 1);
+    // Po przejściu z ostatniego eventu wracamy na pierwszy.
+    index = index >= cards.length - 1 ? 0 : index + 1;
     move();
   });
 
   root.querySelector(".left")?.addEventListener("click", () => {
-    index = Math.max(index - 1, 0);
+    // Po cofnięciu z pierwszego eventu przechodzimy na ostatni.
+    index = index <= 0 ? cards.length - 1 : index - 1;
     move();
   });
 
