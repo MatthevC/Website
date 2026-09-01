@@ -53,7 +53,7 @@ const RECOMMENDED_STREAMERS = [
     displayName: "SandyNPC",
     channelUrl: "https://www.twitch.tv/sandynpc",
     clipSlug: "BlightedGorgeousPeppermintTBTacoRight-fxMtdufblF0eCdpx",
-    clipUrl: "https://www.twitch.tv/sandynpc/clip/BlightedGorgeousPeppermintTBTacoRight-fxMtdufblF0eCdpx?range=7d",
+    clipUrl: "https://www.twitch.tv/sandynpc/clip/DaintyMoldyGooseHotPokket-zcD5cPmXsjknIPJz?range=30d",
     tagline: "Świetny kontakt z czatem i bardzo przyjemny klimat transmisji.",
     description: "SandyNPC to twórczyni, do której naprawdę warto zajrzeć — szczególnie jeśli cenisz pozytywną energię i regularne interakcje z widzami.",
     games: ["Dead by Daylight", "VALORANT", "Euro Truck Simulator 2", "League of Legends"]
