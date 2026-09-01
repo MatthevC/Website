@@ -43,7 +43,7 @@ const RECOMMENDED_STREAMERS = [
     displayName: "FaryMVP",
     channelUrl: "https://www.twitch.tv/farymvp",
     clipSlug: "OddSmilingSquirrelWholeWheat-A_MEU3fIXmNVdOyC",
-    clipUrl: "https://www.twitch.tv/farymvp/clip/OddSmilingSquirrelWholeWheat-A_MEU3fIXmNVdOyC?range=7d",
+    clipUrl: "https://www.twitch.tv/sandynpc/clip/DaintyMoldyGooseHotPokket-zcD5cPmXsjknIPJz",
     tagline: "Energia, klimat i dobra zabawa — idealny wybór, kiedy szukasz twórcy do oglądania podczas mojej nieobecności.",
     description: "Jeśli lubisz luźną atmosferę, kontakt z widzami i ekipowy vibe, to FaryMVP zdecydowanie zasługuje na uwagę.",
     games: ["Dead by Daylight", "Euro Truck Simulator 2", "Among Us"]
