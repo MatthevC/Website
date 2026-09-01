@@ -2046,7 +2046,8 @@ function commandCard(command) {
   const badges = command.roles.includes("viewer")
     ? ""
     : command.roles.map(roleBadge).join("");
-  return `<article class="command command-${special}" data-command="${escapeHtml(command.command.toLowerCase())} ${escapeHtml(command.description.toLowerCase())}">
+  const dbdClass = command.command.toLowerCase().includes("queuedbd") ? " command-dbd" : "";
+  return `<article class="command command-${special}${dbdClass}" data-command="${escapeHtml(command.command.toLowerCase())} ${escapeHtml(command.description.toLowerCase())}">
     <div class="command-top"><code>${escapeHtml(command.command)}</code><div class="command-badges">${badges}</div></div>
     <span>${escapeHtml(command.description)}</span>
   </article>`;

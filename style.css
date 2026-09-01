@@ -8009,3 +8009,34 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   position: relative;
   z-index: 1;
 }
+
+
+/* === DEAD BY DAYLIGHT - KOMENDA !queuedbd === */
+.command-dbd {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.command-dbd::after {
+  content: "";
+  position: absolute;
+  right: -35px;
+  bottom: -45px;
+  width: 180px;
+  height: 180px;
+  background-image: url("pictures/IconDBD.webp");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.10;
+  filter: grayscale(100%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.command-dbd .command-top,
+.command-dbd > span {
+  position: relative;
+  z-index: 1;
+}
