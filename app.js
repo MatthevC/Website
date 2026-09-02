@@ -396,11 +396,12 @@ function discordRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
+            <a class="rule-scroll-link" data-target="discord-rule-twitch">ZASADY TWITCHA</a>
             <a class="rule-scroll-link" data-target="discord-rule-stream">🔴 STREAM ON</a>
-            <a class="rule-scroll-link" data-target="discord-rule-spam">BEZ SPAMU</a>
-            <a class="rule-scroll-link" data-target="discord-rule-ad">BEZ REKLAM</a>
-            <a class="rule-scroll-link" data-target="discord-rule-culture">KULTURA</a>
-            <a class="rule-scroll-link" data-target="discord-rule-games">WSPÓLNA GRA</a>
+            <a class="rule-scroll-link" data-target="discord-rule-mentions">NIE NADUŻYWAMY WZMIANEK RÓL</a>
+            <a class="rule-scroll-link" data-target="discord-rule-spam">BEZ SPAMU I REKLAM</a>
+            <a class="rule-scroll-link" data-target="discord-rule-materials">ZASTOSOWANIE ODPOWIEDNICH KANAŁÓW</a>
+            <a class="rule-scroll-link" data-target="discord-rule-games">🔎 szukam-do-gry</a>
           </div>
         </div>
 
