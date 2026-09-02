@@ -8197,3 +8197,16 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     flex-wrap: nowrap;
   }
 }
+
+
+.stream-pill-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: .18rem .55rem;
+  border-radius: 999px;
+  background: rgba(191,36,45,.16);
+  border: 1px solid rgba(191,36,45,.35);
+  color: #f5f5f5;
+  font-weight: 800;
+  white-space: nowrap;
+}

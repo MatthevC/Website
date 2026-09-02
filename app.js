@@ -409,14 +409,14 @@ function discordRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
             <h2>Przestrzegamy zasad Twitcha</h2>
-            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong>🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><div class="twitch-rules-actions"><a class="twitch-rules-button" href="#/rules/general">REGULAMIN GŁÓWNY <span>→</span></a><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a></div>
+            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong class="stream-pill-inline">🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><div class="twitch-rules-actions"><a class="twitch-rules-button" href="#/rules/general">REGULAMIN GŁÓWNY <span>→</span></a><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a></div>
           </section>
 
           <section class="rule-card" id="discord-rule-stream">
             <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
-            <div class="rule-card-label">🔴 STREAM ON</div>
+            <div class="rule-card-label">STREAM ON</div>
             <h2>To miejsce dla Streamera i jego lobby</h2>
-            <p><strong>🔴 STREAM ON</strong> jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę i nie zakłócamy rozgrywki.</p>
+            <p><strong class="stream-pill-inline">🔴 STREAM ON</strong> jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę i nie zakłócamy rozgrywki.</p>
           </section>
 
           <section class="rule-card">
