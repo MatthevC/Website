@@ -8138,6 +8138,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   gap:12px;
 }
 .rule-scroll-link {
+  cursor: pointer;
   display:inline-flex;
   align-items:center;
   padding:10px 18px;
@@ -8171,10 +8172,16 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 /* === Discord rules compact buttons === */
 .twitch-rules-actions {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  flex-wrap: wrap;
-  gap: .7rem;
-  margin-top: .9rem;
+  flex-wrap: nowrap;
+  gap: .55rem;
+  margin-top: .65rem;
+  width: 100%;
+}
+
+.twitch-rules-actions a {
+  flex: 0 0 auto;
 }
 
 .twitch-rules-actions .twitch-rules-button {
@@ -8187,5 +8194,6 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   .twitch-rules-actions {
     flex-direction: column;
     align-items: stretch;
+    flex-wrap: nowrap;
   }
 }
