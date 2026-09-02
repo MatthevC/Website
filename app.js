@@ -396,27 +396,27 @@ function discordRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
-            <span>STREAM ON</span>
-            <span>BEZ SPAMU</span>
-            <span>BEZ REKLAM</span>
-            <span>KULTURA</span>
-            <span>WSPÓLNA GRA</span>
+            <a href="#discord-rule-stream">🔴 STREAM ON</a>
+            <a href="#discord-rule-spam">BEZ SPAMU</a>
+            <a href="#discord-rule-spam">BEZ REKLAM</a>
+            <a href="#discord-rule-culture">KULTURA</a>
+            <a href="#discord-rule-games">WSPÓLNA GRA</a>
           </div>
         </div>
 
         <div class="rules-card-grid rules-card-grid-compact">
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-culture">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
             <h2>Przestrzegamy zasad Twitcha</h2>
             <p>Na profilach, kanałach tekstowych oraz na kanale głosowym STREAM ON przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-stream">
             <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
-            <div class="rule-card-label">STREAM ON</div>
+            <div class="rule-card-label">🔴 STREAM ON</div>
             <h2>To miejsce dla Streamera i jego lobby</h2>
-            <p>STREAM ON jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę.</p>
+            <p><strong>🔴 STREAM ON</strong> jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę i nie zakłócamy rozgrywki.</p>
           </section>
 
           <section class="rule-card">
@@ -426,7 +426,7 @@ function discordRulesPage() {
             <p>Zakazane jest nadużywanie wzmianek ról oraz używanie <span class="mention-pill">@everyone</span> i <span class="mention-pill">@here</span>. Automod nakłada za takie działania automatyczną karę <strong>1 godziny t/o</strong>.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-spam">
             <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🚫</div></div>
             <div class="rule-card-label">SPAM I REKLAMY</div>
             <h2>Dbamy o porządek na kanałach</h2>
@@ -437,14 +437,14 @@ function discordRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🎬</div></div>
             <div class="rule-card-label">MATERIAŁY</div>
             <h2>Każdy materiał trafia w odpowiednie miejsce</h2>
-            <p>Materiały publikujemy zgodnie z ich przeznaczeniem. Klipy z transmisji Streamera oraz prywatne materiały powinny trafiać do odpowiednich miejsc. Spam lub niepasujące treści mogą zostać usunięte.</p>
+            <p>Materiały publikujemy zgodnie z ich przeznaczeniem. Kanał <span class="discord-channel-chip inline"><span class="channel-icon">🎥</span><span class="channel-name">wideo</span></span> służy do wrzucania waszych filmików, klipów, ciekawych nagrań i materiałów wideo. Klipy z transmisji Streamera oraz prywatne materiały powinny trafiać do odpowiednich miejsc. Spam lub niepasujące treści mogą zostać usunięte.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-games">
             <div class="rule-card-top"><div class="rule-card-number">06</div><div class="rule-card-icon" aria-hidden="true">🤝</div></div>
             <div class="rule-card-label">WSPÓLNA GRA</div>
             <h2>Szukamy ekipy w odpowiedni sposób</h2>
-            <p>Do wspólnej gry korzystamy z przeznaczonych do tego miejsc oraz odpowiednich ról. Dzięki temu łatwiej znaleźć osoby chętne do wspólnej zabawy.</p>
+            <p>Osoby chętne do wspólnej gry szukamy wyłącznie na kanale <span class="discord-channel-chip inline"><span class="channel-icon">🔎</span><span class="channel-name">szukam-do-gry</span></span>. Dzięki temu łatwiej znaleźć ekipę i utrzymać porządek na pozostałych kanałach.</p>
           </section>
         </div>
 
