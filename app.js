@@ -368,7 +368,7 @@ function generalRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">📜</div></div>
             <div class="rule-card-label">PLATFORMA</div>
             <h2>Przestrzegamy regulaminu Twitcha</h2>
-            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p><a class="twitch-rules-button" href="#/rules/twitch">ZOBACZ PEŁNY REGULAMIN TWITCHA <span>→</span></a>
+            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a>
           </section>
         </div>
 
@@ -409,7 +409,7 @@ function discordRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
             <h2>Przestrzegamy zasad Twitcha</h2>
-            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong>🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><div class="twitch-rules-actions"><a class="twitch-rules-button" href="#/rules/general">ZOBACZ REGULAMIN GŁÓWNY <span>→</span></a><a class="twitch-rules-button" href="#/rules/twitch">ZOBACZ PEŁNY REGULAMIN TWITCHA <span>→</span></a></div>
+            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong>🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><div class="twitch-rules-actions"><a class="twitch-rules-button" href="#/rules/general">REGULAMIN GŁÓWNY <span>→</span></a><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a></div>
           </section>
 
           <section class="rule-card" id="discord-rule-stream">
