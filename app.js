@@ -396,7 +396,7 @@ function discordRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
-            <a class="rule-scroll-link" data-target="discord-rule-culture">ZASADY TWITCHA</a>
+            <a class="rule-scroll-link" data-target="discord-rule-twitch">ZASADY TWITCHA</a>
             <a class="rule-scroll-link" data-target="discord-rule-stream">🔴 STREAM ON</a>
             <a class="rule-scroll-link" data-target="discord-rule-mentions">NIE NADUŻYWAMY WZMIANEK RÓL</a>
             <a class="rule-scroll-link" data-target="discord-rule-spam">BEZ SPAMU I REKLAM</a>
@@ -406,7 +406,7 @@ function discordRulesPage() {
         </div>
 
         <div class="rules-card-grid rules-card-grid-compact">
-          <section class="rule-card" id="discord-rule-culture">
+          <section class="rule-card" id="discord-rule-twitch">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
             <h2>Przestrzegamy zasad Twitcha</h2>

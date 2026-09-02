@@ -8145,7 +8145,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   border:1px solid rgba(239,43,45,.45);
   border-radius:999px;
   background:rgba(239,43,45,.08);
-  font-weight:700;
+  font-weight:700;\n  font-size: .78rem;\n  white-space: nowrap;
   transition:.25s ease;
 }
 .rule-scroll-link:hover {
