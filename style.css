@@ -1509,7 +1509,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 
-/* === REGULAMIN OGÓLNY === */
+/* === OGÓLNY === */
 .rules-showcase {
   overflow: hidden;
 }
@@ -1810,7 +1810,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 
-/* === REGULAMIN EVENTÓW === */
+/* === EVENTY === */
 .event-rules-timeline {
   display: grid;
   grid-template-columns: 1fr auto 1fr auto 1fr;
@@ -2117,7 +2117,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 
-/* === MINIMALNY REGULAMIN TWITCH === */
+/* === MINIMALNY TWITCH === */
 .twitch-minimal-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }

@@ -319,7 +319,7 @@ function generalRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">REGULAMIN OGÓLNY</div>
+          <div class="rules-hero-badge">OGÓLNY</div>
           <h1>ZASADY, KTÓRE UTRZYMUJĄ <span>DOBRY KLIMAT</span></h1>
           <p>U nas stawiamy na dobrą atmosferę, szacunek i wspólną zabawę. Poniżej znajdziesz 5 najważniejszych zasad, które łatwo zapamiętać i jeszcze łatwiej stosować.</p>
         </div>
@@ -368,7 +368,7 @@ function generalRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">📜</div></div>
             <div class="rule-card-label">PLATFORMA</div>
             <h2>Przestrzegamy regulaminu Twitcha</h2>
-            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a>
+            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p><a class="twitch-rules-button" href="#/rules/twitch">TWITCHA <span>→</span></a>
           </section>
         </div>
 
@@ -388,7 +388,7 @@ function discordRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">REGULAMIN DISCORDA</div>
+          <div class="rules-hero-badge">DISCORD</div>
           <h1>JASNE ZASADY, <span>LEPSZA ATMOSFERA</span></h1>
           <p>Nasz Discord ma być miejscem wygodnym do rozmów, wspólnej gry i integracji społeczności. Poniżej znajdziesz zasady przedstawione w przejrzysty sposób — tak, aby dało się je szybko przeczytać i łatwo zapamiętać.</p>
         </div>
@@ -410,7 +410,7 @@ function discordRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
             <h2>Przestrzegamy zasad Twitcha</h2>
-            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong class="stream-pill-inline">🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><div class="twitch-rules-actions"><a class="twitch-rules-button" href="#/rules/general">REGULAMIN GŁÓWNY <span>→</span></a><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a></div>
+            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong class="stream-pill-inline">🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><div class="twitch-rules-actions"><a class="twitch-rules-button" href="#/rules/general">REGULAMIN GŁÓWNY <span>→</span></a><a class="twitch-rules-button" href="#/rules/twitch">TWITCHA <span>→</span></a></div>
           </section>
 
           <section class="rule-card" id="discord-rule-stream">
@@ -618,7 +618,7 @@ function vipRulesRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">REGULAMIN VIP</div>
+          <div class="rules-hero-badge">VIP</div>
           <h1>VIP TO <span>WYRÓŻNIENIE I ZAUFANIE</span></h1>
           <p>Ranga VIP to nie tylko dodatkowe możliwości, ale też zaufanie, które budujemy wobec aktywnych i pozytywnych osób w naszej społeczności. Poniżej znajdziesz najważniejsze zasady związane z tą rangą.</p>
         </div>
@@ -688,7 +688,7 @@ function eventRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">REGULAMIN EVENTÓW</div>
+          <div class="rules-hero-badge">EVENTY</div>
           <h1>GRAMY FAIR I <span>DBAMY O DOBRĄ ZABAWĘ</span></h1>
           <p>Eventy i rozdania mają być przyjemne dla całej społeczności. Dlatego zasady są proste: jedno konto, uczciwy udział, rozsądny kontakt po wygranej i odrobina cierpliwości.</p>
         </div>
@@ -774,7 +774,7 @@ function gamePickRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">ZASADY WYBORU DO WSPÓLNYCH GIER</div>
+          <div class="rules-hero-badge">WYBÓR DO WSPÓLNYCH GIER</div>
           <h1>KTO MA <span>PIERWSZEŃSTWO DO GRY?</span></h1>
           <p>Żeby uniknąć nieporozumień i zachować porządek podczas wspólnych rozgrywek, obowiązuje poniższa kolejność wyboru osób do lobby. Im wyżej na liście, tym większy priorytet wejścia do wspólnej gry.</p>
         </div>
@@ -819,7 +819,7 @@ function twitchRulesPage() {
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
         <div class="rules-hero">
-          <div class="rules-hero-badge">REGULAMIN TWITCH</div>
+          <div class="rules-hero-badge">TWITCH</div>
           <h1>PROSTO: <span>SZANUJ INNYCH I ZASADY TWITCHA</span></h1>
           <p>Podczas transmisji obowiązują zasady naszej społeczności oraz oficjalny regulamin Twitcha. Poniżej znajdziesz najważniejsze zasady, których przestrzegamy.</p>
         </div>
@@ -827,8 +827,8 @@ function twitchRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
-            <span>REGULAMIN TWITCHA</span>
-            <span>REGULAMIN OGÓLNY</span>
+            <span>TWITCHA</span>
+            <span>OGÓLNY</span>
             <span>BEZPIECZEŃSTWO</span>
             <span>KULTURA</span>
             <span>ODPOWIEDZIALNOŚĆ</span>
@@ -2509,7 +2509,7 @@ function downloadsPage() {
     {
       id: "download-twitch-words",
       type: "TXT",
-      meta: "6 KB • REGULAMIN TWITCH",
+      meta: "6 KB • TWITCH",
       title: "Zakazane słowa na Twitchu",
       description: "Czytelna lista słów i zwrotów powiązana z naszym regulaminem Twitch. Przydatna dla widzów, moderatorów i osób, które chcą szybko sprawdzić zasady.",
       href: "downloads/twitch-zakazane-slowa-i-zwroty.txt",
