@@ -350,7 +350,7 @@ function generalRulesPage() {
             <p>W lobby zachowujemy kulturę. Nie tolerujemy toxic zachowań, wyzwisk, negatywnej atmosfery ani jęczenia w stylu „nie chcę na to grać”. Gramy po to, żeby było przyjemnie wszystkim.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-mentions">
             <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">🧩</div></div>
             <div class="rule-card-label">PRYWATNE SPRAWY</div>
             <h2>Prywatne dramy zostawcie dla siebie</h2>
@@ -364,7 +364,7 @@ function generalRulesPage() {
             <p>Omijamy tematy i zachowania, które najczęściej kończą się spięciami. Chcemy budować miejsce do odpoczynku i zabawy.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-materials">
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">📜</div></div>
             <div class="rule-card-label">PLATFORMA</div>
             <h2>Przestrzegamy regulaminu Twitcha</h2>
@@ -396,12 +396,12 @@ function discordRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
-            <a class="rule-scroll-link" data-target="discord-rule-twitch">ZASADY TWITCHA</a>
+            <a class="rule-scroll-link" data-target="discord-rule-culture">ZASADY TWITCHA</a>
             <a class="rule-scroll-link" data-target="discord-rule-stream">🔴 STREAM ON</a>
             <a class="rule-scroll-link" data-target="discord-rule-mentions">NIE NADUŻYWAMY WZMIANEK RÓL</a>
             <a class="rule-scroll-link" data-target="discord-rule-spam">BEZ SPAMU I REKLAM</a>
-            <a class="rule-scroll-link" data-target="discord-rule-materials">ZASTOSOWANIE ODPOWIEDNICH KANAŁÓW</a>
-            <a class="rule-scroll-link" data-target="discord-rule-games">🔎 szukam-do-gry</a>
+            <a class="rule-scroll-link" data-target="discord-rule-materials">ODPOWIEDNIE KANAŁY</a>
+            <a class="rule-scroll-link" data-target="discord-rule-games">🔎 SZUKAM-DO-GRY</a>
           </div>
         </div>
 
