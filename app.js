@@ -409,7 +409,7 @@ function discordRulesPage() {
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
             <h2>Przestrzegamy zasad Twitcha</h2>
-            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym STREAM ON przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy.</p>
+            <p>Na profilach, kanałach tekstowych oraz na kanale głosowym <strong>🔴 STREAM ON</strong> przestrzegamy regulaminu Twitcha. Nie krytykujemy ani nie podważamy zasad platformy. Dodatkowo obowiązuje nas również regulamin główny społeczności, który określa podstawowe zasady zachowania i wzajemnego szacunku.</p><a class="twitch-rules-button" href="#/rules/twitch">ZOBACZ PEŁNY REGULAMIN TWITCHA <span>→</span></a><a class="twitch-rules-button" href="#/rules/general">ZOBACZ REGULAMIN GŁÓWNY <span>→</span></a>
           </section>
 
           <section class="rule-card" id="discord-rule-stream">
