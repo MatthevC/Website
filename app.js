@@ -396,11 +396,11 @@ function discordRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">W skrócie najważniejsze:</div>
           <div class="rules-memory-tags">
-            <a href="#discord-rule-stream">🔴 STREAM ON</a>
-            <a href="#discord-rule-spam">BEZ SPAMU</a>
-            <a href="#discord-rule-spam">BEZ REKLAM</a>
-            <a href="#discord-rule-culture">KULTURA</a>
-            <a href="#discord-rule-games">WSPÓLNA GRA</a>
+            <a class="rule-scroll-link" data-target="discord-rule-stream">🔴 STREAM ON</a>
+            <a class="rule-scroll-link" data-target="discord-rule-spam">BEZ SPAMU</a>
+            <a class="rule-scroll-link" data-target="discord-rule-ad">BEZ REKLAM</a>
+            <a class="rule-scroll-link" data-target="discord-rule-culture">KULTURA</a>
+            <a class="rule-scroll-link" data-target="discord-rule-games">WSPÓLNA GRA</a>
           </div>
         </div>
 
@@ -3757,6 +3757,20 @@ document.querySelectorAll(".nav-dropdown > button").forEach(button => {
 window.addEventListener("matt-auth-change", (e) => {
   window.currentUserIsAdmin = e.detail?.isAdmin === true;
   updateEventAdminButton(window.currentUserIsAdmin);
+});
+
+
+document.addEventListener("click", function(e) {
+  const link = e.target.closest(".rule-scroll-link");
+  if (!link) return;
+  e.preventDefault();
+  const target = document.getElementById(link.dataset.target);
+  if (!target) return;
+  target.scrollIntoView({behavior:"smooth", block:"center"});
+  target.classList.remove("rule-highlight");
+  void target.offsetWidth;
+  target.classList.add("rule-highlight");
+  setTimeout(()=>target.classList.remove("rule-highlight"), 3000);
 });
 
 window.addEventListener("hashchange", render);
