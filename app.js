@@ -436,7 +436,7 @@ function discordRulesPage() {
 
           <section class="rule-card">
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🎬</div></div>
-            <div class="rule-card-label">MATERIAŁY</div>
+            <div class="rule-card-label">ODPOWIEDNIE KANAŁY</div>
             <h2>Każdy materiał trafia w odpowiednie miejsce</h2>
             <p>Materiały publikujemy zgodnie z ich przeznaczeniem. Kanał <span class="discord-channel-chip inline"><span class="channel-icon">🎥</span><span class="channel-name">wideo</span></span> służy do wrzucania waszych filmików, klipów, ciekawych nagrań i materiałów wideo. Klipy z transmisji Streamera oraz prywatne materiały powinny trafiać do odpowiednich miejsc. Spam lub niepasujące treści mogą zostać usunięte.</p>
           </section>
