@@ -779,14 +779,14 @@ function gamePickRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">Najkrócej:</div>
           <div class="rules-memory-tags">
-            <span>JASNA KOLEJNOŚĆ</span>
-            <span>PRIORYTET ZA WSPARCIE</span>
-            <span>BEZ SPIN</span>
-            <span>CZYTELNE ZASADY</span>
+            <span class="rule-scroll-link" data-target="game-pick-order">JASNA KOLEJNOŚĆ</span>
+            <span class="rule-scroll-link" data-target="game-pick-order">PRIORYTET ZA WSPARCIE</span>
+            <span class="rule-scroll-link" data-target="game-pick-order">BEZ SPIN</span>
+            <span class="rule-scroll-link" data-target="game-pick-order">CZYTELNE ZASADY</span>
           </div>
         </div>
 
-        <div class="pick-order-board">
+        <div class="pick-order-board" id="game-pick-order">
           <div class="pick-order-intro">Kolejność wyboru osób do wspólnych gier</div>
           <div class="pick-order-list">
             <div class="pick-order-item priority-1"><div class="pick-order-rank">1</div><div class="pick-order-text"><strong>Osoba wykupująca wybór gry</strong><span>Najwyższy priorytet — jeśli ktoś wykupił wybór gry, jego miejsce jest rozpatrywane w pierwszej kolejności.</span></div></div>
