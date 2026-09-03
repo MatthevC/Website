@@ -439,6 +439,7 @@ function discordRulesPage() {
             <div class="rule-card-label">ODPOWIEDNIE KANAŁY</div>
             <h2>Każdy materiał trafia w odpowiednie miejsce</h2>
             <p>Materiały publikujemy zgodnie z ich przeznaczeniem. Kanał <span class="discord-channel-chip inline"><span class="channel-icon">🎥</span><span class="channel-name">wideo</span></span> służy do wrzucania waszych filmików, klipów, ciekawych nagrań i materiałów wideo. Klipy z transmisji Streamera oraz prywatne materiały powinny trafiać do odpowiednich miejsc. Spam lub niepasujące treści mogą zostać usunięte.</p>
+            <a class="twitch-rules-button" href="#/discord/channels">OPIS NASZYCH KANAŁÓW <span>→</span></a>
           </section>
 
           <section class="rule-card" id="discord-rule-games">
