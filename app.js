@@ -640,28 +640,28 @@ function vipRulesRulesPage() {
         </div>
 
         <div class="rules-card-grid">
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-account">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">⭐</div></div>
             <div class="rule-card-label">PRZYZNANIE RANGI</div>
             <h2>VIP otrzymują osoby aktywne i pomocne</h2>
             <p>Ranga ta jest przyznawana osobom, które często bywają na transmisjach, aktywnie uczestniczą w społeczności, są pomocne i udzielają się również na Discordzie.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-reward">
             <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🔴</div></div>
             <div class="rule-card-label">DOSTĘP DO STREAM ON</div>
             <h2>VIP może wejść bez Poczekalni — ale z głową</h2>
             <p>VIP-y mogą wejść na <span class="discord-channel-chip inline voice"><span class="channel-icon">🔴</span><span class="channel-name">STREAM ON</span></span> bez przechodzenia przez <span class="discord-channel-chip inline voice"><span class="channel-icon">🔊</span><span class="channel-name">POCZEKALNIA</span></span>. To przywilej oparty na zaufaniu — nie wchodzimy tam z błahostkami ani bez zgody Streamera. Nagminne nadużywanie może skutkować utratą VIP-a.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-fair">
             <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">😄</div></div>
             <div class="rule-card-label">EMOTKI 7TV</div>
             <h2>Możesz dostać możliwość dodawania emotek</h2>
             <p>Każdy VIP może uzyskać możliwość dodawania emotek 7TV. Jeśli chcesz mieć taką opcję, napisz do <span class="mention-pill">MatthevC</span>, a uprawnienie zostanie przypisane ręcznie.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-shipping">
             <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">📅</div></div>
             <div class="rule-card-label">AKTYWNOŚĆ</div>
             <h2>Brak aktywności może oznaczać utratę rangi</h2>
@@ -693,11 +693,11 @@ function eventRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">5 rzeczy do zapamiętania:</div>
           <div class="rules-memory-tags">
-            <span>JEDNO KONTO</span>
-            <span>14 DNI NA DANE</span>
-            <span>GRAMY FAIR</span>
-            <span>DO 3 MIESIĘCY NA WYSYŁKĘ</span>
-            <span>ZASADY = UDZIAŁ</span>
+            <a class="rule-scroll-link" data-target="event-rule-account">JEDNO KONTO</a>
+            <a class="rule-scroll-link" data-target="event-rule-reward">14 DNI NA DANE</a>
+            <a class="rule-scroll-link" data-target="event-rule-fair">GRAMY FAIR</a>
+            <a class="rule-scroll-link" data-target="event-rule-shipping">DO 3 MIESIĘCY NA WYSYŁKĘ</a>
+            <a class="rule-scroll-link" data-target="event-rule-consequences">ZASADY = UDZIAŁ</a>
           </div>
         </div>
 
