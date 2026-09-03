@@ -2274,6 +2274,8 @@ function setupGlobalPageNavigation() {
       // VIP: nagłówek strony jest osobną pozycją "Początek".
       // Nie pokazujemy jednocześnie pierwszej sekcji przy wejściu na stronę.
       if (isVipPage) {
+        // VIP: pierwsze dwie karty są obok siebie, więc nie zaznaczamy ich jednocześnie.
+        // Przejście 02 -> 03 następuje płynnie podczas przewijania w dół.
         if (window.scrollY <= 20) {
           links.forEach((link, index) => link.classList.toggle("active", index === 0));
           keepActiveLinkVisible(links[0]);
@@ -2281,16 +2283,22 @@ function setupGlobalPageNavigation() {
           return;
         }
 
-        const visibleIds = visible.map(entry => entry.target.id);
-        links.forEach(link => {
-          link.classList.toggle("active", visibleIds.includes(link.dataset.sitePageTarget));
-        });
+        const firstSection = headings[1];
+        const benefitsSection = headings[3];
+        if (!firstSection || !benefitsSection) return;
 
-        const firstActive = links.find(link => link.classList.contains("active"));
-        keepActiveLinkVisible(firstActive);
+        const firstTop = firstSection.getBoundingClientRect().top + window.scrollY;
+        const benefitsTop = benefitsSection.getBoundingClientRect().top + window.scrollY;
+        const transitionPoint = firstTop + Math.max(0, (benefitsTop - firstTop) * 0.52);
 
-        const lastVisible = headings.indexOf(visible[0].target);
-        if (progress && lastVisible >= 0) progress.style.height = `${((lastVisible + 1) / headings.length) * 100}%`;
+        let activeIndex = 1;
+        if (window.scrollY >= benefitsTop - 80) activeIndex = 3;
+        else if (window.scrollY >= transitionPoint) activeIndex = 2;
+
+        const activeLink = links[activeIndex];
+        links.forEach((link, index) => link.classList.toggle("active", index === activeIndex));
+        keepActiveLinkVisible(activeLink);
+        if (progress) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
         return;
       }
 
@@ -3422,6 +3430,10 @@ async function render() {
   const path = rawPath.replace(/^\/+|\/+$/g, "") || "";
   const routeQuery = new URLSearchParams(rawQuery);
   const eventMatch = path.match(/^events\/(.+)$/);
+
+  if ((path === "viewer/vip" || path === "vip" || path === "vip/how-to" || path === "vip/benefits") && !routeQuery.get("jump")) {
+    window.scrollTo(0, 0);
+  }
 
   if (eventMatch) {
     await renderEventDetail(decodeURIComponent(eventMatch[1]));
