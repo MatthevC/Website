@@ -2271,9 +2271,16 @@ function setupGlobalPageNavigation() {
 
       if (!visible.length) return;
 
-      // VIP ma dwie karty obok siebie (JAK ZOSTAĆ VIP-EM + JAK STRACIĆ VIP-A).
-      // Pokazujemy obie jako aktywne, gdy znajdują się w tym samym miejscu widoku.
+      // VIP: nagłówek strony jest osobną pozycją "Początek".
+      // Nie pokazujemy jednocześnie pierwszej sekcji przy wejściu na stronę.
       if (isVipPage) {
+        if (window.scrollY <= 20) {
+          links.forEach((link, index) => link.classList.toggle("active", index === 0));
+          keepActiveLinkVisible(links[0]);
+          if (progress) progress.style.height = `${(1 / headings.length) * 100}%`;
+          return;
+        }
+
         const visibleIds = visible.map(entry => entry.target.id);
         links.forEach(link => {
           link.classList.toggle("active", visibleIds.includes(link.dataset.sitePageTarget));
