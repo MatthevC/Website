@@ -260,7 +260,7 @@ const pages = {
     title: "NASZ DISCORD / <span>DOŁĄCZ</span>",
     body: discordJoinPage()
   },
-  "discord/roles": {
+  "discord/channels": {
     title: "NASZ DISCORD / <span>OPIS KANAŁÓW</span>",
     body: discordChannelsPage()
   },
