@@ -181,10 +181,6 @@ const pages = {
     title: "REGULAMIN <span>DISCORD</span>",
     body: discordRulesPage()
   },
-  "rules/vip": {
-    title: "REGULAMIN <span>VIP</span>",
-    body: vipRulesRulesPage()
-  },
   "rules/events": {
     title: "REGULAMIN <span>EVENTÓW</span>",
     body: eventRulesPage()
