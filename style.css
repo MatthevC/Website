@@ -8215,3 +8215,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   white-space: nowrap;
   vertical-align: middle;
 }
+
+
+/* Klikalne skróty w opisie kanałów Discord */
+.discord-channel-jump { cursor: pointer; }

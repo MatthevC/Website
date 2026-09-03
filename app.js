@@ -468,10 +468,10 @@ function discordChannelsPage() {
           <h1>GDZIE CO <span>ZNAJDZIESZ?</span></h1>
           <p>Krótka mapa serwera MATT'S WORLD. Sprawdź przeznaczenie kanału, zanim coś wyślesz — dzięki temu łatwiej utrzymać porządek i szybciej znaleźć to, czego szukasz.</p>
           <div class="discord-channels-tags" aria-label="Najważniejsze kategorie">
-            <span>⚙️ KONFIGURACJA</span>
-            <span>💬 TEKSTOWE</span>
-            <span>🔊 GŁOSOWE</span>
-            <span>🎮 GRY</span>
+            <span class="rule-scroll-link discord-channel-jump" data-target="discord-role-twitch">⚙️ KONFIGURACJA</span>
+            <span class="rule-scroll-link discord-channel-jump" data-target="discord-role-text">💬 TEKSTOWE</span>
+            <span class="rule-scroll-link discord-channel-jump" data-target="discord-role-voice">🔊 GŁOSOWE</span>
+            <span class="rule-scroll-link discord-channel-jump" data-target="discord-role-games">🎮 GRY</span>
           </div>
         </header>
 
