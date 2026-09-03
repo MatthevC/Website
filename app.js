@@ -87,12 +87,8 @@ const pages = {
     body: `
       <div class="hero">
         <div class="container hero-grid">
-          <section class="hero-main">
-            <div class="hero-content">
-              <div class="eyebrow">OFICJALNA STRONA SPOŁECZNOŚCI</div>
-              <h1>WITAJ NA<br><span>NASZEJ STRONIE</span></h1>
-              <p>Znajdziesz tutaj wszystko co potrzebujesz przyjacielu. Życzymy miłego dnia!</p>
-            </div>
+          <section class="hero-main hero-main-image" aria-label="Witaj w Matt's World">
+            <img src="pictures/home/matts-world-hero.png" alt="Witaj w Matt's World — gry z widzami, Dead by Daylight i horror game">
           </section>
           <aside class="hero-side">
             <div class="side-card discord-card">

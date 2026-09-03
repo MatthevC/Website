@@ -8223,3 +8223,33 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 
 /* Klikalne skróty w opisie kanałów Discord */
 .discord-channel-jump { cursor: pointer; }
+
+/* ===== START — grafika powitalna na stronie głównej ===== */
+.hero-main.hero-main-image {
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  background: #090909;
+}
+
+.hero-main.hero-main-image::before {
+  display: none;
+}
+
+.hero-main.hero-main-image > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+}
+
+@media (max-width: 640px) {
+  .hero-main.hero-main-image > img {
+    object-fit: contain;
+  }
+}
+/* ===== END — grafika powitalna na stronie głównej ===== */
