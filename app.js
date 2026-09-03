@@ -332,14 +332,14 @@ function generalRulesPage() {
         </div>
 
         <div class="rules-card-grid">
-          <section class="rule-card">
+          <section class="rule-card" id="general-rule-atmosphere">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
             <div class="rule-card-label">ATMOSFERA</div>
             <h2>Baw się dobrze i nie bądź dzbanem</h2>
             <p>Najważniejsza zasada naszej społeczności: bawimy się wspólnie i nie psujemy innym humoru. Szacunek, luz i pozytywna energia zawsze są mile widziane.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="general-rule-lobby">
             <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🎙️</div></div>
             <div class="rule-card-label">LOBBY</div>
             <h2>Gramy tak, aby każdy dobrze się bawił</h2>
@@ -353,7 +353,7 @@ function generalRulesPage() {
             <p>Jeżeli macie między sobą konflikt, nie przenoście go na stream, Discord ani eventy. Wystarczy dać znać, że razem nie gracie, nie gadacie i nie ma tematu.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="general-rule-calm">
             <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🕊️</div></div>
             <div class="rule-card-label">SPOKÓJ</div>
             <h2>Nie szukamy niepotrzebnych konfliktów</h2>
