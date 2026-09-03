@@ -2261,16 +2261,43 @@ function setupGlobalPageNavigation() {
   }));
 
   if ("IntersectionObserver" in window) {
+    const isVipPage = currentPath === "viewer/vip" || currentPath === "vip" || currentPath === "vip/how-to" || currentPath === "vip/benefits";
+
     const observer = new IntersectionObserver(entries => {
       if (tocScrollLock) return;
+
       const visible = entries.filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      const activeIndex = headings.indexOf(visible.target);
-      links.forEach(link => link.classList.toggle("active", link.dataset.sitePageTarget === visible.target.id));
-      keepActiveLinkVisible(links.find(link => link.dataset.sitePageTarget === visible.target.id));
-      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
-    }, { rootMargin: "-22% 0px -62% 0px", threshold: [0, .1, .3, .6] });
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+      if (!visible.length) return;
+
+      // VIP ma dwie karty obok siebie (JAK ZOSTAĆ VIP-EM + JAK STRACIĆ VIP-A).
+      // Pokazujemy obie jako aktywne, gdy znajdują się w tym samym miejscu widoku.
+      if (isVipPage) {
+        const visibleIds = visible.map(entry => entry.target.id);
+        links.forEach(link => {
+          link.classList.toggle("active", visibleIds.includes(link.dataset.sitePageTarget));
+        });
+
+        const firstActive = links.find(link => link.classList.contains("active"));
+        keepActiveLinkVisible(firstActive);
+
+        const lastVisible = headings.indexOf(visible[0].target);
+        if (progress && lastVisible >= 0) progress.style.height = `${((lastVisible + 1) / headings.length) * 100}%`;
+        return;
+      }
+
+      const active = visible[0];
+      const activeIndex = headings.indexOf(active.target);
+
+      links.forEach(link => link.classList.toggle("active", link.dataset.sitePageTarget === active.target.id));
+      keepActiveLinkVisible(links.find(link => link.dataset.sitePageTarget === active.target.id));
+
+      if (progress && activeIndex >= 0) {
+        progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
+      }
+    }, { rootMargin: "-18% 0px -55% 0px", threshold: [0, .1, .3, .6] });
+
     headings.forEach(heading => observer.observe(heading));
   }
 }
