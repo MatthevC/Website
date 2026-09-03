@@ -719,35 +719,35 @@ function eventRulesPage() {
         </div>
 
         <div class="rules-card-grid">
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-account">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">👤</div></div>
             <div class="rule-card-label">UCZCIWY UDZIAŁ</div>
             <h2>Jedna osoba = jedno konto</h2>
             <p>Zakazane jest tworzenie nowych kont widmo oraz multikont w celu zwiększenia swoich szans. Wykrycie takiego działania przez bota może skutkować <strong>stałym wykluczeniem z przyszłych rozdań</strong>.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-reward">
             <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">📦</div></div>
             <div class="rule-card-label">ODBIÓR NAGRODY</div>
             <h2>Masz 2 tygodnie na przesłanie danych</h2>
             <p>Jeżeli wygrasz fizyczną nagrodę, w ciągu <strong>14 dni</strong> prześlij w wiadomości prywatnej: numer paczkomatu, miejscowość oraz numer telefonu lub e-mail potrzebny do odbioru paczki. Brak kontaktu oznacza przekazanie nagrody na kolejne rozdanie.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-fair">
             <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">🎲</div></div>
             <div class="rule-card-label">ZASADY KONKURSU</div>
             <h2>Nie wymuszamy zmian w trakcie zabawy</h2>
             <p>Jeżeli nie odpowiada Ci sposób przeprowadzenia konkretnego konkursu lub rozdania, po prostu nie bierz w nim udziału. Nie wymuszamy zmian i nie psujemy zabawy pozostałym osobom.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="event-rule-shipping">
             <div class="rule-card-top"><div class="rule-card-number">04</div><div class="rule-card-icon" aria-hidden="true">🚚</div></div>
             <div class="rule-card-label">WYSYŁKA</div>
             <h2>Na wysyłkę przewidujemy do 3 miesięcy</h2>
             <p>Nagrody będą wysyłane w ciągu maksymalnie <strong>3 miesięcy</strong>. Prosimy o cierpliwość — uporczywe upominanie się i spamowanie w sprawie nagrody może skutkować <strong>rezygnacją z nagrody</strong>.</p>
           </section>
 
-          <section class="rule-card event-rule-card-wide">
+          <section class="rule-card event-rule-card-wide" id="event-rule-consequences">
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">⚖️</div></div>
             <div class="rule-card-label">KONSEKWENCJE</div>
             <h2>Złamanie zasad = odsunięcie od najbliższego rozdania</h2>
