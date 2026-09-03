@@ -2234,6 +2234,21 @@ function setupGlobalPageNavigation() {
     link.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
 
+  const forceLastSectionAtPageEnd = () => {
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8) {
+      const lastHeading = headings[headings.length - 1];
+      const lastLink = links[links.length - 1];
+      if (lastHeading && lastLink) {
+        links.forEach(item => item.classList.toggle("active", item === lastLink));
+        keepActiveLinkVisible(lastLink);
+        const lastIndex = headings.length - 1;
+        if (progress) progress.style.height = `${((lastIndex + 1) / headings.length) * 100}%`;
+      }
+    }
+  };
+
+  window.addEventListener("scroll", forceLastSectionAtPageEnd, { passive: true });
+
   links.forEach(link => link.addEventListener("click", () => {
     const targetId = link.dataset.sitePageTarget;
     const activeIndex = headings.findIndex(heading => heading.id === targetId);
