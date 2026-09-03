@@ -1682,9 +1682,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 
 /* === REGULAMIN DISCORD / VIP === */
-/* Discord uses the same typography size as General rules */
-.rules-card-grid-compact .rule-card h2 {
-  font-size: inherit;
+/* Discord uses the same typography as General rules */
+.discord-rules-page .rule-card h2 {
+  font-size: 1.22rem;
+}
+
+.discord-rules-page .rules-memory-tags span {
+  font-size: .83rem;
 }
 
 .inline-pill,
