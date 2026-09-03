@@ -1682,13 +1682,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 
 /* === REGULAMIN DISCORD / VIP === */
-/* Discord uses the same typography as General rules */
-.discord-rules-page .rule-card h2 {
-  font-size: 1.22rem;
-}
-
-.discord-rules-page .rules-memory-tags span {
-  font-size: .83rem;
+/* Discord uses the same typography size as General rules */
+.rules-card-grid-compact .rule-card h2 {
+  font-size: inherit;
 }
 
 .inline-pill,
@@ -8150,7 +8146,10 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   border:1px solid rgba(239,43,45,.45);
   border-radius:999px;
   background:rgba(239,43,45,.08);
-  font-weight:700;\n  font-size: .78rem;\n  white-space: nowrap;
+  font-weight:700;
+  font-size: .83rem;
+  letter-spacing: .03em;
+  white-space: nowrap;
   transition:.25s ease;
 }
 .rule-scroll-link:hover {

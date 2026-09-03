@@ -401,7 +401,7 @@ function discordRulesPage() {
           </div>
         </div>
 
-        <div class="rules-card-grid">
+        <div class="rules-card-grid rules-card-grid-compact">
           <section class="rule-card" id="discord-rule-twitch">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📺</div></div>
             <div class="rule-card-label">TWITCH</div>
