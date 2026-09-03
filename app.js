@@ -3782,6 +3782,73 @@ document.addEventListener("click", function(e) {
   setTimeout(()=>target.classList.remove("rule-highlight"), 3000);
 });
 
+
+/* Global sidebar navigation edge fix.
+   Keeps first/last sections reachable and keeps active item visible. */
+(function setupUniversalSidebarEdgeFix(){
+  const groups = [
+    ["[data-dixper-target]","[data-dixper-section]","data-dixperTarget"],
+    ["[data-bingo-target]","[data-bingo-section]","data-bingoTarget"],
+    ["[data-emotes7tv-target]","[data-emotes7tv-section]","data-emotes7tvTarget"],
+    ["[data-recommended-target]","[data-recommended-section]","data-recommendedTarget"],
+    ["[data-site-page-target]","[data-site-page-section], [data-site-page-heading]","data-site-page-target"],
+  ];
+
+  function keepVisible(link){
+    if (!link) return;
+    link.scrollIntoView({block:"nearest", behavior:"smooth"});
+  }
+
+  function bind(){
+    groups.forEach(([linkSelector, sectionSelector, key])=>{
+      const links=[...document.querySelectorAll(linkSelector)];
+      const sections=[...document.querySelectorAll(sectionSelector)];
+      if (!links.length || !sections.length || links[0].dataset.sidebarEdgeFix) return;
+
+      links.forEach(l=>l.dataset.sidebarEdgeFix="1");
+
+      let locked=false;
+      const update=()=>{
+        if(locked) return;
+        const maxScroll=window.innerHeight + window.scrollY >= document.documentElement.scrollHeight-8;
+        let section=null;
+
+        if(window.scrollY <= 8) {
+          section=sections[0];
+        } else if(maxScroll) {
+          section=sections[sections.length-1];
+        } else {
+          section=sections.reduce((best,s)=>{
+            const r=s.getBoundingClientRect();
+            const score=Math.abs(r.top-window.innerHeight*0.35);
+            return !best || score<best.score ? {el:s,score} : best;
+          },null)?.el;
+        }
+
+        if(!section) return;
+        const attr=Object.keys(section.dataset).find(k=>k.toLowerCase().includes("section"));
+        const id=section.id;
+        const link=links.find(l=>{
+          const target=l.dataset[key] || l.dataset[key?.replace(/^data-/,"")];
+          return target===id || l.getAttribute("href")==="#"+id;
+        });
+        if(link){
+          links.forEach(x=>x.classList.toggle("active",x===link));
+          keepVisible(link);
+        }
+      };
+
+      window.addEventListener("scroll", update, {passive:true});
+      window.addEventListener("resize", update);
+      setTimeout(update,200);
+    });
+  }
+
+  new MutationObserver(bind).observe(document.body,{childList:true,subtree:true});
+  bind();
+})();
+
+
 window.addEventListener("hashchange", render);
 
 // Fallback dla przeglądarek/cache: kliknięcie linku Kontakt zawsze uruchamia router.
