@@ -2229,10 +2229,16 @@ function setupGlobalPageNavigation() {
   const links = [...aside.querySelectorAll("[data-site-page-target]")];
   const progress = aside.querySelector("[data-site-page-progress]");
 
+  const keepActiveLinkVisible = (link) => {
+    if (!link) return;
+    link.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
+
   links.forEach(link => link.addEventListener("click", () => {
     const targetId = link.dataset.sitePageTarget;
     const activeIndex = headings.findIndex(heading => heading.id === targetId);
     links.forEach(item => item.classList.toggle("active", item === link));
+    keepActiveLinkVisible(link);
     if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
     tocScrollLock = true;
     setTimeout(() => { tocScrollLock = false; }, 1000);
@@ -2247,6 +2253,7 @@ function setupGlobalPageNavigation() {
       if (!visible) return;
       const activeIndex = headings.indexOf(visible.target);
       links.forEach(link => link.classList.toggle("active", link.dataset.sitePageTarget === visible.target.id));
+      keepActiveLinkVisible(links.find(link => link.dataset.sitePageTarget === visible.target.id));
       if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
     }, { rootMargin: "-22% 0px -62% 0px", threshold: [0, .1, .3, .6] });
     headings.forEach(heading => observer.observe(heading));
