@@ -420,7 +420,7 @@ function discordRulesPage() {
             <p><strong class="stream-pill-inline">🔴 STREAM ON</strong> jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę i nie zakłócamy rozgrywki.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-mentions">
             <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">📣</div></div>
             <div class="rule-card-label">WZMIANKI</div>
             <h2>Nie nadużywamy oznaczeń ról</h2>
@@ -434,7 +434,7 @@ function discordRulesPage() {
             <p>Zabronione jest spamowanie wiadomościami oraz reklamowanie własnych kanałów, serwerów Discord i innych treści bez zgody administracji.</p>
           </section>
 
-          <section class="rule-card">
+          <section class="rule-card" id="discord-rule-materials">
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">🎬</div></div>
             <div class="rule-card-label">ODPOWIEDNIE KANAŁY</div>
             <h2>Każdy materiał trafia w odpowiednie miejsce</h2>
