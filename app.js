@@ -821,17 +821,6 @@ function twitchRulesPage() {
           <p>Podczas transmisji obowiązują zasady naszej społeczności oraz oficjalny regulamin Twitcha. Poniżej znajdziesz najważniejsze zasady, których przestrzegamy.</p>
         </div>
 
-        <div class="rules-memory-strip">
-          <div class="rules-memory-title">W skrócie najważniejsze:</div>
-          <div class="rules-memory-tags">
-            <span>TWITCHA</span>
-            <span>OGÓLNY</span>
-            <span>BEZPIECZEŃSTWO</span>
-            <span>KULTURA</span>
-            <span>ODPOWIEDZIALNOŚĆ</span>
-          </div>
-        </div>
-
         <div class="rules-card-grid twitch-minimal-grid">
           <section class="rule-card">
             <div class="rule-card-top"><div class="rule-card-number">01</div><div class="rule-card-icon" aria-hidden="true">📜</div></div>
