@@ -323,11 +323,11 @@ function generalRulesPage() {
         <div class="rules-memory-strip">
           <div class="rules-memory-title">Zapamiętaj w skrócie:</div>
           <div class="rules-memory-tags">
-            <span>ATMOSFERA</span>
-            <span>LOBBY</span>
-            <span>PRYWATNE SPRAWY</span>
-            <span>SPOKÓJ</span>
-            <span>PLATFORMA</span>
+            <span class="rule-scroll-link" data-target="general-rule-atmosphere">ATMOSFERA</span>
+            <span class="rule-scroll-link" data-target="general-rule-lobby">LOBBY</span>
+            <span class="rule-scroll-link" data-target="general-rule-private">PRYWATNE SPRAWY</span>
+            <span class="rule-scroll-link" data-target="general-rule-calm">SPOKÓJ</span>
+            <span class="rule-scroll-link" data-target="general-rule-twitch">REGULAMIN TWITCHA</span>
           </div>
         </div>
 
@@ -346,7 +346,7 @@ function generalRulesPage() {
             <p>W lobby zachowujemy kulturę. Nie tolerujemy toxic zachowań, wyzwisk, negatywnej atmosfery ani jęczenia w stylu „nie chcę na to grać”. Gramy po to, żeby było przyjemnie wszystkim.</p>
           </section>
 
-          <section class="rule-card" id="discord-rule-mentions">
+          <section class="rule-card" id="general-rule-private">
             <div class="rule-card-top"><div class="rule-card-number">03</div><div class="rule-card-icon" aria-hidden="true">🧩</div></div>
             <div class="rule-card-label">PRYWATNE SPRAWY</div>
             <h2>Prywatne dramy zostawcie dla siebie</h2>
@@ -360,11 +360,11 @@ function generalRulesPage() {
             <p>Omijamy tematy i zachowania, które najczęściej kończą się spięciami. Chcemy budować miejsce do odpoczynku i zabawy.</p>
           </section>
 
-          <section class="rule-card" id="discord-rule-materials">
+          <section class="rule-card" id="general-rule-twitch">
             <div class="rule-card-top"><div class="rule-card-number">05</div><div class="rule-card-icon" aria-hidden="true">📜</div></div>
-            <div class="rule-card-label">PLATFORMA</div>
+            <div class="rule-card-label">REGULAMIN TWITCHA</div>
             <h2>Przestrzegamy regulaminu Twitcha</h2>
-            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p><a class="twitch-rules-button" href="#/rules/twitch">TWITCHA <span>→</span></a>
+            <p>Jesteśmy częścią platformy Twitch, dlatego obowiązują nas także jej zasady. To podstawa bezpiecznego i spokojnego korzystania z transmisji.</p><a class="twitch-rules-button" href="#/rules/twitch">REGULAMIN TWITCHA <span>→</span></a>
           </section>
         </div>
 
