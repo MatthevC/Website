@@ -8155,10 +8155,6 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .rule-card-label strong, .rule-card-label {
   letter-spacing:1px;
 }
-#discord-rule-stream .rule-card-label {
-  background:rgba(239,43,45,.12);
-  color:#fff;
-}
 .rule-highlight {
   animation: ruleGlow 3s ease;
 }
