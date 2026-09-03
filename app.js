@@ -2270,7 +2270,7 @@ function discordJoinPage() {
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
                 DOŁĄCZ DO SERWERA
               </a>
-              <a class="discord-join-secondary" href="#/discord/roles">ZOBACZ OPIS KANAŁÓW →</a>
+              <a class="discord-join-secondary" href="#/discord/channels">ZOBACZ OPIS KANAŁÓW →</a>
             </div>
           </div>
 
@@ -2361,39 +2361,39 @@ function discordJoinPage() {
 
         <div class="discord-app-channel-section">
           <div class="discord-app-category">TWITCH/KONFIGURACJA <b>＋</b></div>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon ticket">🎫</span> konfiguracja-tickets</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon megaphone">📣</span> ogłoszenia</a>
-          <a class="discord-app-channel active live" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon live">●</span> live-alert</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-twitch"><span class="channel-icon rules">☑</span> regulamin</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-twitch"><span class="channel-icon ticket">🎫</span> konfiguracja-tickets</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-twitch"><span class="channel-icon megaphone">📣</span> ogłoszenia</a>
+          <a class="discord-app-channel active live" href="#/discord/channels?jump=discord-role-twitch"><span class="channel-icon live">●</span> live-alert</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-twitch"><span class="channel-icon rules">☑</span> regulamin</a>
         </div>
 
         <div class="discord-app-channel-section">
           <div class="discord-app-category">TEXT CHANNELS <b>＋</b></div>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>＃</span> ogólny</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🎮</span> szukam-do-gry</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🖼</span> zdjęcia-grafika</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🎨</span> wasze-arcydzieła</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🤣</span> memy</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>🎬</span> wideo</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>✂</span> matt-klip</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>📚</span> poradniki</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-text"><span>💸</span> promocje</a>
-          <a class="discord-app-channel vip" href="#/discord/roles?jump=discord-role-roles"><span>◆</span> vip</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>＃</span> ogólny</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>🎮</span> szukam-do-gry</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>🖼</span> zdjęcia-grafika</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>🎨</span> wasze-arcydzieła</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>🤣</span> memy</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>🎬</span> wideo</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>✂</span> matt-klip</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>📚</span> poradniki</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-text"><span>💸</span> promocje</a>
+          <a class="discord-app-channel vip" href="#/discord/channels?jump=discord-role-roles"><span>◆</span> vip</a>
         </div>
 
         <div class="discord-app-channel-section">
           <div class="discord-app-category">VOICE ROOM <b>＋</b></div>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>🔊</span> POCZEKALNIA</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>🔴</span> STREAM ON</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>🌍</span> Global Voice</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-voice"><span>➕</span> Add Voice</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-voice"><span>🔊</span> POCZEKALNIA</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-voice"><span>🔴</span> STREAM ON</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-voice"><span>🌍</span> Global Voice</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-voice"><span>➕</span> Add Voice</a>
         </div>
 
         <div class="discord-app-channel-section compact">
           <div class="discord-app-category">DEAD BY DAYLIGHT <b>＋</b></div>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-games"><span>📰</span> nowości</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-games"><span>🧰</span> kodziki</a>
-          <a class="discord-app-channel" href="#/discord/roles?jump=discord-role-games"><span>📖</span> poradnik</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-games"><span>📰</span> nowości</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-games"><span>🧰</span> kodziki</a>
+          <a class="discord-app-channel" href="#/discord/channels?jump=discord-role-games"><span>📖</span> poradnik</a>
         </div>
       </aside>
 
