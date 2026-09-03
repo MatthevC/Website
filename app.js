@@ -415,7 +415,7 @@ function discordRulesPage() {
 
           <section class="rule-card" id="discord-rule-stream">
             <div class="rule-card-top"><div class="rule-card-number">02</div><div class="rule-card-icon" aria-hidden="true">🎮</div></div>
-            <div class="rule-card-label">STREAM ON</div>
+            <div class="rule-card-label">🔴 STREAM ON</div>
             <h2>To miejsce dla Streamera i jego lobby</h2>
             <p><strong class="stream-pill-inline">🔴 STREAM ON</strong> jest przeznaczony dla aktualnej rozgrywki Streamera oraz jego lobby. Jeżeli nie bierzesz udziału w grze, wybierz inny kanał, aby nie przeszkadzać. Kanał może również służyć do transmisji osób trzecich, dlatego zachowujemy kulturę i nie zakłócamy rozgrywki.</p>
           </section>
