@@ -1,0 +1,61 @@
+MATT'S WORLD — TWITCH: AUTOMATYCZNA KONFIGURACJA STREAMERA
+Wersja strony: v2.4.2
+
+CO ROBI PRZYCISK
+Po wklejeniu np. https://www.twitch.tv/wazzzupek i kliknięciu
+„⚡ AUTOMATYCZNA KONFIGURACJA” formularz próbuje uzupełnić:
+- wyświetlaną nazwę Twitch,
+- krótki publiczny opis kanału,
+- do 5 ostatnio / najczęściej ogrywanych kategorii,
+- link do najlepszego publicznego klipu Twitch.
+
+WAŻNE
+GitHub Pages nie może bezpiecznie przechowywać TWITCH_CLIENT_SECRET.
+Dlatego wywołanie Twitch API odbywa się w Supabase Edge Function.
+Funkcja dodatkowo sprawdza, czy wywołujący użytkownik ma profiles.role = 'admin'.
+
+KROK 1 — UTWÓRZ APLIKACJĘ TWITCH
+1. Zaloguj się do Twitch Developers / Developer Console.
+2. Zarejestruj aplikację.
+3. Skopiuj Client ID.
+4. Utwórz Client Secret i skopiuj go w bezpieczne miejsce.
+
+KROK 2 — DODAJ SEKRETY W SUPABASE
+W Supabase Dashboard dodaj sekrety Edge Functions:
+TWITCH_CLIENT_ID = Twój Client ID
+TWITCH_CLIENT_SECRET = Twój Client Secret
+
+Nie wpisuj Client Secret do config.js, supabase.js ani żadnego pliku publikowanego na GitHubie.
+
+KROK 3 — UTWÓRZ EDGE FUNCTION
+Nazwa funkcji MUSI być dokładnie:
+twitch-streamer-autofill
+
+Kod znajduje się w:
+supabase/functions/twitch-streamer-autofill/index.ts
+
+Możesz utworzyć funkcję w Supabase Dashboard i wkleić zawartość index.ts
+albo wdrożyć ją Supabase CLI.
+
+KROK 4 — TEST
+1. Wgraj pliki strony v2.4.2 na GitHub Pages.
+2. Zaloguj się jako administrator.
+3. POLECANI STREAMERZY -> + DODAJ STREAMERA.
+4. Wklej link Twitch.
+5. Kliknij „⚡ AUTOMATYCZNA KONFIGURACJA”.
+6. Sprawdź uzupełnione pola i kliknij ZAPISZ.
+
+JAK USTALANE SĄ GRY
+Twitch nie udostępnia prostego publicznego endpointu „historia wszystkich ostatnich gier”.
+Funkcja łączy aktualną / ostatnio ustawioną kategorię kanału z kategoriami
+publicznych klipów z ostatnich 90 dni. Dzięki temu lista jest automatyczna,
+ale na kanałach bez klipów może być krótsza.
+
+NAJLEPSZY KLIP
+Pobierany jest najwyżej oglądany publiczny klip zwrócony przez Twitch API.
+Jeżeli kanał nie ma dostępnych klipów, istniejące pole nie jest nadpisywane.
+
+BEZPIECZEŃSTWO
+- przycisk jest dostępny w konfiguratorze administratora,
+- Edge Function ponownie sprawdza rolę admin po stronie serwera,
+- TWITCH_CLIENT_SECRET nigdy nie trafia do przeglądarki ani na GitHuba.

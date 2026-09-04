@@ -257,6 +257,62 @@
     });
   }
 
+  function parseTwitchUrl(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return null;
+    try {
+      const normalized = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, '')}`;
+      return new URL(normalized);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function twitchLoginFromUrl(value) {
+    const url = parseTwitchUrl(value);
+    if (!url) return '';
+    const host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+    if (host !== 'twitch.tv') return '';
+    const parts = url.pathname.split('/').filter(Boolean);
+    if (!parts.length) return '';
+    let login = '';
+    try { login = decodeURIComponent(parts[0]).replace(/^@/, '').trim(); } catch (_) { login = parts[0].trim(); }
+    const reserved = new Set(['directory','downloads','jobs','p','settings','subscriptions','videos','clip','clips','inventory','wallet','search']);
+    if (!login || reserved.has(login.toLowerCase()) || !/^[a-z0-9_]{1,25}$/i.test(login)) return '';
+    return login.toLowerCase();
+  }
+
+  function twitchClipSlugFromUrl(value) {
+    const url = parseTwitchUrl(value);
+    if (!url) return '';
+    const host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/^m\./, '');
+    const queryClip = String(url.searchParams.get('clip') || '').trim();
+    if (queryClip && (host === 'clips.twitch.tv' || host === 'twitch.tv')) return queryClip;
+
+    const parts = url.pathname.split('/').filter(Boolean);
+    if (host === 'clips.twitch.tv') {
+      if (!parts.length) return '';
+      if (parts[0].toLowerCase() === 'embed') return queryClip;
+      try { return decodeURIComponent(parts[0]).trim(); } catch (_) { return parts[0].trim(); }
+    }
+    if (host === 'twitch.tv') {
+      const clipIndex = parts.findIndex(part => part.toLowerCase() === 'clip');
+      if (clipIndex >= 0 && parts[clipIndex + 1]) {
+        try { return decodeURIComponent(parts[clipIndex + 1]).trim(); } catch (_) { return parts[clipIndex + 1].trim(); }
+      }
+    }
+    return '';
+  }
+
+  function normalizeStreamer(item = {}) {
+    const streamer = { ...item };
+    if (!streamer.channelUrl && streamer.login) streamer.channelUrl = `https://www.twitch.tv/${streamer.login}`;
+    streamer.login = twitchLoginFromUrl(streamer.channelUrl) || String(streamer.login || '').trim().toLowerCase();
+    if (!streamer.clipUrl && streamer.clipSlug) streamer.clipUrl = `https://clips.twitch.tv/${streamer.clipSlug}`;
+    streamer.clipSlug = twitchClipSlugFromUrl(streamer.clipUrl) || String(streamer.clipSlug || '').trim();
+    return streamer;
+  }
+
   function gameBoxArt(name) {
     const map = {
       'Dead by Daylight': 'https://static-cdn.jtvnw.net/ttv-boxart/Dead%20by%20Daylight-144x192.jpg',
@@ -279,7 +335,8 @@
     const toc = document.querySelector('.recommended-toc');
     if (!grid || !toc || !Array.isArray(items)) return;
     const clipParent = location.hostname || 'matthevc.github.io';
-    grid.innerHTML = items.map((s, index) => `
+    const streamers = items.map(normalizeStreamer);
+    grid.innerHTML = streamers.map((s, index) => `
       <article class="recommended-card" id="streamer-${escapeHtml(s.login)}" data-recommended-section data-streamer-login="${escapeHtml(s.login)}" data-streamer-name="${escapeHtml(s.displayName || s.login)}">
         <div class="recommended-head">
           <a class="recommended-avatar-link" href="${escapeHtml(s.channelUrl || '#')}" target="_blank" rel="noopener" aria-label="Otwórz kanał Twitch ${escapeHtml(s.displayName || s.login)}">
@@ -295,7 +352,7 @@
         </div>
       </article>`).join('');
     const title = toc.querySelector('.recommended-toc-title')?.outerHTML || '<div class="recommended-toc-title">TWÓRCY</div>';
-    toc.innerHTML = `${title}<div class="recommended-toc-track" aria-hidden="true"><span data-recommended-progress></span></div>${items.map((s,index)=>`<button type="button" class="recommended-toc-link${index===0?' active':''}" data-recommended-target="streamer-${escapeHtml(s.login)}"><span>${String(index+1).padStart(2,'0')}</span><strong>${escapeHtml(s.displayName || s.login)}</strong></button>`).join('')}`;
+    toc.innerHTML = `${title}<div class="recommended-toc-track" aria-hidden="true"><span data-recommended-progress></span></div>${streamers.map((s,index)=>`<button type="button" class="recommended-toc-link${index===0?' active':''}" data-recommended-target="streamer-${escapeHtml(s.login)}"><span>${String(index+1).padStart(2,'0')}</span><strong>${escapeHtml(s.displayName || s.login)}</strong></button>`).join('')}`;
   }
 
   function renderModerators(items) {
@@ -371,6 +428,7 @@
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics,
+    twitchLoginFromUrl, twitchClipSlugFromUrl, normalizeStreamer,
     get loadError() { return loadError; }
   };
 })();

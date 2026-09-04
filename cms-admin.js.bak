@@ -377,7 +377,7 @@
     return obj;
   }
 
-  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady }) {
+  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave }) {
     let items = clone(window.MattCMS?.get(key, null) || fallback() || []);
     if (typeof normalizeItem === 'function') items = items.map(item => normalizeItem(clone(item)));
     const esc = window.MattCMS.escape;
@@ -421,10 +421,6 @@
       openModal(index >= 0 ? `EDYTUJ — ${title}` : `DODAJ — ${title}`, `<form id="cms-item-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-item-form', modal);
       bindImageFileFields(form, fields);
-      if (typeof onFormReady === 'function') {
-        try { onFormReady(form, { current: clone(current), index, items: clone(items), drawList }); }
-        catch (error) { console.error('[MATT CMS] Błąd inicjalizacji formularza:', error); }
-      }
       $('[data-back]', form).addEventListener('click', drawList);
       form.addEventListener('submit', async e => {
         e.preventDefault();
@@ -757,96 +753,10 @@
 
   function openStreamersManager() {
     const normalizeStreamer = item => window.MattCMS?.normalizeStreamer ? window.MattCMS.normalizeStreamer(item) : item;
-
-    const setFormValue = (form, name, value) => {
-      const input = form.elements?.[name];
-      if (!input || value == null) return;
-      input.value = Array.isArray(value) ? value.join(', ') : String(value);
-      input.dispatchEvent(new Event('input', { bubbles:true }));
-      input.dispatchEvent(new Event('change', { bubbles:true }));
-    };
-
-    const bindTwitchAutofill = form => {
-      const channelField = form.elements?.channelUrl?.closest('.cms-field');
-      if (!channelField || channelField.querySelector('[data-twitch-autofill]')) return;
-
-      const box = document.createElement('div');
-      box.className = 'cms-twitch-autofill';
-      box.innerHTML = `<button type="button" class="cms-twitch-autofill-btn" data-twitch-autofill>⚡ AUTOMATYCZNA KONFIGURACJA</button>
-        <small data-twitch-autofill-status>Wklej link do kanału Twitch i kliknij przycisk. Dane zostaną pobrane z Twitcha.</small>`;
-      channelField.insertAdjacentElement('afterend', box);
-
-      const button = $('[data-twitch-autofill]', box);
-      const status = $('[data-twitch-autofill-status]', box);
-
-      button.addEventListener('click', async () => {
-        const channelUrl = String(form.elements?.channelUrl?.value || '').trim();
-        const login = window.MattCMS?.twitchLoginFromUrl?.(channelUrl) || '';
-        if (!login) {
-          notify('Najpierw wklej poprawny link do kanału Twitch, np. https://www.twitch.tv/wazzzupek', 'error');
-          form.elements?.channelUrl?.focus();
-          return;
-        }
-        if (!window.supabaseClient?.functions) {
-          notify('Brak połączenia z funkcjami Supabase.', 'error');
-          return;
-        }
-
-        const originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = '⚡ POBIERANIE DANYCH…';
-        status.textContent = 'Łączenie z Twitch API…';
-        status.classList.remove('is-error','is-ok');
-
-        try {
-          const { data, error } = await window.supabaseClient.functions.invoke('twitch-streamer-autofill', {
-            body: { channelUrl }
-          });
-          if (error) {
-            let message = error.message || 'Nie udało się pobrać danych z Twitcha.';
-            try {
-              const context = error.context;
-              if (context && typeof context.json === 'function') {
-                const payload = await context.json();
-                if (payload?.error) message = payload.error;
-              }
-            } catch (_) {}
-            throw new Error(message);
-          }
-          if (!data || data.ok === false) throw new Error(data?.error || 'Twitch nie zwrócił danych kanału.');
-
-          if (data.displayName) setFormValue(form, 'displayName', data.displayName);
-          if (data.channelUrl) setFormValue(form, 'channelUrl', data.channelUrl);
-          if (data.tagline) setFormValue(form, 'tagline', data.tagline);
-          if (Array.isArray(data.games) && data.games.length) setFormValue(form, 'games', data.games);
-          if (data.clipUrl) setFormValue(form, 'clipUrl', data.clipUrl);
-
-          const filled = [];
-          if (data.displayName) filled.push('nazwa');
-          if (data.tagline) filled.push('opis');
-          if (data.games?.length) filled.push(`${data.games.length} ${data.games.length === 1 ? 'gra' : 'gry'}`);
-          if (data.clipUrl) filled.push('najlepszy klip');
-          status.textContent = filled.length
-            ? `Gotowe: ${filled.join(', ')}.${data.warning ? ` ${data.warning}` : ''}`
-            : (data.warning || 'Kanał został znaleziony, ale Twitch nie zwrócił dodatkowych danych.');
-          status.classList.add('is-ok');
-          notify('Automatyczna konfiguracja Twitch została uzupełniona. Sprawdź dane i kliknij ZAPISZ.');
-        } catch (error) {
-          status.textContent = `Nie udało się pobrać danych: ${error.message}`;
-          status.classList.add('is-error');
-          notify(`Automatyczna konfiguracja: ${error.message}`, 'error');
-        } finally {
-          button.disabled = false;
-          button.textContent = originalText;
-        }
-      });
-    };
-
     openArrayManager({
       key:'streamers', title:'POLECANI STREAMERZY', singular:'streamera', fallback:extractStreamers,
       label:item=>item.displayName || item.login,
       normalizeItem:normalizeStreamer,
-      onFormReady:bindTwitchAutofill,
       beforeSave:value=>{
         const login = window.MattCMS?.twitchLoginFromUrl?.(value.channelUrl) || '';
         if (!login) {
@@ -861,9 +771,9 @@
       fields:[
         {name:'displayName',label:'Wyświetlana nazwa',required:true,placeholder:'np. Wazzzupek'},
         {name:'channelUrl',label:'Link do kanału Twitch',type:'url',required:true,placeholder:'https://www.twitch.tv/wazzzupek',help:'Login Twitch zostanie automatycznie odczytany z tego linku.'},
-        {name:'clipUrl',label:'Link do klipu Twitch',type:'url',required:true,placeholder:'https://clips.twitch.tv/...',help:'Możesz wkleić go ręcznie albo użyć Automatycznej konfiguracji.'},
-        {name:'tagline',label:'Krótki opis',type:'textarea',help:'Automatyczna konfiguracja pobiera publiczny opis kanału Twitch.'},
-        {name:'games',label:'Ostatnio / najczęściej ogrywane gry',type:'csv',help:'Automatyczna konfiguracja ustala je na podstawie aktualnej kategorii kanału i ostatnich klipów.'}
+        {name:'clipUrl',label:'Link do klipu Twitch',type:'url',required:true,placeholder:'https://clips.twitch.tv/...',help:'ID / slug klipu zostanie automatycznie wykryty z podanego linku.'},
+        {name:'tagline',label:'Krótki opis',type:'textarea'},
+        {name:'games',label:'Najczęściej ogrywane gry',type:'csv'}
       ]
     });
   }
