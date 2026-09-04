@@ -144,3 +144,6 @@ end;
 $$;
 revoke all on function public.matt_restore_backup(bigint) from public;
 grant execute on function public.matt_restore_backup(bigint) to authenticated;
+
+-- Odśwież cache schematu API Supabase/PostgREST od razu po instalacji funkcji.
+NOTIFY pgrst, 'reload schema';

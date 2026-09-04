@@ -80,3 +80,6 @@ SUPABASE BACKUP = treści CMS i eventy
 PRZYSZŁE KONTA MODERATORÓW
 --------------------------
 Obecna wersja celowo przyznaje wszystkie funkcje edycji wyłącznie roli admin. W przyszłości można dodać osobną tabelę uprawnień i nadać moderatorom dostęp tylko do wybranych konfiguratorów.
+
+
+V2.1: Grafiki eventów dostają czytelne nazwy (np. event-turniej-2026-09-04-1031.jpg), a formularz nie pokazuje długich UUID. Jeśli pojawi się komunikat o matt_create_backup/schema cache, uruchom CMS_UPDATE_BACKUP.sql i odśwież stronę.

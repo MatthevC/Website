@@ -5,6 +5,40 @@ async function mattEventSafetyBackup(label){
   return window.MattCMS.createBackup(label);
 }
 
+// Czytelne nazwy grafik zamiast długich nazw/UUID.
+// Nazwa w Storage jest zrozumiała, a w formularzu pokazujemy prostą etykietę.
+function mattSafeSlug(value){
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'')
+    .slice(0,48) || 'event';
+}
+
+function mattFileExtension(file){
+  const name=String(file?.name || '');
+  const match=name.match(/\.([a-zA-Z0-9]{1,8})$/);
+  if(match) return match[1].toLowerCase();
+  const mime=String(file?.type || '').split('/')[1] || 'jpg';
+  return mime.replace(/[^a-z0-9]/gi,'').toLowerCase() || 'jpg';
+}
+
+function mattEventImageStorageName(file,title,dateValue){
+  const titleSlug=mattSafeSlug(title);
+  const date=String(dateValue || new Date().toISOString().slice(0,10));
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  return `event-${titleSlug}-${date}-${hh}${mm}.${mattFileExtension(file)}`;
+}
+
+function mattFriendlyImageLabel(file,title){
+  if(!file) return 'Nie wybrano pliku';
+  const cleanTitle=String(title || '').trim() || 'event';
+  return `Grafika: ${cleanTitle}.${mattFileExtension(file)}`;
+}
+
 (() => {
 
 let isAdmin = false;
@@ -104,7 +138,11 @@ function initEvents(){
    let image="";
 
    if(file){
-     const name=Date.now()+"_"+file.name;
+     const name=mattEventImageStorageName(
+       file,
+       document.getElementById("eventTitle")?.value,
+       document.getElementById("eventStart")?.value
+     );
      const upload=await supabaseClient.storage.from("events").upload(name,file);
 
      if(upload.error){
@@ -333,7 +371,11 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  let image;
  const file=editEventImage.files[0];
  if(file){
-  const name=Date.now()+"_"+file.name;
+  const name=mattEventImageStorageName(
+    file,
+    document.getElementById("editEventTitle")?.value,
+    document.getElementById("editEventStart")?.value
+  );
   await supabaseClient.storage.from("events").upload(name,file);
   image=supabaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
  }
@@ -368,7 +410,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const img=document.getElementById("editEventPreviewImg");
    const box=document.getElementById("editEventImagePreview");
    if(!file) return;
-   if(name) name.textContent=file.name;
+   if(name) name.textContent=mattFriendlyImageLabel(file, document.getElementById("editEventTitle")?.value);
    const reader=new FileReader();
    reader.onload=e=>{
     if(img){img.src=e.target.result; box.style.display="block"; applyEditPreviewFit();}
@@ -399,7 +441,7 @@ document.addEventListener("DOMContentLoaded",()=>{
    const preview=document.getElementById("eventImagePreview");
    const img=preview?.querySelector("img");
    if(!file){ if(name) name.textContent="Nie wybrano pliku"; if(preview) preview.style.display="none"; return; }
-   if(name) name.textContent=file.name;
+   if(name) name.textContent=mattFriendlyImageLabel(file, document.getElementById("eventTitle")?.value);
    const reader=new FileReader();
    reader.onload=e=>{if(img){img.src=e.target.result;preview.style.display="block";}};
    reader.readAsDataURL(file);

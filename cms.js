@@ -53,7 +53,13 @@
   async function createBackup(label = 'Backup ręczny') {
     requireAdmin();
     const { data, error } = await supabaseClient.rpc('matt_create_backup', { p_label: label });
-    if (error) throw new Error(`Nie udało się utworzyć backupu: ${error.message}`);
+    if (error) {
+      const raw = String(error.message || 'Nieznany błąd');
+      if (raw.includes('matt_create_backup') || raw.includes('schema cache') || error.code === 'PGRST202') {
+        throw new Error('Brakuje funkcji backupu w Supabase. Uruchom plik CMS_UPDATE_BACKUP.sql w SQL Editorze, a potem odśwież stronę.');
+      }
+      throw new Error(`Nie udało się utworzyć backupu: ${raw}`);
+    }
     return data;
   }
 
