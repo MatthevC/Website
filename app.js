@@ -1984,6 +1984,8 @@ const COMMANDS_DATA = [
   { command: "!skip", description: "Pomija utwór.", category: "Bot muzyczny", roles: ["moderator"], subcategory: "Bot muzyczny — moderacja" }
 ];
 
+window.MATT_COMMANDS_DEFAULT = COMMANDS_DATA;
+
 function roleBadge(role) {
   if (role === "vip") return `<span class="command-role-badge command-role-vip" title="Tylko VIP"><img src="https://static-cdn.jtvnw.net/badges/v1/b817aba4-fad8-49e2-b88a-7cc744dfa6ec/2" alt="VIP"></span>`;
   if (role === "moderator") return `<span class="command-role-badge command-role-mod" title="Tylko moderacja"><img src="https://yt3.googleusercontent.com/O2UEt_sd23xo1ASKkGSnAGHyShAR6Xb5cj4z26H05fw8ohw5ie3Dkh_pC7iqSck9uR-2iORgzA=s900-c-k-c0x00ffffff-no-rj" alt="Moderacja"></span>`;
@@ -2016,7 +2018,8 @@ function setupCommandsPage() {
     filter.checked = Boolean(defaults[filter.value === "moderator" ? "mod" : filter.value]);
   });
 
-  const categories = ["Kolejka do lobby", "Ogólne", "Bot muzyczny", "Moderacja"];
+  const commandsData = window.MattCMS?.get("commands", COMMANDS_DATA) || COMMANDS_DATA;
+  const categories = [...new Set(commandsData.map(item => item.category).filter(Boolean))];
 
   function renderCommands() {
     const selected = filters.filter(f => f.checked).map(f => f.value);
@@ -2033,7 +2036,7 @@ function setupCommandsPage() {
     let total = 0;
 
     categories.forEach(category => {
-      const items = COMMANDS_DATA.filter(c => {
+      const items = commandsData.filter(c => {
         if (c.category !== category) return false;
 
         // Filtr działa według rodzaju komendy:
@@ -2845,7 +2848,8 @@ const FALLBACK_EVENTS = [
     excerpt: "Ostatni rozegrany przez nas event — Crossowa Niedziela 2vs8, która odbyła się 16 sierpnia 2026 roku.",
     content: "CROSSOWA NIEDZIELA 2vs8 osbędzie się 16 sierpnia 2026 roku. Wymagana gra na Steam oraz miła atmosfera, bez toksyczności.",
     image: "pictures/events/crossowa-niedziela-2vs8.png",
-    endDate: "2026-08-16"
+    endDate: "2026-08-16",
+    fallback: true
   }
 ];
 
@@ -2890,7 +2894,7 @@ async function loadEvents() {
 
     console.log("[MATT'S WORLD] Pobrano eventów z Supabase:", events.length);
 
-    return events.length ? events : FALLBACK_EVENTS;
+    return events;
 
   } catch (error) {
     console.error("[MATT'S WORLD] Nie udało się pobrać eventów z Supabase:", error);
@@ -2922,7 +2926,7 @@ function eventCard(event) {
         <p>${escapeHtml(event.excerpt)}</p>
         <div class="event-actions">
           <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>
-          ${window.currentUserIsAdmin === true ? `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}">✎ EDYTUJ POST</button>` : ""}
+          ${event.fallback ? "" : `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}" ${window.currentUserIsAdmin === true ? "" : "hidden"}>✎ EDYTUJ POST</button><button class="delete-event-btn" data-id="${escapeHtml(event.id)}" data-title="${escapeHtml(event.title)}" ${window.currentUserIsAdmin === true ? "" : "hidden"}>🗑 USUŃ</button>`}
         </div>
 
       </div>
@@ -3216,7 +3220,7 @@ async function renderEventDetail(id) {
           <span>OPUBLIKOWANO</span>
           ${formatDate(event.publishDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.publishDate)}</div>
         </div>
-        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1></div>
+        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1><div class="detailEditEventSlot" data-event-id="${escapeHtml(event.id)}" data-event-title="${escapeHtml(event.title)}"></div></div>
         
         ${event.mainImage ? `<div class="event-detail-image"><img style="object-fit:${event.mainImageFit || "contain"};object-position:center" src="${escapeHtml(event.mainImage)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
@@ -3421,6 +3425,7 @@ function errorMonkeySceneSvg() {
 }
 
 async function render() {
+  if (window.MattCMS?.ready) await window.MattCMS.ready;
   const raw = location.hash.replace(/^#\/?/, "");
   const [rawPath, rawQuery = ""] = raw.split("?");
   const path = rawPath.replace(/^\/+|\/+$/g, "") || "";
@@ -3433,6 +3438,7 @@ async function render() {
 
   if (eventMatch) {
     await renderEventDetail(decodeURIComponent(eventMatch[1]));
+    if (window.MattCMS) window.MattCMS.applyRoute(path);
     updateLinks();
     setupContactForm();
     setupImagePreview();
@@ -3487,6 +3493,7 @@ async function render() {
       </div>
     `;
     await renderEvents();
+    if (window.MattCMS) window.MattCMS.applyRoute(path);
     updateEventAdminButton(window.currentUserIsAdmin === true);
     updateLinks();
     setupContactForm();
@@ -3528,10 +3535,13 @@ async function render() {
         <button class="home-event-arrow left" aria-label="Poprzedni event">‹</button>
         <button class="home-event-arrow right" aria-label="Następny event">›</button>`;
       setupHomeEventSlider(homeEvents);
+      if (typeof window.updateEditButtons === "function") window.updateEditButtons();
     }
   } else {
     app.innerHTML = page.body;
   }
+
+  if (window.MattCMS) window.MattCMS.applyRoute(path || "home");
 
   document.title = `${SITE_CONFIG.siteName} — ${stripHtml(page.title)}`;
   updateLinks();

@@ -1,0 +1,494 @@
+(() => {
+  let inlineEditing = false;
+  let inlineSnapshot = new Map();
+  let toolbar = null;
+  let modal = null;
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const clone = value => JSON.parse(JSON.stringify(value));
+
+  function currentRoute() {
+    const raw = location.hash.replace(/^#\/?/, '').split('?')[0].replace(/^\/+|\/+$/g, '');
+    return raw || 'home';
+  }
+
+  function slugify(value) {
+    return String(value || 'kategoria').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `kategoria-${Date.now()}`;
+  }
+
+  function isAdmin() { return window.currentUserIsAdmin === true; }
+
+  function formatBackupDate(value) {
+    try { return new Intl.DateTimeFormat('pl-PL', { dateStyle:'medium', timeStyle:'short' }).format(new Date(value)); }
+    catch (_) { return String(value || ''); }
+  }
+
+  function downloadJson(filename, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function resetCmsKey(key, label = 'tę sekcję') {
+    if (!isAdmin()) return;
+    if (window.MattCMS?.get(key, null) == null) {
+      notify('Ta sekcja już korzysta z treści bazowej z GitHuba.');
+      return;
+    }
+    if (!confirm(`Przywrócić ${label} do wersji zapisanej w plikach na GitHubie? Obecna wersja CMS zostanie zachowana w automatycznym backupie.`)) return;
+    try {
+      await window.MattCMS.remove(key);
+      notify('Przywrócono wersję bazową z GitHuba.');
+      await rerender();
+    } catch (error) { notify(`Nie udało się przywrócić: ${error.message}`, 'error'); }
+  }
+
+  function ensureModal() {
+    if (modal) return modal;
+    modal = document.createElement('div');
+    modal.className = 'cms-modal-backdrop';
+    modal.innerHTML = `<div class="cms-modal" role="dialog" aria-modal="true">
+      <div class="cms-modal-head"><div><small>PANEL ADMINISTRATORA</small><h2 id="cms-modal-title">EDYCJA</h2></div><button type="button" class="cms-modal-close" aria-label="Zamknij">×</button></div>
+      <div class="cms-modal-body" id="cms-modal-body"></div>
+    </div>`;
+    document.body.appendChild(modal);
+    $('.cms-modal-close', modal).addEventListener('click', closeModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    return modal;
+  }
+
+  function openModal(title, html) {
+    ensureModal();
+    $('#cms-modal-title', modal).textContent = title;
+    $('#cms-modal-body', modal).innerHTML = html;
+    modal.classList.add('active');
+  }
+
+  function closeModal() { modal?.classList.remove('active'); }
+
+  function notify(message, type = 'ok') {
+    let el = document.getElementById('cms-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'cms-toast';
+      document.body.appendChild(el);
+    }
+    el.className = `cms-toast ${type}`;
+    el.textContent = message;
+    requestAnimationFrame(() => el.classList.add('show'));
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  async function rerender() {
+    closeModal();
+    if (typeof window.render === 'function') await window.render();
+    else location.reload();
+    refreshToolbar();
+  }
+
+  function configForRoute(route) {
+    if (route === 'recommended') return { label: 'STREAMERZY', action: openStreamersManager };
+    if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager };
+    if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager };
+    if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager };
+    if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager };
+    if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager };
+    return null;
+  }
+
+  function ensureToolbar() {
+    if (toolbar) return toolbar;
+    toolbar = document.createElement('div');
+    toolbar.id = 'cms-admin-toolbar';
+    toolbar.innerHTML = `
+      <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
+      <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
+      <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
+      <button type="button" data-cms-action="reset-page">↶ Z GITHUBA</button>
+      <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
+      <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
+      <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
+    document.body.appendChild(toolbar);
+    toolbar.addEventListener('click', e => {
+      const action = e.target.closest('[data-cms-action]')?.dataset.cmsAction;
+      if (action === 'inline') startInlineEdit();
+      if (action === 'save') saveInlineEdit();
+      if (action === 'cancel') cancelInlineEdit();
+      if (action === 'config') configForRoute(currentRoute())?.action();
+      if (action === 'reset-page') resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie');
+      if (action === 'backups') openBackupsManager();
+    });
+    return toolbar;
+  }
+
+  function refreshToolbar() {
+    if (!isAdmin()) {
+      toolbar?.remove(); toolbar = null;
+      return;
+    }
+    ensureToolbar();
+    const config = configForRoute(currentRoute());
+    const configBtn = $('[data-cms-action="config"]', toolbar);
+    configBtn.hidden = !config || inlineEditing;
+    if (config) configBtn.textContent = `⚙ ${config.label}`;
+    $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing;
+    $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing;
+    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing;
+    $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
+    $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
+  }
+
+  function startInlineEdit() {
+    if (!isAdmin() || inlineEditing) return;
+    const items = window.MattCMS?.decorateEditable(currentRoute()) || [];
+    inlineSnapshot = new Map(items.map(el => [el, el.innerHTML]));
+    items.forEach(el => {
+      el.contentEditable = 'true';
+      el.spellcheck = true;
+      el.classList.add('cms-inline-editable');
+    });
+    inlineEditing = true;
+    document.body.classList.add('cms-inline-mode');
+    refreshToolbar();
+    notify(`Tryb edycji: ${items.length} pól tekstowych. Kliknij tekst i wpisz nową treść.`);
+  }
+
+  async function saveInlineEdit() {
+    if (!inlineEditing || !isAdmin()) return;
+    try {
+      const key = `page:${currentRoute()}`;
+      const data = {};
+      (window.MattCMS?.editableElements() || []).forEach(el => {
+        if (!el.dataset.cmsTextId) return;
+        const value = window.MattCMS.sanitizeHtml(el.innerHTML);
+        const base = window.MattCMS.sanitizeHtml(window.MattCMS.baseHtml(el));
+        // Do Supabase trafiają wyłącznie realne nadpisania. Reszta nadal pochodzi z GitHuba.
+        if (value !== base) data[el.dataset.cmsTextId] = value;
+      });
+      if (Object.keys(data).length) await window.MattCMS.save(key, data);
+      else if (window.MattCMS.get(key, null) != null) await window.MattCMS.remove(key);
+      finishInlineEdit();
+      notify('Zmiany zapisane. Nieedytowane teksty nadal są pobierane z plików GitHuba.');
+    } catch (error) {
+      notify(`Nie udało się zapisać: ${error.message}`, 'error');
+    }
+  }
+
+  function cancelInlineEdit() {
+    inlineSnapshot.forEach((html, el) => { if (el.isConnected) el.innerHTML = html; });
+    finishInlineEdit();
+  }
+
+  function finishInlineEdit() {
+    inlineSnapshot.forEach((_, el) => {
+      if (!el.isConnected) return;
+      el.contentEditable = 'false';
+      el.classList.remove('cms-inline-editable');
+    });
+    inlineSnapshot.clear();
+    inlineEditing = false;
+    document.body.classList.remove('cms-inline-mode');
+    refreshToolbar();
+  }
+
+  function extractStreamers() {
+    return $$('.recommended-card').map(card => {
+      const iframe = $('iframe', card);
+      let clipSlug = '';
+      try { clipSlug = new URL(iframe?.src || '', location.href).searchParams.get('clip') || ''; } catch (_) {}
+      return {
+        login: card.dataset.streamerLogin || '',
+        displayName: card.dataset.streamerName || $('[data-streamer-name-target]', card)?.textContent.trim() || '',
+        channelUrl: $('.recommended-avatar-link', card)?.href || '',
+        clipSlug,
+        clipUrl: $$('.recommended-actions a', card)[1]?.href || '',
+        tagline: $('.recommended-meta p', card)?.textContent.trim() || '',
+        description: '',
+        games: $$('.recommended-game-chip strong', card).map(el => el.textContent.trim())
+      };
+    });
+  }
+
+  function extractModerators() {
+    return $$('.moderator-card').map(card => ({
+      name: $('.moderator-name-row h2', card)?.textContent.trim() || '',
+      role: $('.moderator-role', card)?.textContent.trim() || '',
+      description: $('.moderator-card-body > p', card)?.textContent.trim() || '',
+      twitch: $('.moderator-twitch', card)?.href || '',
+      discord: $('.moderator-discord strong', card)?.textContent.trim() || '',
+      image: $('.moderator-photo', card)?.getAttribute('src') || ''
+    }));
+  }
+
+  function extractBenefits() {
+    return $$('.moderator-benefit-card').map(card => ({
+      title: $('h3', card)?.textContent.trim() || '',
+      description: $('p', card)?.textContent.trim() || ''
+    }));
+  }
+
+  function extractTopics() {
+    return $$('#contact-topic option').filter(o => o.value).map(o => o.textContent.trim());
+  }
+
+  function extractDiscordCategories() {
+    return $$('.discord-channel-section').map((section,index) => ({
+      id: section.id?.replace(/^discord-(?:role|cms)-/, '') || `category-${index+1}`,
+      icon: $$('.discord-channels-tags .discord-channel-jump')[index]?.textContent.trim().split(/\s+/)[0] || '📁',
+      title: $('.discord-section-heading h2', section)?.textContent.trim() || `KATEGORIA ${index+1}`,
+      description: $('.discord-section-heading > p', section)?.textContent.trim() || '',
+      channels: $$('.discord-channel-row', section).map(row => ({
+        icon: $('.discord-channel-symbol', row)?.textContent.trim() || '#',
+        name: $('.discord-channel-name strong', row)?.textContent.trim() || '',
+        description: $('p', row)?.textContent.trim() || '',
+        featured: row.classList.contains('featured')
+      }))
+    }));
+  }
+
+  function fieldHtml(field, value) {
+    const esc = window.MattCMS?.escape || (v => String(v || ''));
+    const val = value ?? '';
+    if (field.type === 'textarea') return `<label class="cms-field"><span>${esc(field.label)}</span><textarea name="${esc(field.name)}" ${field.required?'required':''}>${esc(val)}</textarea></label>`;
+    if (field.type === 'csv') return `<label class="cms-field"><span>${esc(field.label)}</span><input name="${esc(field.name)}" value="${esc(Array.isArray(val)?val.join(', '):val)}" placeholder="oddziel przecinkami"></label>`;
+    if (field.type === 'roles') {
+      const roles = Array.isArray(val) ? val : [];
+      return `<fieldset class="cms-field cms-roles"><legend>${esc(field.label)}</legend>${[['viewer','WIDZ'],['vip','VIP'],['moderator','MODERACJA']].map(([v,l])=>`<label><input type="checkbox" name="roles" value="${v}" ${roles.includes(v)?'checked':''}> ${l}</label>`).join('')}</fieldset>`;
+    }
+    if (field.type === 'checkbox') return `<label class="cms-field cms-check"><input type="checkbox" name="${esc(field.name)}" ${val?'checked':''}> <span>${esc(field.label)}</span></label>`;
+    return `<label class="cms-field"><span>${esc(field.label)}</span><input type="${field.type || 'text'}" name="${esc(field.name)}" value="${esc(val)}" ${field.required?'required':''}></label>`;
+  }
+
+  function parseFields(form, fields) {
+    const obj = {};
+    fields.forEach(field => {
+      if (field.type === 'roles') obj[field.name] = $$('input[name="roles"]:checked', form).map(i => i.value);
+      else if (field.type === 'checkbox') obj[field.name] = Boolean(form.elements[field.name]?.checked);
+      else if (field.type === 'csv') obj[field.name] = String(form.elements[field.name]?.value || '').split(',').map(v => v.trim()).filter(Boolean);
+      else obj[field.name] = String(form.elements[field.name]?.value || '').trim();
+    });
+    return obj;
+  }
+
+  function openArrayManager({ key, title, singular, fields, fallback, label }) {
+    let items = clone(window.MattCMS?.get(key, null) || fallback() || []);
+    const esc = window.MattCMS.escape;
+
+    const drawList = () => {
+      openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Supabase przechowuje tylko nadpisanie tej sekcji. Przywrócenie usuwa nadpisanie i wraca do danych z plików GitHuba.</p></div>
+        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-edit="${index}">EDYTUJ</button><button class="danger" type="button" data-delete="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
+      const body = $('#cms-modal-body', modal);
+      $('[data-add]', body)?.addEventListener('click', () => drawForm(-1));
+      $('[data-reset]', body)?.addEventListener('click', () => resetCmsKey(key, title.toLowerCase()));
+      $$('[data-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.edit))));
+      $$('[data-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
+        const index = Number(btn.dataset.delete);
+        if (!confirm(`Usunąć: ${label(items[index])}?`)) return;
+        items.splice(index, 1);
+        try { await window.MattCMS.save(key, items); notify('Element usunięty.'); await rerender(); }
+        catch (e) { notify(e.message, 'error'); }
+      }));
+    };
+
+    const drawForm = index => {
+      const current = index >= 0 ? items[index] : {};
+      openModal(index >= 0 ? `EDYTUJ — ${title}` : `DODAJ — ${title}`, `<form id="cms-item-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form = $('#cms-item-form', modal);
+      $('[data-back]', form).addEventListener('click', drawList);
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const value = parseFields(form, fields);
+        if (index >= 0) items[index] = value; else items.push(value);
+        try {
+          await window.MattCMS.save(key, items);
+          notify('Zapisano zmiany.');
+          await rerender();
+        } catch (error) { notify(`Błąd zapisu: ${error.message}`, 'error'); }
+      });
+    };
+
+    drawList();
+  }
+
+  function openStreamersManager() {
+    openArrayManager({
+      key:'streamers', title:'POLECANI STREAMERZY', singular:'streamera', fallback:extractStreamers,
+      label:item=>item.displayName || item.login,
+      fields:[
+        {name:'login',label:'Login Twitch',required:true}, {name:'displayName',label:'Wyświetlana nazwa',required:true},
+        {name:'channelUrl',label:'Link do kanału Twitch',type:'url',required:true}, {name:'clipSlug',label:'ID / slug klipu Twitch',required:true},
+        {name:'clipUrl',label:'Link do klipu',type:'url'}, {name:'tagline',label:'Krótki opis',type:'textarea'},
+        {name:'games',label:'Najczęściej ogrywane gry',type:'csv'}
+      ]
+    });
+  }
+
+  function openModeratorsManager() {
+    openArrayManager({
+      key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name,
+      fields:[
+        {name:'name',label:'Nick / nazwa',required:true},{name:'role',label:'Rola / stanowisko',required:true},
+        {name:'description',label:'Opis osoby',type:'textarea',required:true},{name:'twitch',label:'Link Twitch',type:'url'},
+        {name:'discord',label:'Nick Discord'},{name:'image',label:'Ścieżka lub URL zdjęcia'}
+      ]
+    });
+  }
+
+  function openBenefitsManager() {
+    openArrayManager({
+      key:'moderator_benefits', title:'MODERACJA / KORZYŚCI', singular:'korzyść', fallback:extractBenefits, label:item=>item.title,
+      fields:[{name:'title',label:'Nazwa korzyści',required:true},{name:'description',label:'Opis korzyści',type:'textarea',required:true}]
+    });
+  }
+
+  function openCommandsManager() {
+    openArrayManager({
+      key:'commands', title:'KOMENDY', singular:'komendę', fallback:()=>window.MATT_COMMANDS_DEFAULT || [], label:item=>item.command,
+      fields:[
+        {name:'command',label:'Komenda',required:true},{name:'description',label:'Opis',type:'textarea',required:true},
+        {name:'category',label:'Kategoria',required:true},{name:'subcategory',label:'Podkategoria (opcjonalnie)'},
+        {name:'roles',label:'Dostęp dla',type:'roles'}
+      ]
+    });
+  }
+
+  function openTopicsManager() {
+    let topics = clone(window.MattCMS?.get('contact_topics', null) || extractTopics());
+    const draw = () => {
+      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button><button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button><button class="danger" data-delete-topic="${index}">USUŃ</button></div></article>`).join('')}</div>`);
+      const body = $('#cms-modal-body', modal);
+      $('[data-add-topic]', body).addEventListener('click', () => editTopic(-1));
+      $('[data-reset-topics]', body).addEventListener('click', () => resetCmsKey('contact_topics', 'tematy formularza'));
+      $$('[data-edit-topic]', body).forEach(b=>b.addEventListener('click',()=>editTopic(Number(b.dataset.editTopic))));
+      $$('[data-delete-topic]', body).forEach(b=>b.addEventListener('click',async()=>{
+        const i=Number(b.dataset.deleteTopic); if(!confirm(`Usunąć temat: ${topics[i]}?`)) return; topics.splice(i,1);
+        try{await window.MattCMS.save('contact_topics',topics); notify('Temat usunięty.'); await rerender();}catch(e){notify(e.message,'error');}
+      }));
+    };
+    const editTopic = index => {
+      const value=index>=0?topics[index]:'';
+      openModal(index>=0?'EDYTUJ TEMAT':'DODAJ TEMAT', `<form id="cms-topic-form" class="cms-form"><label class="cms-field"><span>Nazwa tematu</span><input name="topic" required value="${window.MattCMS.escape(value)}"></label><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-topic-form',modal); $('[data-back]',form).addEventListener('click',draw); form.addEventListener('submit',async e=>{e.preventDefault();const v=form.elements.topic.value.trim();if(index>=0)topics[index]=v;else topics.push(v);try{await window.MattCMS.save('contact_topics',topics);notify('Tematy zapisane.');await rerender();}catch(err){notify(err.message,'error');}});
+    };
+    draw();
+  }
+
+  function openDiscordManager() {
+    let categories = clone(window.MattCMS?.get('discord_channels', null) || extractDiscordCategories());
+    const esc = window.MattCMS.escape;
+
+    const saveAndRender = async message => {
+      try { await window.MattCMS.save('discord_channels', categories); notify(message); await rerender(); }
+      catch (e) { notify(`Błąd zapisu: ${e.message}`, 'error'); }
+    };
+
+    const draw = () => {
+      openModal('DISCORD — KANAŁY I KATEGORIE', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-category>+ DODAJ KATEGORIĘ</button><button data-reset-discord>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Możesz tworzyć własne kategorie, np. TWITCH / KONFIGURACJA, TEKSTOWE, GRY itd.</p></div>
+        <div class="cms-discord-list">${categories.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>${esc(cat.icon || '📁')} KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.title)}</strong><p>${esc(cat.description || '')}</p></div><div><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-delete-cat="${ci}">USUŃ</button></div></header><div class="cms-channel-admin-list">${(cat.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon || '#')}</span><strong>${esc(ch.name)}</strong><small>${esc(ch.description || '')}</small></div><div><button data-edit-channel="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-channel="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-channel="${ci}">+ DODAJ KANAŁ</button></div></section>`).join('')}</div>`);
+      const body=$('#cms-modal-body',modal);
+      $('[data-add-category]',body).addEventListener('click',()=>editCategory(-1));
+      $('[data-reset-discord]',body).addEventListener('click',()=>resetCmsKey('discord_channels', 'kanały i kategorie Discorda'));
+      $$('[data-edit-cat]',body).forEach(b=>b.addEventListener('click',()=>editCategory(Number(b.dataset.editCat))));
+      $$('[data-delete-cat]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.deleteCat);if(!confirm(`Usunąć kategorię ${categories[i].title} razem z kanałami?`))return;categories.splice(i,1);await saveAndRender('Kategoria usunięta.');}));
+      $$('[data-add-channel]',body).forEach(b=>b.addEventListener('click',()=>editChannel(Number(b.dataset.addChannel),-1)));
+      $$('[data-edit-channel]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.editChannel.split(':').map(Number);editChannel(ci,hi);}));
+      $$('[data-delete-channel]',body).forEach(b=>b.addEventListener('click',async()=>{const [ci,hi]=b.dataset.deleteChannel.split(':').map(Number);if(!confirm(`Usunąć kanał ${categories[ci].channels[hi].name}?`))return;categories[ci].channels.splice(hi,1);await saveAndRender('Kanał usunięty.');}));
+    };
+
+    const editCategory = index => {
+      const c=index>=0?categories[index]:{icon:'📁',title:'',description:'',channels:[]};
+      const fields=[{name:'icon',label:'Ikona / emoji'},{name:'title',label:'Nazwa kategorii',required:true},{name:'description',label:'Opis kategorii',type:'textarea'}];
+      openModal(index>=0?'EDYTUJ KATEGORIĘ':'DODAJ KATEGORIĘ',`<form id="cms-cat-form" class="cms-form">${fields.map(f=>fieldHtml(f,c[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-cat-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);const next={...c,...v,id:c.id||slugify(v.title),channels:c.channels||[]};if(index>=0)categories[index]=next;else categories.push(next);await saveAndRender('Kategoria zapisana.');});
+    };
+
+    const editChannel = (ci,hi) => {
+      const ch=hi>=0?categories[ci].channels[hi]:{icon:'#',name:'',description:'',featured:false};
+      const fields=[{name:'icon',label:'Ikona / emoji'},{name:'name',label:'Nazwa kanału',required:true},{name:'description',label:'Opis kanału',type:'textarea',required:true},{name:'featured',label:'Wyróżniony kanał',type:'checkbox'}];
+      openModal(hi>=0?'EDYTUJ KANAŁ':'DODAJ KANAŁ',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-channel-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]=v;else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
+    };
+
+    draw();
+  }
+
+  async function openBackupsManager() {
+    if (!isAdmin()) return;
+
+    const draw = async () => {
+      openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-backup-loading">Ładowanie kopii bezpieczeństwa…</div>`);
+      try {
+        const backups = await window.MattCMS.listBackups();
+        const esc = window.MattCMS.escape;
+        openModal('BACKUPY I PRZYWRACANIE', `
+          <div class="cms-manager-actions cms-backup-actions">
+            <div class="cms-manager-action-group">
+              <button class="cms-primary" type="button" data-create-backup>+ UTWÓRZ BACKUP</button>
+              <button type="button" data-import-backup>↑ WCZYTAJ PLIK JSON</button>
+              <input type="file" data-backup-file accept="application/json,.json" hidden>
+            </div>
+            <p>Backup obejmuje wszystkie nadpisania CMS oraz eventy. Pliki HTML/JS/CSS pozostają w GitHubie i przywraca się je przez historię commitów.</p>
+          </div>
+          <div class="cms-backup-note"><strong>AUTOMATYCZNA OCHRONA:</strong> przed każdym zapisem CMS oraz przed dodaniem, edycją lub usunięciem eventu powstaje snapshot. Kopii zapisanych tutaj nie da się usunąć ani edytować z poziomu strony.</div>
+          <div class="cms-manager-list">${backups.length ? backups.map(b => `<article class="cms-manager-item cms-backup-item"><div><small>#${b.id}</small><div><strong>${esc(b.label || 'Backup')}</strong><span>${esc(formatBackupDate(b.created_at))}${b.created_by ? ` · ${esc(b.created_by)}` : ''}</span></div></div><div><button type="button" data-download-backup="${b.id}">POBIERZ JSON</button><button class="danger" type="button" data-restore-backup="${b.id}">PRZYWRÓĆ</button></div></article>`).join('') : '<div class="cms-empty">Brak backupów. Utwórz pierwszy ręczny backup.</div>'}</div>`);
+
+        const body = $('#cms-modal-body', modal);
+        const fileInput = $('[data-backup-file]', body);
+        $('[data-create-backup]', body)?.addEventListener('click', async () => {
+          const label = prompt('Nazwa backupu:', `Ręczny backup — ${new Date().toLocaleString('pl-PL')}`);
+          if (label === null) return;
+          try { await window.MattCMS.createBackup(label || 'Backup ręczny'); notify('Backup został utworzony.'); await draw(); }
+          catch (e) { notify(e.message, 'error'); }
+        });
+        $('[data-import-backup]', body)?.addEventListener('click', () => fileInput?.click());
+        fileInput?.addEventListener('change', async () => {
+          const file = fileInput.files?.[0];
+          if (!file) return;
+          try {
+            const parsed = JSON.parse(await file.text());
+            const snapshot = parsed?.snapshot && parsed.snapshot.cms_data ? parsed.snapshot : parsed;
+            if (!snapshot || !Array.isArray(snapshot.cms_data) || !Array.isArray(snapshot.events)) throw new Error('Ten plik nie ma prawidłowego formatu backupu Matt\'s World.');
+            if (!confirm(`Przywrócić dane z pliku „${file.name}”? Przed restore automatycznie zapiszę jeszcze bieżący stan.`)) return;
+            await window.MattCMS.restoreSnapshot(snapshot, `plik ${file.name}`);
+            notify('Backup z pliku został przywrócony.');
+            setTimeout(() => location.reload(), 500);
+          } catch (e) { notify(`Nie udało się wczytać pliku: ${e.message}`, 'error'); }
+          finally { fileInput.value = ''; }
+        });
+        $$('[data-download-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
+          try {
+            const backup = await window.MattCMS.getBackup(Number(btn.dataset.downloadBackup));
+            const payload = { ...backup.snapshot, backup_id: backup.id, label: backup.label, exported_at: new Date().toISOString() };
+            const safeLabel = String(backup.label || 'backup').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '').slice(0,50) || 'backup';
+            downloadJson(`matts-world-backup-${backup.id}-${safeLabel}.json`, payload);
+          } catch (e) { notify(`Nie udało się pobrać backupu: ${e.message}`, 'error'); }
+        }));
+        $$('[data-restore-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
+          const id = Number(btn.dataset.restoreBackup);
+          const selected = backups.find(x => Number(x.id) === id);
+          if (!confirm(`Przywrócić backup #${id} „${selected?.label || ''}”? Bieżący stan zostanie automatycznie zabezpieczony przed przywróceniem.`)) return;
+          try { await window.MattCMS.restoreBackup(id); notify('Backup został przywrócony.'); setTimeout(() => location.reload(), 500); }
+          catch (e) { notify(`Nie udało się przywrócić: ${e.message}`, 'error'); }
+        }));
+      } catch (error) {
+        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Jeżeli to pierwsze uruchomienie tej wersji, wykonaj plik <code>CMS_UPDATE_BACKUP.sql</code> w Supabase.</div>`);
+      }
+    };
+
+    await draw();
+  }
+
+  window.addEventListener('matt-auth-change', () => { if (!isAdmin() && inlineEditing) cancelInlineEdit(); refreshToolbar(); });
+  window.addEventListener('hashchange', () => { if (inlineEditing) finishInlineEdit(); setTimeout(refreshToolbar, 0); });
+  document.addEventListener('DOMContentLoaded', () => setTimeout(refreshToolbar, 0));
+  setTimeout(refreshToolbar, 600);
+})();

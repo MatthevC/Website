@@ -1,3 +1,10 @@
+// Backup bezpieczeństwa przed każdą zmianą eventów. Funkcja działa tylko dla administratora.
+async function mattEventSafetyBackup(label){
+  if(window.currentUserIsAdmin !== true) throw new Error('Brak uprawnień administratora.');
+  if(!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny. Uruchom CMS_UPDATE_BACKUP.sql w Supabase.');
+  return window.MattCMS.createBackup(label);
+}
+
 (() => {
 
 let isAdmin = false;
@@ -87,6 +94,12 @@ function initEvents(){
    }
 
    const msg=document.getElementById("eventMsg");
+   try{
+     await mattEventSafetyBackup('AUTO: przed dodaniem eventu');
+   }catch(error){
+     if(msg) msg.textContent='Nie utworzono kopii bezpieczeństwa. Dodawanie anulowane: '+error.message;
+     return;
+   }
    const file=document.getElementById("eventImage")?.files[0];
    let image="";
 
@@ -172,8 +185,12 @@ document.addEventListener("DOMContentLoaded",()=>{
  initEvents();
  checkAdmin();
 
- // ponowne sprawdzenie po logowaniu bez odświeżania
- window.addEventListener("matt-auth-change",checkAdmin);
+ // Aktualizacja stanu po zmianie logowania bez ponownego odpytywania Supabase.
+ // Nie wywołujemy tutaj checkAdmin(), bo checkAdmin sam emituje matt-auth-change.
+ window.addEventListener("matt-auth-change",(event)=>{
+   isAdmin = event.detail?.isAdmin === true;
+   if(isAdmin) showAddButton(); else hideAddButton();
+ });
 });
 
 })();
@@ -260,13 +277,33 @@ async function openEdit(id){
  setDT(data.publish_date,"editEventPublish","editEventPublishTime");
  if(editEventModal) editEventModal.style.display="flex";
 }
-document.addEventListener("click",e=>{
+document.addEventListener("click",async e=>{
  const b=e.target.closest(".edit-event-btn");
- if(b){ e.preventDefault(); e.stopPropagation(); openEdit(b.dataset.id); }
+ if(b){ e.preventDefault(); e.stopPropagation(); openEdit(b.dataset.id); return; }
+ const del=e.target.closest(".delete-event-btn");
+ if(del){
+  e.preventDefault(); e.stopPropagation();
+  if(!admin()) return;
+  const title=del.dataset.title || "ten event";
+  if(!confirm(`Czy na pewno usunąć event „${title}”? Operację można później cofnąć z backupu.`)) return;
+  del.disabled=true;
+  try{
+    await mattEventSafetyBackup(`AUTO: przed usunięciem eventu — ${title}`);
+  }catch(error){
+    alert('Usuwanie anulowane, ponieważ nie udało się utworzyć backupu: '+error.message);
+    del.disabled=false;
+    return;
+  }
+  const {error}=await supabaseClient.from("events").delete().eq("id",del.dataset.id);
+  if(error){ alert("Nie udało się usunąć eventu: "+error.message); del.disabled=false; return; }
+  if(location.hash.startsWith("#/events/")) location.hash="#/events";
+  else if(typeof window.render==="function") window.render();
+  else location.reload();
+ }
 });
 function updateEditButtons(){
  const allowed = window.currentUserIsAdmin === true;
- document.querySelectorAll(".edit-event-btn").forEach(x=>{
+ document.querySelectorAll(".edit-event-btn, .delete-event-btn").forEach(x=>{
   if(allowed){
     x.style.display="inline-flex";
     x.hidden=false;
@@ -286,6 +323,13 @@ document.getElementById("closeEditEvent")?.addEventListener("click",()=>{
 });
 document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  if(!admin()) return;
+ const msg=document.getElementById("editEventMsg");
+ try{
+  await mattEventSafetyBackup(`AUTO: przed edycją eventu — ${document.getElementById('editEventTitle')?.value || 'event'}`);
+ }catch(error){
+  if(msg) msg.textContent='Edycja anulowana, ponieważ nie udało się utworzyć backupu: '+error.message;
+  return;
+ }
  let image;
  const file=editEventImage.files[0];
  if(file){
@@ -297,7 +341,6 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
  const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain", main_image_fit:document.getElementById("editEventMainImageFit")?.value || "contain"};
  if(image) upd.image_url=image;
  const {error}=await supabaseClient.from("events").update(upd).eq("id",editEventId.value);
- const msg=document.getElementById("editEventMsg");
  if(msg) msg.textContent=error?error.message:"Zapisano";
  if(!error)setTimeout(()=>location.reload(),700);
 });
@@ -338,7 +381,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 function renderEditButtons(){
  document.querySelectorAll(".detailEditEventSlot").forEach(slot=>{
   if(window.currentUserIsAdmin){
-   slot.innerHTML=`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button>`;
+   const title=(slot.dataset.eventTitle||"").replace(/"/g,"&quot;");
+   slot.innerHTML=`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button><button class="delete-event-btn cms-event-delete" data-id="${slot.dataset.eventId}" data-title="${title}">🗑 USUŃ EVENT</button>`;
   } else slot.innerHTML="";
  });
 }
