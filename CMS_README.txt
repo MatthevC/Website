@@ -83,3 +83,12 @@ Obecna wersja celowo przyznaje wszystkie funkcje edycji wyłącznie roli admin. 
 
 
 V2.1: Grafiki eventów dostają czytelne nazwy (np. event-turniej-2026-09-04-1031.jpg), a formularz nie pokazuje długich UUID. Jeśli pojawi się komunikat o matt_create_backup/schema cache, uruchom CMS_UPDATE_BACKUP.sql i odśwież stronę.
+
+CMS v2.2 — ZDJĘCIA MODERATORÓW Z DYSKU
+--------------------------------------
+1. Uruchom raz plik CMS_UPDATE_MODERATOR_IMAGES.sql w Supabase -> SQL Editor.
+2. W konfiguratorze NASZA MODERACJA pole URL zostało zastąpione przez „WYBIERZ ZDJĘCIE Z DYSKU”.
+3. Obsługiwane: JPG, PNG, WEBP, GIF; maksymalnie 10 MB.
+4. Pliki trafiają do publicznego bucketu `cms-images`, ale upload/edycja/usuwanie są chronione polityką RLS i dozwolone tylko dla `profiles.role = 'admin'`.
+5. Przy edycji istniejącej osoby możesz zostawić dotychczasowe zdjęcie, wybrać nowe albo kliknąć „USUŃ ZDJĘCIE”.
+6. Starych plików nie kasujemy automatycznie po podmianie, ponieważ backup może wskazywać poprzednią grafikę i musi dać się poprawnie przywrócić.

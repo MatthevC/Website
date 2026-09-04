@@ -18,6 +18,53 @@
       .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `kategoria-${Date.now()}`;
   }
 
+
+  function cmsImageExtension(file) {
+    const name = String(file?.name || '');
+    const fromName = name.includes('.') ? name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+    if (fromName && fromName.length <= 5) return fromName === 'jpeg' ? 'jpg' : fromName;
+    const mime = String(file?.type || '').toLowerCase();
+    if (mime === 'image/png') return 'png';
+    if (mime === 'image/webp') return 'webp';
+    if (mime === 'image/gif') return 'gif';
+    return 'jpg';
+  }
+
+  function cmsImageLabel(value) {
+    if (!value) return 'Nie wybrano pliku';
+    try {
+      const clean = decodeURIComponent(String(value).split('?')[0]);
+      return clean.split('/').filter(Boolean).pop() || 'Aktualne zdjęcie';
+    } catch (_) { return 'Aktualne zdjęcie'; }
+  }
+
+  function cmsCompactStamp() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  }
+
+  function validateCmsImage(file) {
+    if (!file) return;
+    if (!String(file.type || '').startsWith('image/')) throw new Error('Wybierz plik graficzny (JPG, PNG, WEBP lub GIF).');
+    if (file.size > 10 * 1024 * 1024) throw new Error('Zdjęcie jest za duże. Maksymalny rozmiar pliku to 10 MB.');
+  }
+
+  async function uploadCmsImage(file, itemLabel, folder = 'moderators') {
+    validateCmsImage(file);
+    if (!window.supabaseClient) throw new Error('Brak połączenia z Supabase.');
+    const safeFolder = slugify(folder || 'obrazy');
+    const safeName = slugify(itemLabel || 'zdjecie').slice(0, 48) || 'zdjecie';
+    const path = `${safeFolder}/${safeName}-${cmsCompactStamp()}.${cmsImageExtension(file)}`;
+    const { error } = await window.supabaseClient.storage.from('cms-images').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || undefined
+    });
+    if (error) throw new Error(`Nie udało się wysłać zdjęcia: ${error.message}`);
+    return window.supabaseClient.storage.from('cms-images').getPublicUrl(path).data.publicUrl;
+  }
+
   function isAdmin() { return window.currentUserIsAdmin === true; }
 
   function formatBackupDate(value) {
@@ -258,6 +305,14 @@
   function fieldHtml(field, value) {
     const esc = window.MattCMS?.escape || (v => String(v || ''));
     const val = value ?? '';
+    if (field.type === 'image-file') return `<div class="cms-field cms-image-field" data-cms-image-field="${esc(field.name)}">
+      <span>${esc(field.label)}</span>
+      <input type="hidden" name="${esc(field.name)}" value="${esc(val)}" data-image-current>
+      <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-image-file hidden>
+      <div class="cms-image-upload-row"><button type="button" data-image-pick>📁 WYBIERZ ZDJĘCIE Z DYSKU</button><span data-image-name>${esc(cmsImageLabel(val))}</span></div>
+      <div class="cms-image-preview${val ? '' : ' is-empty'}" data-image-preview><img ${val ? `src="${esc(val)}"` : ''} alt="Podgląd zdjęcia"></div>
+      <div class="cms-image-tools"><small>JPG, PNG, WEBP lub GIF • maks. 10 MB. Adres pliku zapisze się automatycznie.</small><button type="button" data-image-remove ${val ? '' : 'hidden'}>USUŃ ZDJĘCIE</button></div>
+    </div>`;
     if (field.type === 'textarea') return `<label class="cms-field"><span>${esc(field.label)}</span><textarea name="${esc(field.name)}" ${field.required?'required':''}>${esc(val)}</textarea></label>`;
     if (field.type === 'csv') return `<label class="cms-field"><span>${esc(field.label)}</span><input name="${esc(field.name)}" value="${esc(Array.isArray(val)?val.join(', '):val)}" placeholder="oddziel przecinkami"></label>`;
     if (field.type === 'roles') {
@@ -266,6 +321,44 @@
     }
     if (field.type === 'checkbox') return `<label class="cms-field cms-check"><input type="checkbox" name="${esc(field.name)}" ${val?'checked':''}> <span>${esc(field.label)}</span></label>`;
     return `<label class="cms-field"><span>${esc(field.label)}</span><input type="${field.type || 'text'}" name="${esc(field.name)}" value="${esc(val)}" ${field.required?'required':''}></label>`;
+  }
+
+  function bindImageFileFields(form, fields) {
+    fields.filter(field => field.type === 'image-file').forEach(field => {
+      const wrap = form.querySelector(`[data-cms-image-field="${field.name}"]`);
+      if (!wrap) return;
+      const input = $('[data-image-file]', wrap);
+      const pick = $('[data-image-pick]', wrap);
+      const remove = $('[data-image-remove]', wrap);
+      const hidden = $('[data-image-current]', wrap);
+      const name = $('[data-image-name]', wrap);
+      const preview = $('[data-image-preview]', wrap);
+      const img = $('img', preview);
+      let objectUrl = '';
+
+      pick?.addEventListener('click', () => input?.click());
+      input?.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        try { validateCmsImage(file); }
+        catch (error) { input.value = ''; notify(error.message, 'error'); return; }
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = URL.createObjectURL(file);
+        img.src = objectUrl;
+        preview.classList.remove('is-empty');
+        name.textContent = file.name;
+        if (remove) remove.hidden = false;
+      });
+      remove?.addEventListener('click', () => {
+        input.value = '';
+        hidden.value = '';
+        if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = ''; }
+        img.removeAttribute('src');
+        preview.classList.add('is-empty');
+        name.textContent = 'Nie wybrano pliku';
+        remove.hidden = true;
+      });
+    });
   }
 
   function parseFields(form, fields) {
@@ -303,16 +396,44 @@
       const current = index >= 0 ? items[index] : {};
       openModal(index >= 0 ? `EDYTUJ — ${title}` : `DODAJ — ${title}`, `<form id="cms-item-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-item-form', modal);
+      bindImageFileFields(form, fields);
       $('[data-back]', form).addEventListener('click', drawList);
       form.addEventListener('submit', async e => {
         e.preventDefault();
-        const value = parseFields(form, fields);
-        if (index >= 0) items[index] = value; else items.push(value);
+        const submit = $('button[type="submit"]', form);
+        if (submit) { submit.disabled = true; submit.textContent = 'ZAPISYWANIE…'; }
         try {
-          await window.MattCMS.save(key, items);
+          const value = parseFields(form, fields);
+          const imageFields = fields.filter(field => field.type === 'image-file');
+          const pendingUploads = imageFields.map(field => ({
+            field,
+            file: form.querySelector(`[data-cms-image-field="${field.name}"] [data-image-file]`)?.files?.[0] || null
+          })).filter(entry => entry.file);
+
+          let backupAlreadyMade = false;
+          if (pendingUploads.length) {
+            // Backup powstaje PRZED wysłaniem pliku, dzięki czemu błąd backupu nie zostawia osieroconego uploadu.
+            await window.MattCMS.createBackup(`AUTO: przed zmianą CMS — ${key}`);
+            backupAlreadyMade = true;
+            for (const entry of pendingUploads) {
+              value[entry.field.name] = await uploadCmsImage(
+                entry.file,
+                value.name || value.displayName || value.title || singular,
+                entry.field.folder || key
+              );
+            }
+          }
+
+          const nextItems = clone(items);
+          if (index >= 0) nextItems[index] = value; else nextItems.push(value);
+          await window.MattCMS.save(key, nextItems, backupAlreadyMade ? { backup:false } : {});
+          items = nextItems;
           notify('Zapisano zmiany.');
           await rerender();
-        } catch (error) { notify(`Błąd zapisu: ${error.message}`, 'error'); }
+        } catch (error) {
+          notify(`Błąd zapisu: ${error.message}`, 'error');
+          if (submit) { submit.disabled = false; submit.textContent = 'ZAPISZ'; }
+        }
       });
     };
 
@@ -338,7 +459,7 @@
       fields:[
         {name:'name',label:'Nick / nazwa',required:true},{name:'role',label:'Rola / stanowisko',required:true},
         {name:'description',label:'Opis osoby',type:'textarea',required:true},{name:'twitch',label:'Link Twitch',type:'url'},
-        {name:'discord',label:'Nick Discord'},{name:'image',label:'Ścieżka lub URL zdjęcia'}
+        {name:'discord',label:'Nick Discord'},{name:'image',label:'Zdjęcie moderatora',type:'image-file',folder:'moderators'}
       ]
     });
   }
