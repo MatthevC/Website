@@ -1,4 +1,4 @@
-const MATT_DEFAULT_AVATAR = "pictures/default-avatar.svg";
+const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 
 function mattSetHeaderUser(profile) {
   const open = document.getElementById("openLogin");
