@@ -6,7 +6,7 @@
     '.recommended-grid', '.recommended-toc', '.moderator-grid', '.moderator-benefits-grid',
     '#commands-results', '.discord-channel-section', '.discord-channels-tags',
     '#contact-topic', '.event-card', '.event-detail-modern', '#home-events',
-    '.collection-toolbar', '.collection-pagination'
+    '.collection-toolbar', '.collection-pagination', '.rules-card-grid', '.rules-memory-tags'
   ];
 
   const escapeHtml = (value = '') => String(value)
@@ -123,6 +123,99 @@
 
   function routeKey(path) {
     return String(path || 'home').replace(/^#\/?/, '').replace(/^\/+|\/+$/g, '') || 'home';
+  }
+
+  function safeHref(value = '#') {
+    const href = String(value || '#').trim();
+    if (!href) return '#';
+    if (/^(https?:\/\/|mailto:|#|\/(?!\/))/i.test(href)) return href;
+    return '#';
+  }
+
+  function ruleIdPart(value = '') {
+    return String(value || 'zasada').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'zasada';
+  }
+
+  function extractNavigationFromDom() {
+    const nav = document.getElementById('main-nav');
+    if (!nav) return [];
+    return [...nav.children].map(node => {
+      if (node.matches('a')) {
+        return { label: node.textContent.trim(), href: node.getAttribute('href') || '#', children: [] };
+      }
+      if (node.classList?.contains('nav-dropdown')) {
+        const button = node.querySelector(':scope > button');
+        const children = [...node.querySelectorAll(':scope > .dropdown-menu > a')].map(a => ({
+          label: a.textContent.trim(),
+          href: a.getAttribute('href') || '#'
+        }));
+        return { label: button?.childNodes?.[0]?.textContent?.trim() || button?.textContent?.replace('⌄','').trim() || 'KATEGORIA', href: '', children };
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  function renderNavigation(items) {
+    const nav = document.getElementById('main-nav');
+    if (!nav || !Array.isArray(items)) return;
+    nav.innerHTML = items.map(item => {
+      const label = escapeHtml(item?.label || 'KATEGORIA');
+      const children = Array.isArray(item?.children) ? item.children : [];
+      if (children.length) {
+        return `<div class="nav-dropdown">
+          <button type="button">${label} <span>⌄</span></button>
+          <div class="dropdown-menu">${children.map(child => `<a href="${escapeHtml(safeHref(child?.href || '#'))}">${escapeHtml(child?.label || 'PODKATEGORIA')}</a>`).join('')}</div>
+        </div>`;
+      }
+      return `<a href="${escapeHtml(safeHref(item?.href || '#'))}">${label}</a>`;
+    }).join('');
+  }
+
+  function renderHeroImage(data) {
+    const img = document.querySelector('.hero-main.hero-main-image > img');
+    if (!img || !data || typeof data !== 'object') return;
+    if (data.url) img.src = String(data.url);
+    if (typeof data.alt === 'string' && data.alt.trim()) img.alt = data.alt.trim();
+  }
+
+  function renderRules(items, path) {
+    const grid = document.querySelector('.rules-card-grid');
+    if (!grid || !Array.isArray(items)) return;
+    const route = routeKey(path);
+    const usedIds = new Set();
+
+    const normalized = items.map((item, index) => {
+      let id = String(item?.id || '').trim();
+      if (!id || usedIds.has(id)) id = `${ruleIdPart(route)}-${ruleIdPart(item?.label || item?.title || `zasada-${index+1}`)}`;
+      let unique = id, suffix = 2;
+      while (usedIds.has(unique)) unique = `${id}-${suffix++}`;
+      usedIds.add(unique);
+      return { ...item, id: unique };
+    });
+
+    grid.innerHTML = normalized.map((item, index) => {
+      const number = String(index + 1).padStart(2, '0');
+      const description = sanitizeHtml(item?.descriptionHtml ?? escapeHtml(item?.description || ''));
+      const extra = sanitizeHtml(item?.extraHtml || '');
+      const wide = item?.wide ? ' event-rule-card-wide' : '';
+      return `<section class="rule-card${wide}" id="${escapeHtml(item.id)}">
+        <div class="rule-card-top"><div class="rule-card-number">${number}</div><div class="rule-card-icon" aria-hidden="true">${escapeHtml(item?.icon || '📌')}</div></div>
+        <div class="rule-card-label">${escapeHtml(item?.label || `ZASADA ${number}`)}</div>
+        <h2>${escapeHtml(item?.title || 'Nowa zasada')}</h2>
+        <p>${description}</p>${extra}
+      </section>`;
+    }).join('');
+
+    const tags = document.querySelector('.rules-memory-tags');
+    if (tags) {
+      tags.innerHTML = normalized.map(item => `<span class="rule-scroll-link" data-target="${escapeHtml(item.id)}">${escapeHtml(item?.label || item?.title || 'ZASADA')}</span>`).join('');
+    }
+  }
+
+  function applyGlobal() {
+    const navigation = get('navigation', null);
+    if (navigation) renderNavigation(navigation);
   }
 
   function isManaged(el) {
@@ -243,6 +336,12 @@
 
   function applyStructured(path) {
     const p = routeKey(path);
+    if (p === 'home') {
+      const data = get('home_hero_image'); if (data) renderHeroImage(data);
+    }
+    if (p.startsWith('rules/') && p !== 'rules/game-picks') {
+      const data = get(`rules:${p}`); if (data) renderRules(data, p);
+    }
     if (p === 'recommended') {
       const data = get('streamers'); if (data) renderStreamers(data);
     }
@@ -261,6 +360,7 @@
   }
 
   function applyRoute(path) {
+    applyGlobal();
     applyStructured(path);
     applyTextOverrides(path);
   }
@@ -268,7 +368,8 @@
   window.MattCMS = {
     ready, get, save, remove, createBackup, listBackups, getBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
-    applyRoute, applyStructured, applyTextOverrides, decorateEditable, editableElements,
+    applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
+    extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics,
     get loadError() { return loadError; }
   };

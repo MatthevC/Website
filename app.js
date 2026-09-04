@@ -2329,7 +2329,7 @@ function discordJoinPage() {
             <p>Discord to centrum naszej społeczności poza transmisją — rozmowy, wspólne granie, eventy, ogłoszenia i szybki kontakt z ekipą. Zajrzyj do środka i ustaw serwer tak, żeby pokazywał dokładnie to, co Cię interesuje.</p>
 
             <div class="discord-join-actions">
-              <a class="discord-join-primary" id="page-discord-link" href="#" target="_blank" rel="noopener">
+              <a class="discord-join-primary" id="page-discord-link" data-site-link="discordUrl" href="#" target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg>
                 DOŁĄCZ DO SERWERA
               </a>
@@ -2479,7 +2479,7 @@ function discordJoinPage() {
                 <div class="discord-live-embed-accent"></div>
                 <div class="discord-live-embed-copy">
                   <strong>MatthevC</strong>
-                  <a href="https://www.twitch.tv/MatthevC" target="_blank" rel="noopener">Szukamy chętnych do lobby!</a>
+                  <a href="#" data-site-link="twitchUrl" target="_blank" rel="noopener">Szukamy chętnych do lobby!</a>
                   <span>Ktoś chętny pobiegać? BINGO Z NAGRODAMI! DIXPER ON!</span>
                   <small>Viewers 20</small>
                 </div>
@@ -2500,7 +2500,7 @@ function discordJoinPage() {
                 <div class="discord-live-embed-accent"></div>
                 <div class="discord-live-embed-copy">
                   <strong>MatthevC</strong>
-                  <a href="https://www.twitch.tv/MatthevC" target="_blank" rel="noopener">Gramy ze społecznością</a>
+                  <a href="#" data-site-link="twitchUrl" target="_blank" rel="noopener">Gramy ze społecznością</a>
                   <span>Wpadaj na stream i dołącz do ekipy.</span>
                   <small>Viewers 29</small>
                 </div>
@@ -3566,6 +3566,11 @@ function stripHtml(value) {
 }
 
 function updateLinks() {
+  if (window.MattCMS?.applyGlobal) window.MattCMS.applyGlobal();
+
+  const cmsLinks = window.MattCMS?.get('site_links', {}) || {};
+  const linkConfig = { ...SITE_CONFIG, ...cmsLinks };
+
   const twitchLinks = [
     document.getElementById("top-twitch-link"),
     document.getElementById("header-twitch-link"),
@@ -3573,13 +3578,23 @@ function updateLinks() {
     document.getElementById("page-twitch-link"),
     document.getElementById("footer-twitch-link")
   ];
-  twitchLinks.forEach(el => { if (el) el.href = SITE_CONFIG.twitchUrl; });
+  twitchLinks.forEach(el => { if (el) el.href = linkConfig.twitchUrl; });
 
   const discordLinks = [
     document.getElementById("footer-discord-link"),
     document.getElementById("page-discord-link")
   ];
-  discordLinks.forEach(el => { if (el) el.href = SITE_CONFIG.discordUrl; });
+  discordLinks.forEach(el => { if (el) el.href = linkConfig.discordUrl; });
+
+  const instagram = document.getElementById("footer-instagram-link");
+  if (instagram) instagram.href = linkConfig.instagramUrl;
+  const tiktok = document.getElementById("footer-tiktok-link");
+  if (tiktok) tiktok.href = linkConfig.tiktokUrl;
+
+  document.querySelectorAll('[data-site-link]').forEach(el => {
+    const key = el.dataset.siteLink;
+    if (key && linkConfig[key]) el.href = linkConfig[key];
+  });
 
   document.title = SITE_CONFIG.pageTitle;
 
@@ -3807,12 +3822,12 @@ document.getElementById("mobile-menu-btn").addEventListener("click", () => {
   document.getElementById("main-nav").classList.toggle("open");
 });
 
-document.querySelectorAll(".nav-dropdown > button").forEach(button => {
-  button.addEventListener("click", () => {
-    if (window.innerWidth <= 900) {
-      button.parentElement.classList.toggle("open");
-    }
-  });
+document.addEventListener("click", (event) => {
+  const button = event.target.closest(".nav-dropdown > button");
+  if (!button) return;
+  if (window.innerWidth <= 900) {
+    button.parentElement.classList.toggle("open");
+  }
 });
 
 window.addEventListener("matt-auth-change", (e) => {

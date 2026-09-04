@@ -143,12 +143,14 @@
   }
 
   function configForRoute(route) {
+    if (route === 'home') return { label: 'GRAFIKA POWITALNA', action: openHomeHeroManager };
     if (route === 'recommended') return { label: 'STREAMERZY', action: openStreamersManager };
     if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager };
     if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager };
     if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager };
     if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager };
     if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager };
+    if (route.startsWith('rules/') && route !== 'rules/game-picks') return { label: 'ZASADY REGULAMINU', action: openRulesManager };
     return null;
   }
 
@@ -160,6 +162,7 @@
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
+      <button type="button" data-cms-action="site">☰ MENU / LINKI</button>
       <button type="button" data-cms-action="reset-page">↶ Z GITHUBA</button>
       <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
@@ -171,6 +174,7 @@
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
       if (action === 'config') configForRoute(currentRoute())?.action();
+      if (action === 'site') openSiteSettingsManager();
       if (action === 'reset-page') resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie');
       if (action === 'backups') openBackupsManager();
     });
@@ -188,6 +192,7 @@
     configBtn.hidden = !config || inlineEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
     $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing;
+    $('[data-cms-action="site"]', toolbar).hidden = inlineEditing;
     $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing;
     $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing;
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
@@ -376,12 +381,30 @@
     let items = clone(window.MattCMS?.get(key, null) || fallback() || []);
     const esc = window.MattCMS.escape;
 
+    const moveItem = (from, to) => {
+      if (to < 0 || to >= items.length || from === to) return;
+      const [moved] = items.splice(from, 1);
+      items.splice(to, 0, moved);
+      drawList();
+    };
+
+    const saveOrder = async () => {
+      try {
+        await window.MattCMS.save(key, items);
+        notify('Kolejność została zapisana.');
+        await rerender();
+      } catch (e) { notify(`Nie udało się zapisać kolejności: ${e.message}`, 'error'); }
+    };
+
     const drawList = () => {
-      openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Supabase przechowuje tylko nadpisanie tej sekcji. Przywrócenie usuwa nadpisanie i wraca do danych z plików GitHuba.</p></div>
-        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-edit="${index}">EDYTUJ</button><button class="danger" type="button" data-delete="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
+      openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Strzałkami możesz ustawić kolejność wyświetlania. Supabase przechowuje tylko nadpisanie tej sekcji.</p></div>
+        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button><button class="danger" type="button" data-delete="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add]', body)?.addEventListener('click', () => drawForm(-1));
+      $('[data-save-order]', body)?.addEventListener('click', saveOrder);
       $('[data-reset]', body)?.addEventListener('click', () => resetCmsKey(key, title.toLowerCase()));
+      $$('[data-up]', body).forEach(btn => btn.addEventListener('click', () => moveItem(Number(btn.dataset.up), Number(btn.dataset.up)-1)));
+      $$('[data-down]', body).forEach(btn => btn.addEventListener('click', () => moveItem(Number(btn.dataset.down), Number(btn.dataset.down)+1)));
       $$('[data-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.edit))));
       $$('[data-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
         const index = Number(btn.dataset.delete);
@@ -403,7 +426,7 @@
         const submit = $('button[type="submit"]', form);
         if (submit) { submit.disabled = true; submit.textContent = 'ZAPISYWANIE…'; }
         try {
-          const value = parseFields(form, fields);
+          const value = { ...clone(current), ...parseFields(form, fields) };
           const imageFields = fields.filter(field => field.type === 'image-file');
           const pendingUploads = imageFields.map(field => ({
             field,
@@ -412,7 +435,6 @@
 
           let backupAlreadyMade = false;
           if (pendingUploads.length) {
-            // Backup powstaje PRZED wysłaniem pliku, dzięki czemu błąd backupu nie zostawia osieroconego uploadu.
             await window.MattCMS.createBackup(`AUTO: przed zmianą CMS — ${key}`);
             backupAlreadyMade = true;
             for (const entry of pendingUploads) {
@@ -438,6 +460,293 @@
     };
 
     drawList();
+  }
+
+
+  function extractRules() {
+    return $$('.rules-card-grid .rule-card').map((card, index) => {
+      const copy = card.cloneNode(true);
+      copy.querySelector('.rule-card-top')?.remove();
+      copy.querySelector('.rule-card-label')?.remove();
+      copy.querySelector('h2')?.remove();
+      copy.querySelector('p')?.remove();
+      return {
+        id: card.id || `rule-${index + 1}`,
+        icon: $('.rule-card-icon', card)?.textContent.trim() || '📌',
+        label: $('.rule-card-label', card)?.textContent.trim() || `ZASADA ${index + 1}`,
+        title: $('h2', card)?.textContent.trim() || 'Nowa zasada',
+        description: $('p', card)?.textContent.trim() || '',
+        descriptionHtml: $('p', card)?.innerHTML || '',
+        extraHtml: copy.innerHTML.trim(),
+        wide: card.classList.contains('event-rule-card-wide')
+      };
+    });
+  }
+
+  function openRulesManager() {
+    if (!isAdmin()) return;
+    const route = currentRoute();
+    const key = `rules:${route}`;
+    let items = clone(window.MattCMS?.get(key, null) || extractRules());
+    const esc = window.MattCMS.escape;
+
+    const applyBehind = () => window.MattCMS?.renderRules?.(items, route);
+
+    const saveRules = async (message, { close = false } = {}) => {
+      try {
+        await window.MattCMS.save(key, items);
+        applyBehind();
+        notify(message);
+        if (close) await rerender(); else drawList();
+      } catch (e) { notify(`Błąd zapisu: ${e.message}`, 'error'); }
+    };
+
+    const move = (from, to) => {
+      if (to < 0 || to >= items.length) return;
+      const [moved] = items.splice(from, 1);
+      items.splice(to, 0, moved);
+      drawList();
+    };
+
+    const drawList = () => {
+      openModal('REGULAMIN — ZASADY', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
+        <button class="cms-primary" data-add-rule>+ DODAJ ZASADĘ</button>
+        <button data-save-rule-order>✓ ZAPISZ KOLEJNOŚĆ</button>
+        <button data-reset-rules>↶ PRZYWRÓĆ Z GITHUBA</button>
+      </div><p>Każda zasada to osobny dymek. Numeracja jest automatyczna — pierwszy element zawsze otrzymuje numer 01.</p></div>
+      <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(item.label || item.title || `ZASADA ${index+1}`)}</strong></div><div>
+        <button data-rule-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button>
+        <button data-rule-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button>
+        <button data-edit-rule="${index}">EDYTUJ</button>
+        <button class="danger" data-delete-rule="${index}">USUŃ</button>
+      </div></article>`).join('') : '<div class="cms-empty">Regulamin nie ma jeszcze żadnych zasad.</div>'}</div>`);
+      const body = $('#cms-modal-body', modal);
+      $('[data-add-rule]', body)?.addEventListener('click', () => editRule(-1));
+      $('[data-save-rule-order]', body)?.addEventListener('click', () => saveRules('Kolejność zasad została zapisana.', { close:true }));
+      $('[data-reset-rules]', body)?.addEventListener('click', () => resetCmsKey(key, 'zasady tego regulaminu'));
+      $$('[data-rule-up]', body).forEach(b => b.addEventListener('click', () => move(Number(b.dataset.ruleUp), Number(b.dataset.ruleUp)-1)));
+      $$('[data-rule-down]', body).forEach(b => b.addEventListener('click', () => move(Number(b.dataset.ruleDown), Number(b.dataset.ruleDown)+1)));
+      $$('[data-edit-rule]', body).forEach(b => b.addEventListener('click', () => editRule(Number(b.dataset.editRule))));
+      $$('[data-delete-rule]', body).forEach(b => b.addEventListener('click', async () => {
+        const i = Number(b.dataset.deleteRule);
+        if (!confirm(`Usunąć zasadę „${items[i]?.label || items[i]?.title}”? Pozostałe punkty zostaną automatycznie przenumerowane.`)) return;
+        items.splice(i, 1);
+        await saveRules('Zasada została usunięta. Numeracja została przeliczona.');
+      }));
+    };
+
+    const editRule = index => {
+      const current = index >= 0 ? items[index] : { icon:'📌', label:'', title:'', description:'', extraHtml:'', wide:false };
+      const fields = [
+        {name:'icon',label:'Ikona / emoji'},
+        {name:'label',label:'Krótka etykieta dymku',required:true},
+        {name:'title',label:'Tytuł zasady',required:true},
+        {name:'description',label:'Treść zasady',type:'textarea',required:true},
+        {name:'wide',label:'Wyświetl dymek na pełną szerokość',type:'checkbox'}
+      ];
+      openModal(index >= 0 ? 'EDYTUJ ZASADĘ' : 'DODAJ ZASADĘ', `<form id="cms-rule-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form = $('#cms-rule-form', modal);
+      $('[data-back]', form)?.addEventListener('click', drawList);
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const value = { ...current, ...parseFields(form, fields) };
+        // Po świadomej edycji treści używamy tekstu z formularza; przy samym przesuwaniu
+        // zachowujemy oryginalne formatowanie HTML pochodzące z GitHuba.
+        delete value.descriptionHtml;
+        if (index >= 0) items[index] = value; else items.push(value);
+        await saveRules(index >= 0 ? 'Zasada została zmieniona.' : 'Nowa zasada została dodana.');
+      });
+    };
+
+    drawList();
+  }
+
+  function openHomeHeroManager() {
+    if (!isAdmin()) return;
+    const baseImg = document.querySelector('.hero-main.hero-main-image > img');
+    const override = clone(window.MattCMS?.get('home_hero_image', null) || {});
+    const displayUrl = override.url || baseImg?.getAttribute('src') || '';
+    const displayAlt = override.alt || baseImg?.getAttribute('alt') || "Witaj w Matt's World";
+
+    const fields = [
+      {name:'url',label:'Grafika „WITAJ W MATT\'S WORLD”',type:'image-file',folder:'home'},
+      {name:'alt',label:'Opis grafiki (ALT)'}
+    ];
+    openModal('STRONA GŁÓWNA — GRAFIKA POWITALNA', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-hero>↶ PRZYWRÓĆ GRAFIKĘ Z GITHUBA</button></div><p>Wybierz nową grafikę bezpośrednio z dysku. Plik zostanie zapisany w Supabase Storage tylko przez konto administratora.</p></div>
+      <form id="cms-hero-form" class="cms-form">${fieldHtml(fields[0], displayUrl)}${fieldHtml(fields[1], displayAlt)}
+      <div class="cms-form-actions"><button type="button" data-back>← ANULUJ</button><button class="cms-primary" type="submit">ZAPISZ GRAFIKĘ</button></div></form>`);
+    const body = $('#cms-modal-body', modal);
+    const form = $('#cms-hero-form', modal);
+    bindImageFileFields(form, fields);
+    $('[data-reset-hero]', body)?.addEventListener('click', () => resetCmsKey('home_hero_image', 'grafikę powitalną'));
+    $('[data-back]', form)?.addEventListener('click', closeModal);
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const submit = $('button[type="submit"]', form);
+      if (submit) { submit.disabled = true; submit.textContent = 'ZAPISYWANIE…'; }
+      try {
+        const file = form.querySelector('[data-cms-image-field="url"] [data-image-file]')?.files?.[0] || null;
+        const hiddenUrl = form.elements.url?.value || '';
+        const alt = String(form.elements.alt?.value || '').trim();
+        let next = {};
+        let backupMade = false;
+
+        if (file) {
+          await window.MattCMS.createBackup('AUTO: przed zmianą grafiki powitalnej');
+          backupMade = true;
+          next.url = await uploadCmsImage(file, 'witaj-w-matts-world', 'home');
+        } else if (override.url && hiddenUrl) {
+          next.url = hiddenUrl;
+        }
+        if (alt && alt !== (baseImg?.getAttribute('alt') || '')) next.alt = alt;
+
+        if (Object.keys(next).length) await window.MattCMS.save('home_hero_image', next, backupMade ? {backup:false} : {});
+        else if (window.MattCMS.get('home_hero_image', null) != null) await window.MattCMS.remove('home_hero_image');
+
+        notify('Grafika powitalna została zapisana.');
+        await rerender();
+      } catch (error) {
+        notify(`Nie udało się zapisać grafiki: ${error.message}`, 'error');
+        if (submit) { submit.disabled = false; submit.textContent = 'ZAPISZ GRAFIKĘ'; }
+      }
+    });
+  }
+
+  function openSiteSettingsManager() {
+    if (!isAdmin()) return;
+    openModal('MENU I LINKI STRONY', `<div class="cms-site-settings-grid">
+      <button class="cms-site-setting-card" type="button" data-open-navigation><strong>☰ KATEGORIE I PODKATEGORIE</strong><span>Dodawanie, edycja, usuwanie i zmiana kolejności pozycji w górnym menu.</span></button>
+      <button class="cms-site-setting-card" type="button" data-open-links><strong>↗ LINKI SOCIAL MEDIA</strong><span>Zmień adres Twitch, Discord, Instagram i TikTok używany przez ikony oraz przyciski strony.</span></button>
+    </div>`);
+    const body = $('#cms-modal-body', modal);
+    $('[data-open-navigation]', body)?.addEventListener('click', openNavigationManager);
+    $('[data-open-links]', body)?.addEventListener('click', openSiteLinksManager);
+  }
+
+  function openNavigationManager() {
+    if (!isAdmin()) return;
+    let items = clone(window.MattCMS?.get('navigation', null) || window.MattCMS?.extractNavigationFromDom?.() || []);
+    const esc = window.MattCMS.escape;
+
+    const apply = () => {
+      window.MattCMS?.renderNavigation?.(items);
+      if (typeof window.updateLinks === 'function') window.updateLinks();
+    };
+
+    const save = async (message, redraw = true) => {
+      try {
+        await window.MattCMS.save('navigation', items);
+        apply();
+        notify(message);
+        if (redraw) draw();
+      } catch (e) { notify(`Błąd zapisu menu: ${e.message}`, 'error'); }
+    };
+
+    const move = (arr, from, to) => {
+      if (to < 0 || to >= arr.length) return;
+      const [moved] = arr.splice(from, 1);
+      arr.splice(to, 0, moved);
+      draw();
+    };
+
+    const draw = () => {
+      openModal('MENU — KATEGORIE I PODKATEGORIE', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
+        <button class="cms-primary" data-add-nav>+ DODAJ KATEGORIĘ</button>
+        <button data-save-nav-order>✓ ZAPISZ KOLEJNOŚĆ</button>
+        <button data-reset-nav>↶ PRZYWRÓĆ Z GITHUBA</button>
+        <button data-site-back>← MENU / LINKI</button>
+      </div><p>Kategoria bez podkategorii działa jak zwykły link. Po dodaniu podkategorii automatycznie staje się rozwijanym menu.</p></div>
+      <div class="cms-discord-list">${items.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.label || 'BEZ NAZWY')}</strong><p>${cat.children?.length ? `${cat.children.length} podkategorii` : esc(cat.href || 'Brak linku')}</p></div><div>
+        <button data-nav-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-nav-down="${ci}" ${ci===items.length-1?'disabled':''}>↓</button>
+        <button data-edit-nav="${ci}">EDYTUJ</button><button class="danger" data-delete-nav="${ci}">USUŃ</button>
+      </div></header>
+      <div class="cms-channel-admin-list">${(cat.children||[]).map((child,hi)=>`<article><div><span>↳</span><strong>${esc(child.label || 'PODKATEGORIA')}</strong><small>${esc(child.href || '#')}</small></div><div>
+        <button data-sub-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-sub-down="${ci}:${hi}" ${hi===(cat.children||[]).length-1?'disabled':''}>↓</button>
+        <button data-edit-sub="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-sub="${ci}:${hi}">USUŃ</button>
+      </div></article>`).join('')}<button class="cms-add-subitem" data-add-sub="${ci}">+ DODAJ PODKATEGORIĘ</button></div></section>`).join('')}</div>`);
+      const body = $('#cms-modal-body', modal);
+      $('[data-add-nav]', body)?.addEventListener('click', () => editCategory(-1));
+      $('[data-save-nav-order]', body)?.addEventListener('click', () => save('Kolejność menu została zapisana.'));
+      $('[data-reset-nav]', body)?.addEventListener('click', () => resetCmsKey('navigation', 'menu główne'));
+      $('[data-site-back]', body)?.addEventListener('click', openSiteSettingsManager);
+      $$('[data-nav-up]', body).forEach(b => b.addEventListener('click', () => move(items, Number(b.dataset.navUp), Number(b.dataset.navUp)-1)));
+      $$('[data-nav-down]', body).forEach(b => b.addEventListener('click', () => move(items, Number(b.dataset.navDown), Number(b.dataset.navDown)+1)));
+      $$('[data-edit-nav]', body).forEach(b => b.addEventListener('click', () => editCategory(Number(b.dataset.editNav))));
+      $$('[data-delete-nav]', body).forEach(b => b.addEventListener('click', async () => {
+        const i = Number(b.dataset.deleteNav);
+        if (!confirm(`Usunąć kategorię „${items[i]?.label}” razem z jej podkategoriami?`)) return;
+        items.splice(i,1); await save('Kategoria została usunięta.');
+      }));
+      $$('[data-add-sub]', body).forEach(b => b.addEventListener('click', () => editSub(Number(b.dataset.addSub), -1)));
+      $$('[data-edit-sub]', body).forEach(b => b.addEventListener('click', () => { const [ci,hi]=b.dataset.editSub.split(':').map(Number); editSub(ci,hi); }));
+      $$('[data-delete-sub]', body).forEach(b => b.addEventListener('click', async () => {
+        const [ci,hi]=b.dataset.deleteSub.split(':').map(Number);
+        if (!confirm(`Usunąć podkategorię „${items[ci]?.children?.[hi]?.label}”?`)) return;
+        items[ci].children.splice(hi,1); await save('Podkategoria została usunięta.');
+      }));
+      $$('[data-sub-up]', body).forEach(b => b.addEventListener('click', () => { const [ci,hi]=b.dataset.subUp.split(':').map(Number); move(items[ci].children, hi, hi-1); }));
+      $$('[data-sub-down]', body).forEach(b => b.addEventListener('click', () => { const [ci,hi]=b.dataset.subDown.split(':').map(Number); move(items[ci].children, hi, hi+1); }));
+    };
+
+    const editCategory = index => {
+      const current = index >= 0 ? items[index] : {label:'',href:'#/',children:[]};
+      const fields = [{name:'label',label:'Nazwa kategorii',required:true},{name:'href',label:'Link kategorii (używany, gdy nie ma podkategorii)',required:false}];
+      openModal(index>=0?'EDYTUJ KATEGORIĘ MENU':'DODAJ KATEGORIĘ MENU', `<form id="cms-nav-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
+        <div class="cms-form-context">Dla podstrony strony wpisz np. <strong>#/events</strong>. Możesz też użyć pełnego adresu https://…</div>
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form = $('#cms-nav-form', modal);
+      $('[data-back]', form)?.addEventListener('click', draw);
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const value = { ...current, ...parseFields(form, fields), children: current.children || [] };
+        if (index>=0) items[index]=value; else items.push(value);
+        await save('Kategoria menu została zapisana.');
+      });
+    };
+
+    const editSub = (ci,hi) => {
+      const current = hi>=0 ? items[ci].children[hi] : {label:'',href:'#/'};
+      const fields = [{name:'label',label:'Nazwa podkategorii',required:true},{name:'href',label:'Link / ścieżka',required:true}];
+      openModal(hi>=0?'EDYTUJ PODKATEGORIĘ':'DODAJ PODKATEGORIĘ', `<form id="cms-sub-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(items[ci].label)}</strong></div>${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form = $('#cms-sub-form', modal);
+      $('[data-back]', form)?.addEventListener('click', draw);
+      form.addEventListener('submit', async e => {
+        e.preventDefault();
+        const value = parseFields(form, fields);
+        items[ci].children ||= [];
+        if (hi>=0) items[ci].children[hi]=value; else items[ci].children.push(value);
+        await save('Podkategoria została zapisana.');
+      });
+    };
+
+    draw();
+  }
+
+  function openSiteLinksManager() {
+    if (!isAdmin()) return;
+    const current = { ...SITE_CONFIG, ...(window.MattCMS?.get('site_links', {}) || {}) };
+    const fields = [
+      {name:'twitchUrl',label:'Twitch — link przy ikonie / TWITCH.TV',type:'url',required:true},
+      {name:'discordUrl',label:'Discord — link do serwera',type:'url',required:true},
+      {name:'instagramUrl',label:'Instagram',type:'url',required:true},
+      {name:'tiktokUrl',label:'TikTok',type:'url',required:true}
+    ];
+    openModal('LINKI SOCIAL MEDIA', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-reset-links>↶ PRZYWRÓĆ Z CONFIG.JS</button><button data-site-back>← MENU / LINKI</button></div><p>Zmiana jest stosowana we wszystkich oznaczonych ikonach i oficjalnych przyciskach strony korzystających z tych adresów.</p></div>
+      <form id="cms-links-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button class="cms-primary" type="submit">ZAPISZ LINKI</button></div></form>`);
+    const body=$('#cms-modal-body',modal), form=$('#cms-links-form',modal);
+    $('[data-site-back]',body)?.addEventListener('click',openSiteSettingsManager);
+    $('[data-reset-links]',body)?.addEventListener('click',()=>resetCmsKey('site_links','linki social media'));
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      try {
+        await window.MattCMS.save('site_links',parseFields(form,fields));
+        if (typeof window.updateLinks === 'function') window.updateLinks();
+        notify('Linki zostały zapisane.');
+        openSiteSettingsManager();
+      } catch(err){notify(`Nie udało się zapisać linków: ${err.message}`,'error');}
+    });
   }
 
   function openStreamersManager() {
@@ -507,22 +816,50 @@
     let categories = clone(window.MattCMS?.get('discord_channels', null) || extractDiscordCategories());
     const esc = window.MattCMS.escape;
 
-    const saveAndRender = async message => {
-      try { await window.MattCMS.save('discord_channels', categories); notify(message); await rerender(); }
-      catch (e) { notify(`Błąd zapisu: ${e.message}`, 'error'); }
+    const applyBehind = () => window.MattCMS?.renderDiscordChannels?.(categories);
+
+    const saveAndRender = async (message, redraw = false) => {
+      try {
+        await window.MattCMS.save('discord_channels', categories);
+        applyBehind();
+        notify(message);
+        if (redraw) draw(); else await rerender();
+      } catch (e) { notify(`Błąd zapisu: ${e.message}`, 'error'); }
+    };
+
+    const move = (arr, from, to) => {
+      if (to < 0 || to >= arr.length) return;
+      const [moved] = arr.splice(from, 1);
+      arr.splice(to, 0, moved);
+      draw();
     };
 
     const draw = () => {
-      openModal('DISCORD — KANAŁY I KATEGORIE', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-category>+ DODAJ KATEGORIĘ</button><button data-reset-discord>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Możesz tworzyć własne kategorie, np. TWITCH / KONFIGURACJA, TEKSTOWE, GRY itd.</p></div>
-        <div class="cms-discord-list">${categories.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>${esc(cat.icon || '📁')} KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.title)}</strong><p>${esc(cat.description || '')}</p></div><div><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-delete-cat="${ci}">USUŃ</button></div></header><div class="cms-channel-admin-list">${(cat.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon || '#')}</span><strong>${esc(ch.name)}</strong><small>${esc(ch.description || '')}</small></div><div><button data-edit-channel="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-channel="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-channel="${ci}">+ DODAJ KANAŁ</button></div></section>`).join('')}</div>`);
+      openModal('DISCORD — KANAŁY I KATEGORIE', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
+        <button class="cms-primary" data-add-category>+ DODAJ KATEGORIĘ</button>
+        <button data-save-discord-order>✓ ZAPISZ KOLEJNOŚĆ</button>
+        <button data-reset-discord>↶ PRZYWRÓĆ Z GITHUBA</button>
+      </div><p>Możesz zmieniać nazwę, ikonę, opis i wyróżnienie każdego dymku kanału, dodawać nowe kanały oraz całe kategorie.</p></div>
+        <div class="cms-discord-list">${categories.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>${esc(cat.icon || '📁')} KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.title)}</strong><p>${esc(cat.description || '')}</p></div><div>
+          <button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===categories.length-1?'disabled':''}>↓</button>
+          <button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-delete-cat="${ci}">USUŃ</button>
+        </div></header><div class="cms-channel-admin-list">${(cat.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon || '#')}</span><strong>${esc(ch.name)}</strong><small>${esc(ch.description || '')}</small></div><div>
+          <button data-channel-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-channel-down="${ci}:${hi}" ${hi===(cat.channels||[]).length-1?'disabled':''}>↓</button>
+          <button data-edit-channel="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-channel="${ci}:${hi}">USUŃ</button>
+        </div></article>`).join('')}<button class="cms-add-subitem" data-add-channel="${ci}">+ DODAJ KANAŁ / OPIS</button></div></section>`).join('')}</div>`);
       const body=$('#cms-modal-body',modal);
       $('[data-add-category]',body).addEventListener('click',()=>editCategory(-1));
+      $('[data-save-discord-order]',body).addEventListener('click',()=>saveAndRender('Kolejność kategorii i kanałów została zapisana.'));
       $('[data-reset-discord]',body).addEventListener('click',()=>resetCmsKey('discord_channels', 'kanały i kategorie Discorda'));
+      $$('[data-cat-up]',body).forEach(b=>b.addEventListener('click',()=>move(categories,Number(b.dataset.catUp),Number(b.dataset.catUp)-1)));
+      $$('[data-cat-down]',body).forEach(b=>b.addEventListener('click',()=>move(categories,Number(b.dataset.catDown),Number(b.dataset.catDown)+1)));
       $$('[data-edit-cat]',body).forEach(b=>b.addEventListener('click',()=>editCategory(Number(b.dataset.editCat))));
       $$('[data-delete-cat]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.deleteCat);if(!confirm(`Usunąć kategorię ${categories[i].title} razem z kanałami?`))return;categories.splice(i,1);await saveAndRender('Kategoria usunięta.');}));
       $$('[data-add-channel]',body).forEach(b=>b.addEventListener('click',()=>editChannel(Number(b.dataset.addChannel),-1)));
       $$('[data-edit-channel]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.editChannel.split(':').map(Number);editChannel(ci,hi);}));
       $$('[data-delete-channel]',body).forEach(b=>b.addEventListener('click',async()=>{const [ci,hi]=b.dataset.deleteChannel.split(':').map(Number);if(!confirm(`Usunąć kanał ${categories[ci].channels[hi].name}?`))return;categories[ci].channels.splice(hi,1);await saveAndRender('Kanał usunięty.');}));
+      $$('[data-channel-up]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.channelUp.split(':').map(Number);move(categories[ci].channels,hi,hi-1);}));
+      $$('[data-channel-down]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.channelDown.split(':').map(Number);move(categories[ci].channels,hi,hi+1);}));
     };
 
     const editCategory = index => {
@@ -534,9 +871,14 @@
 
     const editChannel = (ci,hi) => {
       const ch=hi>=0?categories[ci].channels[hi]:{icon:'#',name:'',description:'',featured:false};
-      const fields=[{name:'icon',label:'Ikona / emoji'},{name:'name',label:'Nazwa kanału',required:true},{name:'description',label:'Opis kanału',type:'textarea',required:true},{name:'featured',label:'Wyróżniony kanał',type:'checkbox'}];
-      openModal(hi>=0?'EDYTUJ KANAŁ':'DODAJ KANAŁ',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
-      const form=$('#cms-channel-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]=v;else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
+      const fields=[
+        {name:'icon',label:'Ikona / emoji'},
+        {name:'name',label:'Nazwa kanału',required:true},
+        {name:'description',label:'Pełny opis kanału / treść dymku',type:'textarea',required:true},
+        {name:'featured',label:'Wyróżniony kanał',type:'checkbox'}
+      ];
+      openModal(hi>=0?'EDYTUJ KANAŁ / DYMEK':'DODAJ KANAŁ / DYMEK',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-channel-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]={...ch,...v};else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
     };
 
     draw();
