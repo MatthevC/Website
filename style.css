@@ -8356,3 +8356,195 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .cms-image-tools small{color:#858892;font-size:11px}
 .cms-image-tools button{padding:7px 9px;color:#ffc4c6;border-color:#6f292d;background:#291416}
 .cms-form button:disabled{opacity:.55;cursor:not-allowed}
+
+/* ============================================================
+   PROFIL UŻYTKOWNIKA v2.3 — avatar + samodzielna edycja konta
+   ============================================================ */
+.header-login{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+}
+.header-user-avatar{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  object-fit:cover;
+  flex:0 0 28px;
+  border:1px solid rgba(255,255,255,.28);
+  background:#202124;
+}
+.header-user-avatar[hidden]{display:none!important}
+
+.profile-modal{
+  padding:24px;
+  overflow:auto;
+  backdrop-filter:blur(9px);
+}
+.profile-box.profile-box-modern{
+  width:min(760px, calc(100vw - 32px));
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+  padding:30px;
+  background:#111216;
+  border:1px solid #31333a;
+  border-top:3px solid #ef2b2d;
+  border-radius:14px;
+  box-shadow:0 28px 80px rgba(0,0,0,.6);
+}
+.profile-box-modern h2{
+  margin:3px 0 4px;
+  font-size:30px;
+  line-height:1;
+}
+.profile-heading p{
+  margin:8px 0 0;
+  color:#9ea1aa;
+  font-size:14px;
+}
+.profile-kicker{
+  color:#ef2b2d;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:1.8px;
+}
+.profile-avatar-section{
+  display:grid;
+  grid-template-columns:112px 1fr;
+  gap:22px;
+  align-items:center;
+  margin:26px 0 22px;
+  padding:18px;
+  background:#0c0d10;
+  border:1px solid #292b31;
+  border-radius:12px;
+}
+.profile-avatar-preview{
+  width:104px;
+  height:104px;
+  border-radius:50%;
+  object-fit:cover;
+  background:#202124;
+  border:2px solid #3b3e47;
+  box-shadow:0 0 0 5px rgba(239,43,45,.07);
+}
+.profile-avatar-controls{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+.profile-avatar-controls strong{font-size:16px}
+.profile-help{
+  color:#8f939c;
+  font-size:12px;
+  line-height:1.4;
+}
+.profile-help-block{display:block;margin:-2px 0 10px}
+.profile-avatar-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:4px;
+}
+.profile-box-modern .profile-secondary-btn,
+.profile-box-modern .profile-ghost-btn{
+  width:auto;
+  margin:0;
+  padding:10px 13px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:800;
+}
+.profile-box-modern .profile-secondary-btn{
+  background:#24262c;
+  border:1px solid #41444e;
+}
+.profile-box-modern .profile-secondary-btn:hover{background:#30333a}
+.profile-box-modern .profile-ghost-btn{
+  background:transparent;
+  border:1px solid #373941;
+  color:#b7bac2;
+}
+.profile-box-modern .profile-ghost-btn:hover{background:#202126;color:#fff}
+.profile-file-name{
+  display:block;
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#a8abb2;
+  font-size:12px;
+}
+.profile-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.profile-box-modern .profile-field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin:0;
+  color:#d8d9dd;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.2px;
+}
+.profile-box-modern .profile-field input{
+  margin:0;
+  border-radius:7px;
+  min-height:44px;
+  background:#090a0c;
+  border:1px solid #30323a;
+}
+.profile-box-modern .profile-field input:focus{
+  outline:none;
+  border-color:#ef2b2d;
+  box-shadow:0 0 0 3px rgba(239,43,45,.09);
+}
+.profile-divider{
+  height:1px;
+  background:#292b31;
+  margin:22px 0 18px;
+}
+.profile-section-title{
+  margin:0 0 6px;
+  font-size:14px;
+  letter-spacing:1px;
+}
+.profile-box-modern .profile-save-btn{
+  width:100%;
+  margin-top:20px;
+  padding:13px 16px;
+  border-radius:7px;
+  font-weight:800;
+}
+.profile-box-modern .profile-save-btn:disabled{
+  opacity:.6;
+  cursor:wait;
+}
+.profile-message{
+  min-height:20px;
+  margin:12px 0 0;
+  color:#d4d6dc;
+  font-size:13px;
+  line-height:1.45;
+}
+.profile-close{
+  z-index:2;
+  right:14px!important;
+  top:10px!important;
+}
+
+@media (max-width:680px){
+  .profile-modal{padding:10px}
+  .profile-box.profile-box-modern{width:100%;max-height:calc(100vh - 20px);padding:22px 16px}
+  .profile-avatar-section{grid-template-columns:1fr;text-align:center}
+  .profile-avatar-preview{margin:auto}
+  .profile-avatar-buttons{justify-content:center}
+  .profile-form-grid{grid-template-columns:1fr}
+  .header-login{padding-left:10px!important;padding-right:12px!important}
+  .header-user-avatar{width:26px;height:26px;flex-basis:26px}
+}

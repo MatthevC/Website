@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Oficjalna strona społeczności kanału Twitch. Regulaminy, komendy, VIP, moderacja, Discord i eventy.">
   <title>MatthevC — Centrum społeczności</title>
-  <link rel="stylesheet" href="style.css?v=50">
+  <link rel="stylesheet" href="style.css?v=51">
 </head>
 <body>
   <header class="site-header">
@@ -71,7 +71,7 @@
       <a class="header-cta" id="header-twitch-link" href="#" target="_blank" rel="noopener"><img class="header-twitch-icon" src="pictures/social/twitch-mark.png" alt="" aria-hidden="true"><span>TWITCH.TV</span></a>
       <div class="header-spacer"></div>
       <div class="user-area">
-          <button id="openLogin" class="header-login">LOGIN</button>
+          <button id="openLogin" class="header-login"><img id="headerUserAvatar" class="header-user-avatar" src="pictures/default-avatar.svg" alt="" hidden><span id="headerUserName">LOGIN</span></button>
           <div id="userMenu" class="user-menu">
             <a id="adminLink" style="display:none" href="admin/">Panel administratora</a>
             <button id="editProfileBtn">Edytuj profil</button>
@@ -83,25 +83,57 @@
 
   
 <div id="profileModal" class="profile-modal">
-  <div class="profile-box">
-    <button id="closeProfile" class="profile-close">×</button>
-    <h2>EDYTUJ PROFIL</h2>
-    <label>Stary e-mail</label>
-    <input id="profileOldEmail" type="email" placeholder="Twój obecny e-mail">
-    <label>Obecne hasło</label>
-    <input id="profileOldPassword" type="password" placeholder="Twoje obecne hasło">
+  <div class="profile-box profile-box-modern">
+    <button id="closeProfile" class="profile-close" type="button">×</button>
+    <div class="profile-heading">
+      <div>
+        <span class="profile-kicker">USTAWIENIA KONTA</span>
+        <h2>EDYTUJ PROFIL</h2>
+        <p>Zmień swój avatar, nazwę oraz dane logowania. Nie musisz wysyłać prośby do administratora.</p>
+      </div>
+    </div>
 
-    <label>Nowy nick</label>
-    <input id="profileNewNick" placeholder="Nowy nick">
+    <section class="profile-avatar-section">
+      <img id="profileAvatarPreview" class="profile-avatar-preview" src="pictures/default-avatar.svg" alt="Twój avatar">
+      <div class="profile-avatar-controls">
+        <strong>Avatar</strong>
+        <span class="profile-help">Jeśli nie wybierzesz zdjęcia, wyświetlany będzie domyślny avatar użytkownika.</span>
+        <input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+        <div class="profile-avatar-buttons">
+          <button id="profileAvatarPick" type="button" class="profile-secondary-btn">📁 WYBIERZ ZDJĘCIE Z DYSKU</button>
+          <button id="profileAvatarRemove" type="button" class="profile-ghost-btn">UŻYJ DOMYŚLNEGO</button>
+        </div>
+        <span id="profileAvatarName" class="profile-file-name">Nie wybrano nowego zdjęcia</span>
+      </div>
+    </section>
 
-    <label>Nowy e-mail</label>
-    <input id="profileNewEmail" type="email" placeholder="Nowy e-mail">
+    <div class="profile-form-grid">
+      <label class="profile-field">Nazwa użytkownika
+        <input id="profileNewNick" maxlength="32" autocomplete="nickname" placeholder="Twój nick">
+      </label>
+      <label class="profile-field">E-mail
+        <input id="profileNewEmail" type="email" autocomplete="email" placeholder="Twój e-mail">
+      </label>
+    </div>
 
-    <label>Nowe hasło</label>
-    <input id="profileNewPassword" type="password" placeholder="Nowe hasło">
+    <div class="profile-divider"></div>
+    <h3 class="profile-section-title">ZMIEŃ HASŁO</h3>
+    <p class="profile-help profile-help-block">Obecne hasło jest wymagane tylko wtedy, gdy zmieniasz e-mail lub hasło.</p>
 
-    <button id="saveProfile">ZAPISZ ZMIANY</button>
-    <p id="profileMsg"></p>
+    <label class="profile-field">Obecne hasło
+      <input id="profileCurrentPassword" type="password" autocomplete="current-password" placeholder="Wpisz obecne hasło">
+    </label>
+    <div class="profile-form-grid">
+      <label class="profile-field">Nowe hasło
+        <input id="profileNewPassword" type="password" autocomplete="new-password" placeholder="Minimum 8 znaków">
+      </label>
+      <label class="profile-field">Powtórz nowe hasło
+        <input id="profileNewPasswordRepeat" type="password" autocomplete="new-password" placeholder="Powtórz nowe hasło">
+      </label>
+    </div>
+
+    <button id="saveProfile" class="profile-save-btn" type="button">ZAPISZ PROFIL</button>
+    <p id="profileMsg" class="profile-message"></p>
   </div>
 </div>
 
@@ -139,7 +171,7 @@
 <script src="supabase.js"></script>
 <script src="cms.js?v=2"></script>
 <script src="app.js?v=55"></script>
-<script src="auth-ui.js"></script>
+<script src="auth-ui.js?v=3"></script>
 <script src="cms-admin.js?v=2"></script>
 
 <div id="loginModal" class="login-overlay" style="display:none">
