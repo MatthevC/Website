@@ -8622,3 +8622,18 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .cms-page-callout-button:hover{filter:brightness(1.12)}
 .cms-bubble-manager-section{display:grid;gap:10px;margin-top:18px}.cms-bubble-manager-section>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:#15161a}.cms-bubble-manager-section>header>div{display:flex;flex-direction:column;gap:3px}.cms-bubble-manager-section>header small{color:#ef2b2d;font:900 10px/1 Rajdhani,sans-serif;letter-spacing:.12em}.cms-bubble-manager-section>header strong{font-size:13px}.cms-bubble-manager-section>header>span{min-width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(239,43,45,.25);border-radius:9px;background:rgba(239,43,45,.08);color:#ff6365;font-weight:900}.cms-callout-live-preview{grid-column:1/-1;display:grid;gap:8px;padding:13px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:#0b0c0f}.cms-callout-live-preview>small{color:#7f828b;font:800 10px/1 Rajdhani,sans-serif;letter-spacing:.13em}.cms-callout-live-preview .cms-page-callout{margin:0}.cms-bubbles-main-actions{align-items:flex-start}
 @media(max-width:700px){.cms-page-callout{grid-template-columns:42px minmax(0,1fr);padding:15px;gap:12px}.cms-page-callout-icon{width:40px;height:40px;border-radius:10px}.cms-bubble-manager-section>header{align-items:flex-start}.cms-bubbles-main-actions{flex-direction:column}}
+
+
+/* ===== CMS — PLIKI DO POBRANIA ===== */
+.cms-download-manager-item > div:first-child > div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.cms-download-manager-item > div:first-child span{color:#8f9198;font-size:12px}
+.cms-download-file-row{display:flex;align-items:center;gap:12px;min-height:46px;border:1px solid #34363c;background:#0b0c0e;border-radius:8px;padding:7px 10px}
+.cms-download-file-button{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 14px;background:#202228;border:1px solid #454852;border-radius:7px;color:#fff;font-weight:800;cursor:pointer;white-space:nowrap}
+.cms-download-file-button:hover{border-color:#f12631}
+.cms-download-file-row > span{min-width:0;color:#a6a8ad;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cms-download-current{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid #2e3035;border-radius:8px;background:#101114}
+.cms-download-current small{color:#777b84;font-weight:800;letter-spacing:.08em}
+.cms-download-current a{color:#ff3943;overflow-wrap:anywhere}
+.cms-download-hidden{margin-top:22px;padding-top:18px;border-top:1px solid #292b30}
+.cms-download-hidden>header{margin-bottom:10px;color:#8c8f96;font-size:12px;letter-spacing:.08em}
+@media(max-width:700px){.cms-download-file-row{align-items:stretch;flex-direction:column}.cms-download-file-button{width:100%}.cms-download-file-row>span{white-space:normal;overflow-wrap:anywhere}}

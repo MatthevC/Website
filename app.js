@@ -2555,61 +2555,133 @@ function discordJoinPage() {
 
 
 
-function downloadsPage() {
-  const downloadItems = [
-    {
-      id: "download-twitch-words",
-      type: "TXT",
-      meta: "6 KB • TWITCH",
-      title: "Zakazane słowa na Twitchu",
-      description: "Czytelna lista słów i zwrotów powiązana z naszym regulaminem Twitch. Przydatna dla widzów, moderatorów i osób, które chcą szybko sprawdzić zasady.",
-      href: "downloads/twitch-zakazane-slowa-i-zwroty.txt",
-      secondaryHref: "#/rules/twitch",
-      secondaryLabel: "ZOBACZ REGULAMIN",
-      icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4.5 5v6.2c0 4.7 3 8.9 7.5 10.8 4.5-1.9 7.5-6.1 7.5-10.8V5L12 2Zm0 2.2 5.4 2.1v4.9c0 3.7-2.1 7-5.4 8.6-3.3-1.6-5.4-4.9-5.4-8.6V6.3L12 4.2Zm-1 4h2v5h-2v-5Zm0 6.4h2v2h-2v-2Z"/></svg>`
-    },
-    {
-      id: "download-matt-reshade",
-      type: "INI",
-      meta: "4 KB • PRESET RESHADE",
-      title: "MattCreshade.ini",
-      description: "Uniwersalny preset ReShade od Matta. Gotowy plik konfiguracyjny do pobrania bez szukania ustawień po Discordzie i wiadomościach.",
-      href: "downloads/MattCreshade.ini",
-      icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h10v2H4V5Zm0 6h16v2H4v-2Zm0 6h12v2H4v-2Zm13-13h3v4h-3V4ZM9 10h3v4H9v-4Zm9 6h3v4h-3v-4Z"/></svg>`
-    },
-    {
-      id: "download-dbd-reshade",
-      type: "ZIP",
-      meta: "511 KB • DEAD BY DAYLIGHT",
-      title: "Reshade Filters DBD",
-      description: "Paczka filtrów ReShade od KinightLighta, polecana w społeczności Dead by Daylight. Wszystkie pliki są spakowane w jednym archiwum ZIP.",
-      href: "downloads/Reshade Filters DBD.zip",
-      icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h9l5 5v13H5V3Zm2 2v14h10V9h-4V5H7Zm8 .8V7h1.2L15 5.8ZM9 9h2v2H9V9Zm2 2h2v2h-2v-2Zm-2 2h2v2H9v-2Zm2 2h2v2h-2v-2Z"/></svg>`
-    }
-  ];
+const BASE_DOWNLOAD_ITEMS = [
+  {
+    id: "download-twitch-words",
+    type: "TXT",
+    sizeLabel: "6 KB",
+    category: "TWITCH",
+    title: "Zakazane słowa na Twitchu",
+    description: "Czytelna lista słów i zwrotów powiązana z naszym regulaminem Twitch. Przydatna dla widzów, moderatorów i osób, które chcą szybko sprawdzić zasady.",
+    href: "downloads/twitch-zakazane-slowa-i-zwroty.txt",
+    secondaryHref: "#/rules/twitch",
+    secondaryLabel: "ZOBACZ REGULAMIN"
+  },
+  {
+    id: "download-matt-reshade",
+    type: "INI",
+    sizeLabel: "4 KB",
+    category: "PRESET RESHADE",
+    title: "MattCreshade.ini",
+    description: "Uniwersalny preset ReShade od Matta. Gotowy plik konfiguracyjny do pobrania bez szukania ustawień po Discordzie i wiadomościach.",
+    href: "downloads/MattCreshade.ini"
+  },
+  {
+    id: "download-dbd-reshade",
+    type: "ZIP",
+    sizeLabel: "511 KB",
+    category: "DEAD BY DAYLIGHT",
+    title: "Reshade Filters DBD",
+    description: "Paczka filtrów ReShade od KinightLighta, polecana w społeczności Dead by Daylight. Wszystkie pliki są spakowane w jednym archiwum ZIP.",
+    href: "downloads/Reshade Filters DBD.zip"
+  }
+];
 
-  const cards = downloadItems.map((item, index) => `
+function downloadTypeFromHref(value = '') {
+  const clean = String(value || '').split('?')[0].split('#')[0];
+  const name = decodeURIComponent(clean.split('/').pop() || '');
+  const ext = name.includes('.') ? name.split('.').pop() : '';
+  return String(ext || 'PLIK').toUpperCase().slice(0, 8);
+}
+
+function downloadIcon(type = 'PLIK') {
+  const t = String(type || 'PLIK').toUpperCase();
+  if (t === 'ZIP' || t === 'RAR' || t === '7Z') return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h9l5 5v13H5V3Zm2 2v14h10V9h-4V5H7Zm8 .8V7h1.2L15 5.8ZM9 9h2v2H9V9Zm2 2h2v2h-2v-2Zm-2 2h2v2H9v-2Zm2 2h2v2h-2v-2Z"/></svg>`;
+  if (t === 'INI' || t === 'CFG' || t === 'JSON') return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h10v2H4V5Zm0 6h16v2H4v-2Zm0 6h12v2H4v-2Zm13-13h3v4h-3V4ZM9 10h3v4H9v-4Zm9 6h3v4h-3v-4Z"/></svg>`;
+  if (t === 'TXT' || t === 'PDF' || t === 'DOC' || t === 'DOCX') return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h9l5 5v13H5V3Zm2 2v14h10V9h-4V5H7Zm2 7h6v2H9v-2Zm0 4h6v2H9v-2Z"/></svg>`;
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h9l5 5v13H5V3Zm2 2v14h10V9h-4V5H7Zm5 6v4.2l1.6-1.6 1.4 1.4-4 4-4-4 1.4-1.4 1.6 1.6V11h2Z"/></svg>`;
+}
+
+function downloadCmsConfig() {
+  const raw = window.MattCMS?.get('downloads_config', null);
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { order: [], overrides: {}, hidden: [], custom: [] };
+  return {
+    order: Array.isArray(raw.order) ? raw.order.map(String) : [],
+    overrides: raw.overrides && typeof raw.overrides === 'object' && !Array.isArray(raw.overrides) ? raw.overrides : {},
+    hidden: Array.isArray(raw.hidden) ? raw.hidden.map(String) : [],
+    custom: Array.isArray(raw.custom) ? raw.custom : []
+  };
+}
+
+function resolvedDownloadItems() {
+  const config = downloadCmsConfig();
+  const hidden = new Set(config.hidden);
+  const items = [];
+  BASE_DOWNLOAD_ITEMS.forEach(base => {
+    if (hidden.has(base.id)) return;
+    const override = config.overrides?.[base.id] || {};
+    items.push({ ...base, ...override, id: base.id, source: 'github' });
+  });
+  (config.custom || []).forEach((item, index) => {
+    if (!item || typeof item !== 'object') return;
+    const id = String(item.id || `download-custom-${index + 1}`);
+    if (hidden.has(id)) return;
+    items.push({ ...item, id, source: 'cms' });
+  });
+  const order = new Map((config.order || []).map((id, index) => [String(id), index]));
+  items.sort((a, b) => {
+    const ai = order.has(a.id) ? order.get(a.id) : 100000;
+    const bi = order.has(b.id) ? order.get(b.id) : 100000;
+    if (ai !== bi) return ai - bi;
+    return 0;
+  });
+  return items.map((item, index) => ({
+    ...item,
+    type: String(item.type || downloadTypeFromHref(item.href)).toUpperCase(),
+    sizeLabel: String(item.sizeLabel || ''),
+    category: String(item.category || 'PLIK'),
+    title: String(item.title || `Plik ${index + 1}`),
+    description: String(item.description || ''),
+    href: String(item.href || '#'),
+    secondaryHref: String(item.secondaryHref || ''),
+    secondaryLabel: String(item.secondaryLabel || '')
+  }));
+}
+
+window.MattDownloads = {
+  baseItems: BASE_DOWNLOAD_ITEMS,
+  getConfig: downloadCmsConfig,
+  resolvedItems: resolvedDownloadItems,
+  typeFromHref: downloadTypeFromHref
+};
+
+function downloadsPage() {
+  const downloadItems = resolvedDownloadItems();
+
+  const cards = downloadItems.map((item, index) => {
+    const meta = [item.sizeLabel, item.category].filter(Boolean).join(' • ');
+    return `
     <article
       class="downloads-card"
-      id="${item.id}"
+      id="${escapeHtml(item.id)}"
       data-collection-item
-      data-search="${escapeHtml(`${item.title} ${item.type} ${item.meta} ${item.description}`.toLowerCase())}">
-      <div class="downloads-card-icon">${item.icon}</div>
+      data-search="${escapeHtml(`${item.title} ${item.type} ${meta} ${item.description}`.toLowerCase())}">
+      <div class="downloads-card-icon">${downloadIcon(item.type)}</div>
       <div class="downloads-card-main">
         <div class="downloads-card-topline">
-          <span class="downloads-type">${item.type}</span>
-          <span class="downloads-meta">${item.meta}</span>
+          <span class="downloads-type">${escapeHtml(item.type)}</span>
+          <span class="downloads-meta">${escapeHtml(meta)}</span>
         </div>
-        <h2>${item.title}</h2>
-        <p>${item.description}</p>
+        <h2>${escapeHtml(item.title)}</h2>
+        <p>${escapeHtml(item.description)}</p>
         <div class="downloads-actions">
-          <a class="downloads-primary" href="${item.href}" download>POBIERZ PLIK ↓</a>
-          ${item.secondaryHref ? `<a class="downloads-secondary" href="${item.secondaryHref}">${item.secondaryLabel} →</a>` : ""}
+          <a class="downloads-primary" href="${escapeHtml(item.href)}" download>POBIERZ PLIK ↓</a>
+          ${item.secondaryHref ? `<a class="downloads-secondary" href="${escapeHtml(item.secondaryHref)}">${escapeHtml(item.secondaryLabel || 'ZOBACZ WIĘCEJ')} →</a>` : ""}
         </div>
       </div>
-      <div class="downloads-card-number">0${index + 1}</div>
-    </article>
-  `).join("");
+      <div class="downloads-card-number">${String(index + 1).padStart(2, '0')}</div>
+    </article>`;
+  }).join("");
 
   return `
     <div class="container content-wrap downloads-page">
@@ -2651,7 +2723,7 @@ function downloadsPage() {
         </section>
 
         <section id="downloads-list" class="downloads-list" aria-label="Pliki do pobrania">
-          ${cards}
+          ${cards || '<div class="collection-empty">Aktualnie nie ma żadnych plików do pobrania.</div>'}
         </section>
 
         <div id="downloads-empty" class="collection-empty" hidden>Nie znaleziono plików pasujących do wyszukiwania.</div>
@@ -3540,7 +3612,7 @@ async function render() {
       if (typeof window.updateEditButtons === "function") window.updateEditButtons();
     }
   } else {
-    app.innerHTML = page.body;
+    app.innerHTML = (path === "viewer/downloads" || path === "downloads") ? downloadsPage() : page.body;
   }
 
   if (window.MattCMS) window.MattCMS.applyRoute(path || "home");

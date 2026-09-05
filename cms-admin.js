@@ -65,6 +65,53 @@
     return window.supabaseClient.storage.from('cms-images').getPublicUrl(path).data.publicUrl;
   }
 
+
+  function cmsDownloadExtension(file) {
+    const name = String(file?.name || '');
+    const raw = name.includes('.') ? name.split('.').pop() : '';
+    return String(raw || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10) || 'bin';
+  }
+
+  function cmsPrettyBytes(bytes) {
+    const n = Number(bytes || 0);
+    if (!Number.isFinite(n) || n <= 0) return '';
+    if (n < 1024) return `${Math.round(n)} B`;
+    if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))} KB`;
+    return `${(n / (1024 * 1024)).toFixed(n >= 10 * 1024 * 1024 ? 0 : 1).replace('.', ',')} MB`;
+  }
+
+  function validateCmsDownload(file) {
+    if (!file) throw new Error('Wybierz plik z dysku.');
+    if (file.size <= 0) throw new Error('Wybrany plik jest pusty.');
+    if (file.size > 50 * 1024 * 1024) throw new Error('Plik jest za duży. Maksymalny rozmiar w konfiguratorze to 50 MB.');
+  }
+
+  async function uploadCmsDownload(file, itemLabel) {
+    validateCmsDownload(file);
+    if (!window.supabaseClient) throw new Error('Brak połączenia z Supabase.');
+    const safeName = slugify(itemLabel || file.name || 'plik').slice(0, 55) || 'plik';
+    const ext = cmsDownloadExtension(file);
+    const path = `files/${safeName}-${cmsCompactStamp()}.${ext}`;
+    const { error } = await window.supabaseClient.storage.from('cms-downloads').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type || 'application/octet-stream'
+    });
+    if (error) {
+      const raw = String(error.message || 'Nieznany błąd');
+      if (/bucket|not found/i.test(raw)) throw new Error('Brakuje bucketu cms-downloads w Supabase. Uruchom przygotowany plik CMS_UPDATE_DOWNLOADS.sql.');
+      throw new Error(`Nie udało się wysłać pliku: ${raw}`);
+    }
+    const publicUrl = window.supabaseClient.storage.from('cms-downloads').getPublicUrl(path).data.publicUrl;
+    return {
+      href: publicUrl,
+      storagePath: path,
+      fileName: file.name,
+      type: ext.toUpperCase(),
+      sizeLabel: cmsPrettyBytes(file.size)
+    };
+  }
+
   function isAdmin() { return window.currentUserIsAdmin === true; }
 
   function formatBackupDate(value) {
@@ -148,6 +195,7 @@
     if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager };
     if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager };
     if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager };
+    if (['viewer/downloads','downloads'].includes(route)) return { label: 'PLIKI DO POBRANIA', action: openDownloadsManager };
     if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager };
     if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager };
     if (route === 'discord/join') return { label: 'PODGLĄD / KOMUNIKATY', action: openDiscordJoinManager };
@@ -1009,6 +1057,170 @@
         {name:'roles',label:'Dostęp dla',type:'roles'}
       ]
     });
+  }
+
+
+  function openDownloadsManager() {
+    if (!isAdmin()) return;
+    const esc = window.MattCMS?.escape || (v => String(v || ''));
+    const baseItems = clone(window.MattDownloads?.baseItems || []);
+    let config = clone(window.MattDownloads?.getConfig?.() || { order: [], overrides: {}, hidden: [], custom: [] });
+    config.order = Array.isArray(config.order) ? config.order.map(String) : [];
+    config.overrides = config.overrides && typeof config.overrides === 'object' ? config.overrides : {};
+    config.hidden = Array.isArray(config.hidden) ? config.hidden.map(String) : [];
+    config.custom = Array.isArray(config.custom) ? config.custom : [];
+
+    const baseMap = new Map(baseItems.map(item => [String(item.id), item]));
+    const customMap = () => new Map(config.custom.map(item => [String(item.id), item]));
+    const hiddenSet = () => new Set(config.hidden.map(String));
+
+    const visibleItems = () => {
+      const hidden = hiddenSet();
+      const list = [];
+      baseItems.forEach(base => {
+        if (hidden.has(String(base.id))) return;
+        list.push({ ...base, ...(config.overrides[String(base.id)] || {}), id:String(base.id), source:'github' });
+      });
+      config.custom.forEach(item => {
+        if (!item || hidden.has(String(item.id))) return;
+        list.push({ ...item, id:String(item.id), source:'cms' });
+      });
+      const order = new Map(config.order.map((id,index)=>[String(id),index]));
+      list.sort((a,b)=>(order.has(a.id)?order.get(a.id):100000)-(order.has(b.id)?order.get(b.id):100000));
+      return list;
+    };
+
+    const normalizeOrder = () => {
+      const ids = visibleItems().map(item => String(item.id));
+      config.order = [...ids, ...config.order.filter(id => !ids.includes(String(id)))];
+    };
+
+    const save = async (message, redraw = true) => {
+      try {
+        normalizeOrder();
+        await window.MattCMS.save('downloads_config', config);
+        notify(message);
+        if (redraw) draw(); else await rerender();
+      } catch (error) { notify(`Błąd zapisu: ${error.message}`, 'error'); }
+    };
+
+
+    const draw = () => {
+      const visible = visibleItems();
+      const hiddenBase = baseItems.filter(item => hiddenSet().has(String(item.id)));
+      openModal('DO POBRANIA — PLIKI', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
+        <button class="cms-primary" type="button" data-add-download>+ DODAJ PLIK</button>
+        <button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>
+        <button type="button" data-reset-downloads>↶ WSZYSTKO Z GITHUBA</button>
+      </div><p>Nowe pliki wybierasz z dysku. Możesz też zmienić opis, kategorię, podmienić istniejący plik lub zmienić kolejność wyświetlania.</p></div>
+      <div class="cms-manager-list">${visible.length ? visible.map((item,index)=>`<article class="cms-manager-item cms-download-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${esc(String(item.type || window.MattDownloads?.typeFromHref?.(item.href) || 'PLIK').toUpperCase())} / ${item.source==='github'?'GITHUB':'CMS'}</small><div><strong>${esc(item.title || 'Plik')}</strong><span>${esc([item.sizeLabel,item.category].filter(Boolean).join(' • '))}</span></div></div><div><button type="button" data-download-up="${esc(item.id)}" ${index===0?'disabled':''}>↑</button><button type="button" data-download-down="${esc(item.id)}" ${index===visible.length-1?'disabled':''}>↓</button><button type="button" data-edit-download="${esc(item.id)}">EDYTUJ</button>${item.source==='github'?`<button type="button" data-reset-download="${esc(item.id)}" ${config.overrides[item.id]?'':'disabled'}>↶ GITHUB</button>`:''}<button class="danger" type="button" data-delete-download="${esc(item.id)}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak plików do pobrania. Dodaj pierwszy.</div>'}</div>
+      ${hiddenBase.length?`<section class="cms-download-hidden"><header><strong>UKRYTE PLIKI Z GITHUBA</strong></header><div class="cms-manager-list">${hiddenBase.map(item=>`<article class="cms-manager-item"><div><small>UKRYTY</small><strong>${esc(item.title)}</strong></div><div><button type="button" data-restore-download="${esc(item.id)}">PRZYWRÓĆ</button></div></article>`).join('')}</div></section>`:''}`);
+
+      $('[data-add-download]', modal)?.addEventListener('click', () => edit(null));
+      $('[data-save-order]', modal)?.addEventListener('click', () => save('Kolejność plików została zapisana.', false));
+      $('[data-reset-downloads]', modal)?.addEventListener('click', async () => {
+        if (!confirm('Przywrócić całą sekcję plików do wersji z GitHuba? Własne pliki CMS znikną z listy, ale backup zachowa konfigurację.')) return;
+        try { await window.MattCMS.remove('downloads_config'); notify('Przywrócono pliki z GitHuba.'); await rerender(); }
+        catch(error){ notify(error.message,'error'); }
+      });
+
+      $$('[data-download-up]', modal).forEach(btn => btn.addEventListener('click', () => move(btn.dataset.downloadUp, -1)));
+      $$('[data-download-down]', modal).forEach(btn => btn.addEventListener('click', () => move(btn.dataset.downloadDown, 1)));
+      $$('[data-edit-download]', modal).forEach(btn => btn.addEventListener('click', () => edit(btn.dataset.editDownload)));
+      $$('[data-reset-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
+        const id=String(btn.dataset.resetDownload); delete config.overrides[id]; config.hidden=config.hidden.filter(x=>String(x)!==id); await save('Przywrócono dane pliku z GitHuba.');
+      }));
+      $$('[data-delete-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
+        const id=String(btn.dataset.deleteDownload); const base=baseMap.has(id);
+        const item=visibleItems().find(x=>String(x.id)===id);
+        if (!confirm(`Usunąć z listy „${item?.title || 'ten plik'}”?`)) return;
+        if (base) {
+          if (!config.hidden.includes(id)) config.hidden.push(id);
+        } else {
+          config.custom=config.custom.filter(x=>String(x.id)!==id);
+        }
+        config.order=config.order.filter(x=>String(x)!==id);
+        await save('Plik został usunięty z listy.');
+      }));
+      $$('[data-restore-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
+        const id=String(btn.dataset.restoreDownload); config.hidden=config.hidden.filter(x=>String(x)!==id); if(!config.order.includes(id))config.order.push(id); await save('Plik został przywrócony.');
+      }));
+    };
+
+    const move = (id, direction) => {
+      const list=visibleItems(); const index=list.findIndex(x=>String(x.id)===String(id)); const target=index+direction;
+      if(index<0||target<0||target>=list.length)return;
+      [list[index],list[target]]=[list[target],list[index]];
+      config.order=list.map(x=>String(x.id));
+      draw();
+    };
+
+    const edit = (id) => {
+      id = id ? String(id) : '';
+      const base = id ? baseMap.get(id) : null;
+      const custom = id ? customMap().get(id) : null;
+      const current = clone(base ? { ...base, ...(config.overrides[id] || {}) } : (custom || {
+        id:'', title:'', description:'', category:'', type:'', sizeLabel:'', href:'', storagePath:'', fileName:'', secondaryHref:'', secondaryLabel:''
+      }));
+      const isNew=!id;
+      openModal(isNew?'DODAJ PLIK DO POBRANIA':'EDYTUJ PLIK DO POBRANIA', `<form id="cms-download-form" class="cms-form">
+        <label class="cms-field"><span>Nazwa wyświetlana</span><input name="title" required maxlength="120" value="${esc(current.title||'')}"></label>
+        <label class="cms-field"><span>Opis</span><textarea name="description" rows="5" maxlength="700" required>${esc(current.description||'')}</textarea></label>
+        <div class="cms-form-grid two">
+          <label class="cms-field"><span>Kategoria</span><input name="category" maxlength="80" placeholder="Np. TWITCH, DBD, RESHADE" value="${esc(current.category||'')}"></label>
+          <label class="cms-field"><span>Typ pliku</span><input name="type" maxlength="10" placeholder="Uzupełni się z pliku" value="${esc(current.type||'')}"></label>
+        </div>
+        <label class="cms-field"><span>${isNew?'Plik z dysku':'Podmień plik (opcjonalnie)'}</span><div class="cms-download-file-row"><label class="cms-download-file-button">📁 WYBIERZ PLIK<input type="file" name="file" ${isNew?'required':''} hidden></label><span data-download-file-name>${esc(current.fileName || (current.href ? decodeURIComponent(String(current.href).split('?')[0].split('/').pop()||'Aktualny plik') : 'Nie wybrano pliku'))}</span></div><small>Maksymalnie 50 MB. Przy edycji możesz zostawić obecny plik bez zmian.</small></label>
+        <div class="cms-form-grid two">
+          <label class="cms-field"><span>Dodatkowy przycisk — tekst (opcjonalnie)</span><input name="secondaryLabel" maxlength="40" placeholder="Np. ZOBACZ REGULAMIN" value="${esc(current.secondaryLabel||'')}"></label>
+          <label class="cms-field"><span>Dodatkowy przycisk — link (opcjonalnie)</span><input name="secondaryHref" placeholder="#/rules/twitch lub https://..." value="${esc(current.secondaryHref||'')}"></label>
+        </div>
+        ${current.href?`<div class="cms-download-current"><small>AKTUALNY PLIK</small><a href="${esc(current.href)}" target="_blank" rel="noopener">${esc(current.fileName || current.href)}</a></div>`:''}
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">${isNew?'DODAJ PLIK':'ZAPISZ ZMIANY'}</button></div>
+      </form>`);
+      const form=$('#cms-download-form',modal); const input=form.elements.file; const label=$('[data-download-file-name]',form);
+      input?.addEventListener('change',()=>{const file=input.files?.[0];if(file)label.textContent=`${file.name} • ${cmsPrettyBytes(file.size)}`;});
+      $('[data-back]',form)?.addEventListener('click',draw);
+      form.addEventListener('submit',async e=>{
+        e.preventDefault(); const submit=$('button[type="submit"]',form); submit.disabled=true; submit.textContent='ZAPISYWANIE…';
+        try {
+          const file=input.files?.[0]||null;
+          let next={...current,
+            title:String(form.elements.title.value||'').trim(),
+            description:String(form.elements.description.value||'').trim(),
+            category:String(form.elements.category.value||'').trim()||'PLIK',
+            type:String(form.elements.type.value||'').trim().toUpperCase(),
+            secondaryLabel:String(form.elements.secondaryLabel.value||'').trim(),
+            secondaryHref:String(form.elements.secondaryHref.value||'').trim()
+          };
+          if(isNew && !file)throw new Error('Wybierz plik z dysku.');
+          if(file){
+            submit.textContent='WYSYŁANIE PLIKU…';
+            const uploaded=await uploadCmsDownload(file,next.title||file.name);
+            next={...next,...uploaded};
+            if(!String(form.elements.type.value||'').trim())next.type=uploaded.type;
+          }
+          if(!next.href)throw new Error('Brakuje pliku do pobrania.');
+          if(!next.type)next.type=window.MattDownloads?.typeFromHref?.(next.href)||'PLIK';
+          if(base){
+            const override={};
+            ['title','description','category','type','sizeLabel','href','storagePath','fileName','secondaryHref','secondaryLabel'].forEach(key=>{
+              const bv=base[key]??''; const nv=next[key]??''; if(String(bv)!==String(nv))override[key]=nv;
+            });
+            if(Object.keys(override).length)config.overrides[id]=override; else delete config.overrides[id];
+            config.hidden=config.hidden.filter(x=>String(x)!==id);
+          }else{
+            const itemId=id||`download-${slugify(next.title||next.fileName||'plik')}-${Date.now()}`;
+            next.id=itemId; const idx=config.custom.findIndex(x=>String(x.id)===itemId);
+            if(idx>=0)config.custom[idx]=next;else config.custom.push(next);
+            if(!config.order.includes(itemId))config.order.push(itemId);
+          }
+          await save(isNew?'Plik został dodany.':'Plik został zaktualizowany.',false);
+        }catch(error){notify(error.message,'error');submit.disabled=false;submit.textContent=isNew?'DODAJ PLIK':'ZAPISZ ZMIANY';}
+      });
+    };
+
+    draw();
   }
 
   function openTopicsManager() {
