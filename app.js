@@ -196,7 +196,8 @@ const pages = {
   },
   "viewer/downloads": {
     title: "DLA WIDZA / <span>DO POBRANIA</span>",
-    body: downloadsPage()
+    // Renderowane leniwie w render(), aby konfiguracja pobrań była już zainicjalizowana.
+    body: ""
   },
   "viewer/emotes7tv": {
     title: "DLA WIDZA / <span>EMOTKI 7TV</span>",
@@ -268,7 +269,8 @@ const pages = {
 
   downloads: {
     title: "PRZYDATNE / <span>DO POBRANIA</span>",
-    body: downloadsPage()
+    // Renderowane leniwie w render(), aby konfiguracja pobrań była już zainicjalizowana.
+    body: ""
   },
 
   contact: {
