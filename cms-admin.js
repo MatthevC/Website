@@ -2190,7 +2190,7 @@
   }
 
   function openPageImagesManager() {
-    if (!isAdmin()) return;
+    if (!has('page.images.manage')) return;
     const route = currentRoute();
     const key = `page_images:${route}`;
     const decorKey = `page_decor_graphics:${route}`;
@@ -2257,15 +2257,64 @@
         {name:'image',label:'Grafika dekoracyjna',type:'image-file'},
         {name:'alt',label:'Opis grafiki (ALT)',help:'Opcjonalny opis — jeśli grafika ma być czysto dekoracyjna, możesz zostawić puste.'},
         {name:'mode',label:'Tryb kolorów',type:'select',options:[{value:'theme',label:'DOSTOSUJ KOLOR DO STRONY (czerwony)'},{value:'normal',label:'NORMALNE KOLORY'}],help:'Tryb czerwony automatycznie dopasowuje obraz do stylistyki strony.'},
-        {name:'offsetX',label:'Przesunięcie poziome (px)',type:'number',help:'Wartość dodatnia przesuwa grafikę w prawo, ujemna w lewo.'},
-        {name:'offsetY',label:'Przesunięcie pionowe (px)',type:'number',help:'Wartość dodatnia przesuwa grafikę w dół, ujemna do góry.'},
-        {name:'scale',label:'Powiększenie (%)',type:'number',help:'Pozwala pokazać tylko fragment grafiki — np. 140 oznacza 140%.'},
-        {name:'rotation',label:'Obrót (stopnie)',type:'number',help:'Możesz wpisać dowolny stopień obrotu, np. -8, 45 albo 180.'},
+        {name:'offsetX',label:'Przesunięcie poziome X (px)',type:'number',help:'Możesz wpisać również wartość poza zakresem suwaka.'},
+        {name:'offsetY',label:'Przesunięcie pionowe Y (px)',type:'number',help:'Możesz wpisać również wartość poza zakresem suwaka.'},
+        {name:'scale',label:'Powiększenie (%)',type:'number',help:'Powiększając i przesuwając obraz możesz pokazać tylko jego wybrany fragment.'},
+        {name:'rotation',label:'Obrót (stopnie)',type:'number',help:'Pole liczbowe pozwala wpisać dowolny kąt, np. -725°, 45° albo 1080°.'},
         {name:'opacity',label:'Widoczność (%)',type:'number',help:'Im niższa wartość, tym subtelniej grafika będzie widoczna pod treścią.'}
       ];
-      openModal('GRAFIKA KAFELKA / DYMKA',`<form id="cms-page-decor-form" class="cms-form"><div class="cms-form-context">Edytujesz: <strong>${esc(item.label||id)}</strong></div>${fields.map(f=>fieldHtml(f,f.name==='image'?(current.url||''):current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-remove ${Object.prototype.hasOwnProperty.call(decorOverrides,id)?'':'disabled'}>USUŃ GRAFIKĘ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const slider = (name,label,min,max,step,value,suffix='') => `<label class="cms-decor-slider"><span>${label}<b data-live-value="${name}">${esc(value)}${suffix}</b></span><input type="range" data-live-slider="${name}" min="${min}" max="${max}" step="${step}" value="${esc(value)}"></label>`;
+      const livePreview = `<section class="cms-decor-live-editor">
+        <div class="cms-decor-live-head"><div><small>PODGLĄD NA ŻYWO</small><strong>${esc(item.label||id)}</strong></div><span>Zmiany poniżej nie są zapisywane, dopóki nie klikniesz ZAPISZ.</span></div>
+        <div class="cms-decor-live-stage" data-decor-live-stage><div class="cms-decor-live-fake-copy"><strong>${esc(item.label||'KAFELEK')}</strong><span>Podgląd położenia grafiki</span></div><img data-decor-live-img ${current.url?`src="${esc(current.url)}"`:''} alt=""></div>
+        <div class="cms-decor-live-sliders">
+          ${slider('offsetX','POZYCJA X',-500,500,1,Number(current.offsetX||0),' px')}
+          ${slider('offsetY','POZYCJA Y',-500,500,1,Number(current.offsetY||0),' px')}
+          ${slider('rotation','OBRÓT',-360,360,1,Number(current.rotation||0),'°')}
+          ${slider('scale','POWIĘKSZENIE',20,300,1,Number(current.scale||100),'%')}
+          ${slider('opacity','WIDOCZNOŚĆ',1,100,1,Number(current.opacity||18),'%')}
+        </div>
+      </section>`;
+      openModal('GRAFIKA KAFELKA / DYMKA',`<form id="cms-page-decor-form" class="cms-form"><div class="cms-form-context">Edytujesz: <strong>${esc(item.label||id)}</strong></div>${livePreview}${fields.map(f=>fieldHtml(f,f.name==='image'?(current.url||''):current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-remove ${Object.prototype.hasOwnProperty.call(decorOverrides,id)?'':'disabled'}>USUŃ GRAFIKĘ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form=$('#cms-page-decor-form',modal);
       bindImageFileFields(form,fields);
+
+      const liveImg=$('[data-decor-live-img]',form);
+      const liveStage=$('[data-decor-live-stage]',form);
+      const valueFor=name=>Number(form.elements[name]?.value || (name==='scale'?100:name==='opacity'?18:0));
+      const updateLive=()=>{
+        if(!liveImg||!liveStage) return;
+        const mode=String(form.elements.mode?.value||item.defaultMode||'theme');
+        const x=valueFor('offsetX'), y=valueFor('offsetY'), rot=valueFor('rotation'), scale=valueFor('scale'), opacity=valueFor('opacity');
+        liveImg.classList.toggle('cms-decor-preview-theme',mode!=='normal');
+        liveImg.classList.toggle('cms-decor-preview-normal',mode==='normal');
+        liveImg.style.transform=`translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rot}deg) scale(${Math.max(.05,scale/100)})`;
+        liveImg.style.opacity=String(Math.max(.01,Math.min(1,opacity/100)));
+        ['offsetX','offsetY','rotation','scale','opacity'].forEach(name=>{
+          const out=form.querySelector(`[data-live-value="${name}"]`);
+          if(out){const suffix=name==='rotation'?'°':(name==='scale'||name==='opacity'?'%':' px');out.textContent=`${valueFor(name)}${suffix}`;}
+          const range=form.querySelector(`[data-live-slider="${name}"]`);
+          if(range){const n=valueFor(name), min=Number(range.min), max=Number(range.max);range.value=String(Math.max(min,Math.min(max,n)));}
+        });
+      };
+      $$('[data-live-slider]',form).forEach(range=>range.addEventListener('input',()=>{
+        const name=range.dataset.liveSlider;
+        if(form.elements[name]) form.elements[name].value=range.value;
+        updateLive();
+      }));
+      ['offsetX','offsetY','rotation','scale','opacity'].forEach(name=>form.elements[name]?.addEventListener('input',updateLive));
+      form.elements.mode?.addEventListener('change',updateLive);
+      const fileInput=form.querySelector('[data-cms-image-field="image"] [data-image-file]');
+      fileInput?.addEventListener('change',()=>setTimeout(()=>{
+        const previewSrc=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img')?.src || '';
+        if(liveImg&&previewSrc) liveImg.src=previewSrc;
+        updateLive();
+      },0));
+      form.querySelector('[data-cms-image-field="image"] [data-image-remove]')?.addEventListener('click',()=>{
+        if(liveImg) liveImg.removeAttribute('src');
+      });
+      updateLive();
+
       $('[data-back]',form)?.addEventListener('click',draw);
       $('[data-remove]',form)?.addEventListener('click',async()=>{
         if(!Object.prototype.hasOwnProperty.call(decorOverrides,id)) return;

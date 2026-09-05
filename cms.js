@@ -258,19 +258,59 @@
   }
   function pageDecorGraphicElements(root = document.getElementById('app')) {
     if (!root) return [];
+
+    const explicit = [...root.querySelectorAll('[data-cms-decor-id]')];
+    const auto = [...root.querySelectorAll('[class]')].filter(el => {
+      if (el.hasAttribute('data-cms-decor-id')) return false;
+      if (el.closest('.cms-page-custom-callouts')) return false;
+      if (el.matches('input,textarea,select,button,img,svg,nav,header,footer')) return false;
+
+      const tokens = [...el.classList].map(v => String(v).toLowerCase());
+      if (!tokens.length) return false;
+
+      // Kafelki/boxy treści. Pomijamy ich wewnętrzne części typu icon/body/top/grid.
+      const internal = tokens.some(v => /(?:^|-)(?:grid|body|top|icon|label|number|actions|copy|meta|badge|heading|title|row|list)(?:$|-)/.test(v));
+      const card = tokens.some(v => /(?:^|-)card(?:$|-)/.test(v)) && !internal;
+      const semantic = tokens.some(v => /(?:^|-)(?:callout|notice|summary|benefit|crate-item|pick-order-item)(?:$|-)/.test(v));
+      const safeBox = tokens.some(v => /(?:^|-)(?:join-box|note-box|summary-box)(?:$|-)/.test(v));
+      const discordBubble = tokens.includes('discord-configure-section');
+
+      if (!(card || semantic || safeBox || discordBubble)) return false;
+
+      // Elementy techniczne paneli/formularzy nie są kafelkami strony.
+      if (tokens.some(v => /^(?:cms|admin|account|profile|login|first-login|edit-|file-|collection-|filter-|search-)/.test(v))) return false;
+      return true;
+    });
+
+    const elements = [...new Set([...explicit, ...auto])];
     const seen = new Map();
-    return [...root.querySelectorAll('[data-cms-decor-id]')].map((el, index) => {
+
+    return elements.map((el, index) => {
       let id = String(el.dataset.cmsDecorId || '').trim();
+      const tokens = [...el.classList];
+      const classBase = tokens.find(v => /(?:card|callout|notice|summary|benefit|crate-item|pick-order-item|join-box|note-box)/i.test(v)) || 'kafelek';
+      const stable = String(
+        el.id ||
+        el.dataset.eventId ||
+        el.dataset.streamerLogin ||
+        el.dataset.id ||
+        el.dataset.command ||
+        el.dataset.title ||
+        el.dataset.target ||
+        ''
+      ).trim();
+      const heading = String(el.querySelector('h1,h2,h3,h4,strong,code')?.textContent || '').replace(/\s+/g,' ').trim();
+      const rawLabel = String(el.dataset.cmsDecorLabel || heading || el.textContent || `Kafelek ${index+1}`).replace(/\s+/g,' ').trim();
+
       if (!id) {
-        const base = ruleIdPart(el.dataset.cmsDecorLabel || el.textContent || `dekor-${index+1}`) || `dekor-${index+1}`;
+        const base = ruleIdPart(stable || `${classBase}-${rawLabel.slice(0,80)}`) || `kafelek-${index+1}`;
         const count = (seen.get(base) || 0) + 1;
         seen.set(base, count);
         id = count > 1 ? `${base}-${count}` : base;
         el.dataset.cmsDecorId = id;
       }
-      if (typeof el.__mattCmsDecorLabel !== 'string') {
-        el.__mattCmsDecorLabel = String(el.dataset.cmsDecorLabel || el.querySelector('h1,h2,h3,strong,code')?.textContent || `Kafelek ${index+1}`).trim();
-      }
+      if (!el.dataset.cmsDecorLabel) el.dataset.cmsDecorLabel = rawLabel.slice(0,120) || `Kafelek ${index+1}`;
+      if (typeof el.__mattCmsDecorLabel !== 'string') el.__mattCmsDecorLabel = el.dataset.cmsDecorLabel;
       if (typeof el.__mattCmsDecorDefaultMode !== 'string') {
         el.__mattCmsDecorDefaultMode = String(el.dataset.cmsDecorDefaultMode || 'theme');
       }

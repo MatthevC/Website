@@ -9164,3 +9164,24 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   outline-offset:3px!important;
   box-shadow:0 0 0 3px rgba(255,52,56,.12)!important;
 }
+
+
+/* v2.6.6 — live editor grafik dekoracyjnych */
+.cms-decor-live-editor{display:grid;gap:14px;padding:16px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:#0b0c10;margin-bottom:8px}
+.cms-decor-live-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+.cms-decor-live-head small{display:block;color:#ef2b2d;font:800 10px Rajdhani,sans-serif;letter-spacing:1.2px;margin-bottom:4px}
+.cms-decor-live-head strong{font:800 17px Rajdhani,sans-serif;color:#fff}
+.cms-decor-live-head>span{max-width:380px;color:#777;font-size:11px;line-height:1.45;text-align:right}
+.cms-decor-live-stage{position:relative;overflow:hidden;isolation:isolate;min-height:240px;border:1px solid rgba(239,43,45,.28);border-radius:16px;background:radial-gradient(circle at 85% 15%,rgba(239,43,45,.16),transparent 38%),linear-gradient(145deg,#191919,#101010)}
+.cms-decor-live-stage>img{position:absolute;left:50%;top:50%;width:65%;max-width:none;height:auto;z-index:0;pointer-events:none;transform-origin:center}
+.cms-decor-live-stage>img.cms-decor-preview-theme{filter:grayscale(1) brightness(.34) sepia(1) saturate(10) hue-rotate(-24deg) contrast(1.06);mix-blend-mode:screen}
+.cms-decor-live-stage>img.cms-decor-preview-normal{filter:none;mix-blend-mode:normal}
+.cms-decor-live-fake-copy{position:absolute;left:22px;bottom:20px;z-index:2;display:grid;gap:4px;pointer-events:none}
+.cms-decor-live-fake-copy strong{font:800 22px Rajdhani,sans-serif;color:#fff;text-transform:uppercase}
+.cms-decor-live-fake-copy span{color:#aaa;font-size:12px}
+.cms-decor-live-sliders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+.cms-decor-slider{display:grid;gap:6px}
+.cms-decor-slider>span{display:flex;justify-content:space-between;gap:12px;color:#aaa;font:700 10px Rajdhani,sans-serif;letter-spacing:.7px}
+.cms-decor-slider b{color:#fff;font-weight:800}
+.cms-decor-slider input[type=range]{width:100%;accent-color:#ef2b2d}
+@media(max-width:760px){.cms-decor-live-head{display:grid}.cms-decor-live-head>span{text-align:left}.cms-decor-live-sliders{grid-template-columns:1fr}.cms-decor-live-stage{min-height:190px}}
