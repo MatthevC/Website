@@ -818,6 +818,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       location.reload();
     };
+
+    // Enter w polu nicku lub hasła działa tak samo jak kliknięcie ZALOGUJ.
+    [nick, pass].forEach(field => {
+      field?.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" || event.isComposing) return;
+        event.preventDefault();
+        btn.click();
+      });
+    });
   }
 });
 
