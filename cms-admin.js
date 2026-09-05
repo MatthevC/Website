@@ -386,7 +386,7 @@
     ensureModal();
     const kicker = $('.cms-modal-head small', modal);
     if (kicker) kicker.textContent = window.currentUserRole === 'admin' ? 'PANEL ADMINISTRATORA' : 'PANEL MODERATORA';
-    $('.cms-modal', modal)?.classList.remove('cms-modal-discord');
+    $('.cms-modal', modal)?.classList.remove('cms-modal-discord','cms-modal-event');
     $('#cms-modal-title', modal).textContent = title;
     $('#cms-modal-body', modal).innerHTML = html;
     modal.classList.add('active');
@@ -3113,22 +3113,47 @@
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
-      openModal(editing?'EDYTUJ EVENT':'DODAJ EVENT', `<form id="cms-event-form" class="cms-form cms-event-form">
+      openModal(editing?'EDYTUJ EVENT':'DODAJ EVENT', `<form id="cms-event-form" class="cms-event-form">
         <div class="cms-event-editor-layout">
-          <section class="cms-event-form-fields">
-            ${fieldHtml({name:'title',label:'Nazwa wydarzenia',required:true},current.title)}
-            <div class="cms-event-date-grid">${fieldHtml({name:'startDate',label:'Data rozpoczęcia',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina rozpoczęcia',type:'time'},current.startTime)}${fieldHtml({name:'endDate',label:'Data zakończenia',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina zakończenia',type:'time'},current.endTime)}${fieldHtml({name:'publishDate',label:'Data publikacji',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina publikacji',type:'time'},current.publishTime)}</div>
-            ${fieldHtml({name:'endedNow',label:'Oznacz jako zakończony teraz',type:'checkbox'},false)}
-            ${fieldHtml(imageField,current.image)}
-            ${fieldHtml({name:'imageFit',label:'Dopasowanie grafiki na liście',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}
-            ${fieldHtml(mainImageField,current.mainImage)}
-            ${fieldHtml({name:'mainImageFit',label:'Dopasowanie grafiki głównej',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}
-            ${fieldHtml({name:'description',label:'Opis wydarzenia',type:'textarea',required:true},current.description)}
-          </section>
-          <aside class="cms-event-live-panel"><div class="cms-event-live-head"><div><small>PODGLĄD NA ŻYWO</small><strong>Tak event będzie wyglądał na stronie</strong></div><span>Zmiany nie zapisują się, dopóki nie klikniesz ZAPISZ.</span></div><div class="cms-event-preview-tabs"><button class="active" type="button" data-event-preview-mode="card">KARTA NA LIŚCIE</button><button type="button" data-event-preview-mode="detail">STRONA EVENTU</button></div><div class="cms-event-live-preview" data-event-live-preview></div></aside>
+          <main class="cms-event-form-pane">
+            <section class="cms-event-editor-section">
+              <header class="cms-event-section-head"><div><small>01 / PODSTAWOWE</small><strong>NAZWA EVENTU</strong></div><span>To jest główny tytuł widoczny na liście i na stronie wydarzenia.</span></header>
+              <div class="cms-event-section-body">${fieldHtml({name:'title',label:'Nazwa wydarzenia',required:true},current.title)}</div>
+            </section>
+
+            <section class="cms-event-editor-section">
+              <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.</span></header>
+              <div class="cms-event-date-cards">
+                <div class="cms-event-date-card"><b>ROZPOCZĘCIE</b>${fieldHtml({name:'startDate',label:'Data',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina',type:'time'},current.startTime)}</div>
+                <div class="cms-event-date-card"><b>ZAKOŃCZENIE</b>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div>
+                <div class="cms-event-date-card"><b>PUBLIKACJA</b>${fieldHtml({name:'publishDate',label:'Data',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina',type:'time'},current.publishTime)}</div>
+              </div>
+              <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>Po zaznaczeniu data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</p></div>
+            </section>
+
+            <section class="cms-event-editor-section">
+              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Osobno możesz ustawić miniaturę listy i dużą grafikę na stronie wydarzenia.</span></header>
+              <div class="cms-event-media-grid">
+                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA NA LIŚCIE</strong><span>Miniatura widoczna w spisie eventów.</span></div>${fieldHtml(imageField,current.image)}${fieldHtml({name:'imageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}</div>
+                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA GŁÓWNA</strong><span>Opcjonalna grafika na stronie konkretnego eventu.</span></div>${fieldHtml(mainImageField,current.mainImage)}${fieldHtml({name:'mainImageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div>
+              </div>
+            </section>
+
+            <section class="cms-event-editor-section">
+              <header class="cms-event-section-head"><div><small>04 / TREŚĆ</small><strong>OPIS WYDARZENIA</strong></div><span>Pełna treść wpisu. Ten tekst jest również skracany do zajawki na liście eventów.</span></header>
+              <div class="cms-event-section-body">${fieldHtml({name:'description',label:'Opis wydarzenia',type:'textarea',required:true},current.description)}</div>
+            </section>
+          </main>
+
+          <aside class="cms-event-live-panel">
+            <div class="cms-event-live-head"><div><small>PODGLĄD NA ŻYWO</small><strong>TAK EVENT BĘDZIE WYGLĄDAŁ</strong></div><span>Podgląd aktualizuje się automatycznie i nie zapisuje zmian.</span></div>
+            <div class="cms-event-preview-tabs"><button class="active" type="button" data-event-preview-mode="card">KARTA NA LIŚCIE</button><button type="button" data-event-preview-mode="detail">STRONA EVENTU</button></div>
+            <div class="cms-event-live-preview" data-event-live-preview></div>
+          </aside>
         </div>
-        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button>${editing&&has('events.delete')?'<button class="danger" type="button" data-delete-current>USUŃ EVENT</button>':''}<button class="cms-primary" type="submit">${editing?'ZAPISZ ZMIANY':'DODAJ EVENT'}</button></div>
+        <div class="cms-form-actions cms-event-form-actions"><button type="button" data-back>← WRÓĆ</button><div class="cms-event-form-actions-right">${editing&&has('events.delete')?'<button class="danger" type="button" data-delete-current>USUŃ EVENT</button>':''}<button class="cms-primary" type="submit">${editing?'ZAPISZ ZMIANY':'DODAJ EVENT'}</button></div></div>
       </form>`);
+      $('.cms-modal',modal)?.classList.add('cms-modal-event');
       const form=$('#cms-event-form',modal); bindImageFileFields(form,[imageField,mainImageField]);
       let previewMode='card';
       const imageFromField = name => {
