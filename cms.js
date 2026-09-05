@@ -201,7 +201,7 @@
 
   const pageImageExclusions = [
     '.event-card', '.event-detail-modern', '#home-events', '.recommended-grid', '.moderator-grid',
-    '#discord-preview', '.discord-channel-section', '.user-area', '.site-footer', '.cms-page-banner'
+    '#discord-preview', '.discord-channel-section', '.user-area', '.site-footer', '.cms-page-banner', '.hero-main.hero-main-image'
   ];
 
   function pageImageExcluded(img) {

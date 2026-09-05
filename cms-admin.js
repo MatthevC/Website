@@ -415,7 +415,6 @@
   }
 
   function configForRoute(route) {
-    if (route === 'home') return { label: 'GRAFIKA POWITALNA', action: openHomeHeroManager, permission:'home.hero.manage' };
     if (route === 'recommended') return { label: 'STREAMERZY', action: openStreamersManager, permission:'streamers.manage' };
     if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager, permission:'moderation.people.manage' };
     if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager, permission:'moderation.benefits.manage' };
@@ -769,7 +768,6 @@
       <button type="button" data-cms-action="callouts" hidden>▰ KOMUNIKATY</button>
       <button type="button" data-cms-action="images">▧ GRAFIKI</button>
       <button type="button" data-cms-action="site">☰ MENU / LINKI</button>
-      <button type="button" data-cms-action="reset-page">↶ Z GITHUBA</button>
       <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
@@ -791,8 +789,7 @@
       if (action === 'callouts' && has('page.callouts.manage')) openPageCalloutsManager();
       if (action === 'images' && has('page.images.manage')) openPageImagesManager();
       if (action === 'site' && any('site.navigation.manage','site.links.manage')) openSiteSettingsManager();
-      if (action === 'reset-page') resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie');
-      if (action === 'backups' && has('backups.view')) openBackupsManager();
+      if (action === 'backups' && any('backups.view','github.restore')) openBackupsManager();
     });
     return toolbar;
   }
@@ -823,11 +820,13 @@
     const layoutBtn = $('[data-cms-action="layout"]', toolbar);
     if (layoutBtn) layoutBtn.hidden = inlineEditing || layoutEditing || !has('page.layout.manage');
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
-    if (imagesBtn) imagesBtn.hidden = inlineEditing || layoutEditing || !has('page.images.manage');
+    if (imagesBtn) {
+      const canGraphics = has('page.images.manage') || (currentRoute() === 'home' && has('home.hero.manage'));
+      imagesBtn.hidden = inlineEditing || layoutEditing || !canGraphics;
+    }
     $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || layoutEditing || !has('page.text.edit');
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
-    $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing || layoutEditing || !has('github.restore');
-    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || layoutEditing || !has('backups.view');
+    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || layoutEditing || !any('backups.view','github.restore');
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
     applyToolbarState();
@@ -1300,8 +1299,8 @@
     drawList();
   }
 
-  function openHomeHeroManager() {
-    if (!isAdmin()) return;
+  function openHomeHeroManager(backAction = null) {
+    if (!has('home.hero.manage')) return;
     const baseImg = document.querySelector('.hero-main.hero-main-image > img');
     const override = clone(window.MattCMS?.get('home_hero_image', null) || {});
     const displayUrl = override.url || baseImg?.getAttribute('src') || '';
@@ -1318,7 +1317,7 @@
     const form = $('#cms-hero-form', modal);
     bindImageFileFields(form, fields);
     $('[data-reset-hero]', body)?.addEventListener('click', () => resetCmsKey('home_hero_image', 'grafikę powitalną'));
-    $('[data-back]', form)?.addEventListener('click', closeModal);
+    $('[data-back]', form)?.addEventListener('click', () => typeof backAction === 'function' ? backAction() : closeModal());
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const submit = $('button[type="submit"]', form);
@@ -2190,8 +2189,8 @@
   }
 
   function openPageImagesManager() {
-    if (!has('page.images.manage')) return;
     const route = currentRoute();
+    if (!has('page.images.manage') && !(route === 'home' && has('home.hero.manage'))) return;
     const key = `page_images:${route}`;
     const decorKey = `page_decor_graphics:${route}`;
     const bannerKey = `page_banner:${route}`;
@@ -2206,13 +2205,19 @@
       const images = currentImages();
       const decorItems = currentDecorItems();
       const banner = clone(window.MattCMS?.get(bannerKey, null) || null);
-      const bannerBlock = route === 'home' ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
-      const imageSection = `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
-        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów. Nadal możesz dodać grafikę nagłówkową powyżej.</div>'}</div>`;
-      const decorSection = `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-decor>↶ WSZYSTKIE GRAFIKI KAFELKÓW</button></div><p>Te ustawienia dotyczą grafik dekoracyjnych w kafelkach i dymkach. Możesz wgrać własny obraz, przełączyć tryb „dostosuj kolor do strony”, przesuwać grafikę, obracać ją i powiększać.</p></div>
-        <div class="cms-image-manager-grid">${decorItems.length?decorItems.map((item,index)=>{const saved=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[item.id]||{}, item.defaultMode)||decorOverrides[item.id]||{}; return `<article class="cms-image-manager-card"><div class="cms-image-manager-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}">`:'<div class="cms-empty">BRAK</div>'}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / KAFELEK</small><strong>${esc(item.label||`Kafelek ${index+1}`)}</strong><span>${saved.url?`Tryb: ${saved.mode==='normal'?'normalne kolory':'dostosuj kolor do strony'} • obrót ${Number(saved.rotation||0)}° • przesunięcie ${Number(saved.offsetX||0)} / ${Number(saved.offsetY||0)} px`:'Brak własnej grafiki dekoracyjnej'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-decor-edit="${esc(item.id)}">USTAW GRAFIKĘ</button><button data-decor-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(decorOverrides,item.id)?'':'disabled'}>USUŃ / RESET</button></div></article>`;}).join(''):'<div class="cms-empty">Na tej podstronie nie wykryto kafelków z obsługą dekoracyjnej grafiki.</div>'}</div>`;
-      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${bannerBlock}${imageSection}${decorSection}`);
+      const heroOverride = clone(window.MattCMS?.get('home_hero_image', null) || {});
+      const heroImg = document.querySelector('.hero-main.hero-main-image > img');
+      const heroUrl = heroOverride.url || heroImg?.getAttribute('src') || '';
+      const heroAlt = heroOverride.alt || heroImg?.getAttribute('alt') || "Witaj w Matt's World";
+      const heroBlock = route === 'home' && has('home.hero.manage') ? `<section class="cms-graphics-banner-card"><div><small>GRAFIKA POWITALNA</small><strong>WITAJ W MATT'S WORLD</strong><p>Grafika główna strony została połączona z pozostałymi ustawieniami grafik.</p></div>${heroUrl?`<img src="${esc(heroUrl)}" alt="${esc(heroAlt)}">`:''}<div><button class="cms-primary" data-home-hero-edit>ZMIEŃ GRAFIKĘ POWITALNĄ</button></div></section>` : '';
+      const bannerBlock = route === 'home' || !has('page.images.manage') ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
+      const imageSection = has('page.images.manage') ? `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
+        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów.</div>'}</div>` : '';
+      const decorSection = has('page.images.manage') ? `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-decor>↶ WSZYSTKIE GRAFIKI KAFELKÓW</button></div><p>Te ustawienia dotyczą grafik dekoracyjnych w kafelkach i dymkach. Możesz wgrać własny obraz, przełączyć tryb „dostosuj kolor do strony”, przesuwać grafikę, obracać ją i powiększać.</p></div>
+        <div class="cms-image-manager-grid">${decorItems.length?decorItems.map((item,index)=>{const saved=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[item.id]||{}, item.defaultMode)||decorOverrides[item.id]||{}; return `<article class="cms-image-manager-card"><div class="cms-image-manager-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}">`:'<div class="cms-empty">BRAK</div>'}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / KAFELEK</small><strong>${esc(item.label||`Kafelek ${index+1}`)}</strong><span>${saved.url?`Tryb: ${saved.mode==='normal'?'normalne kolory':'dostosuj kolor do strony'} • obrót ${Number(saved.rotation||0)}° • przesunięcie ${Number(saved.offsetX||0)} / ${Number(saved.offsetY||0)} px`:'Brak własnej grafiki dekoracyjnej'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-decor-edit="${esc(item.id)}">USTAW GRAFIKĘ</button><button data-decor-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(decorOverrides,item.id)?'':'disabled'}>USUŃ / RESET</button></div></article>`;}).join(''):'<div class="cms-empty">Na tej podstronie nie wykryto kafelków z obsługą dekoracyjnej grafiki.</div>'}</div>` : '';
+      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${heroBlock}${bannerBlock}${imageSection}${decorSection}`);
       const body=$('#cms-modal-body',modal);
+      $('[data-home-hero-edit]',body)?.addEventListener('click',()=>openHomeHeroManager(draw));
       $('[data-reset-images]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie grafiki tej podstrony'));
       $('[data-reset-decor]',body)?.addEventListener('click',()=>resetCmsKey(decorKey,'wszystkie grafiki dekoracyjne tej podstrony'));
       $$('[data-image-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editImage(btn.dataset.imageEdit)));
@@ -2361,8 +2366,8 @@
   }
 
   async function openBackupsManager() {
-    if (!has('backups.view')) return;
-    let activeType = 'automatic';
+    if (!any('backups.view','github.restore')) return;
+    let activeType = has('backups.view') ? 'automatic' : 'github';
 
     const renderBackupItem = (b) => {
       const esc = window.MattCMS.escape;
@@ -2385,6 +2390,25 @@
     };
 
     const draw = async () => {
+      if (activeType === 'github') {
+        openModal('BACKUPY I PRZYWRACANIE', `
+          <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj przywracania">
+            ${has('backups.view')?'<button type="button" data-backup-tab="automatic">Automatyczne zapisy</button><button type="button" data-backup-tab="manual">Ręczne zapisy</button>':''}
+            ${has('github.restore')?'<button type="button" class="active" data-backup-tab="github">Z GitHuba</button>':''}
+          </div>
+          <div class="cms-backup-note"><strong>WERSJA Z GITHUBA:</strong> przywraca bazową treść bieżącej podstrony z plików znajdujących się w repozytorium. Przed przywróceniem aktualny stan zostanie zabezpieczony przez system backupów.</div>
+          <div class="cms-manager-actions cms-backup-actions">
+            <div class="cms-manager-action-group">
+              <button class="cms-primary" type="button" data-github-restore-page>↶ PRZYWRÓĆ TĘ PODSTRONĘ Z GITHUBA</button>
+            </div>
+            <p>Podstrona: <strong>${window.MattCMS.escape(currentRoute().toUpperCase())}</strong></p>
+          </div>
+        `);
+        const body = $('#cms-modal-body', modal);
+        $$('[data-backup-tab]', body).forEach(btn => btn.addEventListener('click', async () => { activeType = btn.dataset.backupTab; await draw(); }));
+        $('[data-github-restore-page]', body)?.addEventListener('click', () => resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie'));
+        return;
+      }
       openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-backup-loading">Ładowanie kopii bezpieczeństwa…</div>`);
       try {
         const backups = await window.MattCMS.listBackups();
@@ -2396,6 +2420,7 @@
           <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj zapisów">
             <button type="button" class="${activeType === 'automatic' ? 'active' : ''}" data-backup-tab="automatic">Automatyczne zapisy <span>${automatic.length}</span></button>
             <button type="button" class="${activeType === 'manual' ? 'active' : ''}" data-backup-tab="manual">Ręczne zapisy <span>${manual.length}</span></button>
+            ${has('github.restore')?`<button type="button" data-backup-tab="github">Z GitHuba</button>`:''}
           </div>
 
           ${activeType === 'automatic' ? `
@@ -2417,7 +2442,7 @@
 
         const body = $('#cms-modal-body', modal);
         $$('[data-backup-tab]', body).forEach(btn => btn.addEventListener('click', async () => {
-          activeType = btn.dataset.backupTab === 'manual' ? 'manual' : 'automatic';
+          activeType = ['automatic','manual','github'].includes(btn.dataset.backupTab) ? btn.dataset.backupTab : 'automatic';
           await draw();
         }));
 
