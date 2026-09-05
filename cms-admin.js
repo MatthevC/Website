@@ -1122,7 +1122,38 @@
     return obj;
   }
 
-  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady }) {
+  function cmsLivePreviewShell(title = 'PODGLĄD NA ŻYWO', note = 'Zmiany w podglądzie nie zapisują się do momentu kliknięcia ZAPISZ.') {
+    return `<section class="cms-generic-live-preview"><header><div><small>PODGLĄD NA ŻYWO</small><strong>${window.MattCMS.escape(title)}</strong></div><span>${window.MattCMS.escape(note)}</span></header><div class="cms-generic-live-stage" data-cms-generic-live></div></section>`;
+  }
+
+  function cmsFormPreviewValue(form, fields, current = {}) {
+    const value = { ...clone(current), ...parseFields(form, fields) };
+    fields.filter(field => field.type === 'image-file').forEach(field => {
+      const wrap = form.querySelector(`[data-cms-image-field="${field.name}"]`);
+      const img = wrap?.querySelector('[data-image-preview] img');
+      const src = String(img?.getAttribute('src') || '').trim();
+      if (src) value[field.name] = src;
+    });
+    return value;
+  }
+
+  function bindCmsLivePreview(form, fields, current, renderer) {
+    const host = $('[data-cms-generic-live]', form);
+    if (!host || typeof renderer !== 'function') return;
+    const refresh = () => {
+      try {
+        const value = cmsFormPreviewValue(form, fields, current);
+        host.innerHTML = renderer(value) || '<div class="cms-empty">Brak danych do podglądu.</div>';
+      } catch (error) {
+        host.innerHTML = `<div class="cms-empty">Nie udało się zbudować podglądu: ${window.MattCMS.escape(error?.message || 'nieznany błąd')}</div>`;
+      }
+    };
+    form.addEventListener('input', refresh);
+    form.addEventListener('change', refresh);
+    refresh();
+  }
+
+  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady, livePreview }) {
     let items = clone(window.MattCMS?.get(key, null) || fallback() || []);
     if (typeof normalizeItem === 'function') items = items.map(item => normalizeItem(clone(item)));
     const esc = window.MattCMS.escape;
@@ -1163,9 +1194,11 @@
 
     const drawForm = index => {
       const current = index >= 0 ? items[index] : {};
-      openModal(index >= 0 ? `EDYTUJ — ${title}` : `DODAJ — ${title}`, `<form id="cms-item-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const preview = typeof livePreview === 'function' ? cmsLivePreviewShell('TAK ELEMENT BĘDZIE WYGLĄDAŁ NA STRONIE') : '';
+      openModal(index >= 0 ? `EDYTUJ — ${title}` : `DODAJ — ${title}`, `<form id="cms-item-form" class="cms-form">${preview}${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-item-form', modal);
       bindImageFileFields(form, fields);
+      if (typeof livePreview === 'function') bindCmsLivePreview(form, fields, current, value => livePreview(value, { index, items: clone(items) }));
       if (typeof onFormReady === 'function') {
         try { onFormReady(form, { current: clone(current), index, items: clone(items), drawList }); }
         catch (error) { console.error('[MATT CMS] Błąd inicjalizacji formularza:', error); }
@@ -1295,9 +1328,10 @@
         {name:'description',label:'Treść zasady',type:'textarea',required:true},
         {name:'wide',label:'Wyświetl dymek na pełną szerokość',type:'checkbox'}
       ];
-      openModal(index >= 0 ? 'EDYTUJ ZASADĘ' : 'DODAJ ZASADĘ', `<form id="cms-rule-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
+      openModal(index >= 0 ? 'EDYTUJ ZASADĘ' : 'DODAJ ZASADĘ', `<form id="cms-rule-form" class="cms-form">${cmsLivePreviewShell('TAK BĘDZIE WYGLĄDAŁ DYMEK ZASADY')}${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-rule-form', modal);
+      bindCmsLivePreview(form, fields, current, value => `<section class="rule-card${value.wide?' event-rule-card-wide':''} cms-live-rule-card"><div class="rule-card-top"><div class="rule-card-number">${String((index>=0?index:items.length)+1).padStart(2,'0')}</div><div class="rule-card-icon">${esc(value.icon||'📌')}</div></div><div class="rule-card-label">${esc(value.label||'ZASADA')}</div><h2>${esc(value.title||'Nowa zasada')}</h2><p>${esc(value.description||'Treść zasady pojawi się tutaj.')}</p></section>`);
       $('[data-back]', form)?.addEventListener('click', drawList);
       form.addEventListener('submit', async e => {
         e.preventDefault();
@@ -1379,6 +1413,12 @@
     if (!isAdmin()) return;
     let items = clone(window.MattCMS?.get('navigation', null) || window.MattCMS?.extractNavigationFromDom?.() || []);
     const esc = window.MattCMS.escape;
+    const navPreviewHtml = draft => `<nav class="main-nav cms-live-main-nav">${draft.map(item=>{const children=Array.isArray(item.children)?item.children:[];return children.length?`<div class="nav-dropdown"><button type="button">${esc(item.label||'KATEGORIA')} <span>⌄</span></button><div class="dropdown-menu">${children.map(child=>`<a href="#">${esc(child.label||'PODKATEGORIA')}</a>`).join('')}</div></div>`:`<a href="#">${esc(item.label||'KATEGORIA')}</a>`;}).join('')}</nav>`;
+    const bindNavFormPreview = (form, fields, current, makeDraft) => {
+      const host=$('[data-cms-generic-live]',form); if(!host)return;
+      const refresh=()=>{const value={...current,...parseFields(form,fields)};host.innerHTML=navPreviewHtml(makeDraft(value));};
+      form.addEventListener('input',refresh);form.addEventListener('change',refresh);refresh();
+    };
 
     const apply = () => {
       window.MattCMS?.renderNavigation?.(items);
@@ -1443,10 +1483,11 @@
     const editCategory = index => {
       const current = index >= 0 ? items[index] : {label:'',href:'#/',children:[]};
       const fields = [{name:'label',label:'Nazwa kategorii',required:true},{name:'href',label:'Link kategorii (używany, gdy nie ma podkategorii)',required:false}];
-      openModal(index>=0?'EDYTUJ KATEGORIĘ MENU':'DODAJ KATEGORIĘ MENU', `<form id="cms-nav-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
+      openModal(index>=0?'EDYTUJ KATEGORIĘ MENU':'DODAJ KATEGORIĘ MENU', `<form id="cms-nav-form" class="cms-form">${cmsLivePreviewShell('PODGLĄD GÓRNEGO MENU')}${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
         <div class="cms-form-context">Dla podstrony strony wpisz np. <strong>#/events</strong>. Możesz też użyć pełnego adresu https://…</div>
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-nav-form', modal);
+      bindNavFormPreview(form,fields,current,value=>{const draft=clone(items);const next={...current,...value,children:current.children||[]};if(index>=0)draft[index]=next;else draft.push(next);return draft;});
       $('[data-back]', form)?.addEventListener('click', draw);
       form.addEventListener('submit', async e => {
         e.preventDefault();
@@ -1459,9 +1500,10 @@
     const editSub = (ci,hi) => {
       const current = hi>=0 ? items[ci].children[hi] : {label:'',href:'#/'};
       const fields = [{name:'label',label:'Nazwa podkategorii',required:true},{name:'href',label:'Link / ścieżka',required:true}];
-      openModal(hi>=0?'EDYTUJ PODKATEGORIĘ':'DODAJ PODKATEGORIĘ', `<form id="cms-sub-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(items[ci].label)}</strong></div>${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
+      openModal(hi>=0?'EDYTUJ PODKATEGORIĘ':'DODAJ PODKATEGORIĘ', `<form id="cms-sub-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(items[ci].label)}</strong></div>${cmsLivePreviewShell('PODGLĄD ROZWIJANEGO MENU')}${fields.map(f=>fieldHtml(f,current[f.name])).join('')}
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-sub-form', modal);
+      bindNavFormPreview(form,fields,current,value=>{const draft=clone(items);draft[ci].children ||= [];if(hi>=0)draft[ci].children[hi]=value;else draft[ci].children.push(value);return draft;});
       $('[data-back]', form)?.addEventListener('click', draw);
       form.addEventListener('submit', async e => {
         e.preventDefault();
@@ -1501,6 +1543,7 @@
   }
 
   function openStreamersManager() {
+    const esc = window.MattCMS.escape;
     const normalizeStreamer = item => window.MattCMS?.normalizeStreamer ? window.MattCMS.normalizeStreamer(item) : item;
 
     const setFormValue = (form, name, value) => {
@@ -1592,6 +1635,12 @@
       label:item=>item.displayName || item.login,
       normalizeItem:normalizeStreamer,
       onFormReady:bindTwitchAutofill,
+      livePreview:(value,{index})=>{
+        const login = window.MattCMS?.twitchLoginFromUrl?.(value.channelUrl) || String(value.login||'streamer').trim().toLowerCase() || 'streamer';
+        const name = value.displayName || login || 'NOWY STREAMER';
+        const games = Array.isArray(value.games) ? value.games : String(value.games||'').split(',').map(x=>x.trim()).filter(Boolean);
+        return `<article class="recommended-card cms-live-recommended-card"><div class="recommended-head"><a class="recommended-avatar-link" href="#" tabindex="-1"><span class="recommended-avatar-wrap"><img class="recommended-avatar" src="https://unavatar.io/twitch/${encodeURIComponent(login)}" alt=""></span><span class="recommended-avatar-hover">TWITCH ↗</span></a><div class="recommended-meta"><span class="recommended-index">${String((index>=0?index:0)+1).padStart(2,'0')} / POLECANY TWÓRCA</span><h2>${esc(name)}</h2><p>${esc(value.tagline||'Krótki opis twórcy pojawi się tutaj.')}</p></div><div class="recommended-actions"><span class="recommended-action primary">TWITCH ↗</span><span class="recommended-action">OTWÓRZ KLIP ↗</span></div></div><div class="recommended-body"><div class="recommended-clip-frame cms-live-media-placeholder"><strong>KLIP TWITCH</strong><span>Podgląd odtwarzacza jest wyłączony w edytorze.</span></div><div class="recommended-side"><div class="recommended-note-box"><h3>NAJCZĘŚCIEJ OGRYWANE</h3><div class="recommended-games">${games.length?games.map(game=>`<span class="recommended-game-chip"><strong>${esc(game)}</strong></span>`).join(''):'<span class="cms-live-muted">Dodaj gry, aby zobaczyć je tutaj.</span>'}</div></div></div></div></article>`;
+      },
       beforeSave:value=>{
         const login = window.MattCMS?.twitchLoginFromUrl?.(value.channelUrl) || '';
         if (!login) {
@@ -1614,8 +1663,10 @@
   }
 
   function openModeratorsManager() {
+    const esc = window.MattCMS.escape;
     openArrayManager({
       key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name,
+      livePreview:(m,{index})=>`<article class="moderator-card cms-live-moderator-card"><div class="moderator-photo-wrap">${m.image?`<img class="moderator-photo" src="${esc(m.image)}" alt="">`:'<div class="cms-live-photo-placeholder">BRAK ZDJĘCIA</div>'}<div class="moderator-photo-index">${String((index>=0?index:0)+1).padStart(2,'0')}</div></div><div class="moderator-card-body"><div class="moderator-name-row"><h2>${esc(m.name||'NOWA OSOBA')}</h2><span class="moderator-role">${esc(m.role||'ROLA')}</span></div><p>${esc(m.description||'Opis moderatora pojawi się w tym miejscu.')}</p><div class="moderator-links"><span class="moderator-social moderator-twitch"><span>TWITCH</span><strong>${esc(m.name||'nick')}</strong><b>↗</b></span><div class="moderator-social moderator-discord"><span>DISCORD</span><strong>${esc(m.discord||'nick_discord')}</strong></div></div></div></article>`,
       fields:[
         {name:'name',label:'Nick / nazwa',required:true},{name:'role',label:'Rola / stanowisko',required:true},
         {name:'description',label:'Opis osoby',type:'textarea',required:true},{name:'twitch',label:'Link Twitch',type:'url'},
@@ -1625,8 +1676,10 @@
   }
 
   function openBenefitsManager() {
+    const esc = window.MattCMS.escape;
     openArrayManager({
       key:'moderator_benefits', title:'MODERACJA / KORZYŚCI', singular:'korzyść', fallback:extractBenefits, label:item=>item.title,
+      livePreview:(b,{index})=>`<article class="moderator-benefit-card cms-live-benefit-card"><span class="moderator-benefit-number">${String((index>=0?index:0)+1).padStart(2,'0')}</span><div><h3>${esc(b.title||'NOWA KORZYŚĆ')}</h3><p>${esc(b.description||'Opis korzyści pojawi się tutaj.')}</p></div></article>`,
       fields:[{name:'title',label:'Nazwa korzyści',required:true},{name:'description',label:'Opis korzyści',type:'textarea',required:true}]
     });
   }
@@ -1938,6 +1991,9 @@
       draw();
     };
 
+    const downloadPreviewIcon = type => { const t=String(type||'PLIK').toUpperCase(); if(t==='ZIP')return '🗜'; if(t==='INI')return '⚙'; if(t==='TXT')return '≡'; if(t==='PDF')return 'PDF'; return '↓'; };
+    const downloadPreviewHtml = item => { const meta=[item.sizeLabel,item.category].filter(Boolean).join(' • '); return `<article class="downloads-card cms-live-download-card"><div class="downloads-card-icon">${esc(downloadPreviewIcon(item.type))}</div><div class="downloads-card-main"><div class="downloads-card-topline"><span class="downloads-type">${esc(String(item.type||'PLIK').toUpperCase())}</span><span class="downloads-meta">${esc(meta)}</span></div><h2>${esc(item.title||'NOWY PLIK')}</h2><p>${esc(item.description||'Opis pliku pojawi się tutaj.')}</p><div class="downloads-actions"><span class="downloads-primary">POBIERZ PLIK ↓</span>${item.secondaryHref||item.secondaryLabel?`<span class="downloads-secondary">${esc(item.secondaryLabel||'ZOBACZ WIĘCEJ')} →</span>`:''}</div></div><div class="downloads-card-number">01</div></article>`; };
+
     const edit = (id) => {
       id = id ? String(id) : '';
       const base = id ? baseMap.get(id) : null;
@@ -1947,6 +2003,7 @@
       }));
       const isNew=!id;
       openModal(isNew?'DODAJ PLIK DO POBRANIA':'EDYTUJ PLIK DO POBRANIA', `<form id="cms-download-form" class="cms-form">
+        ${cmsLivePreviewShell('TAK KARTA PLIKU BĘDZIE WYGLĄDAŁA NA STRONIE')}
         <label class="cms-field"><span>Nazwa wyświetlana</span><input name="title" required maxlength="120" value="${esc(current.title||'')}"></label>
         <label class="cms-field"><span>Opis</span><textarea name="description" rows="5" maxlength="700" required>${esc(current.description||'')}</textarea></label>
         <div class="cms-form-grid two">
@@ -1962,7 +2019,10 @@
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">${isNew?'DODAJ PLIK':'ZAPISZ ZMIANY'}</button></div>
       </form>`);
       const form=$('#cms-download-form',modal); const input=form.elements.file; const label=$('[data-download-file-name]',form);
-      input?.addEventListener('change',()=>{const file=input.files?.[0];if(file)label.textContent=`${file.name} • ${cmsPrettyBytes(file.size)}`;});
+      const refreshDownloadPreview=()=>{const host=$('[data-cms-generic-live]',form);if(!host)return;const value={...current,title:String(form.elements.title?.value||'').trim(),description:String(form.elements.description?.value||'').trim(),category:String(form.elements.category?.value||'').trim(),type:String(form.elements.type?.value||'').trim().toUpperCase(),secondaryLabel:String(form.elements.secondaryLabel?.value||'').trim(),secondaryHref:String(form.elements.secondaryHref?.value||'').trim()};const file=input?.files?.[0];if(file&&!value.type)value.type=String(file.name.split('.').pop()||'PLIK').toUpperCase();if(file)value.sizeLabel=cmsPrettyBytes(file.size);host.innerHTML=downloadPreviewHtml(value);};
+      form.addEventListener('input',refreshDownloadPreview);form.addEventListener('change',refreshDownloadPreview);
+      input?.addEventListener('change',()=>{const file=input.files?.[0];if(file)label.textContent=`${file.name} • ${cmsPrettyBytes(file.size)}`;refreshDownloadPreview();});
+      refreshDownloadPreview();
       $('[data-back]',form)?.addEventListener('click',draw);
       form.addEventListener('submit',async e=>{
         e.preventDefault(); const submit=$('button[type="submit"]',form); submit.disabled=true; submit.textContent='ZAPISYWANIE…';
@@ -2021,8 +2081,11 @@
     };
     const editTopic = index => {
       const value=index>=0?topics[index]:'';
-      openModal(index>=0?'EDYTUJ TEMAT':'DODAJ TEMAT', `<form id="cms-topic-form" class="cms-form"><label class="cms-field"><span>Nazwa tematu</span><input name="topic" required value="${window.MattCMS.escape(value)}"></label><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
-      const form=$('#cms-topic-form',modal); $('[data-back]',form).addEventListener('click',draw); form.addEventListener('submit',async e=>{e.preventDefault();const v=form.elements.topic.value.trim();if(index>=0)topics[index]=v;else topics.push(v);try{await window.MattCMS.save('contact_topics',topics);notify('Tematy zapisane.');await rerender();}catch(err){notify(err.message,'error');}});
+      openModal(index>=0?'EDYTUJ TEMAT':'DODAJ TEMAT', `<form id="cms-topic-form" class="cms-form">${cmsLivePreviewShell('TAK BĘDZIE WYGLĄDAŁO POLE WYBORU TEMATU')}<label class="cms-field"><span>Nazwa tematu</span><input name="topic" required value="${window.MattCMS.escape(value)}"></label><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-topic-form',modal);
+      const refreshTopicPreview=()=>{const draft=[...topics];const v=String(form.elements.topic?.value||'').trim()||'Nowy temat';if(index>=0)draft[index]=v;else draft.push(v);const host=$('[data-cms-generic-live]',form);if(host)host.innerHTML=`<div class="contact-form cms-live-contact-preview"><label><span>TEMAT WIADOMOŚCI</span><select><option>Wybierz temat</option>${draft.map(t=>`<option${t===v?' selected':''}>${window.MattCMS.escape(t)}</option>`).join('')}</select></label></div>`;};
+      form.addEventListener('input',refreshTopicPreview);refreshTopicPreview();
+      $('[data-back]',form).addEventListener('click',draw); form.addEventListener('submit',async e=>{e.preventDefault();const v=form.elements.topic.value.trim();if(index>=0)topics[index]=v;else topics.push(v);try{await window.MattCMS.save('contact_topics',topics);notify('Tematy zapisane.');await rerender();}catch(err){notify(err.message,'error');}});
     };
     draw();
   }
@@ -2312,6 +2375,7 @@
   function openDiscordManager() {
     let categories = clone(window.MattCMS?.get('discord_channels', null) || extractDiscordCategories());
     const esc = window.MattCMS.escape;
+    const discordCategoryPreviewHtml = (cat,index=0) => `<section class="discord-channel-section cms-live-discord-channel-section"><div class="discord-section-heading"><div><span class="discord-section-number">${String(index+1).padStart(2,'0')}</span><h2>${esc(cat.title||'NOWA KATEGORIA')}</h2></div><p>${esc(cat.description||'Opis kategorii pojawi się tutaj.')}</p></div><div class="discord-channel-list">${(cat.channels||[]).length?(cat.channels||[]).map(ch=>`<article class="discord-channel-row${ch.featured?' featured':''}"><div class="discord-channel-name"><span class="discord-channel-symbol">${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong></div><p>${esc(ch.description||'Opis kanału')}</p></article>`).join(''):'<article class="discord-channel-row"><div class="discord-channel-name"><span class="discord-channel-symbol">#</span><strong>kanał</strong></div><p>Dodaj kanał, aby zobaczyć go w tej kategorii.</p></article>'}</div></section>`;
 
     const applyBehind = () => window.MattCMS?.renderDiscordChannels?.(categories);
 
@@ -2362,8 +2426,8 @@
     const editCategory = index => {
       const c=index>=0?categories[index]:{icon:'📁',title:'',description:'',channels:[]};
       const fields=[{name:'icon',label:'Ikona / emoji'},{name:'title',label:'Nazwa kategorii',required:true},{name:'description',label:'Opis kategorii',type:'textarea'}];
-      openModal(index>=0?'EDYTUJ KATEGORIĘ':'DODAJ KATEGORIĘ',`<form id="cms-cat-form" class="cms-form">${fields.map(f=>fieldHtml(f,c[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
-      const form=$('#cms-cat-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);const next={...c,...v,id:c.id||slugify(v.title),channels:c.channels||[]};if(index>=0)categories[index]=next;else categories.push(next);await saveAndRender('Kategoria zapisana.');});
+      openModal(index>=0?'EDYTUJ KATEGORIĘ':'DODAJ KATEGORIĘ',`<form id="cms-cat-form" class="cms-form">${cmsLivePreviewShell('TAK KATEGORIA BĘDZIE WYGLĄDAŁA NA STRONIE')}${fields.map(f=>fieldHtml(f,c[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-cat-form',modal);bindCmsLivePreview(form,fields,c,v=>discordCategoryPreviewHtml({...c,...v,channels:c.channels||[]},index>=0?index:categories.length));$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);const next={...c,...v,id:c.id||slugify(v.title),channels:c.channels||[]};if(index>=0)categories[index]=next;else categories.push(next);await saveAndRender('Kategoria zapisana.');});
     };
 
     const editChannel = (ci,hi) => {
@@ -2374,8 +2438,8 @@
         {name:'description',label:'Pełny opis kanału / treść komunikatu',type:'textarea',required:true},
         {name:'featured',label:'Wyróżniony kanał',type:'checkbox'}
       ];
-      openModal(hi>=0?'EDYTUJ KANAŁ / KOMUNIKAT':'DODAJ KANAŁ / KOMUNIKAT',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
-      const form=$('#cms-channel-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]={...ch,...v};else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
+      openModal(hi>=0?'EDYTUJ KANAŁ / KOMUNIKAT':'DODAJ KANAŁ / KOMUNIKAT',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${cmsLivePreviewShell('PODGLĄD KANAŁU W KATEGORII')}${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-channel-form',modal);bindCmsLivePreview(form,fields,ch,v=>{const cat=clone(categories[ci]);cat.channels ||= [];if(hi>=0)cat.channels[hi]={...ch,...v};else cat.channels.push({...ch,...v});return discordCategoryPreviewHtml(cat,ci);});$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]={...ch,...v};else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
     };
 
     draw();
@@ -2863,7 +2927,10 @@
       const current=clone(window.MattCMS?.get(bannerKey,null)||{url:'',alt:'Grafika podstrony',fit:'cover'});
       const fields=[{name:'image',label:'Grafika nagłówkowa',type:'image-file'},{name:'alt',label:'Opis grafiki (ALT)'},{name:'fit',label:'Dopasowanie',type:'select',options:[{value:'cover',label:'Wypełnij szerokość (cover)'},{value:'contain',label:'Pokaż całą grafikę (contain)'}]}];
       openModal('GRAFIKA NAGŁÓWKOWA PODSTRONY',`<form id="cms-page-banner-form" class="cms-form">${fields.map(f=>fieldHtml(f,f.name==='image'?current.url:current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
-      const form=$('#cms-page-banner-form',modal);bindImageFileFields(form,fields);$('[data-back]',form)?.addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||'');const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,`naglowek-${route}`,`pages/${route}`);if(!url)throw new Error('Wybierz grafikę z dysku.');await window.MattCMS.save(bannerKey,{url,alt:String(form.elements.alt?.value||'Grafika podstrony').trim(),fit:String(form.elements.fit?.value||'cover')});notify('Grafika nagłówkowa została zapisana.');await rerender();}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
+      const form=$('#cms-page-banner-form',modal);bindImageFileFields(form,fields);
+      const updateBannerPreview=()=>{const img=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img');if(img)img.style.objectFit=String(form.elements.fit?.value||'cover');};
+      form.elements.fit?.addEventListener('change',updateBannerPreview);form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.addEventListener('change',()=>setTimeout(updateBannerPreview,0));updateBannerPreview();
+      $('[data-back]',form)?.addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||'');const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,`naglowek-${route}`,`pages/${route}`);if(!url)throw new Error('Wybierz grafikę z dysku.');await window.MattCMS.save(bannerKey,{url,alt:String(form.elements.alt?.value||'Grafika podstrony').trim(),fit:String(form.elements.fit?.value||'cover')});notify('Grafika nagłówkowa została zapisana.');await rerender();}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
     };
 
     draw();

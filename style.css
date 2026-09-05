@@ -9642,3 +9642,121 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .cms-discord-live-panel>header>span{text-align:left;max-width:none}
   .cms-discord-live-stage>.discord-preview-section{min-width:920px}
 }
+
+/* === CMS v2.6.20 — wspólny podgląd na żywo konfiguratorów === */
+.cms-generic-live-preview{
+  grid-column:1/-1;
+  display:grid;
+  gap:12px;
+  margin:2px 0 8px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:13px;
+  background:#0b0c0f;
+  overflow:hidden;
+}
+.cms-generic-live-preview>header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+}
+.cms-generic-live-preview>header>div{display:grid;gap:3px}
+.cms-generic-live-preview>header small{
+  color:#ff5558;
+  font:800 10px/1 Rajdhani,sans-serif;
+  letter-spacing:.12em;
+}
+.cms-generic-live-preview>header strong{
+  color:#fff;
+  font:800 15px Rajdhani,sans-serif;
+  text-transform:uppercase;
+}
+.cms-generic-live-preview>header>span{
+  max-width:420px;
+  color:#777a83;
+  font-size:11px;
+  line-height:1.45;
+  text-align:right;
+}
+.cms-generic-live-stage{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:11px;
+  background:#07080a;
+  overflow:auto;
+  max-height:520px;
+}
+.cms-generic-live-stage>*{margin:0!important;box-sizing:border-box}
+.cms-live-muted{color:#747780;font-size:12px}
+.cms-live-media-placeholder{
+  min-height:180px;
+  display:grid!important;
+  place-items:center;
+  align-content:center;
+  gap:6px;
+  border:1px dashed rgba(255,255,255,.12);
+  background:linear-gradient(135deg,#111217,#0b0c0f)!important;
+  color:#8d9099;
+}
+.cms-live-media-placeholder strong{color:#fff;font:800 14px Rajdhani,sans-serif}
+.cms-live-media-placeholder span{font-size:11px;color:#747780}
+.cms-live-recommended-card{width:100%;max-width:100%;}
+.cms-live-recommended-card iframe{display:none!important}
+.cms-live-recommended-card .recommended-actions span{cursor:default}
+.cms-live-moderator-card{width:100%;max-width:100%;}
+.cms-live-photo-placeholder{
+  width:100%;height:100%;min-height:220px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,#16171b,#0d0e11);
+  color:#656871;font:800 12px Rajdhani,sans-serif;
+}
+.cms-live-benefit-card{width:100%;}
+.cms-live-rule-card{width:100%;max-width:100%;}
+.cms-live-download-card{width:100%;max-width:100%;}
+.cms-live-discord-channel-section{width:100%;max-width:100%;}
+.cms-live-contact-preview{margin:0!important;max-width:620px}
+.cms-live-contact-preview label{margin:0!important}
+.cms-live-main-nav{
+  position:relative!important;
+  inset:auto!important;
+  width:max-content!important;
+  min-width:100%;
+  max-width:none!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:4px!important;
+  padding:8px!important;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  background:#070707;
+  overflow:visible!important;
+  transform:none!important;
+}
+.cms-live-main-nav>a,
+.cms-live-main-nav .nav-dropdown>button{
+  white-space:nowrap;
+  pointer-events:none;
+}
+.cms-live-main-nav .nav-dropdown{position:relative}
+.cms-live-main-nav .dropdown-menu{
+  z-index:5;
+}
+.cms-generic-live-stage:has(.cms-live-main-nav){
+  overflow:auto;
+  min-height:92px;
+}
+#cms-page-banner-form .cms-image-preview{
+  width:min(780px,100%);
+  aspect-ratio:16/5;
+}
+#cms-page-banner-form .cms-image-preview img{background:#050506}
+@media(max-width:760px){
+  .cms-generic-live-preview>header{flex-direction:column;gap:7px}
+  .cms-generic-live-preview>header>span{text-align:left;max-width:none}
+  .cms-generic-live-stage{padding:8px;max-height:440px}
+  .cms-live-recommended-card .recommended-head{grid-template-columns:1fr!important}
+}
