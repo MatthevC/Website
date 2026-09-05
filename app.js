@@ -2020,6 +2020,8 @@ function commandCard(command) {
   </article>`;
 }
 
+window.MattCommandUI = { commandCard, commandAccessTier };
+
 function setupCommandsPage() {
   const results = document.getElementById("commands-results");
   const search = document.getElementById("command-search-input");

@@ -1631,52 +1631,214 @@
   }
 
   function openCommandsManager() {
-    const stored = clone(window.MattCMS?.get('commands', null) || []);
+    const key = 'commands';
     const defaults = clone(window.MATT_COMMANDS_DEFAULT || []);
-    const categorySource = stored.length ? stored : defaults;
-    const categories = [...new Set([...defaults, ...categorySource]
-      .map(item => String(item?.category || '').trim())
-      .filter(Boolean))];
+    let items = clone(window.MattCMS?.get(key, null) || defaults);
+    const esc = window.MattCMS.escape;
 
-    openArrayManager({
-      key:'commands', title:'KOMENDY', singular:'komendę', fallback:()=>window.MATT_COMMANDS_DEFAULT || [], label:item=>item.command,
-      fields:[
-        {name:'command',label:'Komenda',required:true},
+    const cleanCategory = value => String(value || '').trim();
+    const availableCategories = () => {
+      const out = [];
+      [...items, ...defaults].forEach(item => {
+        const category = cleanCategory(item?.category);
+        if (category && !out.includes(category)) out.push(category);
+      });
+      return out;
+    };
+
+    const normalizeCommand = value => {
+      const next = { ...value };
+      next.command = String(next.command || '').trim();
+      next.description = String(next.description || '').trim();
+      next.category = cleanCategory(next.category);
+      next.subcategory = String(next.subcategory || '').trim();
+      next.roles = Array.isArray(next.roles) ? [...new Set(next.roles)] : [];
+      if (!next.command) throw new Error('Wpisz komendę.');
+      if (!next.description) throw new Error('Wpisz opis komendy.');
+      const categories = availableCategories();
+      if (!next.category || !categories.includes(next.category)) throw new Error('Wybierz kategorię z listy.');
+      if (!next.roles.length) throw new Error('Zaznacz przynajmniej jedną grupę dostępu: WIDZ, VIP lub MODERACJA.');
+      return next;
+    };
+
+    const categoryGroups = () => {
+      const map = new Map();
+      items.forEach((item, index) => {
+        const category = cleanCategory(item?.category) || 'BEZ KATEGORII';
+        if (!map.has(category)) map.set(category, []);
+        map.get(category).push({ item, index });
+      });
+      return [...map.entries()].map(([category, entries]) => ({ category, entries }));
+    };
+
+    const persistOrder = async message => {
+      try {
+        // Kolejność jest zapisywana od razu po strzałce. Nie tworzymy osobnego
+        // backupu po każdym kliknięciu, żeby nie zapełniać 10 automatycznych kopii.
+        await window.MattCMS.save(key, items, { backup:false });
+        notify(message || 'Kolejność komend została zapisana.');
+        if (typeof window.render === 'function') await window.render();
+        refreshToolbar();
+      } catch (error) {
+        notify(`Nie udało się zapisać kolejności: ${error.message}`, 'error');
+      }
+    };
+
+    const moveCommand = async (absoluteIndex, direction) => {
+      const current = items[absoluteIndex];
+      if (!current) return;
+      const category = cleanCategory(current.category);
+      const categoryIndices = items.map((item, index) => cleanCategory(item?.category) === category ? index : -1).filter(index => index >= 0);
+      const localIndex = categoryIndices.indexOf(absoluteIndex);
+      const targetLocal = localIndex + direction;
+      if (localIndex < 0 || targetLocal < 0 || targetLocal >= categoryIndices.length) return;
+      const targetIndex = categoryIndices[targetLocal];
+      [items[absoluteIndex], items[targetIndex]] = [items[targetIndex], items[absoluteIndex]];
+      drawList();
+      await persistOrder('Kolejność komend w kategorii została zapisana.');
+    };
+
+    const moveCategory = async (category, direction) => {
+      const groups = categoryGroups();
+      const from = groups.findIndex(group => group.category === category);
+      const to = from + direction;
+      if (from < 0 || to < 0 || to >= groups.length) return;
+      [groups[from], groups[to]] = [groups[to], groups[from]];
+      items = groups.flatMap(group => group.entries.map(entry => entry.item));
+      drawList();
+      await persistOrder('Kolejność kategorii została zapisana.');
+    };
+
+    const roleSummary = item => {
+      const roles = Array.isArray(item?.roles) ? item.roles : [];
+      if (roles.includes('viewer')) return 'WIDZ / VIP / MOD';
+      if (roles.includes('vip')) return roles.includes('moderator') ? 'VIP + MOD' : 'VIP';
+      if (roles.includes('moderator')) return 'MOD';
+      return 'BRAK ROLI';
+    };
+
+    const drawList = () => {
+      const groups = categoryGroups();
+      openModal('KOMENDY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-command-add>+ DODAJ KOMENDĘ</button><button type="button" data-command-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Kolejność zapisuje się automatycznie. Komendy przesuwasz tylko wewnątrz swojej kategorii, a całe kategorie możesz przesuwać osobnymi strzałkami.</p></div>
+        <div class="cms-command-order-list">${groups.length ? groups.map((group, groupIndex) => `<section class="cms-command-order-category">
+          <header><div><small>KATEGORIA ${String(groupIndex+1).padStart(2,'0')}</small><strong>${esc(group.category)}</strong><span>${group.entries.length} ${group.entries.length === 1 ? 'komenda' : 'komendy'}</span></div><div><button type="button" data-category-up="${esc(group.category)}" ${groupIndex===0?'disabled':''} title="Przesuń kategorię wyżej">↑ KATEGORIA</button><button type="button" data-category-down="${esc(group.category)}" ${groupIndex===groups.length-1?'disabled':''} title="Przesuń kategorię niżej">↓ KATEGORIA</button></div></header>
+          <div class="cms-manager-list">${group.entries.map((entry, localIndex) => `<article class="cms-manager-item cms-command-order-item"><div><small>${String(localIndex+1).padStart(2,'0')}</small><div><strong>${esc(entry.item.command || 'Komenda')}</strong><span>${esc(entry.item.description || '')}</span><em>${esc(roleSummary(entry.item))}</em></div></div><div><button type="button" data-command-up="${entry.index}" ${localIndex===0?'disabled':''} title="Przesuń wyżej w tej kategorii">↑</button><button type="button" data-command-down="${entry.index}" ${localIndex===group.entries.length-1?'disabled':''} title="Przesuń niżej w tej kategorii">↓</button><button type="button" data-command-edit="${entry.index}">EDYTUJ</button><button class="danger" type="button" data-command-delete="${entry.index}">USUŃ</button></div></article>`).join('')}</div>
+        </section>`).join('') : '<div class="cms-empty">Brak komend.</div>'}</div>`);
+
+      const body = $('#cms-modal-body', modal);
+      $('[data-command-add]', body)?.addEventListener('click', () => drawForm(-1));
+      $('[data-command-reset]', body)?.addEventListener('click', () => resetCmsKey(key, 'komendy'));
+      $$('[data-command-up]', body).forEach(btn => btn.addEventListener('click', () => moveCommand(Number(btn.dataset.commandUp), -1)));
+      $$('[data-command-down]', body).forEach(btn => btn.addEventListener('click', () => moveCommand(Number(btn.dataset.commandDown), 1)));
+      $$('[data-category-up]', body).forEach(btn => btn.addEventListener('click', () => moveCategory(btn.dataset.categoryUp, -1)));
+      $$('[data-category-down]', body).forEach(btn => btn.addEventListener('click', () => moveCategory(btn.dataset.categoryDown, 1)));
+      $$('[data-command-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.commandEdit))));
+      $$('[data-command-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
+        const index = Number(btn.dataset.commandDelete);
+        const item = items[index];
+        if (!item || !confirm(`Usunąć komendę ${item.command || ''}?`)) return;
+        const next = clone(items);
+        next.splice(index, 1);
+        try {
+          await window.MattCMS.save(key, next);
+          items = next;
+          notify('Komenda została usunięta.');
+          await rerender();
+        } catch (error) { notify(`Błąd usuwania: ${error.message}`, 'error'); }
+      }));
+    };
+
+    const drawForm = index => {
+      const isEdit = index >= 0;
+      const current = isEdit ? clone(items[index]) : {};
+      const categories = availableCategories();
+      const fields = [
+        {name:'command',label:'Komenda',required:true,placeholder:'np. !discord'},
         {name:'description',label:'Opis',type:'textarea',required:true},
-        {name:'category',label:'Kategoria',type:'select',required:true,options:[
-          {value:'',label:'— WYBIERZ KATEGORIĘ —'},
-          ...categories.map(category => ({value:category,label:category}))
-        ]},
+        {name:'category',label:'Kategoria',type:'select',required:true,options:[{value:'',label:'— WYBIERZ KATEGORIĘ —'},...categories.map(category=>({value:category,label:category}))]},
         {name:'subcategory',label:'Podkategoria (opcjonalnie)'},
         {name:'roles',label:'Dostęp dla',type:'roles'}
-      ],
-      onFormReady(form, { index }) {
-        if (index < 0) {
-          const route = currentRoute();
-          const roleInputs = [...form.querySelectorAll('input[name="roles"]')];
-          // Nowa komenda tworzona z MODERATOR / KOMENDY startuje jako
-          // moderator-only, więc od razu pojawi się w aktualnym widoku.
-          // Na stronach widza/VIP domyślnie zaznaczamy wszystkie 3 role.
-          roleInputs.forEach(input => {
-            input.checked = route === 'moderator/commands'
-              ? input.value === 'moderator'
-              : true;
-          });
-        }
-      },
-      beforeSave(value) {
-        value.command = String(value.command || '').trim();
-        value.description = String(value.description || '').trim();
-        value.category = String(value.category || '').trim();
-        value.subcategory = String(value.subcategory || '').trim();
-        value.roles = Array.isArray(value.roles) ? [...new Set(value.roles)] : [];
-        if (!value.command) throw new Error('Wpisz komendę.');
-        if (!value.description) throw new Error('Wpisz opis komendy.');
-        if (!value.category || !categories.includes(value.category)) throw new Error('Wybierz kategorię z listy.');
-        if (!value.roles.length) throw new Error('Zaznacz przynajmniej jedną grupę dostępu: WIDZ, VIP lub MODERACJA.');
-        return value;
+      ];
+
+      openModal(isEdit ? 'EDYTUJ KOMENDĘ' : 'DODAJ KOMENDĘ', `<form id="cms-command-form" class="cms-form cms-command-form">${fields.map(field=>fieldHtml(field,current[field.name])).join('')}
+        <section class="cms-command-live-preview"><div class="cms-command-live-preview-head"><div><small>PODGLĄD NA ŻYWO</small><strong>Tak komenda będzie wyglądała na stronie</strong></div><span>Zmiany w podglądzie nie zapisują się do momentu kliknięcia ZAPISZ.</span></div><div class="cms-command-preview-stage" data-command-preview></div></section>
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+
+      const form = $('#cms-command-form', modal);
+      if (!isEdit) {
+        const route = currentRoute();
+        const roleInputs = [...form.querySelectorAll('input[name="roles"]')];
+        roleInputs.forEach(input => {
+          input.checked = route === 'moderator/commands' ? input.value === 'moderator' : true;
+        });
       }
-    });
+
+      const renderPreview = () => {
+        const value = {
+          command: String(form.elements.command?.value || '!komenda').trim() || '!komenda',
+          description: String(form.elements.description?.value || 'Tutaj pojawi się opis komendy.').trim() || 'Tutaj pojawi się opis komendy.',
+          category: String(form.elements.category?.value || '').trim(),
+          subcategory: String(form.elements.subcategory?.value || '').trim(),
+          roles: $$('input[name="roles"]:checked', form).map(input => input.value)
+        };
+        const stage = $('[data-command-preview]', form);
+        if (!stage) return;
+        if (window.MattCommandUI?.commandCard) {
+          stage.innerHTML = window.MattCommandUI.commandCard(value);
+        } else {
+          const tier = value.roles.includes('viewer') ? 'shared' : value.roles.includes('vip') ? 'vip' : value.roles.includes('moderator') ? 'moderator' : 'shared';
+          stage.innerHTML = `<article class="command command-${tier}"><div class="command-top"><code>${esc(value.command)}</code><div class="command-badges"></div></div><span>${esc(value.description)}</span></article>`;
+        }
+      };
+
+      form.addEventListener('input', renderPreview);
+      form.addEventListener('change', renderPreview);
+      renderPreview();
+      $('[data-back]', form)?.addEventListener('click', drawList);
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const submit = $('button[type="submit"]', form);
+        if (submit) { submit.disabled = true; submit.textContent = 'ZAPISYWANIE…'; }
+        try {
+          const value = normalizeCommand(parseFields(form, fields));
+          let next = clone(items);
+
+          if (isEdit) {
+            // Jeśli zmieniono kategorię, komenda trafia na koniec nowej kategorii,
+            // dzięki czemu kategorie nigdy się nie przeplatają w tablicy danych.
+            const oldCategory = cleanCategory(next[index]?.category);
+            if (oldCategory !== value.category) {
+              next.splice(index, 1);
+              let lastTarget = -1;
+              next.forEach((item, itemIndex) => { if (cleanCategory(item?.category) === value.category) lastTarget = itemIndex; });
+              if (lastTarget >= 0) next.splice(lastTarget + 1, 0, value);
+              else next.push(value);
+            } else {
+              next[index] = value;
+            }
+          } else {
+            // Nowa komenda pojawia się na końcu wybranej kategorii, a nie na końcu
+            // całej tablicy. To naprawia przypadki, w których była zapisana,
+            // ale trafiała w nieoczekiwane miejsce na stronie.
+            let lastTarget = -1;
+            next.forEach((item, itemIndex) => { if (cleanCategory(item?.category) === value.category) lastTarget = itemIndex; });
+            if (lastTarget >= 0) next.splice(lastTarget + 1, 0, value);
+            else next.push(value);
+          }
+
+          await window.MattCMS.save(key, next);
+          items = next;
+          notify(isEdit ? 'Komenda została zapisana.' : 'Nowa komenda została dodana.');
+          await rerender();
+        } catch (error) {
+          notify(`Błąd zapisu: ${error.message}`, 'error');
+          if (submit) { submit.disabled = false; submit.textContent = 'ZAPISZ'; }
+        }
+      });
+    };
+
+    drawList();
   }
 
 
