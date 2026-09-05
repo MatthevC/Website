@@ -1538,7 +1538,6 @@ function rewardsPage() {
 
         <section class="reward-group" data-reward-group>
           <div class="reward-group-head">
-            <span class="moderator-section-label">OGÓLNE</span>
             <h2>OGÓLNE</h2>
             <p>Szybkie nagrody związane z czatem, muzyką i podstawową zabawą na transmisji.</p>
           </div>
@@ -1571,7 +1570,6 @@ function rewardsPage() {
 
         <section class="reward-group" data-reward-group>
           <div class="reward-group-head">
-            <span class="moderator-section-label">DIXPER ORAZ STREAM BOUNTY (BINGO)</span>
             <h2>DIXPER ORAZ STREAM BOUNTY (BINGO)</h2>
             <p>Skrzynki Dixpera oraz nagrody wpływające na eventy i planszę Stream Bounty. Teraz układ jest wyrównany w parach: <strong>Bingo po lewej</strong>, <strong>Dixper po prawej</strong>.</p>
           </div>
@@ -1624,7 +1622,6 @@ function rewardsPage() {
 
         <section class="reward-group" data-reward-group>
           <div class="reward-group-head">
-            <span class="moderator-section-label">NAGRODY ZWIĄZANE Z DBD</span>
             <h2>NAGRODY ZWIĄZANE Z DBD</h2>
             <p>Nagrody związane z buildami, survivorami i killerami w Dead by Daylight.</p>
           </div>
@@ -1651,7 +1648,6 @@ function rewardsPage() {
 
         <section class="reward-group" data-reward-group>
           <div class="reward-group-head">
-            <span class="moderator-section-label">NAGRODY UNIWERSALNE DO GIER</span>
             <h2>NAGRODY UNIWERSALNE DO GIER</h2>
             <p>Nagrody, które można wykorzystać w wielu różnych grach, nie tylko w jednym konkretnym tytule.</p>
           </div>
@@ -1673,7 +1669,6 @@ function rewardsPage() {
 
         <section class="reward-group" data-reward-group>
           <div class="reward-group-head">
-            <span class="moderator-section-label">NAGRODY PREMIUM</span>
             <h2>NAGRODY PREMIUM</h2>
             <p>Najbardziej wyjątkowe nagrody — od personalizowanych bonusów po realne korzyści poza transmisją.</p>
           </div>
