@@ -179,6 +179,129 @@
     if (typeof data.alt === 'string' && data.alt.trim()) img.alt = data.alt.trim();
   }
 
+
+  const pageImageExclusions = [
+    '.event-card', '.event-detail-modern', '#home-events', '.recommended-grid', '.moderator-grid',
+    '#discord-preview', '.discord-channel-section', '.user-area', '.site-footer', '.cms-page-banner'
+  ];
+
+  function pageImageExcluded(img) {
+    return pageImageExclusions.some(selector => img.closest(selector));
+  }
+
+  function pageImageElements(root = document.getElementById('app')) {
+    if (!root) return [];
+    const seen = new Map();
+    return [...root.querySelectorAll('img')].filter(img => {
+      if (pageImageExcluded(img)) return false;
+      const src = String(img.getAttribute('src') || '').trim();
+      if (!src || src.startsWith('data:')) return false;
+      return true;
+    }).map((img, index) => {
+      if (!img.dataset.cmsImageId) {
+        const raw = String(img.getAttribute('src') || `grafika-${index+1}`).split('?')[0].split('/').pop() || `grafika-${index+1}`;
+        const base = ruleIdPart(raw.replace(/\.[^.]+$/, '')) || `grafika-${index+1}`;
+        const count = (seen.get(base) || 0) + 1;
+        seen.set(base, count);
+        img.dataset.cmsImageId = count > 1 ? `${base}-${count}` : base;
+      }
+      if (typeof img.__mattCmsBaseSrc !== 'string') img.__mattCmsBaseSrc = img.getAttribute('src') || '';
+      if (typeof img.__mattCmsBaseAlt !== 'string') img.__mattCmsBaseAlt = img.getAttribute('alt') || '';
+      return img;
+    });
+  }
+
+  function pageImageInfo(path) {
+    return pageImageElements().map((img, index) => ({
+      id: img.dataset.cmsImageId || `grafika-${index+1}`,
+      src: img.getAttribute('src') || '',
+      alt: img.getAttribute('alt') || '',
+      baseSrc: img.__mattCmsBaseSrc || img.getAttribute('src') || '',
+      baseAlt: img.__mattCmsBaseAlt || img.getAttribute('alt') || '',
+      label: img.getAttribute('alt') || (img.__mattCmsBaseSrc || img.getAttribute('src') || '').split('/').pop() || `Grafika ${index+1}`,
+      route: routeKey(path)
+    }));
+  }
+
+  function applyPageImages(path) {
+    const data = get(`page_images:${routeKey(path)}`, {}) || {};
+    pageImageElements().forEach(img => {
+      const item = data[img.dataset.cmsImageId];
+      if (!item || typeof item !== 'object') return;
+      if (item.url) img.src = String(item.url);
+      if (typeof item.alt === 'string') img.alt = item.alt;
+      const preview = img.closest('[data-image-preview]');
+      if (preview && item.url) {
+        preview.dataset.imagePreview = String(item.url);
+        if (typeof item.alt === 'string') preview.dataset.imageAlt = item.alt;
+      }
+    });
+  }
+
+  const redCalloutSelector = [
+    '.notice',
+    '.emotes7tv-intro-copy',
+    '.emotes7tv-final-note',
+    '.dixper-clean-callout',
+    '.vip-card-warning'
+  ].join(',');
+
+  function redCalloutElements(root = document.getElementById('app')) {
+    if (!root) return [];
+    const counts = new Map();
+    return [...root.querySelectorAll(redCalloutSelector)].filter(el => !el.closest('#discord-custom-bubbles')).map((el, index) => {
+      if (!el.dataset.cmsCalloutId) {
+        const classBase = [...el.classList].find(c => /notice|warning|intro-copy|final-note/i.test(c)) || `dymek-${index+1}`;
+        const base = ruleIdPart(classBase) || `dymek-${index+1}`;
+        const count = (counts.get(base) || 0) + 1;
+        counts.set(base, count);
+        el.dataset.cmsCalloutId = count > 1 ? `${base}-${count}` : base;
+      }
+      if (typeof el.__mattCmsBaseCalloutHtml !== 'string') el.__mattCmsBaseCalloutHtml = el.innerHTML;
+      return el;
+    });
+  }
+
+  function calloutInfo(path) {
+    return redCalloutElements().map((el, index) => ({
+      id: el.dataset.cmsCalloutId || `dymek-${index+1}`,
+      html: el.innerHTML,
+      baseHtml: el.__mattCmsBaseCalloutHtml || el.innerHTML,
+      text: (el.textContent || '').replace(/\s+/g, ' ').trim(),
+      route: routeKey(path)
+    }));
+  }
+
+  function applyPageCallouts(path) {
+    const data = get(`page_callouts:${routeKey(path)}`, {}) || {};
+    redCalloutElements().forEach(el => {
+      const value = data[el.dataset.cmsCalloutId];
+      if (typeof value === 'string') el.innerHTML = sanitizeHtml(value);
+    });
+  }
+
+  function renderPageBanner(path, data) {
+    document.querySelectorAll('.cms-page-banner').forEach(el => el.remove());
+    if (!data || !data.url || routeKey(path) === 'home') return;
+    const root = document.getElementById('app');
+    if (!root) return;
+    const wrap = root.querySelector('.content-wrap') || root.firstElementChild || root;
+    const panel = wrap.querySelector('.page-panel') || wrap;
+    const anchor = panel.querySelector('.back-link');
+    const banner = document.createElement('section');
+    banner.className = `cms-page-banner cms-page-banner-${String(data.fit || 'cover').replace(/[^a-z]/gi,'')}`;
+    banner.innerHTML = `<img src="${escapeHtml(String(data.url))}" alt="${escapeHtml(String(data.alt || 'Grafika podstrony'))}" loading="lazy">`;
+    if (anchor?.nextSibling) anchor.parentNode.insertBefore(banner, anchor.nextSibling);
+    else if (anchor) anchor.parentNode.appendChild(banner);
+    else panel.insertBefore(banner, panel.firstChild);
+  }
+
+  function applyPageBanner(path) {
+    const p = routeKey(path);
+    if (p === 'home') return;
+    renderPageBanner(p, get(`page_banner:${p}`, null));
+  }
+
   function renderRules(items, path) {
     const grid = document.querySelector('.rules-card-grid');
     if (!grid || !Array.isArray(items)) return;
@@ -530,12 +653,16 @@
     applyGlobal();
     applyStructured(path);
     applyTextOverrides(path);
+    applyPageCallouts(path);
+    applyPageImages(path);
+    applyPageBanner(path);
   }
 
   window.MattCMS = {
     ready, get, save, remove, createBackup, listBackups, getBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
+    pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview,
     twitchLoginFromUrl, twitchClipSlugFromUrl, normalizeStreamer,

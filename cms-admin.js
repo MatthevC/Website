@@ -163,6 +163,8 @@
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
+      <button type="button" data-cms-action="callouts" hidden>▰ DYMKI</button>
+      <button type="button" data-cms-action="images">▧ GRAFIKI</button>
       <button type="button" data-cms-action="site">☰ MENU / LINKI</button>
       <button type="button" data-cms-action="reset-page">↶ Z GITHUBA</button>
       <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
@@ -175,6 +177,8 @@
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
       if (action === 'config') configForRoute(currentRoute())?.action();
+      if (action === 'callouts') openPageCalloutsManager();
+      if (action === 'images') openPageImagesManager();
       if (action === 'site') openSiteSettingsManager();
       if (action === 'reset-page') resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie');
       if (action === 'backups') openBackupsManager();
@@ -192,6 +196,11 @@
     const configBtn = $('[data-cms-action="config"]', toolbar);
     configBtn.hidden = !config || inlineEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
+    const calloutBtn = $('[data-cms-action="callouts"]', toolbar);
+    const calloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
+    if (calloutBtn) { calloutBtn.hidden = inlineEditing || calloutCount === 0; calloutBtn.textContent = `▰ DYMKI${calloutCount ? ` (${calloutCount})` : ''}`; }
+    const imagesBtn = $('[data-cms-action="images"]', toolbar);
+    if (imagesBtn) imagesBtn.hidden = inlineEditing || currentRoute() === 'home';
     $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing;
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing;
     $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing;
@@ -1145,6 +1154,118 @@
       ];
       openModal(hi>=0?'EDYTUJ KANAŁ / DYMEK':'DODAJ KANAŁ / DYMEK',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form=$('#cms-channel-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]={...ch,...v};else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
+    };
+
+    draw();
+  }
+
+
+  async function saveOverrideMap(key, data, message) {
+    const clean = data && typeof data === 'object' ? data : {};
+    try {
+      if (Object.keys(clean).length) await window.MattCMS.save(key, clean);
+      else if (window.MattCMS.get(key, null) != null) await window.MattCMS.remove(key);
+      notify(message || 'Zmiany zostały zapisane.');
+      await rerender();
+    } catch (error) { notify(`Nie udało się zapisać: ${error.message}`, 'error'); }
+  }
+
+  function openPageCalloutsManager() {
+    if (!isAdmin()) return;
+    const route = currentRoute();
+    const key = `page_callouts:${route}`;
+    let overrides = clone(window.MattCMS?.get(key, {}) || {});
+    const esc = window.MattCMS.escape;
+
+    const getItems = () => window.MattCMS?.calloutInfo?.(route) || [];
+
+    const draw = () => {
+      const items = getItems();
+      openModal(`DYMKI — ${route.toUpperCase()}`, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-all>↶ WSZYSTKIE Z GITHUBA</button></div><p>To są czerwone dymki/komunikaty wykryte na tej podstronie, w tym pola takie jak „Masz taki chat…”. Edytujesz ich zawartość bez zmiany kodu strony.</p></div>
+        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / DYMEK</small><strong>${esc((item.text || 'Czerwony dymek').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit="${esc(item.id)}">EDYTUJ</button><button type="button" data-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join('') : '<div class="cms-empty">Na tej podstronie nie wykryto czerwonych dymków. Jeśli dodamy taki element w plikach GitHuba, pojawi się tutaj automatycznie.</div>'}</div>`);
+      const body = $('#cms-modal-body', modal);
+      $('[data-reset-all]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie czerwone dymki na tej podstronie'));
+      $$('[data-edit]',body).forEach(btn=>btn.addEventListener('click',()=>edit(btn.dataset.edit)));
+      $$('[data-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const id=btn.dataset.reset;
+        if(!Object.prototype.hasOwnProperty.call(overrides,id)) return;
+        if(!confirm('Przywrócić ten dymek do wersji zapisanej w GitHubie?')) return;
+        delete overrides[id];
+        await saveOverrideMap(key,overrides,'Dymek przywrócony z GitHuba.');
+      }));
+    };
+
+    const edit = id => {
+      const item = getItems().find(x=>x.id===id);
+      if(!item) return draw();
+      const current = Object.prototype.hasOwnProperty.call(overrides,id) ? overrides[id] : item.html;
+      openModal('EDYTUJ CZERWONY DYMEK', `<div class="cms-manager-actions"><p>Kliknij w treść poniżej i edytuj ją wizualnie. Możesz zostawić pogrubienia, listy i linki. Nie trzeba wpisywać kodu HTML.</p></div>
+        <div class="cms-rich-callout-editor" contenteditable="true" spellcheck="true" data-rich-editor>${current}</div>
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-base>↶ TREŚĆ Z GITHUBA</button><button class="cms-primary" type="button" data-save>ZAPISZ</button></div>`);
+      const body=$('#cms-modal-body',modal);
+      const editor=$('[data-rich-editor]',body);
+      $('[data-back]',body)?.addEventListener('click',draw);
+      $('[data-base]',body)?.addEventListener('click',()=>{editor.innerHTML=item.baseHtml;});
+      $('[data-save]',body)?.addEventListener('click',async()=>{
+        const value=window.MattCMS.sanitizeHtml(editor.innerHTML);
+        const base=window.MattCMS.sanitizeHtml(item.baseHtml);
+        if(value===base) delete overrides[id]; else overrides[id]=value;
+        await saveOverrideMap(key,overrides,'Dymek został zapisany.');
+      });
+    };
+
+    draw();
+  }
+
+  function openPageImagesManager() {
+    if (!isAdmin()) return;
+    const route = currentRoute();
+    const key = `page_images:${route}`;
+    const bannerKey = `page_banner:${route}`;
+    let overrides = clone(window.MattCMS?.get(key, {}) || {});
+    const esc = window.MattCMS.escape;
+
+    const currentImages = () => window.MattCMS?.pageImageInfo?.(route) || [];
+
+    const draw = () => {
+      const images = currentImages();
+      const banner = clone(window.MattCMS?.get(bannerKey, null) || null);
+      const bannerBlock = route === 'home' ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
+      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${bannerBlock}<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
+        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów. Nadal możesz dodać grafikę nagłówkową powyżej.</div>'}</div>`);
+      const body=$('#cms-modal-body',modal);
+      $('[data-reset-images]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie grafiki tej podstrony'));
+      $$('[data-image-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editImage(btn.dataset.imageEdit)));
+      $$('[data-image-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const id=btn.dataset.imageReset;
+        if(!Object.prototype.hasOwnProperty.call(overrides,id)) return;
+        if(!confirm('Przywrócić tę grafikę do wersji z GitHuba?')) return;
+        delete overrides[id];
+        await saveOverrideMap(key,overrides,'Grafika została przywrócona z GitHuba.');
+      }));
+      $('[data-banner-edit]',body)?.addEventListener('click',editBanner);
+      $('[data-banner-remove]',body)?.addEventListener('click',async()=>{
+        if(!confirm('Usunąć dodatkową grafikę nagłówkową tej podstrony?')) return;
+        try { await window.MattCMS.remove(bannerKey); notify('Grafika nagłówkowa została usunięta.'); await rerender(); }
+        catch(e){notify(e.message,'error');}
+      });
+    };
+
+    const editImage = id => {
+      const item=currentImages().find(x=>x.id===id);
+      if(!item) return draw();
+      const current=overrides[id]||{url:item.src,alt:item.alt};
+      const fields=[{name:'image',label:'Grafika',type:'image-file'},{name:'alt',label:'Opis grafiki (ALT)',help:'Krótki opis obrazu dla dostępności i wyszukiwarek.'}];
+      openModal('ZMIEŃ GRAFIKĘ',`<form id="cms-page-image-form" class="cms-form">${fieldHtml(fields[0],current.url||item.src)}${fieldHtml(fields[1],current.alt??item.alt)}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-base>↶ Z GITHUBA</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-page-image-form',modal);bindImageFileFields(form,fields);$('[data-back]',form)?.addEventListener('click',draw);$('[data-base]',form)?.addEventListener('click',async()=>{delete overrides[id];await saveOverrideMap(key,overrides,'Grafika została przywrócona z GitHuba.');});
+      form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||item.src);const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,item.label||id,`pages/${route}`);const alt=String(form.elements.alt?.value||'').trim();const baseUrl=item.baseSrc;const baseAlt=item.baseAlt||'';if(url===baseUrl&&alt===baseAlt)delete overrides[id];else overrides[id]={url,alt};await saveOverrideMap(key,overrides,'Grafika została zapisana.');}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
+    };
+
+    const editBanner = () => {
+      const current=clone(window.MattCMS?.get(bannerKey,null)||{url:'',alt:'Grafika podstrony',fit:'cover'});
+      const fields=[{name:'image',label:'Grafika nagłówkowa',type:'image-file'},{name:'alt',label:'Opis grafiki (ALT)'},{name:'fit',label:'Dopasowanie',type:'select',options:[{value:'cover',label:'Wypełnij szerokość (cover)'},{value:'contain',label:'Pokaż całą grafikę (contain)'}]}];
+      openModal('GRAFIKA NAGŁÓWKOWA PODSTRONY',`<form id="cms-page-banner-form" class="cms-form">${fields.map(f=>fieldHtml(f,f.name==='image'?current.url:current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-page-banner-form',modal);bindImageFileFields(form,fields);$('[data-back]',form)?.addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||'');const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,`naglowek-${route}`,`pages/${route}`);if(!url)throw new Error('Wybierz grafikę z dysku.');await window.MattCMS.save(bannerKey,{url,alt:String(form.elements.alt?.value||'Grafika podstrony').trim(),fit:String(form.elements.fit?.value||'cover')});notify('Grafika nagłówkowa została zapisana.');await rerender();}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
     };
 
     draw();
