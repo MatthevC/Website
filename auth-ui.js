@@ -353,10 +353,24 @@ async function mattForceFirstLoginSetup(session, profile) {
       setTimeout(() => location.reload(), 1200);
     } catch (error) {
       console.error("Pierwsza konfiguracja konta:", error);
-      if (msg) msg.textContent = error?.message || "Nie udało się zapisać danych konta.";
+      if (msg) msg.textContent = await mattFunctionErrorMessage(error, "Nie udało się zapisać danych konta.");
       save.disabled = false;
     }
   };
+}
+
+
+async function mattFunctionErrorMessage(error, fallback = "Operacja Edge Function nie powiodła się.") {
+  try {
+    const response = error?.context;
+    if (response && typeof response.clone === "function") {
+      const clone = response.clone();
+      const payload = await clone.json().catch(() => null);
+      if (payload?.error) return String(payload.error);
+      if (payload?.message) return String(payload.message);
+    }
+  } catch (_) {}
+  return error?.message || fallback;
 }
 
 async function mattOpenAccountManager() {
@@ -701,7 +715,8 @@ async function mattOpenAccountManager() {
         selectedId = data.userId;
         await load();
       } catch (error) {
-        message.textContent = error?.message || "Nie udało się utworzyć konta.";
+        console.error("Tworzenie konta:", error);
+        message.textContent = await mattFunctionErrorMessage(error, "Nie udało się utworzyć konta.");
       } finally {
         button.disabled = false;
       }
