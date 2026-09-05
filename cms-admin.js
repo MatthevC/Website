@@ -1675,32 +1675,76 @@
 
   async function openBackupsManager() {
     if (!isAdmin()) return;
+    let activeType = 'automatic';
+
+    const renderBackupItem = (b) => {
+      const esc = window.MattCMS.escape;
+      const creator = b.created_by_username || b.created_by || 'administrator';
+      const typeLabel = b.backup_type === 'manual' ? 'RĘCZNY' : 'AUTO';
+      return `<article class="cms-manager-item cms-backup-item" data-backup-id="${Number(b.id)}">
+        <div>
+          <small>#${Number(b.id)} · ${typeLabel}</small>
+          <div>
+            <strong>${esc(b.label || 'Backup')}</strong>
+            <span>${esc(formatBackupDate(b.created_at))} · utworzył: ${esc(creator)}</span>
+          </div>
+        </div>
+        <div>
+          <button type="button" data-download-backup="${Number(b.id)}">POBIERZ JSON</button>
+          <button type="button" data-restore-backup="${Number(b.id)}">PRZYWRÓĆ</button>
+          <button class="danger" type="button" data-delete-backup="${Number(b.id)}">USUŃ</button>
+        </div>
+      </article>`;
+    };
 
     const draw = async () => {
       openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-backup-loading">Ładowanie kopii bezpieczeństwa…</div>`);
       try {
         const backups = await window.MattCMS.listBackups();
-        const esc = window.MattCMS.escape;
+        const automatic = backups.filter(b => b.backup_type !== 'manual');
+        const manual = backups.filter(b => b.backup_type === 'manual');
+        const current = activeType === 'manual' ? manual : automatic;
+
         openModal('BACKUPY I PRZYWRACANIE', `
-          <div class="cms-manager-actions cms-backup-actions">
-            <div class="cms-manager-action-group">
-              <button class="cms-primary" type="button" data-create-backup>+ UTWÓRZ BACKUP</button>
-              <button type="button" data-import-backup>↑ WCZYTAJ PLIK JSON</button>
-              <input type="file" data-backup-file accept="application/json,.json" hidden>
-            </div>
-            <p>Backup obejmuje wszystkie nadpisania CMS oraz eventy. Pliki HTML/JS/CSS pozostają w GitHubie i przywraca się je przez historię commitów.</p>
+          <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj zapisów">
+            <button type="button" class="${activeType === 'automatic' ? 'active' : ''}" data-backup-tab="automatic">Automatyczne zapisy <span>${automatic.length}</span></button>
+            <button type="button" class="${activeType === 'manual' ? 'active' : ''}" data-backup-tab="manual">Ręczne zapisy <span>${manual.length}</span></button>
           </div>
-          <div class="cms-backup-note"><strong>AUTOMATYCZNA OCHRONA:</strong> przed każdym zapisem CMS oraz przed dodaniem, edycją lub usunięciem eventu powstaje snapshot. Kopii zapisanych tutaj nie da się usunąć ani edytować z poziomu strony.</div>
-          <div class="cms-manager-list">${backups.length ? backups.map(b => `<article class="cms-manager-item cms-backup-item"><div><small>#${b.id}</small><div><strong>${esc(b.label || 'Backup')}</strong><span>${esc(formatBackupDate(b.created_at))}${b.created_by ? ` · ${esc(b.created_by)}` : ''}</span></div></div><div><button type="button" data-download-backup="${b.id}">POBIERZ JSON</button><button class="danger" type="button" data-restore-backup="${b.id}">PRZYWRÓĆ</button></div></article>`).join('') : '<div class="cms-empty">Brak backupów. Utwórz pierwszy ręczny backup.</div>'}</div>`);
+
+          ${activeType === 'automatic' ? `
+            <div class="cms-backup-note"><strong>AUTOMATYCZNE ZAPISY:</strong> powstają przed zmianami CMS, eventów i przywracaniem danych. Przechowywanych jest maksymalnie <strong>10</strong> najnowszych. Starsze są automatycznie usuwane. Każdy zapis możesz także usunąć ręcznie.</div>
+          ` : `
+            <div class="cms-manager-actions cms-backup-actions">
+              <div class="cms-manager-action-group">
+                <button class="cms-primary" type="button" data-create-backup>+ UTWÓRZ RĘCZNY ZAPIS</button>
+                <button type="button" data-import-backup>↑ WCZYTAJ PLIK JSON</button>
+                <input type="file" data-backup-file accept="application/json,.json" hidden>
+              </div>
+              <p>Ręczne zapisy nie są objęte limitem 10 kopii i nie są usuwane automatycznie. Widać przy nich autora oraz datę utworzenia.</p>
+            </div>
+            <div class="cms-backup-note"><strong>RĘCZNE ZAPISY:</strong> zostają do czasu, aż uprawniony administrator usunie je z listy.</div>
+          `}
+
+          <div class="cms-manager-list">${current.length ? current.map(renderBackupItem).join('') : `<div class="cms-empty">${activeType === 'manual' ? 'Brak ręcznych zapisów.' : 'Brak automatycznych zapisów.'}</div>`}</div>
+        `);
 
         const body = $('#cms-modal-body', modal);
+        $$('[data-backup-tab]', body).forEach(btn => btn.addEventListener('click', async () => {
+          activeType = btn.dataset.backupTab === 'manual' ? 'manual' : 'automatic';
+          await draw();
+        }));
+
         const fileInput = $('[data-backup-file]', body);
         $('[data-create-backup]', body)?.addEventListener('click', async () => {
-          const label = prompt('Nazwa backupu:', `Ręczny backup — ${new Date().toLocaleString('pl-PL')}`);
+          const label = prompt('Nazwa ręcznego zapisu:', `Ręczny zapis — ${new Date().toLocaleString('pl-PL')}`);
           if (label === null) return;
-          try { await window.MattCMS.createBackup(label || 'Backup ręczny'); notify('Backup został utworzony.'); await draw(); }
-          catch (e) { notify(e.message, 'error'); }
+          try {
+            await window.MattCMS.createManualBackup(label || 'Ręczny zapis');
+            notify('Ręczny zapis został utworzony.');
+            await draw();
+          } catch (e) { notify(e.message, 'error'); }
         });
+
         $('[data-import-backup]', body)?.addEventListener('click', () => fileInput?.click());
         fileInput?.addEventListener('change', async () => {
           const file = fileInput.files?.[0];
@@ -1709,30 +1753,40 @@
             const parsed = JSON.parse(await file.text());
             const snapshot = parsed?.snapshot && parsed.snapshot.cms_data ? parsed.snapshot : parsed;
             if (!snapshot || !Array.isArray(snapshot.cms_data) || !Array.isArray(snapshot.events)) throw new Error('Ten plik nie ma prawidłowego formatu backupu Matt\'s World.');
-            if (!confirm(`Przywrócić dane z pliku „${file.name}”? Przed restore automatycznie zapiszę jeszcze bieżący stan.`)) return;
+            if (!confirm(`Przywrócić dane z pliku „${file.name}”? Przed przywróceniem powstanie automatyczny zapis bieżącego stanu.`)) return;
             await window.MattCMS.restoreSnapshot(snapshot, `plik ${file.name}`);
             notify('Backup z pliku został przywrócony.');
             setTimeout(() => location.reload(), 500);
           } catch (e) { notify(`Nie udało się wczytać pliku: ${e.message}`, 'error'); }
           finally { fileInput.value = ''; }
         });
+
         $$('[data-download-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
           try {
             const backup = await window.MattCMS.getBackup(Number(btn.dataset.downloadBackup));
-            const payload = { ...backup.snapshot, backup_id: backup.id, label: backup.label, exported_at: new Date().toISOString() };
+            const payload = { ...backup.snapshot, backup_id: backup.id, label: backup.label, backup_type: backup.backup_type, created_by: backup.created_by, created_by_username: backup.created_by_username, exported_at: new Date().toISOString() };
             const safeLabel = String(backup.label || 'backup').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '').slice(0,50) || 'backup';
             downloadJson(`matts-world-backup-${backup.id}-${safeLabel}.json`, payload);
           } catch (e) { notify(`Nie udało się pobrać backupu: ${e.message}`, 'error'); }
         }));
+
         $$('[data-restore-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
           const id = Number(btn.dataset.restoreBackup);
           const selected = backups.find(x => Number(x.id) === id);
-          if (!confirm(`Przywrócić backup #${id} „${selected?.label || ''}”? Bieżący stan zostanie automatycznie zabezpieczony przed przywróceniem.`)) return;
-          try { await window.MattCMS.restoreBackup(id); notify('Backup został przywrócony.'); setTimeout(() => location.reload(), 500); }
+          if (!confirm(`Przywrócić zapis #${id} „${selected?.label || ''}”? Bieżący stan zostanie automatycznie zabezpieczony przed przywróceniem.`)) return;
+          try { await window.MattCMS.restoreBackup(id); notify('Zapis został przywrócony.'); setTimeout(() => location.reload(), 500); }
           catch (e) { notify(`Nie udało się przywrócić: ${e.message}`, 'error'); }
         }));
+
+        $$('[data-delete-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
+          const id = Number(btn.dataset.deleteBackup);
+          const selected = backups.find(x => Number(x.id) === id);
+          if (!confirm(`Usunąć ${selected?.backup_type === 'manual' ? 'ręczny' : 'automatyczny'} zapis #${id} „${selected?.label || ''}”? Tej operacji nie da się cofnąć.`)) return;
+          try { await window.MattCMS.deleteBackup(id); notify('Zapis został usunięty.'); await draw(); }
+          catch (e) { notify(`Nie udało się usunąć: ${e.message}`, 'error'); }
+        }));
       } catch (error) {
-        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Jeżeli to pierwsze uruchomienie tej wersji, wykonaj plik <code>CMS_UPDATE_BACKUP.sql</code> w Supabase.</div>`);
+        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać nowych backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Uruchom plik <code>CMS_UPDATE_AUDIT_BACKUPS.sql</code> w Supabase.</div>`);
       }
     };
 

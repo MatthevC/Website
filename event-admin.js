@@ -1,7 +1,7 @@
 // Backup bezpieczeństwa przed każdą zmianą eventów. Funkcja działa tylko dla administratora.
 async function mattEventSafetyBackup(label){
   if(window.currentUserIsAdmin !== true) throw new Error('Brak uprawnień administratora.');
-  if(!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny. Uruchom CMS_UPDATE_BACKUP.sql w Supabase.');
+  if(!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny. Uruchom CMS_UPDATE_AUDIT_BACKUPS.sql w Supabase.');
   return window.MattCMS.createBackup(label);
 }
 

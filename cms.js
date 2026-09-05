@@ -50,17 +50,22 @@
     if (window.currentUserIsAdmin !== true) throw new Error('Brak uprawnień administratora.');
   }
 
-  async function createBackup(label = 'Backup ręczny') {
+  async function createBackup(label = 'Backup automatyczny', options = {}) {
     requireAdmin();
-    const { data, error } = await supabaseClient.rpc('matt_create_backup', { p_label: label });
+    const type = options?.type === 'manual' ? 'manual' : 'automatic';
+    const { data, error } = await supabaseClient.rpc('matt_create_backup_v2', { p_label: label, p_type: type });
     if (error) {
       const raw = String(error.message || 'Nieznany błąd');
-      if (raw.includes('matt_create_backup') || raw.includes('schema cache') || error.code === 'PGRST202') {
-        throw new Error('Brakuje funkcji backupu w Supabase. Uruchom plik CMS_UPDATE_BACKUP.sql w SQL Editorze, a potem odśwież stronę.');
+      if (raw.includes('matt_create_backup_v2') || raw.includes('schema cache') || error.code === 'PGRST202') {
+        throw new Error('Brakuje aktualizacji backupów i logów w Supabase. Uruchom plik CMS_UPDATE_AUDIT_BACKUPS.sql w SQL Editorze, a potem odśwież stronę.');
       }
       throw new Error(`Nie udało się utworzyć backupu: ${raw}`);
     }
     return data;
+  }
+
+  async function createManualBackup(label = 'Backup ręczny') {
+    return createBackup(label, { type: 'manual' });
   }
 
   async function save(key, data, options = {}) {
@@ -85,13 +90,16 @@
     cache.delete(key);
   }
 
-  async function listBackups() {
+  async function listBackups(type = null) {
     requireAdmin();
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
       .from('cms_backups')
-      .select('id,label,created_at,created_by')
+      .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type')
+      .order('created_at', { ascending: false })
       .order('id', { ascending: false })
-      .limit(100);
+      .limit(200);
+    if (type === 'automatic' || type === 'manual') query = query.eq('backup_type', type);
+    const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }
@@ -100,9 +108,16 @@
     requireAdmin();
     const { data, error } = await supabaseClient
       .from('cms_backups')
-      .select('id,label,created_at,created_by,snapshot')
+      .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type,snapshot')
       .eq('id', id)
       .single();
+    if (error) throw error;
+    return data;
+  }
+
+  async function deleteBackup(id) {
+    requireAdmin();
+    const { data, error } = await supabaseClient.rpc('matt_delete_backup', { p_backup_id: Number(id) });
     if (error) throw error;
     return data;
   }
@@ -775,7 +790,7 @@
   }
 
   window.MattCMS = {
-    ready, get, save, remove, createBackup, listBackups, getBackup, restoreBackup, restoreSnapshot,
+    ready, get, save, remove, createBackup, createManualBackup, listBackups, getBackup, deleteBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
     pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts,

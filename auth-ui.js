@@ -1,5 +1,156 @@
 const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 
+
+function mattAuditEscape(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function mattAuditCategory(action = "") {
+  const a = String(action || "").toLowerCase();
+  if (a.startsWith("profile.") || a.startsWith("auth.")) return "PROFIL / KONTO";
+  if (a.startsWith("event.")) return "EVENTY";
+  if (a.startsWith("backup.")) return "BACKUPY";
+  if (a.startsWith("cms.")) return "CMS / STRONA";
+  return "INNE";
+}
+
+function mattAuditActionLabel(action = "") {
+  const labels = {
+    "cms.created": "Dodano dane CMS",
+    "cms.updated": "Zmieniono dane CMS",
+    "cms.deleted": "Usunięto dane CMS",
+    "event.created": "Dodano event",
+    "event.updated": "Edytowano event",
+    "event.deleted": "Usunięto event",
+    "profile.created": "Utworzono profil",
+    "profile.updated": "Edytowano profil",
+    "profile.deleted": "Usunięto profil",
+    "auth.password_changed": "Zmieniono hasło",
+    "auth.email_changed": "Zmieniono e-mail",
+    "backup.automatic.created": "Utworzono automatyczny zapis",
+    "backup.manual.created": "Utworzono ręczny zapis",
+    "backup.automatic.deleted": "Usunięto automatyczny zapis",
+    "backup.manual.deleted": "Usunięto ręczny zapis"
+  };
+  return labels[action] || String(action || "Zdarzenie");
+}
+
+function mattAuditFormatDate(value) {
+  try {
+    return new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value));
+  } catch (_) {
+    return String(value || "");
+  }
+}
+
+async function mattOpenAuditLogs() {
+  if (window.currentUserIsAdmin !== true) return;
+
+  let modal = document.getElementById("adminAuditModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "adminAuditModal";
+    modal.className = "audit-modal";
+    modal.innerHTML = `
+      <div class="audit-box" role="dialog" aria-modal="true" aria-labelledby="auditTitle">
+        <header class="audit-head">
+          <div><span>TYLKO ADMINISTRATOR</span><h2 id="auditTitle">LOGI ZMIAN</h2><p>Historia działań z ostatnich 14 dni. Hasła, tokeny i sekrety nigdy nie są zapisywane w logach.</p></div>
+          <button type="button" class="audit-close" aria-label="Zamknij">×</button>
+        </header>
+        <div class="audit-toolbar">
+          <input type="search" data-audit-search placeholder="Szukaj użytkownika, akcji, sekcji…">
+          <select data-audit-category>
+            <option value="">Wszystkie kategorie</option>
+            <option value="CMS / STRONA">CMS / STRONA</option>
+            <option value="EVENTY">EVENTY</option>
+            <option value="PROFIL / KONTO">PROFIL / KONTO</option>
+            <option value="BACKUPY">BACKUPY</option>
+            <option value="INNE">INNE</option>
+          </select>
+          <button type="button" data-audit-refresh>ODŚWIEŻ</button>
+        </div>
+        <div class="audit-summary" data-audit-summary>Ładowanie…</div>
+        <div class="audit-list" data-audit-list><div class="audit-empty">Ładowanie logów…</div></div>
+      </div>`;
+    document.body.appendChild(modal);
+
+    modal.querySelector(".audit-close")?.addEventListener("click", () => modal.classList.remove("active"));
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("active"); });
+  }
+
+  modal.classList.add("active");
+  const list = modal.querySelector("[data-audit-list]");
+  const summary = modal.querySelector("[data-audit-summary]");
+  const search = modal.querySelector("[data-audit-search]");
+  const category = modal.querySelector("[data-audit-category]");
+  const refresh = modal.querySelector("[data-audit-refresh]");
+  let rows = [];
+
+  const render = () => {
+    const needle = String(search?.value || "").trim().toLowerCase();
+    const selectedCategory = String(category?.value || "");
+    const filtered = rows.filter(row => {
+      const cat = mattAuditCategory(row.action);
+      if (selectedCategory && cat !== selectedCategory) return false;
+      if (!needle) return true;
+      const hay = [row.actor_username, row.actor_email, row.action, row.entity_type, row.entity_id, row.summary, cat]
+        .filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(needle);
+    });
+
+    if (summary) summary.textContent = `Wyświetlono ${filtered.length} z ${rows.length} zdarzeń z ostatnich 14 dni.`;
+    if (!list) return;
+    list.innerHTML = filtered.length ? filtered.map(row => {
+      const actor = row.actor_username || row.actor_email || (row.actor_user_id ? `Użytkownik ${String(row.actor_user_id).slice(0,8)}…` : "System");
+      const actorExtra = row.actor_username && row.actor_email ? ` · ${row.actor_email}` : "";
+      const details = row.details && typeof row.details === "object" ? JSON.stringify(row.details, null, 2) : "";
+      return `<article class="audit-item">
+        <div class="audit-item-top">
+          <div><span class="audit-category">${mattAuditEscape(mattAuditCategory(row.action))}</span><strong>${mattAuditEscape(mattAuditActionLabel(row.action))}</strong></div>
+          <time>${mattAuditEscape(mattAuditFormatDate(row.created_at))}</time>
+        </div>
+        <p class="audit-summary-text">${mattAuditEscape(row.summary || "Brak dodatkowego opisu.")}</p>
+        <div class="audit-meta"><span><b>Kto:</b> ${mattAuditEscape(actor + actorExtra)}</span><span><b>Obiekt:</b> ${mattAuditEscape(row.entity_type || "—")}${row.entity_id ? ` / ${mattAuditEscape(row.entity_id)}` : ""}</span></div>
+        ${details ? `<details class="audit-details"><summary>Pokaż szczegóły zmiany</summary><pre>${mattAuditEscape(details)}</pre></details>` : ""}
+      </article>`;
+    }).join("") : '<div class="audit-empty">Brak logów pasujących do filtrów.</div>';
+  };
+
+  const load = async () => {
+    if (list) list.innerHTML = '<div class="audit-empty">Ładowanie logów…</div>';
+    if (refresh) refresh.disabled = true;
+    try {
+      const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabaseClient
+        .from("matt_audit_logs")
+        .select("id,created_at,actor_user_id,actor_email,actor_username,action,entity_type,entity_id,summary,details")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      rows = data || [];
+      render();
+    } catch (error) {
+      console.error("Nie udało się wczytać logów:", error);
+      if (summary) summary.textContent = "Nie udało się pobrać logów.";
+      if (list) list.innerHTML = `<div class="audit-empty">${mattAuditEscape(error.message || "Błąd odczytu logów")}.<br><br>Uruchom plik <b>CMS_UPDATE_AUDIT_BACKUPS.sql</b> w Supabase.</div>`;
+    } finally {
+      if (refresh) refresh.disabled = false;
+    }
+  };
+
+  search.oninput = render;
+  category.onchange = render;
+  refresh.onclick = load;
+  await load();
+}
+
+
 function mattSetHeaderUser(profile) {
   const open = document.getElementById("openLogin");
   const name = document.getElementById("headerUserName");
@@ -59,6 +210,7 @@ async function mattLoadUserHeader() {
   const menu = document.getElementById("userMenu");
   const admin = document.getElementById("adminLink");
   const logout = document.getElementById("logoutBtn");
+  const auditLogs = document.getElementById("adminAuditLogsBtn");
   if (!open) return;
 
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -67,6 +219,7 @@ async function mattLoadUserHeader() {
     window.currentUserProfile = null;
     window.dispatchEvent(new CustomEvent("matt-auth-change", { detail: { isAdmin: false } }));
     mattSetHeaderUser(null);
+    if (auditLogs) auditLogs.hidden = true;
     open.onclick = () => modal?.classList.add("active");
     return;
   }
@@ -75,12 +228,14 @@ async function mattLoadUserHeader() {
     const profile = await mattGetOwnProfile(session);
     if (!profile) {
       mattSetHeaderUser({ username: session.user.email?.split("@")[0] || "UŻYTKOWNIK", avatar_url: null });
+      if (auditLogs) auditLogs.hidden = true;
       return;
     }
 
     window.currentUserProfile = profile;
     window.currentUserIsAdmin = profile.role === "admin";
     window.dispatchEvent(new CustomEvent("matt-auth-change", { detail: { isAdmin: window.currentUserIsAdmin } }));
+    if (auditLogs) { auditLogs.hidden = !window.currentUserIsAdmin; auditLogs.onclick = window.currentUserIsAdmin ? (() => { menu?.classList.remove("show"); mattOpenAuditLogs(); }) : null; }
     mattSetHeaderUser(profile);
 
     open.onclick = (e) => {
