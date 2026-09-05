@@ -9854,3 +9854,35 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .cms-event-form-actions-right{width:100%;margin-left:0}
   .cms-event-form-actions button,.cms-event-form-actions-right button{flex:1}
 }
+
+/* Discord preview — przewijanie listy użytkowników rolką */
+.discord-app-preview-expanded .discord-app-members.discord-members-expanded {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.14) transparent;
+}
+
+.discord-app-preview-expanded .discord-app-members.discord-members-expanded::-webkit-scrollbar {
+  width: 5px;
+}
+.discord-app-preview-expanded .discord-app-members.discord-members-expanded::-webkit-scrollbar-track {
+  background: transparent;
+}
+.discord-app-preview-expanded .discord-app-members.discord-members-expanded::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
+}
+.discord-app-preview-expanded .discord-app-members.discord-members-expanded::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.22);
+}
+
+/* Pasek „Aktywność” zostaje widoczny podczas przewijania użytkowników. */
+.discord-app-preview-expanded .discord-members-search {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #111216;
+  box-shadow: 0 6px 12px rgba(17,18,22,.78);
+}
