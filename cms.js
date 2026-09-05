@@ -238,11 +238,16 @@
     });
   }
 
+  // Elementy, które w panelu administratora traktujemy jako KOMUNIKATY.
+  // Oprócz małych notice/callout obejmujemy również większe bloki typu hero,
+  // jeżeli pełnią rolę komunikatu / wprowadzenia do konkretnej podstrony.
   const redCalloutSelector = [
     '.notice',
     '.emotes7tv-intro-copy',
     '.emotes7tv-final-note',
     '.dixper-clean-callout',
+    '.dixper-intro:not(.emotes7tv-intro)',
+    '.bingo-intro',
     '.vip-card-warning',
     '.vip-note',
     '.bingo-demo-note',
@@ -252,16 +257,32 @@
     '.recommended-note-box',
     '.reward-note',
     '.rewards-side-note',
-    '.discord-showcase-note'
+    '.discord-showcase-note',
+    '.discord-configure-section',
+    '.discord-join-hero',
+    '.discord-channels-hero',
+    '.rules-hero',
+    '.vip-hero',
+    '.moderator-team-hero',
+    '.moderator-benefits-hero',
+    '.recommended-hero',
+    '.downloads-hero',
+    '.rewards-hero',
+    '.rules-summary-box',
+    '.event-rules-summary',
+    '.downloads-summary',
+    '.bingo-prize-summary',
+    '.collection-summary'
   ].join(',');
 
   function redCalloutElements(root = document.getElementById('app')) {
     if (!root) return [];
     const counts = new Map();
-    return [...root.querySelectorAll(redCalloutSelector)].filter(el => !el.closest('#discord-custom-bubbles')).map((el, index) => {
+    return [...root.querySelectorAll(redCalloutSelector)].map((el, index) => {
       if (!el.dataset.cmsCalloutId) {
-        const classBase = [...el.classList].find(c => /notice|warning|intro-copy|final-note/i.test(c)) || `dymek-${index+1}`;
-        const base = ruleIdPart(classBase) || `dymek-${index+1}`;
+        const preferred = String(el.id || '').trim();
+        const classBase = [...el.classList].find(c => /notice|warning|intro|note|callout|hero|summary/i.test(c)) || `komunikat-${index+1}`;
+        const base = ruleIdPart(preferred || classBase) || `komunikat-${index+1}`;
         const count = (counts.get(base) || 0) + 1;
         counts.set(base, count);
         el.dataset.cmsCalloutId = count > 1 ? `${base}-${count}` : base;
@@ -273,7 +294,7 @@
 
   function calloutInfo(path) {
     return redCalloutElements().map((el, index) => ({
-      id: el.dataset.cmsCalloutId || `dymek-${index+1}`,
+      id: el.dataset.cmsCalloutId || `komunikat-${index+1}`,
       html: el.innerHTML,
       baseHtml: el.__mattCmsBaseCalloutHtml || el.innerHTML,
       text: (el.textContent || '').replace(/\s+/g, ' ').trim(),
@@ -300,15 +321,23 @@
     });
   }
 
+  function normalizeHexColor(value, fallback) {
+    const raw = String(value || '').trim();
+    return /^#[0-9a-f]{6}$/i.test(raw) ? raw : fallback;
+  }
+
   function normalizeCustomPageCallout(item = {}, index = 0) {
-    const styles = new Set(['red','discord','dark','green','blue','orange']);
+    const styles = new Set(['red','discord','dark','green','blue','orange','custom']);
     const style = styles.has(String(item.style || '').toLowerCase()) ? String(item.style).toLowerCase() : 'red';
     return {
-      id: String(item.id || `dymek-${Date.now()}-${index}`).replace(/[^a-zA-Z0-9_-]/g, '-') || `dymek-${index+1}`,
+      id: String(item.id || `komunikat-${Date.now()}-${index}`).replace(/[^a-zA-Z0-9_-]/g, '-') || `komunikat-${index+1}`,
       style,
+      accentColor: normalizeHexColor(item.accentColor, '#ef2b2d'),
+      backgroundColor: normalizeHexColor(item.backgroundColor, '#241315'),
+      textColor: normalizeHexColor(item.textColor, '#c9cbd1'),
       icon: String(item.icon || 'i').slice(0, 12),
       kicker: String(item.kicker || '').trim(),
-      title: String(item.title || 'NOWY DYMEK').trim(),
+      title: String(item.title || 'NOWY KOMUNIKAT').trim(),
       text: String(item.text || '').trim(),
       buttonLabel: String(item.buttonLabel || '').trim(),
       buttonUrl: safeHref(item.buttonUrl || '')
@@ -337,7 +366,10 @@
     wrap.innerHTML = items.map((item, index) => {
       const text = escapeHtml(item.text).replace(/\n/g, '<br>');
       const button = item.buttonLabel ? `<a class="cms-page-callout-button" href="${escapeHtml(item.buttonUrl || '#')}">${escapeHtml(item.buttonLabel)}</a>` : '';
-      return `<article class="cms-page-callout cms-page-callout-${escapeHtml(item.style)}" data-cms-custom-callout-id="${escapeHtml(item.id)}">
+      const customStyle = item.style === 'custom'
+        ? ` style="--bubble-accent:${escapeHtml(item.accentColor)};--bubble-bg:${escapeHtml(item.backgroundColor)};--bubble-text:${escapeHtml(item.textColor)}"`
+        : '';
+      return `<article class="cms-page-callout cms-page-callout-${escapeHtml(item.style)}" data-cms-custom-callout-id="${escapeHtml(item.id)}"${customStyle}>
         <div class="cms-page-callout-icon" aria-hidden="true">${escapeHtml(item.icon || 'i')}</div>
         <div class="cms-page-callout-copy">
           ${item.kicker ? `<small>${escapeHtml(item.kicker)}</small>` : ''}
@@ -596,7 +628,7 @@
 
 
   function discordCalloutStyle(value) {
-    const allowed = new Set(['red','discord','dark','green']);
+    const allowed = new Set(['red','discord','dark','green','custom']);
     const style = String(value || 'red').toLowerCase();
     return allowed.has(style) ? style : 'red';
   }
@@ -610,7 +642,10 @@
       const useDiscord = !rawUrl || rawUrl === 'discord' || rawUrl === 'discordUrl';
       const href = useDiscord ? '#' : safeHref(rawUrl);
       const button = String(item.buttonText || '').trim();
-      return `<section class="discord-configure-section discord-callout-${style}" data-discord-callout data-cms-callout="${index}">
+      const customStyle = style === 'custom'
+        ? ` style="--discord-callout-accent:${escapeHtml(normalizeHexColor(item.accentColor,'#ef2b2d'))};--discord-callout-bg:${escapeHtml(normalizeHexColor(item.backgroundColor,'#241315'))};--discord-callout-text:${escapeHtml(normalizeHexColor(item.textColor,'#c9cbd1'))}"`
+        : '';
+      return `<section class="discord-configure-section discord-callout-${style}" data-discord-callout data-cms-callout="${index}"${customStyle}>
         <div class="discord-configure-icon" aria-hidden="true">${escapeHtml(item.icon || '⚙')}</div>
         <div class="discord-configure-copy">
           <span>${escapeHtml(item.kicker || '')}</span>

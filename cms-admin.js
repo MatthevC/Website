@@ -1263,13 +1263,51 @@
         openModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
         const body=$('#cms-modal-body',modal);
         $('[data-hub]',body).addEventListener('click',drawHub);$('[data-add]',body).addEventListener('click',()=>edit(-1));$('[data-save-order]',body).addEventListener('click',()=>save('Kolejność komunikatów zapisana.'));$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_bubbles','komunikaty strony Discord'));
-        $$('[data-up]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.up),Number(b.dataset.up)-1)));$$('[data-down]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.down),Number(b.dataset.down)+1)));$$('[data-edit]',body).forEach(b=>b.addEventListener('click',()=>edit(Number(b.dataset.edit))));$$('[data-delete]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delete);if(!confirm(`Usunąć dymek „${items[i]?.title||''}”?`))return;items.splice(i,1);await save('Dymek usunięty.');}));
+        $$('[data-up]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.up),Number(b.dataset.up)-1)));$$('[data-down]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.down),Number(b.dataset.down)+1)));$$('[data-edit]',body).forEach(b=>b.addEventListener('click',()=>edit(Number(b.dataset.edit))));$$('[data-delete]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delete);if(!confirm(`Usunąć komunikat „${items[i]?.title||''}”?`))return;items.splice(i,1);await save('Komunikat usunięty.');}));
       };
       const edit=index=>{
-        const cur=index>=0?items[index]:{icon:'⚙',kicker:'',title:'',highlight:'',description:'',emphasis:'',buttonText:'',buttonUrl:'',style:'red'};
-        const fields=[{name:'style',label:'Wygląd komunikatu',type:'select',options:[{value:'red',label:'Czerwony / MATT\'S WORLD'},{value:'discord',label:'Fioletowy / Discord'},{value:'dark',label:'Ciemny / neutralny'},{value:'green',label:'Zielony / pozytywny'}]},{name:'icon',label:'Ikona / emoji'},{name:'kicker',label:'Mały nagłówek'},{name:'title',label:'Tytuł',required:true},{name:'highlight',label:'Wyróżniony fragment tytułu',help:'Np. #konfiguracja-tickets — będzie w kolorze akcentu.'},{name:'description',label:'Główny opis',type:'textarea',required:true},{name:'emphasis',label:'Dodatkowe wyróżnienie na dole',type:'textarea'},{name:'buttonText',label:'Tekst przycisku'},{name:'buttonUrl',label:'Link przycisku',help:'Zostaw puste, aby użyć głównego linku do Discorda.'}];
+        const cur=index>=0?{accentColor:'#ef2b2d',backgroundColor:'#241315',textColor:'#c9cbd1',...items[index]}:{icon:'⚙',kicker:'',title:'',highlight:'',description:'',emphasis:'',buttonText:'',buttonUrl:'',style:'red',accentColor:'#ef2b2d',backgroundColor:'#241315',textColor:'#c9cbd1'};
+        const fields=[
+          {name:'style',label:'Wygląd komunikatu',type:'select',options:[
+            {value:'red',label:'Czerwony / MATT\'S WORLD'},
+            {value:'discord',label:'Fioletowy / Discord'},
+            {value:'dark',label:'Ciemny / neutralny'},
+            {value:'green',label:'Zielony / pozytywny'},
+            {value:'custom',label:'WŁASNE KOLORY'}
+          ]},
+          {name:'accentColor',label:'Własny kolor akcentu',type:'color',help:'Używany po wybraniu „WŁASNE KOLORY”.'},
+          {name:'backgroundColor',label:'Własny kolor tła',type:'color',help:'Używany po wybraniu „WŁASNE KOLORY”.'},
+          {name:'textColor',label:'Własny kolor tekstu',type:'color',help:'Używany po wybraniu „WŁASNE KOLORY”.'},
+          {name:'icon',label:'Ikona / emoji'},
+          {name:'kicker',label:'Mały nagłówek'},
+          {name:'title',label:'Tytuł',required:true},
+          {name:'highlight',label:'Wyróżniony fragment tytułu',help:'Np. #konfiguracja-tickets — będzie w kolorze akcentu.'},
+          {name:'description',label:'Główny opis',type:'textarea',required:true},
+          {name:'emphasis',label:'Dodatkowe wyróżnienie na dole',type:'textarea'},
+          {name:'buttonText',label:'Tekst przycisku'},
+          {name:'buttonUrl',label:'Link przycisku',help:'Zostaw puste, aby użyć głównego linku do Discorda.'}
+        ];
         openModal(index>=0?'EDYTUJ KOMUNIKAT':'DODAJ KOMUNIKAT',`<form id="cms-discord-bubble-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
-        const form=$('#cms-discord-bubble-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v={...cur,...parseFields(form,fields),id:cur.id||`dymek-${Date.now()}`};if(index>=0)items[index]=v;else items.push(v);await save('Dymek zapisany.');});
+        const form=$('#cms-discord-bubble-form',modal);
+        const colorNames=['accentColor','backgroundColor','textColor'];
+        const syncColors=()=>{
+          const custom=form.elements.style?.value==='custom';
+          colorNames.forEach(name=>{
+            const input=form.elements[name], field=input?.closest('.cms-field');
+            if(field) field.classList.toggle('cms-color-disabled',!custom);
+            if(input) input.disabled=!custom;
+          });
+        };
+        syncColors();
+        form.addEventListener('change',syncColors);
+        $('[data-back]',form).addEventListener('click',draw);
+        form.addEventListener('submit',async e=>{
+          e.preventDefault();
+          colorNames.forEach(name=>{if(form.elements[name]) form.elements[name].disabled=false;});
+          const v={...cur,...parseFields(form,fields),id:cur.id||`komunikat-${Date.now()}`};
+          if(index>=0)items[index]=v;else items.push(v);
+          await save('Komunikat zapisany.');
+        });
       };
       draw();
     };
@@ -1408,12 +1446,12 @@
       try {
         if (customItems.length) await window.MattCMS.save(customKey, customItems);
         else if (window.MattCMS.get(customKey, null) != null) await window.MattCMS.remove(customKey);
-        notify(message || 'Dymki zostały zapisane.');
+        notify(message || 'Komunikaty zostały zapisane.');
         await rerender();
       } catch (error) { notify(`Nie udało się zapisać: ${error.message}`, 'error'); }
     };
 
-    const styleLabel = style => ({red:'CZERWONY',discord:'DISCORD',dark:'CIEMNY',green:'ZIELONY',blue:'NIEBIESKI',orange:'POMARAŃCZOWY'}[style] || String(style || 'CZERWONY').toUpperCase());
+    const styleLabel = style => ({red:'CZERWONY',discord:'DISCORD',dark:'CIEMNY',green:'ZIELONY',blue:'NIEBIESKI',orange:'POMARAŃCZOWY',custom:'WŁASNY KOLOR'}[style] || String(style || 'CZERWONY').toUpperCase());
 
     const draw = () => {
       const baseItems = getBaseItems();
@@ -1433,7 +1471,7 @@
           <div class="cms-manager-list">${baseItems.length ? baseItems.map((item,index)=>{
             const raw = overrides[item.id];
             const state = raw && typeof raw === 'object' && raw.hidden === true ? 'USUNIĘTY ZE STRONY' : (raw != null ? 'ZMODYFIKOWANY' : 'Z GITHUBA');
-            return `<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${state}</small><strong>${esc((item.text || 'Dymek').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit-base="${esc(item.id)}">EDYTUJ</button><button class="danger" type="button" data-hide-base="${esc(item.id)}">${state==='USUNIĘTY ZE STRONY'?'PRZYWRÓĆ':'USUŃ ZE STRONY'}</button><button type="button" data-reset-one="${esc(item.id)}" ${raw!=null?'':'disabled'}>↶ GITHUB</button></div></article>`;
+            return `<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${state}</small><strong>${esc((item.text || 'Komunikat').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit-base="${esc(item.id)}">EDYTUJ</button><button class="danger" type="button" data-hide-base="${esc(item.id)}">${state==='USUNIĘTY ZE STRONY'?'PRZYWRÓĆ':'USUŃ ZE STRONY'}</button><button type="button" data-reset-one="${esc(item.id)}" ${raw!=null?'':'disabled'}>↶ GITHUB</button></div></article>`;
           }).join('') : '<div class="cms-empty">W plikach GitHuba nie ma wykrytego komunikatu na tej podstronie. Nadal możesz utworzyć własny poniżej.</div>'}</div>
         </section>
 
@@ -1456,14 +1494,14 @@
         const item=getBaseItems().find(x=>x.id===id); if(!item) return;
         const current=overrides[id];
         const isHidden=current && typeof current==='object' && current.hidden===true;
-        if(isHidden){ delete overrides[id]; await saveBase('Dymek został przywrócony na stronę.'); return; }
-        if(!confirm('Usunąć ten dymek z widoku strony? Będzie można go później przywrócić z GitHuba.')) return;
+        if(isHidden){ delete overrides[id]; await saveBase('Komunikat został przywrócony na stronę.'); return; }
+        if(!confirm('Usunąć ten komunikat z widoku strony? Będzie można go później przywrócić z GitHuba.')) return;
         const html=typeof current==='string'?current:(current?.html || item.baseHtml);
-        overrides[id]={html,hidden:true}; await saveBase('Dymek został ukryty na stronie.');
+        overrides[id]={html,hidden:true}; await saveBase('Komunikat został ukryty na stronie.');
       }));
       $$('[data-reset-one]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const id=btn.dataset.resetOne; if(overrides[id]==null) return;
-        if(!confirm('Przywrócić ten dymek dokładnie do wersji z GitHuba?')) return;
+        if(!confirm('Przywrócić ten komunikat dokładnie do wersji z GitHuba?')) return;
         delete overrides[id]; await saveBase('Komunikat przywrócony z GitHuba.');
       }));
       $$('[data-custom-up]',body).forEach(btn=>btn.addEventListener('click',()=>moveCustom(Number(btn.dataset.customUp),-1)));
@@ -1471,7 +1509,7 @@
       $$('[data-edit-custom]',body).forEach(btn=>btn.addEventListener('click',()=>editCustom(Number(btn.dataset.editCustom))));
       $$('[data-delete-custom]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const index=Number(btn.dataset.deleteCustom); if(!customItems[index]) return;
-        if(!confirm(`Usunąć dymek „${customItems[index].title || 'bez nazwy'}”?`)) return;
+        if(!confirm(`Usunąć komunikat „${customItems[index].title || 'bez nazwy'}”?`)) return;
         customItems.splice(index,1); await saveCustom('Komunikat został usunięty.');
       }));
     };
@@ -1498,13 +1536,24 @@
         const base=window.MattCMS.sanitizeHtml(item.baseHtml);
         if(value===base) delete overrides[id];
         else overrides[id]={html:value,hidden:false};
-        await saveBase('Dymek został zapisany.');
+        await saveBase('Komunikat został zapisany.');
       });
     };
 
     const editCustom = index => {
       const isEdit=index>=0;
-      const cur=isEdit ? clone(customItems[index]) : {style:'red',icon:'i',kicker:'WAŻNE',title:'NOWY KOMUNIKAT',text:'Wpisz treść komunikatu.',buttonLabel:'',buttonUrl:''};
+      const cur=isEdit ? clone(window.MattCMS?.normalizeCustomPageCallout?.(customItems[index],index) || customItems[index]) : {
+        style:'red',
+        accentColor:'#ef2b2d',
+        backgroundColor:'#241315',
+        textColor:'#c9cbd1',
+        icon:'i',
+        kicker:'WAŻNE',
+        title:'NOWY KOMUNIKAT',
+        text:'Wpisz treść komunikatu.',
+        buttonLabel:'',
+        buttonUrl:''
+      };
       const fields=[
         {name:'style',label:'Kolor / styl komunikatu',type:'select',options:[
           {value:'red',label:'Czerwony — MATT’S WORLD'},
@@ -1512,8 +1561,12 @@
           {value:'dark',label:'Ciemny'},
           {value:'green',label:'Zielony'},
           {value:'blue',label:'Niebieski'},
-          {value:'orange',label:'Pomarańczowy'}
+          {value:'orange',label:'Pomarańczowy'},
+          {value:'custom',label:'WŁASNE KOLORY'}
         ]},
+        {name:'accentColor',label:'Własny kolor akcentu',type:'color',help:'Używany po wybraniu „WŁASNE KOLORY”.'},
+        {name:'backgroundColor',label:'Własny kolor tła',type:'color',help:'Używany po wybraniu „WŁASNE KOLORY”.'},
+        {name:'textColor',label:'Własny kolor tekstu',type:'color',help:'Używany po wybraniu „WŁASNE KOLORY”.'},
         {name:'icon',label:'Ikona / emoji',placeholder:'np. !, i, ⚠️, 🎮'},
         {name:'kicker',label:'Mały nagłówek',placeholder:'np. WAŻNE / WSKAZÓWKA'},
         {name:'title',label:'Tytuł komunikatu',required:true},
@@ -1524,22 +1577,45 @@
       openModal(isEdit?'EDYTUJ WŁASNY KOMUNIKAT':'DODAJ NOWY KOMUNIKAT', `<form id="cms-custom-page-callout-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-callout-live-preview"><small>PODGLĄD</small><div data-bubble-preview></div></div><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ KOMUNIKAT</button></div></form>`);
       const form=$('#cms-custom-page-callout-form',modal);
       const preview=$('[data-bubble-preview]',form);
-      const renderPreview=()=>{
-        const v=parseFields(form,fields);
-        const style=esc(v.style||'red');
-        preview.innerHTML=`<article class="cms-page-callout cms-page-callout-${style}"><div class="cms-page-callout-icon">${esc(v.icon||'i')}</div><div class="cms-page-callout-copy">${v.kicker?`<small>${esc(v.kicker)}</small>`:''}<h2>${esc(v.title||'NOWY KOMUNIKAT')}</h2>${v.text?`<p>${esc(v.text).replace(/\\n/g,'<br>')}</p>`:''}${v.buttonLabel?`<span class="cms-page-callout-button">${esc(v.buttonLabel)}</span>`:''}</div></article>`;
+      const colorNames=['accentColor','backgroundColor','textColor'];
+      const updateColorFields=()=>{
+        const custom=form.elements.style?.value==='custom';
+        colorNames.forEach(name=>{
+          const input=form.elements[name];
+          const field=input?.closest('.cms-field');
+          if(field) field.classList.toggle('cms-color-disabled',!custom);
+          if(input) input.disabled=!custom;
+        });
       };
-      form.addEventListener('input',renderPreview); form.addEventListener('change',renderPreview); renderPreview();
+      const valuesForPreview=()=>{
+        const values={};
+        fields.forEach(field=>{
+          if(field.type==='checkbox') values[field.name]=Boolean(form.elements[field.name]?.checked);
+          else values[field.name]=String(form.elements[field.name]?.value || '').trim();
+        });
+        return values;
+      };
+      const renderPreview=()=>{
+        const v=valuesForPreview();
+        const style=esc(v.style||'red');
+        const customCss=v.style==='custom'
+          ? ` style="--bubble-accent:${esc(v.accentColor||'#ef2b2d')};--bubble-bg:${esc(v.backgroundColor||'#241315')};--bubble-text:${esc(v.textColor||'#c9cbd1')}"`
+          : '';
+        preview.innerHTML=`<article class="cms-page-callout cms-page-callout-${style}"${customCss}><div class="cms-page-callout-icon">${esc(v.icon||'i')}</div><div class="cms-page-callout-copy">${v.kicker?`<small>${esc(v.kicker)}</small>`:''}<h2>${esc(v.title||'NOWY KOMUNIKAT')}</h2>${v.text?`<p>${esc(v.text).replace(/\\n/g,'<br>')}</p>`:''}${v.buttonLabel?`<span class="cms-page-callout-button">${esc(v.buttonLabel)}</span>`:''}</div></article>`;
+      };
+      form.addEventListener('input',()=>{updateColorFields();renderPreview();});
+      form.addEventListener('change',()=>{updateColorFields();renderPreview();});
+      updateColorFields(); renderPreview();
       $('[data-back]',form)?.addEventListener('click',draw);
       form.addEventListener('submit',async e=>{
         e.preventDefault();
+        colorNames.forEach(name=>{ if(form.elements[name]) form.elements[name].disabled=false; });
         const v=parseFields(form,fields);
-        const item={...cur,...v,id:cur.id || `dymek-${Date.now()}`};
+        const item={...cur,...v,id:cur.id || `komunikat-${Date.now()}`};
         if(isEdit) customItems[index]=item; else customItems.push(item);
-        await saveCustom(isEdit?'Dymek został zaktualizowany.':'Nowy dymek został dodany.');
+        await saveCustom(isEdit?'Komunikat został zaktualizowany.':'Nowy komunikat został dodany.');
       });
     };
-
     draw();
   }
 
