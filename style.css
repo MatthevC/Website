@@ -8101,35 +8101,6 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 }
 
 
-/* === DEAD BY DAYLIGHT - KOMENDA !queuedbd === */
-.command-dbd {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-
-.command-dbd::after {
-  content: "";
-  position: absolute;
-  right: -35px;
-  bottom: -45px;
-  width: 180px;
-  height: 180px;
-  background-image: url("pictures/IconDBD.webp");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.10;
-  filter: grayscale(100%);
-  z-index: -1;
-  pointer-events: none;
-}
-
-.command-dbd .command-top,
-.command-dbd > span {
-  position: relative;
-  z-index: 1;
-}
 
 /* Wyróżniony przycisk pełnego regulaminu Twitcha */
 .twitch-rules-button {
@@ -9499,3 +9470,175 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-command-preview-stage>.command{width:100%;box-sizing:border-box;min-height:82px}
 .cms-command-preview-stage>.command .cms-decor-graphic{display:none!important}
 @media(max-width:760px){.cms-command-order-category>header,.cms-command-live-preview-head{align-items:stretch;flex-direction:column}.cms-command-live-preview-head>span{text-align:left}.cms-command-order-category>header>div:last-child{width:100%}.cms-command-order-category>header>div:last-child button{flex:1}}
+
+/* ===== CMS Discord editor v2.6.19 ===== */
+.cms-modal.cms-modal-discord{
+  width:min(1180px,97vw);
+  max-height:92vh;
+}
+.cms-modal.cms-modal-discord .cms-modal-body{
+  padding:24px;
+}
+.cms-modal.cms-modal-discord .cms-manager-actions{
+  padding:14px 15px;
+  margin-bottom:16px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:#15161a;
+}
+.cms-modal.cms-modal-discord .cms-manager-action-group{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.cms-modal.cms-modal-discord .cms-preview-admin-grid button,
+.cms-modal.cms-modal-discord .cms-channel-admin-list button,
+.cms-modal.cms-modal-discord .cms-add-subitem,
+.cms-modal.cms-modal-discord .cms-feature-card button{
+  border:1px solid rgba(255,255,255,.16);
+  background:#1b1b1f;
+  color:#fff;
+  border-radius:8px;
+  padding:9px 11px;
+  font:700 11px/1 Rajdhani,sans-serif;
+  letter-spacing:.02em;
+  cursor:pointer;
+  transition:.16s ease;
+}
+.cms-modal.cms-modal-discord .cms-preview-admin-grid button:hover:not(:disabled),
+.cms-modal.cms-modal-discord .cms-channel-admin-list button:hover:not(:disabled),
+.cms-modal.cms-modal-discord .cms-add-subitem:hover,
+.cms-modal.cms-modal-discord .cms-feature-card button:hover{
+  border-color:rgba(239,43,45,.72);
+  background:#25252a;
+}
+.cms-modal.cms-modal-discord button:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+.cms-discord-editor-sections{
+  margin-top:18px;
+  gap:16px;
+}
+.cms-discord-editor-sections>section{
+  padding:16px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:#121318;
+}
+.cms-discord-editor-sections>section>header{
+  margin-bottom:2px;
+  padding-bottom:12px;
+}
+.cms-discord-editor-sections>section>header>div{
+  display:grid;
+  gap:2px;
+}
+.cms-discord-editor-sections>section>header small{
+  color:#ef2b2d;
+  font:800 10px Rajdhani,sans-serif;
+  letter-spacing:.12em;
+}
+.cms-discord-editor-sections>section>header strong{
+  color:#fff;
+  font:800 16px Rajdhani,sans-serif;
+}
+.cms-modal.cms-modal-discord .cms-preview-admin-card{
+  border-color:rgba(255,255,255,.08);
+  background:#17181d;
+}
+.cms-modal.cms-modal-discord .cms-channel-admin-list article{
+  border-color:rgba(255,255,255,.07);
+  background:#101115;
+}
+.cms-discord-live-panel{
+  display:grid;
+  gap:12px;
+  margin:0 0 18px;
+  padding:14px;
+  border:1px solid rgba(239,43,45,.20);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 85% 5%,rgba(239,43,45,.08),transparent 30%),
+    #0d0e12;
+  box-shadow:0 18px 48px rgba(0,0,0,.22);
+}
+.cms-discord-live-panel>header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:18px;
+  padding:0 2px;
+}
+.cms-discord-live-panel>header>div{
+  display:grid;
+  gap:2px;
+}
+.cms-discord-live-panel>header small{
+  color:#ef2b2d;
+  font:800 10px Rajdhani,sans-serif;
+  letter-spacing:.13em;
+}
+.cms-discord-live-panel>header strong{
+  color:#fff;
+  font:800 16px Rajdhani,sans-serif;
+}
+.cms-discord-live-panel>header>span{
+  max-width:420px;
+  color:#7f828c;
+  font-size:11px;
+  line-height:1.4;
+  text-align:right;
+}
+.cms-discord-live-stage{
+  overflow:auto;
+  max-height:650px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;
+  background:#08090c;
+  scrollbar-width:thin;
+}
+.cms-discord-live-stage>.discord-preview-section{
+  width:100%;
+  min-width:1030px;
+  margin:0;
+  padding:0 !important;
+}
+.cms-discord-live-stage .discord-section-title{
+  margin-bottom:12px;
+}
+.cms-discord-live-stage a{
+  pointer-events:none;
+}
+.cms-discord-live-panel.is-compact .cms-discord-live-stage{
+  max-height:520px;
+}
+.cms-discord-live-panel.is-bubble{
+  margin-bottom:16px;
+}
+.cms-discord-bubble-live{
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;
+  background:#08090c;
+  padding:10px;
+}
+.cms-discord-bubble-live .discord-custom-bubbles{
+  display:block;
+}
+.cms-discord-bubble-live .discord-configure-section{
+  margin:0 !important;
+}
+.cms-modal.cms-modal-discord .cms-form{
+  padding:16px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;
+  background:#121318;
+}
+@media(max-width:900px){
+  .cms-modal.cms-modal-discord{width:100%;max-height:94vh}
+  .cms-discord-live-panel>header{align-items:flex-start;flex-direction:column}
+  .cms-discord-live-panel>header>span{text-align:left;max-width:none}
+  .cms-discord-live-stage>.discord-preview-section{min-width:920px}
+}

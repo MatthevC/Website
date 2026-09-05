@@ -386,6 +386,7 @@
     ensureModal();
     const kicker = $('.cms-modal-head small', modal);
     if (kicker) kicker.textContent = window.currentUserRole === 'admin' ? 'PANEL ADMINISTRATORA' : 'PANEL MODERATORA';
+    $('.cms-modal', modal)?.classList.remove('cms-modal-discord');
     $('#cms-modal-title', modal).textContent = title;
     $('#cms-modal-body', modal).innerHTML = html;
     modal.classList.add('active');
@@ -2029,8 +2030,63 @@
 
   function openDiscordJoinManager() {
     const esc = window.MattCMS.escape;
+    const openDiscordModal = (title, html) => {
+      openModal(title, html);
+      $('.cms-modal', modal)?.classList.add('cms-modal-discord');
+    };
+
+    const buildDiscordServerPreviewHtml = draft => {
+      const pagePreview = document.getElementById('discord-preview');
+      if (pagePreview) pagePreview.id = 'discord-preview-page-source';
+      const temp = document.createElement('section');
+      temp.id = 'discord-preview';
+      temp.className = 'discord-preview-section';
+      temp.setAttribute('aria-hidden', 'true');
+      temp.style.cssText = 'position:fixed;left:-20000px;top:0;width:1100px;visibility:hidden;pointer-events:none';
+      document.body.appendChild(temp);
+      try {
+        window.MattCMS?.renderDiscordJoinPreview?.(clone(draft));
+        return temp.innerHTML;
+      } catch (error) {
+        return `<div class="cms-empty">Nie udało się zbudować podglądu: ${esc(error?.message || 'nieznany błąd')}</div>`;
+      } finally {
+        temp.remove();
+        if (pagePreview) pagePreview.id = 'discord-preview';
+      }
+    };
+
+    const renderDiscordServerLive = (root, draft) => {
+      const host = $('[data-discord-server-live]', root);
+      if (!host) return;
+      host.innerHTML = buildDiscordServerPreviewHtml(draft);
+    };
+
+    const buildDiscordBubblePreviewHtml = item => {
+      const pageWrap = document.getElementById('discord-custom-bubbles');
+      if (pageWrap) pageWrap.id = 'discord-custom-bubbles-page-source';
+      const temp = document.createElement('div');
+      temp.id = 'discord-custom-bubbles';
+      temp.className = 'discord-custom-bubbles';
+      temp.setAttribute('aria-hidden', 'true');
+      temp.style.cssText = 'position:fixed;left:-20000px;top:0;width:900px;visibility:hidden;pointer-events:none';
+      document.body.appendChild(temp);
+      try {
+        window.MattCMS?.renderDiscordJoinBubbles?.([clone(item)]);
+        return temp.innerHTML;
+      } catch (error) {
+        return `<div class="cms-empty">Nie udało się zbudować podglądu: ${esc(error?.message || 'nieznany błąd')}</div>`;
+      } finally {
+        temp.remove();
+        if (pageWrap) pageWrap.id = 'discord-custom-bubbles';
+      }
+    };
+
+    const liveServerPanel = (compact = false) => `<section class="cms-discord-live-panel${compact ? ' is-compact' : ''}">
+      <header><div><small>PODGLĄD NA ŻYWO</small><strong>TAK BĘDZIE WYGLĄDAŁ PODGLĄD DISCORDA</strong></div><span>Zmiany w formularzu są tylko podglądem, dopóki nie klikniesz ZAPISZ.</span></header>
+      <div class="cms-discord-live-stage"><section class="discord-preview-section" data-discord-server-live></section></div>
+    </section>`;
     const drawHub = () => {
-      openModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne wyłącznie dla administratora i zapisują się w CMS.</p></div>
+      openDiscordModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne wyłącznie dla administratora i zapisują się w CMS.</p></div>
       <div class="cms-feature-grid"><article class="cms-feature-card"><span>01</span><div><strong>KOMUNIKATY NAD PODGLĄDEM</strong><p>Dodawaj komunikaty podobne do czerwonego „ZACZNIJ OD #konfiguracja-tickets”, zmieniaj ich kolejność, kolor, ikonę, treść i przycisk.</p></div><button data-open-bubbles>EDYTUJ →</button></article><article class="cms-feature-card"><span>02</span><div><strong>PODGLĄD SERWERA</strong><p>Zmieniaj kategorie i kanały w makiecie Discorda, wiadomości na czacie, członków, nagłówki i opis podglądu.</p></div><button data-open-preview>EDYTUJ →</button></article></div>`);
       const body=$('#cms-modal-body',modal);
       $$('[data-open-bubbles]',body).forEach(b=>b.addEventListener('click',openBubbles));
@@ -2042,7 +2098,7 @@
       const move=(from,to)=>{if(to<0||to>=items.length)return;const [x]=items.splice(from,1);items.splice(to,0,x);draw();};
       const save=async(message)=>{try{await window.MattCMS.save('discord_join_bubbles',items);window.MattCMS.renderDiscordJoinBubbles(items);notify(message);draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
       const draw=()=>{
-        openModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
+        openDiscordModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
         const body=$('#cms-modal-body',modal);
         $('[data-hub]',body).addEventListener('click',drawHub);$('[data-add]',body).addEventListener('click',()=>edit(-1));$('[data-save-order]',body).addEventListener('click',()=>save('Kolejność komunikatów zapisana.'));$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_bubbles','komunikaty strony Discord'));
         $$('[data-up]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.up),Number(b.dataset.up)-1)));$$('[data-down]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.down),Number(b.dataset.down)+1)));$$('[data-edit]',body).forEach(b=>b.addEventListener('click',()=>edit(Number(b.dataset.edit))));$$('[data-delete]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delete);if(!confirm(`Usunąć komunikat „${items[i]?.title||''}”?`))return;items.splice(i,1);await save('Komunikat usunięty.');}));
@@ -2069,8 +2125,13 @@
           {name:'buttonText',label:'Tekst przycisku'},
           {name:'buttonUrl',label:'Link przycisku',help:'Zostaw puste, aby użyć głównego linku do Discorda.'}
         ];
-        openModal(index>=0?'EDYTUJ KOMUNIKAT':'DODAJ KOMUNIKAT',`<form id="cms-discord-bubble-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+        openDiscordModal(index>=0?'EDYTUJ KOMUNIKAT':'DODAJ KOMUNIKAT',`<section class="cms-discord-live-panel is-bubble"><header><div><small>PODGLĄD NA ŻYWO</small><strong>WYGLĄD KOMUNIKATU</strong></div><span>Kolory, treść, ikona i przycisk aktualizują się bez zapisywania.</span></header><div class="cms-discord-bubble-live" data-discord-bubble-live></div></section><form id="cms-discord-bubble-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
         const form=$('#cms-discord-bubble-form',modal);
+        const bubbleLive=$('[data-discord-bubble-live]',modal);
+        const renderBubbleLive=()=>{
+          const previewValue={...cur,...parseFields(form,fields),id:cur.id||'podglad-komunikatu'};
+          if(bubbleLive) bubbleLive.innerHTML=buildDiscordBubblePreviewHtml(previewValue);
+        };
         const colorNames=['accentColor','backgroundColor','textColor'];
         const syncColors=()=>{
           const custom=form.elements.style?.value==='custom';
@@ -2081,7 +2142,9 @@
           });
         };
         syncColors();
-        form.addEventListener('change',syncColors);
+        renderBubbleLive();
+        form.addEventListener('input',renderBubbleLive);
+        form.addEventListener('change',()=>{syncColors();renderBubbleLive();});
         $('[data-back]',form).addEventListener('click',draw);
         form.addEventListener('submit',async e=>{
           e.preventDefault();
@@ -2096,29 +2159,150 @@
 
     const openPreview = () => {
       let data = clone(window.MattCMS?.get('discord_join_preview', null) || extractDiscordJoinPreview());
-      data.categories = Array.isArray(data.categories)?data.categories:[];data.messages=Array.isArray(data.messages)?data.messages:[];data.memberGroups=Array.isArray(data.memberGroups)?data.memberGroups:[];
-      const save=async(message,redraw=true)=>{try{await window.MattCMS.save('discord_join_preview',data);window.MattCMS.renderDiscordJoinPreview(data);notify(message);if(redraw)draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
-      const move=(arr,from,to)=>{if(to<0||to>=arr.length)return;const [x]=arr.splice(from,1);arr.splice(to,0,x);draw();};
-      const draw=()=>{
-        openModal('DISCORD — EDYCJA PODGLĄDU', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button data-general>✎ NAGŁÓWEK / USTAWIENIA</button><button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button><button data-reset>↶ Z GITHUBA</button></div><p>Makieta jest poglądowa. Nazwa serwera, ikona i liczniki nadal mogą być automatycznie pobierane z prawdziwego zaproszenia Discord.</p></div>
-        <div class="cms-preview-admin-grid"><section><header><strong>KATEGORIE I KANAŁY</strong><button class="cms-primary" data-add-cat>+ KATEGORIA</button></header>${data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div><button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${esc(ch.href||'')}</small></div><div><button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button></div></article>`).join('')}</section>
-        <section><header><strong>WIADOMOŚCI W PODGLĄDZIE</strong><button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button></header><div class="cms-manager-list">${data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div><button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button></div></article>`).join('')}</div></section>
-        <section><header><strong>LISTA OSÓB</strong><button class="cms-primary" data-add-group>+ GRUPA</button></header>${data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>`<article><div><span>${esc(m.initial||String(m.name||'?').charAt(0))}</span><strong>${esc(m.name||'osoba')}</strong><small>${esc(m.status||'')}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('')}</section></div>`);
-        const body=$('#cms-modal-body',modal);$('[data-hub]',body).addEventListener('click',drawHub);$('[data-general]',body).addEventListener('click',editGeneral);$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_preview','podgląd Discorda'));
-        $('[data-import]',body).addEventListener('click',async()=>{const cmsSource=window.MattCMS?.get('discord_channels',null);const source=clone(cmsSource||extractDiscordCategories());if(!source.length)return notify('Brak kanałów do zaimportowania.','error');if(!confirm('Zastąpić kategorie i kanały w podglądzie danymi z „OPIS KANAŁÓW”? Wiadomości i lista osób pozostaną bez zmian.'))return;data.categories=source.map(c=>({title:c.title,channels:(c.channels||[]).map(ch=>({icon:ch.icon,name:ch.name,href:`#/discord/channels?jump=${cmsSource?'discord-cms-':'discord-role-'}${c.id||slugify(c.title)}`,active:false,vip:/vip/i.test(ch.name)}))}));await save('Kanały podglądu zsynchronizowane.');});
-        $('[data-add-cat]',body).addEventListener('click',()=>editCat(-1));$$('[data-cat-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.categories,Number(b.dataset.catUp),Number(b.dataset.catUp)-1)));$$('[data-cat-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.categories,Number(b.dataset.catDown),Number(b.dataset.catDown)+1)));$$('[data-edit-cat]',body).forEach(b=>b.addEventListener('click',()=>editCat(Number(b.dataset.editCat))));$$('[data-del-cat]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delCat);if(!confirm(`Usunąć kategorię ${data.categories[i]?.title}?`))return;data.categories.splice(i,1);await save('Kategoria usunięta.');}));
-        $$('[data-add-ch]',body).forEach(b=>b.addEventListener('click',()=>editCh(Number(b.dataset.addCh),-1)));$$('[data-edit-ch]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.editCh.split(':').map(Number);editCh(ci,hi);}));$$('[data-del-ch]',body).forEach(b=>b.addEventListener('click',async()=>{const [ci,hi]=b.dataset.delCh.split(':').map(Number);data.categories[ci].channels.splice(hi,1);await save('Kanał usunięty.');}));$$('[data-ch-up]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.chUp.split(':').map(Number);move(data.categories[ci].channels,hi,hi-1);}));$$('[data-ch-down]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.chDown.split(':').map(Number);move(data.categories[ci].channels,hi,hi+1);}));
-        $('[data-add-msg]',body).addEventListener('click',()=>editMsg(-1));$$('[data-msg-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.messages,Number(b.dataset.msgUp),Number(b.dataset.msgUp)-1)));$$('[data-msg-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.messages,Number(b.dataset.msgDown),Number(b.dataset.msgDown)+1)));$$('[data-edit-msg]',body).forEach(b=>b.addEventListener('click',()=>editMsg(Number(b.dataset.editMsg))));$$('[data-del-msg]',body).forEach(b=>b.addEventListener('click',async()=>{data.messages.splice(Number(b.dataset.delMsg),1);await save('Wiadomość usunięta.');}));
-        $('[data-add-group]',body).addEventListener('click',()=>editGroup(-1));$$('[data-group-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.memberGroups,Number(b.dataset.groupUp),Number(b.dataset.groupUp)-1)));$$('[data-group-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.memberGroups,Number(b.dataset.groupDown),Number(b.dataset.groupDown)+1)));$$('[data-edit-group]',body).forEach(b=>b.addEventListener('click',()=>editGroup(Number(b.dataset.editGroup))));$$('[data-del-group]',body).forEach(b=>b.addEventListener('click',async()=>{data.memberGroups.splice(Number(b.dataset.delGroup),1);await save('Grupa usunięta.');}));
-        $$('[data-add-member]',body).forEach(b=>b.addEventListener('click',()=>editMember(Number(b.dataset.addMember),-1)));$$('[data-edit-member]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.editMember.split(':').map(Number);editMember(gi,mi);}));$$('[data-del-member]',body).forEach(b=>b.addEventListener('click',async()=>{const [gi,mi]=b.dataset.delMember.split(':').map(Number);data.memberGroups[gi].members.splice(mi,1);await save('Osoba usunięta.');}));$$('[data-member-up]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.memberUp.split(':').map(Number);move(data.memberGroups[gi].members,mi,mi-1);}));$$('[data-member-down]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.memberDown.split(':').map(Number);move(data.memberGroups[gi].members,mi,mi+1);}));
+      data.categories = Array.isArray(data.categories) ? data.categories : [];
+      data.messages = Array.isArray(data.messages) ? data.messages : [];
+      data.memberGroups = Array.isArray(data.memberGroups) ? data.memberGroups : [];
+
+      const save = async (message, redraw = true) => {
+        try {
+          await window.MattCMS.save('discord_join_preview', data);
+          window.MattCMS.renderDiscordJoinPreview(data);
+          notify(message);
+          if (redraw) draw();
+        } catch (e) { notify(`Błąd zapisu: ${e.message}`, 'error'); }
       };
-      const formEdit=(title,current,fields,onSave)=>{openModal(title,`<form id="cms-preview-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);const form=$('#cms-preview-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();await onSave({...current,...parseFields(form,fields)});});};
-      const editGeneral=()=>{const fields=[{name:'kicker',label:'Mały nagłówek sekcji'},{name:'title',label:'Tytuł sekcji'},{name:'description',label:'Opis sekcji',type:'textarea'},{name:'noteBadge',label:'Etykieta nad podglądem'},{name:'noteTitle',label:'Tytuł informacji nad podglądem'},{name:'noteText',label:'Opis informacji nad podglądem',type:'textarea'},{name:'boostLabel',label:'Tekst celu boostów'},{name:'boostValue',label:'Wartość celu boostów'},{name:'activeChannel',label:'Aktywny kanał w czacie'},{name:'composerText',label:'Tekst w polu wpisywania'}];formEdit('PODGLĄD — USTAWIENIA',data,fields,async v=>{Object.assign(data,v);await save('Ustawienia podglądu zapisane.');});};
-      const editCat=i=>{const cur=i>=0?data.categories[i]:{title:'NOWA KATEGORIA',channels:[]};const fields=[{name:'title',label:'Nazwa kategorii',required:true}];formEdit(i>=0?'EDYTUJ KATEGORIĘ':'DODAJ KATEGORIĘ',cur,fields,async v=>{v.channels=cur.channels||[];if(i>=0)data.categories[i]=v;else data.categories.push(v);await save('Kategoria zapisana.');});};
-      const editCh=(ci,hi)=>{const cur=hi>=0?data.categories[ci].channels[hi]:{icon:'＃',name:'',href:'#/discord/channels',active:false,vip:false};const fields=[{name:'icon',label:'Ikona / emoji'},{name:'name',label:'Nazwa kanału',required:true},{name:'href',label:'Link po kliknięciu'},{name:'active',label:'Oznacz jako aktywny',type:'checkbox'},{name:'vip',label:'Styl VIP',type:'checkbox'}];formEdit(hi>=0?'EDYTUJ KANAŁ PODGLĄDU':'DODAJ KANAŁ PODGLĄDU',cur,fields,async v=>{if(v.active){data.categories.forEach(c=>(c.channels||[]).forEach(ch=>ch.active=false));data.activeChannel=v.name;}if(hi>=0)data.categories[ci].channels[hi]=v;else data.categories[ci].channels.push(v);await save('Kanał zapisany.');});};
-      const editMsg=i=>{const cur=i>=0?data.messages[i]:{date:'',avatar:'M',author:'',time:'',text:'',embedTitle:'',embedLinkText:'',embedDescription:'',viewers:'',thumbnail:'pictures/logo/matthevc-monkey.png'};const fields=[{name:'date',label:'Data / separator'},{name:'avatar',label:'Litera / znak avatara'},{name:'author',label:'Autor',required:true},{name:'time',label:'Godzina'},{name:'text',label:'Treść wiadomości',type:'textarea',required:true},{name:'embedTitle',label:'Nazwa w embedzie Twitch'},{name:'embedLinkText',label:'Tytuł transmisji / link'},{name:'embedDescription',label:'Opis embedu',type:'textarea'},{name:'viewers',label:'Tekst widzów, np. Viewers 20'}];formEdit(i>=0?'EDYTUJ WIADOMOŚĆ':'DODAJ WIADOMOŚĆ',cur,fields,async v=>{if(i>=0)data.messages[i]=v;else data.messages.push(v);await save('Wiadomość zapisana.');});};
-      const editGroup=i=>{const cur=i>=0?data.memberGroups[i]:{title:'NOWA GRUPA',members:[]};const fields=[{name:'title',label:'Nazwa grupy',required:true}];formEdit(i>=0?'EDYTUJ GRUPĘ':'DODAJ GRUPĘ',cur,fields,async v=>{v.members=cur.members||[];if(i>=0)data.memberGroups[i]=v;else data.memberGroups.push(v);await save('Grupa zapisana.');});};
-      const editMember=(gi,mi)=>{const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:''};const fields=[{name:'name',label:'Nick / nazwa',required:true},{name:'status',label:'Status / opis'},{name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},{name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma obrazu w wersji bazowej.'}];formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{if(mi>=0)data.memberGroups[gi].members[mi]=v;else data.memberGroups[gi].members.push(v);await save('Osoba zapisana.');});};
+
+      const move = (arr, from, to) => {
+        if (to < 0 || to >= arr.length || from === to) return;
+        const [x] = arr.splice(from, 1);
+        arr.splice(to, 0, x);
+        draw();
+      };
+
+      const draw = () => {
+        openDiscordModal('DISCORD — EDYCJA PODGLĄDU', `
+          <div class="cms-manager-actions cms-discord-editor-toolbar">
+            <div class="cms-manager-action-group">
+              <button data-hub>← PODGLĄD / KOMUNIKATY</button>
+              <button class="cms-primary" data-general>✎ NAGŁÓWEK / USTAWIENIA</button>
+              <button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button>
+              <button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>
+              <button data-reset>↶ Z GITHUBA</button>
+            </div>
+            <p>Edytor korzysta z tego samego wyglądu co strona. Podgląd poniżej pokazuje aktualny stan kategorii, kanałów, wiadomości i listy osób.</p>
+          </div>
+          ${liveServerPanel(false)}
+          <div class="cms-preview-admin-grid cms-discord-editor-sections">
+            <section>
+              <header><div><small>01 / STRUKTURA SERWERA</small><strong>KATEGORIE I KANAŁY</strong></div><button class="cms-primary" data-add-cat>+ KATEGORIA</button></header>
+              ${data.categories.length ? data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div><button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${ch.vip?'VIP • ':''}${esc(ch.href||'')}</small></div><div><button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button></div></article>`).join('') : '<div class="cms-empty">Brak kategorii. Dodaj pierwszą kategorię.</div>'}
+            </section>
+            <section>
+              <header><div><small>02 / CZAT</small><strong>WIADOMOŚCI W PODGLĄDZIE</strong></div><button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button></header>
+              <div class="cms-manager-list">${data.messages.length ? data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div><button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak wiadomości w podglądzie.</div>'}</div>
+            </section>
+            <section>
+              <header><div><small>03 / SPOŁECZNOŚĆ</small><strong>LISTA OSÓB</strong></div><button class="cms-primary" data-add-group>+ GRUPA</button></header>
+              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>`<article><div><span>${esc(m.initial||String(m.name||'?').charAt(0))}</span><strong>${esc(m.name||'osoba')}</strong><small>${esc(m.status||'')}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
+            </section>
+          </div>`);
+
+        const body = $('#cms-modal-body', modal);
+        renderDiscordServerLive(body, data);
+        $('[data-hub]',body)?.addEventListener('click',drawHub);
+        $('[data-general]',body)?.addEventListener('click',editGeneral);
+        $('[data-reset]',body)?.addEventListener('click',()=>resetCmsKey('discord_join_preview','podgląd Discorda'));
+        $('[data-save-order]',body)?.addEventListener('click',()=>save('Kolejność elementów podglądu została zapisana.'));
+        $('[data-import]',body)?.addEventListener('click',async()=>{
+          const cmsSource=window.MattCMS?.get('discord_channels',null);
+          const source=clone(cmsSource||extractDiscordCategories());
+          if(!source.length)return notify('Brak kanałów do zaimportowania.','error');
+          if(!confirm('Zastąpić kategorie i kanały w podglądzie danymi z „OPIS KANAŁÓW”? Wiadomości i lista osób pozostaną bez zmian.'))return;
+          data.categories=source.map(c=>({title:c.title,channels:(c.channels||[]).map(ch=>({icon:ch.icon,name:ch.name,href:`#/discord/channels?jump=${cmsSource?'discord-cms-':'discord-role-'}${c.id||slugify(c.title)}`,active:false,vip:/vip/i.test(ch.name)}))}));
+          await save('Kanały podglądu zsynchronizowane.');
+        });
+
+        $('[data-add-cat]',body)?.addEventListener('click',()=>editCat(-1));
+        $$('[data-cat-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.categories,Number(b.dataset.catUp),Number(b.dataset.catUp)-1)));
+        $$('[data-cat-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.categories,Number(b.dataset.catDown),Number(b.dataset.catDown)+1)));
+        $$('[data-edit-cat]',body).forEach(b=>b.addEventListener('click',()=>editCat(Number(b.dataset.editCat))));
+        $$('[data-del-cat]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delCat);if(!confirm(`Usunąć kategorię ${data.categories[i]?.title}?`))return;data.categories.splice(i,1);await save('Kategoria usunięta.');}));
+
+        $$('[data-add-ch]',body).forEach(b=>b.addEventListener('click',()=>editCh(Number(b.dataset.addCh),-1)));
+        $$('[data-edit-ch]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.editCh.split(':').map(Number);editCh(ci,hi);}));
+        $$('[data-del-ch]',body).forEach(b=>b.addEventListener('click',async()=>{const [ci,hi]=b.dataset.delCh.split(':').map(Number);data.categories[ci].channels.splice(hi,1);await save('Kanał usunięty.');}));
+        $$('[data-ch-up]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.chUp.split(':').map(Number);move(data.categories[ci].channels,hi,hi-1);}));
+        $$('[data-ch-down]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.chDown.split(':').map(Number);move(data.categories[ci].channels,hi,hi+1);}));
+
+        $('[data-add-msg]',body)?.addEventListener('click',()=>editMsg(-1));
+        $$('[data-msg-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.messages,Number(b.dataset.msgUp),Number(b.dataset.msgUp)-1)));
+        $$('[data-msg-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.messages,Number(b.dataset.msgDown),Number(b.dataset.msgDown)+1)));
+        $$('[data-edit-msg]',body).forEach(b=>b.addEventListener('click',()=>editMsg(Number(b.dataset.editMsg))));
+        $$('[data-del-msg]',body).forEach(b=>b.addEventListener('click',async()=>{data.messages.splice(Number(b.dataset.delMsg),1);await save('Wiadomość usunięta.');}));
+
+        $('[data-add-group]',body)?.addEventListener('click',()=>editGroup(-1));
+        $$('[data-group-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.memberGroups,Number(b.dataset.groupUp),Number(b.dataset.groupUp)-1)));
+        $$('[data-group-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.memberGroups,Number(b.dataset.groupDown),Number(b.dataset.groupDown)+1)));
+        $$('[data-edit-group]',body).forEach(b=>b.addEventListener('click',()=>editGroup(Number(b.dataset.editGroup))));
+        $$('[data-del-group]',body).forEach(b=>b.addEventListener('click',async()=>{data.memberGroups.splice(Number(b.dataset.delGroup),1);await save('Grupa usunięta.');}));
+
+        $$('[data-add-member]',body).forEach(b=>b.addEventListener('click',()=>editMember(Number(b.dataset.addMember),-1)));
+        $$('[data-edit-member]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.editMember.split(':').map(Number);editMember(gi,mi);}));
+        $$('[data-del-member]',body).forEach(b=>b.addEventListener('click',async()=>{const [gi,mi]=b.dataset.delMember.split(':').map(Number);data.memberGroups[gi].members.splice(mi,1);await save('Osoba usunięta.');}));
+        $$('[data-member-up]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.memberUp.split(':').map(Number);move(data.memberGroups[gi].members,mi,mi-1);}));
+        $$('[data-member-down]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.memberDown.split(':').map(Number);move(data.memberGroups[gi].members,mi,mi+1);}));
+      };
+
+      const formEdit = (title, current, fields, onSave, makeDraft) => {
+        openDiscordModal(title, `${liveServerPanel(true)}<form id="cms-preview-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+        const body=$('#cms-modal-body',modal);
+        const form=$('#cms-preview-form',modal);
+        const updateLive=()=>{
+          const values={...current,...parseFields(form,fields)};
+          const draft=typeof makeDraft==='function'?makeDraft(values):clone(data);
+          renderDiscordServerLive(body,draft);
+        };
+        updateLive();
+        form.addEventListener('input',updateLive);
+        form.addEventListener('change',updateLive);
+        $('[data-back]',form)?.addEventListener('click',draw);
+        form.addEventListener('submit',async e=>{e.preventDefault();await onSave({...current,...parseFields(form,fields)});});
+      };
+
+      const editGeneral=()=>{
+        const fields=[{name:'kicker',label:'Mały nagłówek sekcji'},{name:'title',label:'Tytuł sekcji'},{name:'description',label:'Opis sekcji',type:'textarea'},{name:'noteBadge',label:'Etykieta nad podglądem'},{name:'noteTitle',label:'Tytuł informacji nad podglądem'},{name:'noteText',label:'Opis informacji nad podglądem',type:'textarea'},{name:'boostLabel',label:'Tekst celu boostów'},{name:'boostValue',label:'Wartość celu boostów'},{name:'activeChannel',label:'Aktywny kanał w czacie'},{name:'composerText',label:'Tekst w polu wpisywania'}];
+        formEdit('PODGLĄD — USTAWIENIA',data,fields,async v=>{Object.assign(data,v);await save('Ustawienia podglądu zapisane.');},v=>({...clone(data),...v}));
+      };
+      const editCat=i=>{
+        const cur=i>=0?data.categories[i]:{title:'NOWA KATEGORIA',channels:[]};
+        const fields=[{name:'title',label:'Nazwa kategorii',required:true}];
+        const makeDraft=v=>{const d=clone(data);const next={...cur,...v,channels:cur.channels||[]};if(i>=0)d.categories[i]=next;else d.categories.push(next);return d;};
+        formEdit(i>=0?'EDYTUJ KATEGORIĘ':'DODAJ KATEGORIĘ',cur,fields,async v=>{v.channels=cur.channels||[];if(i>=0)data.categories[i]=v;else data.categories.push(v);await save('Kategoria zapisana.');},makeDraft);
+      };
+      const editCh=(ci,hi)=>{
+        const cur=hi>=0?data.categories[ci].channels[hi]:{icon:'＃',name:'',href:'#/discord/channels',active:false,vip:false};
+        const fields=[{name:'icon',label:'Ikona / emoji'},{name:'name',label:'Nazwa kanału',required:true},{name:'href',label:'Link po kliknięciu'},{name:'active',label:'Oznacz jako aktywny',type:'checkbox'},{name:'vip',label:'Styl VIP',type:'checkbox'}];
+        const makeDraft=v=>{const d=clone(data);if(v.active){d.categories.forEach(c=>(c.channels||[]).forEach(ch=>ch.active=false));d.activeChannel=v.name;}const arr=d.categories[ci].channels||[];if(hi>=0)arr[hi]=v;else arr.push(v);return d;};
+        formEdit(hi>=0?'EDYTUJ KANAŁ PODGLĄDU':'DODAJ KANAŁ PODGLĄDU',cur,fields,async v=>{if(v.active){data.categories.forEach(c=>(c.channels||[]).forEach(ch=>ch.active=false));data.activeChannel=v.name;}if(hi>=0)data.categories[ci].channels[hi]=v;else data.categories[ci].channels.push(v);await save('Kanał zapisany.');},makeDraft);
+      };
+      const editMsg=i=>{
+        const cur=i>=0?data.messages[i]:{date:'',avatar:'M',author:'',time:'',text:'',embedTitle:'',embedLinkText:'',embedDescription:'',viewers:'',thumbnail:'pictures/logo/matthevc-monkey.png'};
+        const fields=[{name:'date',label:'Data / separator'},{name:'avatar',label:'Litera / znak avatara'},{name:'author',label:'Autor',required:true},{name:'time',label:'Godzina'},{name:'text',label:'Treść wiadomości',type:'textarea',required:true},{name:'embedTitle',label:'Nazwa w embedzie Twitch'},{name:'embedLinkText',label:'Tytuł transmisji / link'},{name:'embedDescription',label:'Opis embedu',type:'textarea'},{name:'viewers',label:'Tekst widzów, np. Viewers 20'}];
+        const makeDraft=v=>{const d=clone(data);if(i>=0)d.messages[i]=v;else d.messages.push(v);return d;};
+        formEdit(i>=0?'EDYTUJ WIADOMOŚĆ':'DODAJ WIADOMOŚĆ',cur,fields,async v=>{if(i>=0)data.messages[i]=v;else data.messages.push(v);await save('Wiadomość zapisana.');},makeDraft);
+      };
+      const editGroup=i=>{
+        const cur=i>=0?data.memberGroups[i]:{title:'NOWA GRUPA',members:[]};
+        const fields=[{name:'title',label:'Nazwa grupy',required:true}];
+        const makeDraft=v=>{const d=clone(data);const next={...cur,...v,members:cur.members||[]};if(i>=0)d.memberGroups[i]=next;else d.memberGroups.push(next);return d;};
+        formEdit(i>=0?'EDYTUJ GRUPĘ':'DODAJ GRUPĘ',cur,fields,async v=>{v.members=cur.members||[];if(i>=0)data.memberGroups[i]=v;else data.memberGroups.push(v);await save('Grupa zapisana.');},makeDraft);
+      };
+      const editMember=(gi,mi)=>{
+        const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:''};
+        const fields=[{name:'name',label:'Nick / nazwa',required:true},{name:'status',label:'Status / opis'},{name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},{name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma obrazu w wersji bazowej.'}];
+        const makeDraft=v=>{const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=v;else arr.push(v);return d;};
+        formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{if(mi>=0)data.memberGroups[gi].members[mi]=v;else data.memberGroups[gi].members.push(v);await save('Osoba zapisana.');},makeDraft);
+      };
       draw();
     };
 

@@ -2012,9 +2012,8 @@ function commandCard(command) {
       ? roleBadge("moderator")
       : "";
 
-  const dbdClass = String(command.command || '').toLowerCase().includes("queuedbd") ? " command-dbd" : "";
   const graphicId = `command-${String(command.command || 'komenda').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item'}`;
-  return `<article class="command command-${special}${dbdClass}" data-command="${escapeHtml(String(command.command || '').toLowerCase())} ${escapeHtml(String(command.description || '').toLowerCase())}" data-cms-decor-id="${escapeHtml(graphicId)}" data-cms-decor-label="Komenda — ${escapeHtml(command.command)}" data-cms-decor-default-mode="theme">
+  return `<article class="command command-${special}" data-command="${escapeHtml(String(command.command || '').toLowerCase())} ${escapeHtml(String(command.description || '').toLowerCase())}" data-cms-decor-id="${escapeHtml(graphicId)}" data-cms-decor-label="Komenda — ${escapeHtml(command.command)}" data-cms-decor-default-mode="theme">
     <div class="command-top"><code>${escapeHtml(command.command)}</code><div class="command-badges">${badges}</div></div>
     <span>${escapeHtml(command.description)}</span>
   </article>`;
