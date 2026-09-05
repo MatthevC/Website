@@ -763,11 +763,10 @@
       <button type="button" class="cms-toolbar-orientation" data-cms-action="toolbar-orientation" aria-label="Zmień pasek na pionowy" title="Zmień pasek na pionowy">↕</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
-      <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
+      <button type="button" data-cms-action="content">✎ TREŚĆ</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
-      <button type="button" data-cms-action="callouts" hidden>▰ KOMUNIKATY</button>
       <button type="button" data-cms-action="images">▧ GRAFIKI</button>
-      <button type="button" data-cms-action="site">☰ MENU / LINKI</button>
+      <button type="button" data-cms-action="site">⚙ USTAWIENIA STRONY</button>
       <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
@@ -782,11 +781,10 @@
         return;
       }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
-      if (action === 'inline') startInlineEdit();
+      if (action === 'content' && any('page.text.edit','page.callouts.manage')) openContentManager();
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
       if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
-      if (action === 'callouts' && has('page.callouts.manage')) openPageCalloutsManager();
       if (action === 'images' && has('page.images.manage')) openPageImagesManager();
       if (action === 'site' && any('site.navigation.manage','site.links.manage')) openSiteSettingsManager();
       if (action === 'backups' && any('backups.view','github.restore')) openBackupsManager();
@@ -808,14 +806,13 @@
     const configBtn = $('[data-cms-action="config"]', toolbar);
     configBtn.hidden = !config || !canConfig(config) || inlineEditing || layoutEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
-    const calloutBtn = $('[data-cms-action="callouts"]', toolbar);
     const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
     const customCalloutCount = window.MattCMS?.customPageCallouts?.(currentRoute())?.length || 0;
     const calloutCount = baseCalloutCount + customCalloutCount;
-    if (calloutBtn) {
-      // Kreator dymków jest dostępny na KAŻDEJ podstronie, nawet gdy w GitHubie nie ma jeszcze żadnego dymku.
-      calloutBtn.hidden = inlineEditing || layoutEditing || !has('page.callouts.manage');
-      calloutBtn.textContent = `▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}`;
+    const contentBtn = $('[data-cms-action="content"]', toolbar);
+    if (contentBtn) {
+      contentBtn.hidden = inlineEditing || layoutEditing || !any('page.text.edit','page.callouts.manage');
+      contentBtn.textContent = `✎ TREŚĆ${has('page.callouts.manage') && calloutCount ? ` (${calloutCount})` : ''}`;
     }
     const layoutBtn = $('[data-cms-action="layout"]', toolbar);
     if (layoutBtn) layoutBtn.hidden = inlineEditing || layoutEditing || !has('page.layout.manage');
@@ -824,12 +821,28 @@
       const canGraphics = has('page.images.manage') || (currentRoute() === 'home' && has('home.hero.manage'));
       imagesBtn.hidden = inlineEditing || layoutEditing || !canGraphics;
     }
-    $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || layoutEditing || !has('page.text.edit');
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
     $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || layoutEditing || !any('backups.view','github.restore');
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
     applyToolbarState();
+  }
+
+  function openContentManager() {
+    if (!isAdmin() || !any('page.text.edit','page.callouts.manage')) return;
+    const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
+    const customCalloutCount = window.MattCMS?.customPageCallouts?.(currentRoute())?.length || 0;
+    const calloutCount = baseCalloutCount + customCalloutCount;
+    openModal('TREŚĆ', `<div class="cms-site-settings-grid">
+      ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-text><strong>✎ EDYTUJ TEKSTY</strong><span>Włącz bezpośrednią edycję napisów, nagłówków i opisów widocznych na bieżącej podstronie.</span></button>':''}
+      ${has('page.callouts.manage')?`<button class="cms-site-setting-card" type="button" data-content-callouts><strong>▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}</strong><span>Dodawaj, edytuj, usuwaj i konfiguruj komunikaty oraz dymki na bieżącej podstronie.</span></button>`:''}
+    </div>`);
+    const body = $('#cms-modal-body', modal);
+    $('[data-content-text]', body)?.addEventListener('click', () => {
+      closeModal();
+      setTimeout(startInlineEdit, 0);
+    });
+    $('[data-content-callouts]', body)?.addEventListener('click', openPageCalloutsManager);
   }
 
   function startInlineEdit() {
@@ -1352,7 +1365,7 @@
 
   function openSiteSettingsManager() {
     if (!isAdmin()) return;
-    openModal('MENU I LINKI STRONY', `<div class="cms-site-settings-grid">
+    openModal('USTAWIENIA STRONY', `<div class="cms-site-settings-grid">
       ${has('site.navigation.manage')?'<button class="cms-site-setting-card" type="button" data-open-navigation><strong>☰ KATEGORIE I PODKATEGORIE</strong><span>Dodawanie, edycja, usuwanie i zmiana kolejności pozycji w górnym menu.</span></button>':''}
       ${has('site.links.manage')?'<button class="cms-site-setting-card" type="button" data-open-links><strong>↗ LINKI SOCIAL MEDIA</strong><span>Zmień adres Twitch, Discord, Instagram i TikTok używany przez ikony oraz przyciski strony.</span></button>':''}
     </div>`);
@@ -1392,7 +1405,7 @@
         <button class="cms-primary" data-add-nav>+ DODAJ KATEGORIĘ</button>
         <button data-save-nav-order>✓ ZAPISZ KOLEJNOŚĆ</button>
         <button data-reset-nav>↶ PRZYWRÓĆ Z GITHUBA</button>
-        <button data-site-back>← MENU / LINKI</button>
+        <button data-site-back>← USTAWIENIA STRONY</button>
       </div><p>Kategoria bez podkategorii działa jak zwykły link. Po dodaniu podkategorii automatycznie staje się rozwijanym menu.</p></div>
       <div class="cms-discord-list">${items.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.label || 'BEZ NAZWY')}</strong><p>${cat.children?.length ? `${cat.children.length} podkategorii` : esc(cat.href || 'Brak linku')}</p></div><div>
         <button data-nav-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-nav-down="${ci}" ${ci===items.length-1?'disabled':''}>↓</button>
@@ -1470,7 +1483,7 @@
       {name:'instagramUrl',label:'Instagram',type:'url',required:true},
       {name:'tiktokUrl',label:'TikTok',type:'url',required:true}
     ];
-    openModal('LINKI SOCIAL MEDIA', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-reset-links>↶ PRZYWRÓĆ Z CONFIG.JS</button><button data-site-back>← MENU / LINKI</button></div><p>Zmiana jest stosowana we wszystkich oznaczonych ikonach i oficjalnych przyciskach strony korzystających z tych adresów.</p></div>
+    openModal('LINKI SOCIAL MEDIA', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-reset-links>↶ PRZYWRÓĆ Z CONFIG.JS</button><button data-site-back>← USTAWIENIA STRONY</button></div><p>Zmiana jest stosowana we wszystkich oznaczonych ikonach i oficjalnych przyciskach strony korzystających z tych adresów.</p></div>
       <form id="cms-links-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button class="cms-primary" type="submit">ZAPISZ LINKI</button></div></form>`);
     const body=$('#cms-modal-body',modal), form=$('#cms-links-form',modal);
     $('[data-site-back]',body)?.addEventListener('click',openSiteSettingsManager);
@@ -2028,6 +2041,7 @@
       openModal(`KOMUNIKATY — ${route.toUpperCase()}`, `
         <div class="cms-manager-actions cms-bubbles-main-actions">
           <div class="cms-manager-action-group">
+            <button type="button" data-content-back>← TREŚĆ</button>
             <button class="cms-primary" type="button" data-add-custom>+ DODAJ NOWY KOMUNIKAT</button>
             <button type="button" data-reset-base>↶ KOMUNIKATY Z GITHUBA</button>
             <button type="button" data-remove-custom ${custom.length?'':'disabled'}>USUŃ WŁASNE KOMUNIKATY</button>
@@ -2050,6 +2064,7 @@
         </section>`);
 
       const body = $('#cms-modal-body', modal);
+      $('[data-content-back]',body)?.addEventListener('click',openContentManager);
       $('[data-add-custom]',body)?.addEventListener('click',()=>editCustom(-1));
       $('[data-reset-base]',body)?.addEventListener('click',()=>resetCmsKey(baseKey,'wszystkie komunikaty pochodzące z GitHuba na tej podstronie'));
       $('[data-remove-custom]',body)?.addEventListener('click',async()=>{
