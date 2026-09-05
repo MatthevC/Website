@@ -361,19 +361,31 @@ async function mattForceFirstLoginSetup(session, profile) {
 
 async function mattOpenAccountManager() {
   if (window.currentUserIsAdmin !== true) return;
+
+  const sessionRes = await supabaseClient.auth.getSession();
+  const viewerUserId = sessionRes?.data?.session?.user?.id || "";
+
   let modal = document.getElementById("accountManagerModal");
   if (!modal) {
     modal = document.createElement("div");
     modal.id = "accountManagerModal";
     modal.className = "account-manager-modal";
     modal.innerHTML = `<div class="account-manager-box" role="dialog" aria-modal="true">
-      <header class="account-manager-head"><div><span>TYLKO ADMINISTRATOR</span><h2>ZARZĄDZAJ KONTAMI</h2><p>Twórz konta tymczasowe i przypisuj role oraz dokładne uprawnienia moderatorów.</p></div><button type="button" data-account-close>×</button></header>
+      <header class="account-manager-head">
+        <div>
+          <span>TYLKO ADMINISTRATOR</span>
+          <h2>ZARZĄDZAJ KONTAMI</h2>
+          <p>Twórz konta tymczasowe, przypisuj role i kontroluj dokładne uprawnienia moderatorów.</p>
+        </div>
+        <button type="button" data-account-close aria-label="Zamknij">×</button>
+      </header>
       <div class="account-manager-body" data-account-body></div>
     </div>`;
     document.body.appendChild(modal);
     modal.querySelector("[data-account-close]")?.addEventListener("click", () => modal.classList.remove("active"));
     modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("active"); });
   }
+
   modal.classList.add("active");
   const body = modal.querySelector("[data-account-body]");
   if (!body) return;
@@ -383,7 +395,7 @@ async function mattOpenAccountManager() {
   let selectedId = null;
 
   const load = async () => {
-    body.innerHTML = `<div class="account-loading">Ładowanie kont…</div>`;
+    body.innerHTML = `<div class="account-loading">Ładowanie kont i katalogu uprawnień…</div>`;
     const [accountsRes, catalogRes] = await Promise.all([
       supabaseClient.rpc("matt_admin_list_accounts"),
       supabaseClient.from("matt_permission_catalog").select("permission,group_name,label,description,sort_order").order("sort_order")
@@ -392,6 +404,9 @@ async function mattOpenAccountManager() {
     if (catalogRes.error) throw catalogRes.error;
     accounts = accountsRes.data || [];
     catalog = catalogRes.data || [];
+    if (!selectedId && accounts.length) {
+      selectedId = accounts.find(a => a.auth_user_id === viewerUserId)?.auth_user_id || accounts[0].auth_user_id;
+    }
     draw();
   };
 
@@ -404,98 +419,301 @@ async function mattOpenAccountManager() {
     return groups;
   };
 
+  const roleMeta = role => {
+    const value = String(role || "user").toLowerCase();
+    if (value === "admin") return { label: "Administrator", icon: "★", desc: "Pełny dostęp do wszystkich narzędzi i uprawnień.", cls: "admin" };
+    if (value === "moderator") return { label: "Moderator", icon: "◆", desc: "Dostęp wyłącznie do zaznaczonych niżej czynności.", cls: "moderator" };
+    return { label: "Użytkownik", icon: "●", desc: "Brak dostępu do narzędzi administracyjnych.", cls: "user" };
+  };
+
+  const effectivePermissions = account => {
+    if (String(account?.role || "").toLowerCase() === "admin") return catalog.map(item => item.permission);
+    if (String(account?.role || "").toLowerCase() === "moderator") return Array.isArray(account.permissions) ? account.permissions : [];
+    return [];
+  };
+
   const accountStatus = account => {
     const technical = /@pending\.mattsworld\.invalid$/i.test(String(account.email || ""));
     if (technical) return `<span class="account-badge pending">PIERWSZE LOGOWANIE</span>`;
-    if (account.role === "admin") return `<span class="account-badge admin">ADMIN</span>`;
+    if (account.role === "admin") return `<span class="account-badge admin">ADMIN · ${catalog.length} upr.</span>`;
     if (account.role === "moderator") return `<span class="account-badge moderator">MODERATOR · ${(account.permissions || []).length} upr.</span>`;
-    return `<span class="account-badge user">UŻYTKOWNIK</span>`;
+    return `<span class="account-badge user">UŻYTKOWNIK · 0 upr.</span>`;
+  };
+
+  const roleSummary = () => {
+    const admins = accounts.filter(a => a.role === "admin").length;
+    const moderators = accounts.filter(a => a.role === "moderator").length;
+    const users = accounts.filter(a => !["admin","moderator"].includes(a.role)).length;
+    return `<div class="account-overview">
+      <div><small>ADMINISTRATORZY</small><strong>${admins}</strong></div>
+      <div><small>MODERATORZY</small><strong>${moderators}</strong></div>
+      <div><small>UŻYTKOWNICY</small><strong>${users}</strong></div>
+      <div><small>UPRAWNIENIA W SYSTEMIE</small><strong>${catalog.length}</strong></div>
+    </div>`;
   };
 
   const draw = () => {
     const selected = accounts.find(a => a.auth_user_id === selectedId) || null;
-    body.innerHTML = `<div class="account-manager-grid">
+    body.innerHTML = `${roleSummary()}<div class="account-manager-grid">
       <section class="account-list-panel">
-        <div class="account-panel-title"><div><small>KONTA</small><strong>${accounts.length} użytkowników</strong></div><button class="account-primary" type="button" data-new-account>+ NOWE KONTO</button></div>
-        <div class="account-list">${accounts.map(a => `<button type="button" class="account-row ${selectedId===a.auth_user_id?'active':''}" data-account-id="${mattAccountEscape(a.auth_user_id)}"><img src="${mattAccountEscape(a.avatar_url || MATT_DEFAULT_AVATAR)}" alt=""><span><strong>${mattAccountEscape(a.username || 'Użytkownik')}</strong><small>${/@pending\.mattsworld\.invalid$/i.test(String(a.email||'')) ? 'E-mail ustawi przy pierwszym logowaniu' : mattAccountEscape(a.email || 'Brak e-maila')}</small></span>${accountStatus(a)}</button>`).join("")}</div>
+        <div class="account-panel-title">
+          <div><small>KONTA</small><strong>${accounts.length} użytkowników</strong></div>
+          <button class="account-primary" type="button" data-new-account>+ NOWE KONTO</button>
+        </div>
+        <div class="account-list">${accounts.map(a => {
+          const isSelf = a.auth_user_id === viewerUserId;
+          return `<button type="button" class="account-row ${selectedId===a.auth_user_id?'active':''}" data-account-id="${mattAccountEscape(a.auth_user_id)}">
+            <img src="${mattAccountEscape(a.avatar_url || MATT_DEFAULT_AVATAR)}" alt="">
+            <span>
+              <strong>${mattAccountEscape(a.username || 'Użytkownik')}${isSelf ? ' <em>TY</em>' : ''}</strong>
+              <small>${/@pending\.mattsworld\.invalid$/i.test(String(a.email||'')) ? 'E-mail ustawi przy pierwszym logowaniu' : mattAccountEscape(a.email || 'Brak e-maila')}</small>
+            </span>
+            ${accountStatus(a)}
+          </button>`;
+        }).join("")}</div>
       </section>
       <section class="account-edit-panel">${selected ? renderSelected(selected) : `<div class="account-empty"><strong>Wybierz konto</strong><p>Kliknij użytkownika z listy albo utwórz nowe konto tymczasowe.</p></div>`}</section>
     </div>`;
 
-    body.querySelectorAll("[data-account-id]").forEach(btn => btn.addEventListener("click", () => { selectedId = btn.dataset.accountId; draw(); }));
+    body.querySelectorAll("[data-account-id]").forEach(btn => btn.addEventListener("click", () => {
+      selectedId = btn.dataset.accountId;
+      draw();
+    }));
     body.querySelector("[data-new-account]")?.addEventListener("click", renderCreate);
     bindSelected(selected);
   };
 
   const renderSelected = account => {
     const groups = groupCatalog();
-    return `<div class="account-editor-head"><div><small>EDYCJA KONTA</small><h3>${mattAccountEscape(account.username || 'Użytkownik')}</h3><p>${/@pending\.mattsworld\.invalid$/i.test(String(account.email||'')) ? 'Konto oczekuje na pierwsze logowanie i ustawienie prawdziwego e-maila.' : mattAccountEscape(account.email || '')}</p></div>${accountStatus(account)}</div>
-      <label class="account-field">Rola<select data-account-role><option value="user" ${account.role==='user'?'selected':''}>Użytkownik</option><option value="moderator" ${account.role==='moderator'?'selected':''}>Moderator</option><option value="admin" ${account.role==='admin'?'selected':''}>Administrator</option></select></label>
+    const isSelf = account.auth_user_id === viewerUserId;
+    const currentRole = String(account.role || "user").toLowerCase();
+    const selectedPermissions = new Set(effectivePermissions(account));
+    const meta = roleMeta(currentRole);
+
+    const roleCards = ["user","moderator","admin"].map(role => {
+      const m = roleMeta(role);
+      const active = currentRole === role;
+      return `<label class="account-role-card ${m.cls} ${active ? 'active' : ''} ${isSelf ? 'locked' : ''}">
+        <input type="radio" name="account-role-choice" value="${role}" ${active ? 'checked' : ''} ${isSelf ? 'disabled' : ''}>
+        <span class="account-role-icon">${m.icon}</span>
+        <span class="account-role-copy">
+          <strong>${m.label}</strong>
+          <small>${m.desc}</small>
+        </span>
+        <span class="account-role-state">${active ? 'WYBRANA' : ''}</span>
+      </label>`;
+    }).join("");
+
+    const permissionSections = [...groups.entries()].map(([group, items]) => {
+      const activeCount = currentRole === "admin"
+        ? items.length
+        : currentRole === "moderator"
+          ? items.filter(item => selectedPermissions.has(item.permission)).length
+          : 0;
+
+      return `<section class="account-permission-group">
+        <header><h4>${mattAccountEscape(group)}</h4><span data-group-count>${activeCount}/${items.length}</span></header>
+        ${items.map(item => {
+          const checked = currentRole === "admin" || (currentRole === "moderator" && selectedPermissions.has(item.permission));
+          const disabled = isSelf || currentRole !== "moderator";
+          return `<label class="account-permission ${disabled ? 'readonly' : ''}">
+            <input type="checkbox" value="${mattAccountEscape(item.permission)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+            <span>
+              <strong>${mattAccountEscape(item.label)}</strong>
+              <small>${mattAccountEscape(item.description || '')}</small>
+            </span>
+          </label>`;
+        }).join("")}
+      </section>`;
+    }).join("");
+
+    const permissionCount = currentRole === "admin" ? catalog.length : currentRole === "moderator" ? selectedPermissions.size : 0;
+
+    return `<div class="account-editor-head">
+        <div>
+          <small>${isSelf ? 'TWOJE KONTO · PODGLĄD' : 'EDYCJA KONTA'}</small>
+          <h3>${mattAccountEscape(account.username || 'Użytkownik')}</h3>
+          <p>${/@pending\.mattsworld\.invalid$/i.test(String(account.email||'')) ? 'Konto oczekuje na pierwsze logowanie i ustawienie prawdziwego e-maila.' : mattAccountEscape(account.email || '')}</p>
+        </div>
+        <div class="account-editor-badges">${isSelf ? '<span class="account-badge self">TWOJE KONTO</span>' : ''}${accountStatus(account)}</div>
+      </div>
+
+      ${isSelf ? `<div class="account-protection-note"><strong>🔒 OCHRONA WŁASNEGO KONTA</strong><span>Nie możesz z tego panelu odebrać sobie roli administratora ani zmienić własnych uprawnień.</span></div>` : ''}
+
+      <div class="account-section-heading">
+        <div><small>ROLA UŻYTKOWNIKA</small><h4>${meta.label}</h4></div>
+        <span>${isSelf ? 'TYLKO PODGLĄD' : 'WYBIERZ ROLĘ'}</span>
+      </div>
+      <div class="account-role-grid" data-role-grid>${roleCards}</div>
       <div class="account-role-note" data-role-note></div>
-      <div class="account-permissions" data-permissions ${account.role==='moderator'?'':'hidden'}>${[...groups.entries()].map(([group, items]) => `<section><h4>${mattAccountEscape(group)}</h4>${items.map(item => `<label class="account-permission"><input type="checkbox" value="${mattAccountEscape(item.permission)}" ${(account.permissions||[]).includes(item.permission)?'checked':''}><span><strong>${mattAccountEscape(item.label)}</strong><small>${mattAccountEscape(item.description || '')}</small></span></label>`).join('')}</section>`).join('')}</div>
-      <div class="account-editor-actions"><button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button></div>
+
+      <div class="account-section-heading permissions-heading">
+        <div><small>UPRAWNIENIA</small><h4>Zakres dostępu</h4></div>
+        <div class="account-permission-tools">
+          <span class="account-permission-total" data-permission-total>${permissionCount}/${catalog.length} aktywnych</span>
+          <button type="button" data-select-all ${currentRole !== 'moderator' || isSelf ? 'disabled' : ''}>ZAZNACZ WSZYSTKO</button>
+          <button type="button" data-clear-all ${currentRole !== 'moderator' || isSelf ? 'disabled' : ''}>WYCZYŚĆ</button>
+        </div>
+      </div>
+      <div class="account-permissions" data-permissions>${permissionSections}</div>
+
+      <div class="account-editor-actions">
+        ${isSelf
+          ? `<button class="account-primary protected" type="button" disabled>🔒 WŁASNE KONTO CHRONIONE</button>`
+          : `<button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button>`}
+      </div>
       <p class="account-message" data-account-message></p>`;
   };
 
   const bindSelected = account => {
     if (!account) return;
-    const role = body.querySelector("[data-account-role]");
-    const perms = body.querySelector("[data-permissions]");
+    const isSelf = account.auth_user_id === viewerUserId;
+    const roleInputs = [...body.querySelectorAll('input[name="account-role-choice"]')];
+    const permsWrap = body.querySelector("[data-permissions]");
     const note = body.querySelector("[data-role-note]");
-    const sync = () => {
-      const value = role?.value || "user";
-      if (perms) perms.hidden = value !== "moderator";
-      if (note) note.textContent = value === "admin" ? "Administrator automatycznie otrzymuje wszystkie uprawnienia." : value === "moderator" ? "Zaznacz dokładnie te czynności, które moderator może wykonywać." : "Zwykły użytkownik nie ma dostępu do narzędzi administracyjnych.";
+    const total = body.querySelector("[data-permission-total]");
+    const selectAll = body.querySelector("[data-select-all]");
+    const clearAll = body.querySelector("[data-clear-all]");
+
+    const selectedRole = () => roleInputs.find(input => input.checked)?.value || String(account.role || "user");
+
+    const syncPermissionUi = () => {
+      const role = selectedRole();
+      const checkboxes = [...body.querySelectorAll("[data-permissions] input[type=checkbox]")];
+
+      checkboxes.forEach(cb => {
+        if (role === "admin") {
+          cb.checked = true;
+          cb.disabled = true;
+        } else if (role === "user") {
+          cb.checked = false;
+          cb.disabled = true;
+        } else {
+          cb.disabled = isSelf;
+        }
+      });
+
+      body.querySelectorAll(".account-role-card").forEach(card => {
+        const input = card.querySelector('input[type="radio"]');
+        card.classList.toggle("active", !!input?.checked);
+        const state = card.querySelector(".account-role-state");
+        if (state) state.textContent = input?.checked ? "WYBRANA" : "";
+      });
+
+      const active = role === "admin" ? catalog.length : role === "moderator" ? checkboxes.filter(cb => cb.checked).length : 0;
+      if (total) total.textContent = `${active}/${catalog.length} aktywnych`;
+
+      body.querySelectorAll(".account-permission-group").forEach(group => {
+        const groupBoxes = [...group.querySelectorAll('input[type="checkbox"]')];
+        const counter = group.querySelector("[data-group-count]");
+        if (counter) counter.textContent = `${groupBoxes.filter(cb => cb.checked).length}/${groupBoxes.length}`;
+      });
+
+      if (selectAll) selectAll.disabled = role !== "moderator" || isSelf;
+      if (clearAll) clearAll.disabled = role !== "moderator" || isSelf;
+
+      if (note) {
+        note.innerHTML = role === "admin"
+          ? `<strong>Administrator</strong> ma automatycznie wszystkie ${catalog.length} uprawnień. Poniższa lista jest pełnym podglądem zakresu dostępu.`
+          : role === "moderator"
+            ? `<strong>Moderator</strong> otrzymuje wyłącznie zaznaczone czynności. Każde niezaznaczone działanie jest blokowane również po stronie Supabase.`
+            : `<strong>Użytkownik</strong> nie ma dostępu do narzędzi administracyjnych. Lista poniżej pokazuje, jakie możliwości można później nadać po zmianie roli na Moderatora.`;
+      }
     };
-    role?.addEventListener("change", sync); sync();
+
+    roleInputs.forEach(input => input.addEventListener("change", syncPermissionUi));
+    body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(input => input.addEventListener("change", syncPermissionUi));
+
+    selectAll?.addEventListener("click", () => {
+      if (selectedRole() !== "moderator" || isSelf) return;
+      body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(cb => { cb.checked = true; });
+      syncPermissionUi();
+    });
+
+    clearAll?.addEventListener("click", () => {
+      if (selectedRole() !== "moderator" || isSelf) return;
+      body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(cb => { cb.checked = false; });
+      syncPermissionUi();
+    });
+
+    syncPermissionUi();
+
     body.querySelector("[data-save-access]")?.addEventListener("click", async () => {
+      if (isSelf) return;
       const button = body.querySelector("[data-save-access]");
       const message = body.querySelector("[data-account-message]");
-      const selectedRole = role?.value || "user";
-      const selectedPermissions = selectedRole === "moderator" ? [...body.querySelectorAll("[data-permissions] input:checked")].map(x => x.value) : [];
-      button.disabled = true; if (message) message.textContent = "Zapisywanie…";
+      const role = selectedRole();
+      const selectedPermissions = role === "moderator"
+        ? [...body.querySelectorAll("[data-permissions] input:checked")].map(x => x.value)
+        : [];
+
+      button.disabled = true;
+      if (message) message.textContent = "Zapisywanie…";
       try {
-        const { error } = await supabaseClient.rpc("matt_admin_set_account_access", { p_user_id: account.auth_user_id, p_role: selectedRole, p_permissions: selectedPermissions });
+        const { error } = await supabaseClient.rpc("matt_admin_set_account_access", {
+          p_user_id: account.auth_user_id,
+          p_role: role,
+          p_permissions: selectedPermissions
+        });
         if (error) throw error;
-        if (message) message.textContent = "Uprawnienia zapisane.";
-        await load();
+        if (message) message.textContent = "Rola i uprawnienia zostały zapisane.";
         selectedId = account.auth_user_id;
-        draw();
-      } catch (error) { if (message) message.textContent = error?.message || "Nie udało się zapisać."; }
-      finally { button.disabled = false; }
+        await load();
+      } catch (error) {
+        if (message) message.textContent = error?.message || "Nie udało się zapisać.";
+      } finally {
+        button.disabled = false;
+      }
     });
   };
 
   const renderCreate = () => {
-    body.innerHTML = `<div class="account-create-card"><button type="button" class="account-back" data-back-accounts>← WRÓĆ DO LISTY</button><small>NOWE KONTO TYMCZASOWE</small><h3>UTWÓRZ UŻYTKOWNIKA</h3><p>Podaj tylko nick i hasło tymczasowe. Przy pierwszym logowaniu użytkownik będzie musiał podać swój e-mail i ustawić nowe hasło.</p>
+    body.innerHTML = `<div class="account-create-card">
+      <button type="button" class="account-back" data-back-accounts>← WRÓĆ DO LISTY</button>
+      <small>NOWE KONTO TYMCZASOWE</small>
+      <h3>UTWÓRZ UŻYTKOWNIKA</h3>
+      <p>Podaj tylko nick i hasło tymczasowe. Przy pierwszym logowaniu użytkownik będzie musiał podać swój e-mail i ustawić nowe hasło.</p>
       <label class="account-field">Nick<input data-create-username maxlength="32" autocomplete="off" placeholder="np. NowyModerator"></label>
       <label class="account-field">Hasło tymczasowe<input data-create-password type="password" autocomplete="new-password" placeholder="Minimum 8 znaków"></label>
-      <button class="account-primary" type="button" data-create-submit>UTWÓRZ KONTO</button><p class="account-message" data-create-message></p></div>`;
+      <button class="account-primary" type="button" data-create-submit>UTWÓRZ KONTO</button>
+      <p class="account-message" data-create-message></p>
+    </div>`;
+
     body.querySelector("[data-back-accounts]")?.addEventListener("click", draw);
     body.querySelector("[data-create-submit]")?.addEventListener("click", async () => {
       const username = String(body.querySelector("[data-create-username]")?.value || "").trim();
       const password = String(body.querySelector("[data-create-password]")?.value || "");
       const button = body.querySelector("[data-create-submit]");
       const message = body.querySelector("[data-create-message]");
+
       if (username.length < 2) { message.textContent = "Nick musi mieć co najmniej 2 znaki."; return; }
       if (password.length < 8) { message.textContent = "Hasło tymczasowe musi mieć co najmniej 8 znaków."; return; }
-      button.disabled = true; message.textContent = "Tworzenie konta…";
+
+      button.disabled = true;
+      message.textContent = "Tworzenie konta…";
       try {
-        const { data, error } = await supabaseClient.functions.invoke("admin-manage-users", { body: { action: "create", username, password } });
+        const { data, error } = await supabaseClient.functions.invoke("admin-manage-users", {
+          body: { action: "create", username, password }
+        });
         if (error) throw error;
         if (!data?.ok) throw new Error(data?.error || "Nie udało się utworzyć konta.");
         message.textContent = "Konto utworzone. Użytkownik przy pierwszym logowaniu ustawi swój e-mail i nowe hasło.";
         selectedId = data.userId;
         await load();
-      } catch (error) { message.textContent = error?.message || "Nie udało się utworzyć konta."; }
-      finally { button.disabled = false; }
+      } catch (error) {
+        message.textContent = error?.message || "Nie udało się utworzyć konta.";
+      } finally {
+        button.disabled = false;
+      }
     });
   };
 
-  try { await load(); }
-  catch (error) { body.innerHTML = `<div class="account-empty"><strong>Nie udało się otworzyć zarządzania kontami.</strong><p>${mattAccountEscape(error?.message || 'Nieznany błąd')}</p></div>`; }
+  try {
+    await load();
+  } catch (error) {
+    body.innerHTML = `<div class="account-empty"><strong>Nie udało się otworzyć zarządzania kontami.</strong><p>${mattAccountEscape(error?.message || 'Nieznany błąd')}</p></div>`;
+  }
 }
-
 window.mattOpenAccountManager = mattOpenAccountManager;
 window.mattForceFirstLoginSetup = mattForceFirstLoginSetup;
 
