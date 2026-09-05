@@ -353,24 +353,10 @@ async function mattForceFirstLoginSetup(session, profile) {
       setTimeout(() => location.reload(), 1200);
     } catch (error) {
       console.error("Pierwsza konfiguracja konta:", error);
-      if (msg) msg.textContent = await mattFunctionErrorMessage(error, "Nie udało się zapisać danych konta.");
+      if (msg) msg.textContent = error?.message || "Nie udało się zapisać danych konta.";
       save.disabled = false;
     }
   };
-}
-
-
-async function mattFunctionErrorMessage(error, fallback = "Operacja Edge Function nie powiodła się.") {
-  try {
-    const response = error?.context;
-    if (response && typeof response.clone === "function") {
-      const clone = response.clone();
-      const payload = await clone.json().catch(() => null);
-      if (payload?.error) return String(payload.error);
-      if (payload?.message) return String(payload.message);
-    }
-  } catch (_) {}
-  return error?.message || fallback;
 }
 
 async function mattOpenAccountManager() {
@@ -504,18 +490,10 @@ async function mattOpenAccountManager() {
     const selectedPermissions = new Set(effectivePermissions(account));
     const meta = roleMeta(currentRole);
 
-    const roleCards = ["user","moderator","admin"].map(role => {
+    const roleOptions = ["user","moderator","admin"].map(role => {
       const m = roleMeta(role);
       const active = currentRole === role;
-      return `<label class="account-role-card ${m.cls} ${active ? 'active' : ''} ${isSelf ? 'locked' : ''}">
-        <input type="radio" name="account-role-choice" value="${role}" ${active ? 'checked' : ''} ${isSelf ? 'disabled' : ''}>
-        <span class="account-role-icon">${m.icon}</span>
-        <span class="account-role-copy">
-          <strong>${m.label}</strong>
-          <small>${m.desc}</small>
-        </span>
-        <span class="account-role-state">${active ? 'WYBRANA' : ''}</span>
-      </label>`;
+      return `<option value="${role}" ${active ? 'selected' : ''}>${m.label}</option>`;
     }).join("");
 
     const permissionSections = [...groups.entries()].map(([group, items]) => {
@@ -556,9 +534,15 @@ async function mattOpenAccountManager() {
 
       <div class="account-section-heading">
         <div><small>ROLA UŻYTKOWNIKA</small><h4>${meta.label}</h4></div>
-        <span>${isSelf ? 'TYLKO PODGLĄD' : 'WYBIERZ ROLĘ'}</span>
+        <span>${isSelf ? 'TYLKO PODGLĄD' : 'WYBIERZ ROLĘ Z LISTY'}</span>
       </div>
-      <div class="account-role-grid" data-role-grid>${roleCards}</div>
+      <div class="account-role-select-wrap">
+        <label class="account-form-label" for="account-role-select">Wybór roli</label>
+        <select id="account-role-select" name="account-role-choice" class="account-role-select" ${isSelf ? 'disabled' : ''}>
+          ${roleOptions}
+        </select>
+        <div class="account-role-help">${isSelf ? 'To jest Twoje konto — zmiana własnej roli jest zablokowana.' : 'Wybierz jedną rolę z listy. Dla Moderatora możesz niżej zaznaczyć dokładne uprawnienia.'}</div>
+      </div>
       <div class="account-role-note" data-role-note></div>
 
       <div class="account-section-heading permissions-heading">
@@ -582,18 +566,21 @@ async function mattOpenAccountManager() {
   const bindSelected = account => {
     if (!account) return;
     const isSelf = account.auth_user_id === viewerUserId;
-    const roleInputs = [...body.querySelectorAll('input[name="account-role-choice"]')];
+    const roleSelect = body.querySelector('select[name="account-role-choice"]');
     const permsWrap = body.querySelector("[data-permissions]");
     const note = body.querySelector("[data-role-note]");
     const total = body.querySelector("[data-permission-total]");
     const selectAll = body.querySelector("[data-select-all]");
     const clearAll = body.querySelector("[data-clear-all]");
 
-    const selectedRole = () => roleInputs.find(input => input.checked)?.value || String(account.role || "user");
+    const selectedRole = () => roleSelect?.value || String(account.role || "user");
 
     const syncPermissionUi = () => {
       const role = selectedRole();
       const checkboxes = [...body.querySelectorAll("[data-permissions] input[type=checkbox]")];
+      const metaNow = roleMeta(role);
+      const roleHeading = body.querySelector(".account-section-heading h4");
+      if (roleHeading) roleHeading.textContent = metaNow.label;
 
       checkboxes.forEach(cb => {
         if (role === "admin") {
@@ -605,13 +592,6 @@ async function mattOpenAccountManager() {
         } else {
           cb.disabled = isSelf;
         }
-      });
-
-      body.querySelectorAll(".account-role-card").forEach(card => {
-        const input = card.querySelector('input[type="radio"]');
-        card.classList.toggle("active", !!input?.checked);
-        const state = card.querySelector(".account-role-state");
-        if (state) state.textContent = input?.checked ? "WYBRANA" : "";
       });
 
       const active = role === "admin" ? catalog.length : role === "moderator" ? checkboxes.filter(cb => cb.checked).length : 0;
@@ -635,7 +615,7 @@ async function mattOpenAccountManager() {
       }
     };
 
-    roleInputs.forEach(input => input.addEventListener("change", syncPermissionUi));
+    roleSelect?.addEventListener("change", syncPermissionUi);
     body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(input => input.addEventListener("change", syncPermissionUi));
 
     selectAll?.addEventListener("click", () => {
@@ -715,8 +695,7 @@ async function mattOpenAccountManager() {
         selectedId = data.userId;
         await load();
       } catch (error) {
-        console.error("Tworzenie konta:", error);
-        message.textContent = await mattFunctionErrorMessage(error, "Nie udało się utworzyć konta.");
+        message.textContent = error?.message || "Nie udało się utworzyć konta.";
       } finally {
         button.disabled = false;
       }

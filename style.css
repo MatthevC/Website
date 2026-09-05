@@ -8838,3 +8838,46 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   .account-manager-body{padding:12px}
   .account-permission-tools{justify-content:flex-start}
 }
+
+/* Account roles: select-list version */
+.account-role-select-wrap{
+  display:grid;
+  gap:10px;
+  margin:0 0 12px;
+}
+.account-form-label{
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted, #9ca3af);
+}
+.account-role-select{
+  width:100%;
+  min-height:52px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(8,10,18,.92);
+  color:#fff;
+  padding:0 16px;
+  font-size:16px;
+  font-weight:700;
+  outline:none;
+}
+.account-role-select:focus{
+  border-color:rgba(255,58,58,.7);
+  box-shadow:0 0 0 3px rgba(255,58,58,.12);
+}
+.account-role-select:disabled{
+  opacity:.72;
+  cursor:not-allowed;
+}
+.account-role-help{
+  font-size:13px;
+  line-height:1.5;
+  color:rgba(255,255,255,.68);
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:12px 14px;
+}
