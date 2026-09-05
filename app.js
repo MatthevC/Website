@@ -3812,7 +3812,7 @@ document.addEventListener("click", function(e) {
 
 
 
-/* === v2.6.12 — PŁYNNY SCROLL-SPY DLA WSZYSTKICH BOCZNYCH NAWIGACJI ===
+/* === v2.6.13 — PŁYNNY SCROLL-SPY + WIRTUALNE STREFY DLA SEKCJI OBOK SIEBIE ===
    - krótka sekcja nie jest pomijana przy szybkim scrollu: przechodzimy przez
      wszystkie minięte pozycje po kolei;
    - aktywny kafelek ma ruchomy, animowany marker zamiast gwałtownego przeskoku;
@@ -3931,18 +3931,81 @@ document.addEventListener("click", function(e) {
     return clamp(window.innerHeight * 0.38, HEADER_OFFSET + 72, Math.max(HEADER_OFFSET + 72, window.innerHeight * 0.48));
   }
 
-  function chooseTargetIndex(metrics, probeAbs){
+  function chooseTargetIndex(metrics, probeAbs, edgeState){
     if (!metrics.length) return 0;
+    if (edgeState?.atTop) return 0;
+    if (edgeState?.atBottom) return metrics.length - 1;
     let index = 0;
-    // Granice odpowiedzialności są w połowie odległości między początkami sekcji.
-    // To daje małym sekcjom własną strefę zamiast natychmiast oddawać aktywność.
+    // Używamy efektywnych kotwic. Dla sekcji stojących w jednym rzędzie kotwice
+    // są rozłożone wewnątrz wysokości całego rzędu, więc każda karta dostaje
+    // własny moment aktywacji mimo identycznego położenia Y nagłówków.
     for (let i = 0; i < metrics.length - 1; i++) {
-      const boundary = (metrics[i].top + metrics[i + 1].top) / 2;
+      const boundary = (metrics[i].anchor + metrics[i + 1].anchor) / 2;
       if (probeAbs >= boundary) index = i + 1;
       else break;
     }
-    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8;
-    return atBottom ? metrics.length - 1 : index;
+    return index;
+  }
+
+  function visualBlockForHeading(heading){
+    if (!heading) return null;
+    const selectors = [
+      '.vip-card','.vip-benefits','.vip-hero','.rules-hero','.notice',
+      'section','article','header','[class*="-card"]','[class*="-section"]','[class*="-hero"]'
+    ];
+    for (const selector of selectors) {
+      const found = heading.closest(selector);
+      if (found && found !== document.body && !found.classList.contains('site-page-toc')) return found;
+    }
+    return heading;
+  }
+
+  function buildEffectiveMetrics(pairs, scrollTop){
+    const raw = pairs.map(item => {
+      const rect = item.section.getBoundingClientRect();
+      const block = visualBlockForHeading(item.section);
+      const blockRect = block?.getBoundingClientRect?.() || rect;
+      return {
+        top: rect.top + scrollTop,
+        bottom: rect.bottom + scrollTop,
+        blockTop: blockRect.top + scrollTop,
+        blockBottom: blockRect.bottom + scrollTop,
+        anchor: rect.top + scrollTop
+      };
+    });
+
+    // Kolejne nagłówki o praktycznie tej samej wysokości należą zazwyczaj do kart
+    // ustawionych obok siebie. Tworzymy z nich jeden rząd i dzielimy jego wysokość
+    // na tyle wirtualnych stref, ile jest pozycji w nawigacji.
+    const SAME_ROW_TOLERANCE = 72;
+    let i = 0;
+    while (i < raw.length) {
+      let j = i + 1;
+      const baseTop = raw[i].top;
+      while (j < raw.length && Math.abs(raw[j].top - baseTop) <= SAME_ROW_TOLERANCE) j++;
+      const count = j - i;
+      if (count > 1) {
+        const rowTop = Math.min(...raw.slice(i,j).map(m => Math.min(m.top, m.blockTop)));
+        const rowBottom = Math.max(...raw.slice(i,j).map(m => Math.max(m.bottom, m.blockBottom)));
+        const rowHeight = Math.max(140, rowBottom - rowTop);
+        // Margines 20% chroni przed aktywowaniem drugiej karty natychmiast po
+        // wejściu w rząd. Dwie karty dostają więc strefy około 30% i 70% rzędu.
+        const start = rowTop + rowHeight * 0.20;
+        const end = rowTop + rowHeight * 0.80;
+        for (let k = 0; k < count; k++) {
+          const t = count === 1 ? 0.5 : k / (count - 1);
+          raw[i+k].anchor = start + (end - start) * t;
+        }
+      }
+      i = j;
+    }
+
+    // Kotwice muszą być ściśle rosnące. To zabezpiecza nietypowe układy CMS,
+    // w których kilka nagłówków może wizualnie zachodzić na siebie.
+    for (let k = 1; k < raw.length; k++) {
+      raw[k].anchor = Math.max(raw[k].anchor, raw[k-1].anchor + 36);
+    }
+    return raw;
   }
 
   function progressStopPercent(link, track){
@@ -3953,7 +4016,7 @@ document.addEventListener("click", function(e) {
     return clamp(((center - trackRect.top) / trackRect.height) * 100, 0, 100);
   }
 
-  function updateProgress(nav, cfg, pairs, metrics, probeAbs){
+  function updateProgress(nav, cfg, pairs, metrics, probeAbs, edgeState){
     const progress = nav.querySelector(cfg.progress);
     const track = progress?.parentElement;
     if (!progress || !track || !metrics.length) return;
@@ -3961,20 +4024,20 @@ document.addEventListener("click", function(e) {
     const stops = pairs.map(item => progressStopPercent(item.link, track));
     let pct = stops[0] ?? 0;
 
-    if (metrics.length === 1) {
+    if (edgeState?.atTop) {
+      pct = stops[0] ?? 0;
+    } else if (edgeState?.atBottom) {
+      pct = stops[stops.length - 1] ?? 100;
+    } else if (metrics.length === 1) {
       pct = stops[0] ?? 100;
-    } else if (probeAbs <= metrics[0].top) {
+    } else if (probeAbs <= metrics[0].anchor) {
       pct = stops[0];
-    } else if (probeAbs >= metrics[metrics.length - 1].top) {
-      const last = metrics[metrics.length - 1];
-      const tail = Math.max(1, last.bottom - last.top);
-      const t = clamp((probeAbs - last.top) / tail, 0, 1);
-      // Końcówka dochodzi dokładnie do środka ostatniego linku, nie do losowego 100% tracka.
-      pct = stops[stops.length - 1] * (0.96 + 0.04 * t);
+    } else if (probeAbs >= metrics[metrics.length - 1].anchor) {
+      pct = stops[stops.length - 1];
     } else {
       for (let i = 0; i < metrics.length - 1; i++) {
-        const a = metrics[i].top;
-        const b = metrics[i + 1].top;
+        const a = metrics[i].anchor;
+        const b = metrics[i + 1].anchor;
         if (probeAbs >= a && probeAbs <= b) {
           const t = clamp((probeAbs - a) / Math.max(1, b - a), 0, 1);
           pct = stops[i] + (stops[i + 1] - stops[i]) * t;
@@ -4003,15 +4066,27 @@ document.addEventListener("click", function(e) {
     }
 
     const scrollTop = window.scrollY;
-    const metrics = pairs.map(item => {
-      const rect = item.section.getBoundingClientRect();
-      return { top: rect.top + scrollTop, bottom: rect.bottom + scrollTop };
-    });
+    const doc = document.documentElement;
+    const edgeState = {
+      atTop: scrollTop <= 6,
+      atBottom: window.innerHeight + scrollTop >= doc.scrollHeight - 10
+    };
+    const metrics = buildEffectiveMetrics(pairs, scrollTop);
     const probeAbs = scrollTop + probeY();
-    const targetIndex = chooseTargetIndex(metrics, probeAbs);
+    const targetIndex = chooseTargetIndex(metrics, probeAbs, edgeState);
 
-    queueActive(nav, pairs, targetIndex, state);
-    updateProgress(nav, cfg, pairs, metrics, probeAbs);
+    // Na absolutnych krawędziach dokumentu reguła jest twarda: góra = pierwszy,
+    // dół = ostatni. Nie czekamy wtedy na kolejkę animacji między pozycjami.
+    if (edgeState.atTop || edgeState.atBottom) {
+      if (state.timer) clearTimeout(state.timer);
+      state.timer = 0;
+      state.initialized = true;
+      state.targetIndex = targetIndex;
+      paintActive(nav, pairs, targetIndex, state, false);
+    } else {
+      queueActive(nav, pairs, targetIndex, state);
+    }
+    updateProgress(nav, cfg, pairs, metrics, probeAbs, edgeState);
   }
 
   function update(){
