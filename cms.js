@@ -853,10 +853,19 @@
     // przyciski, sekcje, boksy i praktycznie każdy wizualny kontener z klasą/id.
     if (el.matches('.site-header,.site-footer,.brand,.brand-logo-wrap,.brand-logo,.brand-text,.main-nav,.main-nav > a,.main-nav > .nav-dropdown,.main-nav > .nav-dropdown > button,#header-twitch-link,.user-area,.footer-inner,.footer-brand,.footer-links,.footer-links > a')) return true;
     if (el.matches('section,article,aside,figure,img,h1,h2,h3,h4,p,a,button,nav')) return true;
+    if (el.matches('span,strong,small,em,b,i,svg')) {
+      const text = String(el.textContent || '').replace(/\s+/g, ' ').trim();
+      const childEls = el.children?.length || 0;
+      if (text || childEls === 0 || el.matches('svg')) return true;
+    }
     if (el.hasAttribute('data-cms-callout-id') || el.hasAttribute('data-custom-callout-id')) return true;
 
     const tokens = String(el.className || '').split(/\s+/).filter(Boolean);
-    if (!tokens.length && !el.id) return false;
+    if (!tokens.length && !el.id) {
+      // Pozwalamy także na proste kontenery-liście bez klas, jeśli są wizualnie niezależne.
+      if (el.matches('div') && el.children.length <= 1 && String(el.textContent || '').trim()) return true;
+      return false;
+    }
     const semantic = tokens.some(token => /(?:hero|card|callout|notice|bubble|tile|feature|info|intro|download|cta|heading|title|section|grid|wrap|content|sidebar|toc|banner|panel|box|actions|row|columns?|image|photo|reward|discord|moderator|recommended|event|rules|quick|home)/i.test(token));
     if (semantic) return true;
 
@@ -883,7 +892,7 @@
     const header = document.querySelector('.site-header');
     const root = document.getElementById('app');
     const footer = document.querySelector('.site-footer');
-    const universalSelector = 'section,article,aside,figure,img,h1,h2,h3,h4,p,a,button,nav,[class],[id]';
+    const universalSelector = 'section,article,aside,figure,img,h1,h2,h3,h4,p,a,button,nav,span,strong,small,em,b,i,svg,[class],[id]';
     if (header) raw.push(header, ...header.querySelectorAll(universalSelector));
     if (root) raw.push(...root.querySelectorAll(universalSelector));
     if (footer) raw.push(footer, ...footer.querySelectorAll(universalSelector));

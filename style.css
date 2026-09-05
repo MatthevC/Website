@@ -9060,3 +9060,23 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   #cms-layout-designer{left:8px;right:8px;bottom:8px;width:auto;max-height:74vh}
   .cms-layout-reset-zones{grid-template-columns:1fr}
 }
+
+/* v2.6.3 — precyzyjne zaznaczanie pojedynczych elementów w projektancie */
+.cms-layout-select-section{
+  width:100%;
+  margin:-2px 0 10px;
+  border:1px solid rgba(239,43,45,.35)!important;
+  background:rgba(239,43,45,.08)!important;
+  color:#ffd8d9!important;
+}
+.cms-layout-select-section:hover:not(:disabled){
+  border-color:rgba(239,43,45,.8)!important;
+  background:rgba(239,43,45,.16)!important;
+}
+.cms-layout-select-section:disabled{opacity:.35!important}
+.cms-layout-mode [data-cms-layout-id].cms-layout-editable{outline-offset:2px}
+.cms-layout-mode [data-cms-layout-id].cms-layout-selected{
+  outline:2px solid #ff3438!important;
+  outline-offset:3px!important;
+  box-shadow:0 0 0 3px rgba(255,52,56,.12)!important;
+}

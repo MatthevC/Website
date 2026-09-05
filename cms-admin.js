@@ -404,6 +404,35 @@
     return layoutCandidates().find(el => el.dataset.cmsLayoutId === id) || null;
   }
 
+  function layoutSectionForElement(el) {
+    if (!el) return null;
+    const primary = 'section,.site-header,.site-footer,[class*="-section"],[class*="-hero"],[class*="-panel"]';
+    let node = el.parentElement;
+    while (node && node !== document.body) {
+      if (node.matches?.(primary) && node.dataset?.cmsLayoutId) return node;
+      node = node.parentElement;
+    }
+    const fallback = 'article,aside,[class*="-card"],[class*="-grid"],[class*="-wrap"],[class*="-content"]';
+    node = el.parentElement;
+    while (node && node !== document.body) {
+      if (node.matches?.(fallback) && node.dataset?.cmsLayoutId) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  function selectLayoutWholeSection() {
+    const selected = layoutCandidateById(layoutSelectedId);
+    const section = layoutSectionForElement(selected);
+    if (!section) {
+      notify('Dla tego elementu nie znaleziono większej sekcji do zaznaczenia.', 'error');
+      return;
+    }
+    layoutSelectedId = section.dataset.cmsLayoutId;
+    updateLayoutDesignerSelection();
+    section.scrollIntoView?.({ block:'nearest', inline:'nearest', behavior:'smooth' });
+  }
+
   function layoutDraftForElement(el) {
     return el?.dataset?.cmsLayoutZone === 'global' ? layoutGlobalDraft : layoutDraft;
   }
@@ -472,6 +501,12 @@
     if (pos) pos.textContent = selected ? `X ${Number(offset.x||0)} px · Y ${Number(offset.y||0)} px · ${Math.round(Number(size.width || rect?.width || 0))}×${Math.round(Number(size.height || rect?.height || 0))} px` : 'Brak zaznaczenia';
     if (zone) zone.textContent = selected ? (selected.dataset.cmsLayoutZone === 'global' ? 'GLOBALNY · NAGŁÓWEK / STOPKA' : `PODSTRONA · ${currentRoute().toUpperCase()}`) : '—';
     panel.querySelectorAll('[data-layout-nudge],[data-layout-size],[data-layout-order],[data-layout-reset-element]').forEach(btn => btn.disabled = !selected);
+    const sectionBtn = $('[data-layout-select-section]', panel);
+    const section = layoutSectionForElement(selected);
+    if (sectionBtn) {
+      sectionBtn.disabled = !section;
+      sectionBtn.textContent = section ? `ZAZNACZ CAŁĄ SEKCJĘ · ${String(section.dataset.cmsLayoutLabel || 'SEKCJA').slice(0,42)}` : 'ZAZNACZ CAŁĄ SEKCJĘ';
+    }
     layoutCandidates().forEach(el => el.classList.toggle('cms-layout-selected', !!selected && el === selected));
   }
 
@@ -588,8 +623,9 @@
     panel.id = 'cms-layout-designer';
     panel.innerHTML = `
       <div class="cms-layout-panel-head"><div><small>PEŁNY TRYB GRAFICZNY</small><strong>PROJEKTOWANIE CAŁEJ STRONY</strong></div><button type="button" data-layout-close>×</button></div>
-      <p class="cms-layout-help">Kliknij praktycznie dowolny widoczny element: logo, grafikę powitalną, nagłówek „CO NOWEGO?”, kategorię menu, tekst, przycisk, kafelek, sekcję albo grafikę. Większość elementów możesz przesuwać bezpośrednio myszką; elementy w siatkach przeciągaj, aby zmienić ich kolejność.</p>
-      <div class="cms-layout-selected-box"><small>WYBRANY ELEMENT</small><strong data-layout-selected>Kliknij dowolny element na stronie</strong><span data-layout-zone>—</span><span data-layout-position>Brak zaznaczenia</span></div>
+      <p class="cms-layout-help">Kliknięcie wybiera teraz pojedynczy element — np. samo logo, napis, obraz, przycisk lub tekst. Przeciągając przesuwasz tylko ten element. Jeśli chcesz przesunąć cały większy blok, najpierw wybierz jeden z jego elementów i użyj przycisku „ZAZNACZ CAŁĄ SEKCJĘ”. Kolejność w siatce lub menu zmieniaj przyciskami WCZEŚNIEJ / PÓŹNIEJ.</p>
+      <div class="cms-layout-selected-box"><small>WYBRANY ELEMENT</small><strong data-layout-selected>Kliknij pojedynczy element na stronie</strong><span data-layout-zone>—</span><span data-layout-position>Brak zaznaczenia</span></div>
+      <button type="button" class="cms-layout-select-section" data-layout-select-section disabled>ZAZNACZ CAŁĄ SEKCJĘ</button>
       <div class="cms-layout-control-title">POŁOŻENIE · 8 PX</div>
       <div class="cms-layout-nudge-grid">
         <button type="button" data-layout-nudge="0,-8">↑</button><button type="button" data-layout-nudge="-8,0">←</button><button type="button" data-layout-nudge="8,0">→</button><button type="button" data-layout-nudge="0,8">↓</button>
@@ -605,45 +641,44 @@
 
     const candidates = layoutCandidates();
     candidates.forEach(el => {
-      el.classList.add('cms-layout-editable');
-      const group = layoutGroupElements(el.dataset.cmsLayoutParent);
-      const canReorder = group.length > 1 && /(grid|flex)/.test(getComputedStyle(el.parentElement).display);
-      if (canReorder) {
-        el.setAttribute('draggable','true');
-      } else {
-        el.classList.add('cms-layout-free-drag');
-        el.addEventListener('pointerdown', e => {
-          if (e.button !== 0 || e.target.closest('#cms-layout-designer,#cms-admin-toolbar')) return;
-          const draft = layoutDraftForElement(el);
-          const old = draft?.offsets?.[el.dataset.cmsLayoutId] || {x:0,y:0};
-          layoutSelectedId = el.dataset.cmsLayoutId;
-          layoutFreeDrag = { id:el.dataset.cmsLayoutId, pointerId:e.pointerId, startX:e.clientX, startY:e.clientY, baseX:Number(old.x||0), baseY:Number(old.y||0) };
-          try { el.setPointerCapture(e.pointerId); } catch (_) {}
-          el.classList.add('cms-layout-dragging');
-          updateLayoutDesignerSelection();
-          e.preventDefault();
-        }, {signal});
-        el.addEventListener('pointermove', e => {
-          if (!layoutFreeDrag || layoutFreeDrag.id !== el.dataset.cmsLayoutId || layoutFreeDrag.pointerId !== e.pointerId) return;
-          const draft = layoutDraftForElement(el);
-          if (!draft.offsets) draft.offsets = {};
-          draft.offsets[el.dataset.cmsLayoutId] = {
-            x: Math.max(-1200, Math.min(1200, layoutFreeDrag.baseX + (e.clientX - layoutFreeDrag.startX))),
-            y: Math.max(-1200, Math.min(1200, layoutFreeDrag.baseY + (e.clientY - layoutFreeDrag.startY)))
-          };
-          applyLayoutDraftToDom();
-          updateLayoutDesignerSelection();
-          e.preventDefault();
-        }, {signal});
-        const finishFreeDrag = e => {
-          if (!layoutFreeDrag || layoutFreeDrag.id !== el.dataset.cmsLayoutId) return;
-          try { el.releasePointerCapture(layoutFreeDrag.pointerId); } catch (_) {}
-          layoutFreeDrag = null;
-          el.classList.remove('cms-layout-dragging');
+      el.classList.add('cms-layout-editable','cms-layout-free-drag');
+      el.setAttribute('draggable','false');
+      el.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('#cms-layout-designer,#cms-admin-toolbar')) return;
+        // Kluczowe: reaguje wyłącznie najgłębszy element pod kursorem.
+        // Rodzic (np. cały nagłówek/sekcja) nie może przejąć przeciągania dziecka.
+        const nearest = e.target.closest('[data-cms-layout-id]');
+        if (nearest !== el) return;
+        const draft = layoutDraftForElement(el);
+        const old = draft?.offsets?.[el.dataset.cmsLayoutId] || {x:0,y:0};
+        layoutSelectedId = el.dataset.cmsLayoutId;
+        layoutFreeDrag = { id:el.dataset.cmsLayoutId, pointerId:e.pointerId, startX:e.clientX, startY:e.clientY, baseX:Number(old.x||0), baseY:Number(old.y||0) };
+        try { el.setPointerCapture(e.pointerId); } catch (_) {}
+        el.classList.add('cms-layout-dragging');
+        updateLayoutDesignerSelection();
+        e.preventDefault();
+        e.stopPropagation();
+      }, {signal});
+      el.addEventListener('pointermove', e => {
+        if (!layoutFreeDrag || layoutFreeDrag.id !== el.dataset.cmsLayoutId || layoutFreeDrag.pointerId !== e.pointerId) return;
+        const draft = layoutDraftForElement(el);
+        if (!draft.offsets) draft.offsets = {};
+        draft.offsets[el.dataset.cmsLayoutId] = {
+          x: Math.max(-1200, Math.min(1200, layoutFreeDrag.baseX + (e.clientX - layoutFreeDrag.startX))),
+          y: Math.max(-1200, Math.min(1200, layoutFreeDrag.baseY + (e.clientY - layoutFreeDrag.startY)))
         };
-        el.addEventListener('pointerup', finishFreeDrag, {signal});
-        el.addEventListener('pointercancel', finishFreeDrag, {signal});
-      }
+        applyLayoutDraftToDom();
+        updateLayoutDesignerSelection();
+        e.preventDefault();
+      }, {signal});
+      const finishFreeDrag = e => {
+        if (!layoutFreeDrag || layoutFreeDrag.id !== el.dataset.cmsLayoutId) return;
+        try { el.releasePointerCapture(layoutFreeDrag.pointerId); } catch (_) {}
+        layoutFreeDrag = null;
+        el.classList.remove('cms-layout-dragging');
+      };
+      el.addEventListener('pointerup', finishFreeDrag, {signal});
+      el.addEventListener('pointercancel', finishFreeDrag, {signal});
     });
 
     document.addEventListener('click', e => {
@@ -655,24 +690,12 @@
       updateLayoutDesignerSelection();
     }, { capture:true, signal });
 
-    candidates.forEach(el => {
-      el.addEventListener('dragstart', e => {
-        layoutDraggedId = el.dataset.cmsLayoutId; layoutSelectedId = layoutDraggedId;
-        el.classList.add('cms-layout-dragging'); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',layoutDraggedId); updateLayoutDesignerSelection();
-      }, {signal});
-      el.addEventListener('dragend',()=>{el.classList.remove('cms-layout-dragging');layoutDraggedId=null;},{signal});
-      el.addEventListener('dragover',e=>{const dragged=layoutCandidateById(layoutDraggedId);if(!dragged||dragged.parentElement!==el.parentElement||dragged===el)return;e.preventDefault();e.dataTransfer.dropEffect='move';},{signal});
-      el.addEventListener('drop',e=>{
-        const dragged=layoutCandidateById(layoutDraggedId);if(!dragged||dragged.parentElement!==el.parentElement||dragged===el)return;
-        e.preventDefault();const parentKey=el.dataset.cmsLayoutParent;const order=layoutCurrentOrder(parentKey);const from=order.indexOf(dragged.dataset.cmsLayoutId);const to=order.indexOf(el.dataset.cmsLayoutId);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,dragged.dataset.cmsLayoutId);updateLayoutOrder(parentKey,order);
-      },{signal});
-    });
-
     panel.querySelector('[data-layout-close]').addEventListener('click', cancelLayoutDesigner, {signal});
     panel.querySelector('[data-layout-cancel]').addEventListener('click', cancelLayoutDesigner, {signal});
     panel.querySelector('[data-layout-save]').addEventListener('click', saveLayoutDesigner, {signal});
     panel.querySelector('[data-layout-reset-page]').addEventListener('click', ()=>resetLayoutDraftZone('page'), {signal});
     panel.querySelector('[data-layout-reset-global]').addEventListener('click', ()=>resetLayoutDraftZone('global'), {signal});
+    panel.querySelector('[data-layout-select-section]').addEventListener('click', selectLayoutWholeSection, {signal});
     panel.querySelector('[data-layout-reset-element]').addEventListener('click', resetLayoutSelected, {signal});
     panel.querySelectorAll('[data-layout-nudge]').forEach(btn=>btn.addEventListener('click',()=>{const [dx,dy]=btn.dataset.layoutNudge.split(',').map(Number);nudgeLayoutSelected(dx,dy);},{signal}));
     panel.querySelectorAll('[data-layout-size]').forEach(btn=>btn.addEventListener('click',()=>{const [dw,dh]=btn.dataset.layoutSize.split(',').map(Number);resizeLayoutSelected(dw,dh);},{signal}));
