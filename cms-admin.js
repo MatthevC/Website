@@ -3,7 +3,13 @@
   let inlineSnapshot = new Map();
   let toolbar = null;
   let modal = null;
+  let layoutEditing = false;
+  let layoutDraft = null;
+  let layoutSelectedId = null;
+  let layoutController = null;
+  let layoutDraggedId = null;
   const TOOLBAR_COLLAPSE_KEY = 'matt_cms_toolbar_collapsed';
+  const TOOLBAR_POSITION_KEY = 'matt_cms_toolbar_position_v2';
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -20,16 +26,91 @@
     applyToolbarState();
   }
 
+  function getToolbarPosition() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(TOOLBAR_POSITION_KEY) || 'null');
+      if (raw && Number.isFinite(raw.left) && Number.isFinite(raw.top)) return raw;
+    } catch (_) {}
+    return null;
+  }
+
+  function saveToolbarPosition(left, top) {
+    try { localStorage.setItem(TOOLBAR_POSITION_KEY, JSON.stringify({ left:Math.round(left), top:Math.round(top) })); }
+    catch (_) {}
+  }
+
+  function resetToolbarPosition() {
+    try { localStorage.removeItem(TOOLBAR_POSITION_KEY); } catch (_) {}
+    applyToolbarState();
+  }
+
+  function applyToolbarPosition() {
+    if (!toolbar) return;
+    const pos = getToolbarPosition();
+    toolbar.style.removeProperty('left');
+    toolbar.style.removeProperty('top');
+    toolbar.style.removeProperty('right');
+    toolbar.style.removeProperty('bottom');
+    if (!pos) return;
+    const rect = toolbar.getBoundingClientRect();
+    const maxLeft = Math.max(8, window.innerWidth - Math.max(48, rect.width) - 8);
+    const maxTop = Math.max(8, window.innerHeight - Math.max(48, rect.height) - 8);
+    const left = Math.max(8, Math.min(maxLeft, pos.left));
+    const top = Math.max(8, Math.min(maxTop, pos.top));
+    toolbar.style.left = `${left}px`;
+    toolbar.style.top = `${top}px`;
+    toolbar.style.right = 'auto';
+    toolbar.style.bottom = 'auto';
+  }
+
+  function bindToolbarDrag() {
+    const handle = $('.cms-toolbar-drag-handle', toolbar);
+    if (!handle || handle.dataset.bound === '1') return;
+    handle.dataset.bound = '1';
+    handle.addEventListener('dblclick', e => {
+      e.preventDefault();
+      resetToolbarPosition();
+      notify('Przywrócono domyślne położenie paska administratora.');
+    });
+    handle.addEventListener('pointerdown', e => {
+      if (e.button !== 0 || isToolbarCollapsed()) return;
+      e.preventDefault();
+      const rect = toolbar.getBoundingClientRect();
+      const dx = e.clientX - rect.left;
+      const dy = e.clientY - rect.top;
+      toolbar.classList.add('cms-toolbar-dragging');
+      const move = ev => {
+        const maxLeft = Math.max(8, window.innerWidth - toolbar.offsetWidth - 8);
+        const maxTop = Math.max(8, window.innerHeight - toolbar.offsetHeight - 8);
+        const left = Math.max(8, Math.min(maxLeft, ev.clientX - dx));
+        const top = Math.max(8, Math.min(maxTop, ev.clientY - dy));
+        toolbar.style.left = `${left}px`;
+        toolbar.style.top = `${top}px`;
+        toolbar.style.right = 'auto';
+        toolbar.style.bottom = 'auto';
+      };
+      const up = () => {
+        document.removeEventListener('pointermove', move);
+        toolbar.classList.remove('cms-toolbar-dragging');
+        const end = toolbar.getBoundingClientRect();
+        saveToolbarPosition(end.left, end.top);
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up, { once:true });
+    });
+  }
+
   function applyToolbarState() {
     if (!toolbar) return;
     const collapsed = isToolbarCollapsed();
     toolbar.classList.toggle('cms-collapsed', collapsed);
     const toggleBtn = $('[data-cms-action="toggle-toolbar"]', toolbar);
     if (toggleBtn) {
-      toggleBtn.innerHTML = collapsed ? '‹' : '›';
+      toggleBtn.innerHTML = collapsed ? '☰' : '−';
       toggleBtn.title = collapsed ? 'Pokaż pasek administratora' : 'Ukryj pasek administratora';
       toggleBtn.setAttribute('aria-label', toggleBtn.title);
     }
+    applyToolbarPosition();
   }
 
   function currentRoute() {
@@ -237,13 +318,258 @@
     return has(config.permission);
   }
 
+  function normalizeLayoutDraft(value) {
+    const data = clone(value || {});
+    return {
+      version: 1,
+      offsets: data.offsets && typeof data.offsets === 'object' ? data.offsets : {},
+      orders: data.orders && typeof data.orders === 'object' ? data.orders : {}
+    };
+  }
+
+  function layoutCandidates() {
+    return window.MattCMS?.layoutElements?.(currentRoute()) || [];
+  }
+
+  function layoutCandidateById(id) {
+    return layoutCandidates().find(el => el.dataset.cmsLayoutId === id) || null;
+  }
+
+  function layoutGroupElements(parentKey) {
+    return layoutCandidates().filter(el => el.dataset.cmsLayoutParent === parentKey);
+  }
+
+  function layoutCurrentOrder(parentKey) {
+    const group = layoutGroupElements(parentKey);
+    const saved = Array.isArray(layoutDraft?.orders?.[parentKey]) ? layoutDraft.orders[parentKey] : [];
+    const ids = group.map(el => el.dataset.cmsLayoutId);
+    const merged = [...saved.filter(id => ids.includes(id)), ...ids.filter(id => !saved.includes(id))];
+    return merged;
+  }
+
+  function applyLayoutDraftToDom() {
+    const elements = layoutCandidates();
+    const byId = new Map(elements.map(el => [el.dataset.cmsLayoutId, el]));
+    elements.forEach(el => {
+      const pos = layoutDraft?.offsets?.[el.dataset.cmsLayoutId] || {};
+      const x = Number(pos.x || 0), y = Number(pos.y || 0);
+      el.style.translate = (x || y) ? `${x}px ${y}px` : '';
+      el.classList.toggle('cms-layout-applied', !!(x || y));
+      el.style.order = '';
+    });
+    Object.entries(layoutDraft?.orders || {}).forEach(([parentKey, ids]) => {
+      if (!Array.isArray(ids)) return;
+      const group = layoutGroupElements(parentKey);
+      const parent = group[0]?.parentElement;
+      if (!parent || !/(grid|flex)/.test(getComputedStyle(parent).display)) return;
+      const rank = new Map(ids.map((id, i) => [id, i]));
+      group.forEach((el, i) => el.style.order = String(rank.has(el.dataset.cmsLayoutId) ? rank.get(el.dataset.cmsLayoutId) : ids.length + i));
+    });
+  }
+
+  function updateLayoutDesignerSelection() {
+    const panel = document.getElementById('cms-layout-designer');
+    if (!panel) return;
+    const selected = layoutCandidateById(layoutSelectedId);
+    const label = $('[data-layout-selected]', panel);
+    const pos = $('[data-layout-position]', panel);
+    if (label) label.textContent = selected ? (selected.dataset.cmsLayoutLabel || 'Wybrany element') : 'Kliknij element na stronie';
+    const offset = selected ? (layoutDraft?.offsets?.[selected.dataset.cmsLayoutId] || {x:0,y:0}) : {x:0,y:0};
+    if (pos) pos.textContent = selected ? `X ${Number(offset.x||0)} px · Y ${Number(offset.y||0)} px` : 'Brak zaznaczenia';
+    panel.querySelectorAll('[data-layout-nudge],[data-layout-order],[data-layout-reset-element]').forEach(btn => btn.disabled = !selected);
+    layoutCandidates().forEach(el => el.classList.toggle('cms-layout-selected', !!selected && el === selected));
+  }
+
+  function updateLayoutOrder(parentKey, ids) {
+    if (!layoutDraft.orders) layoutDraft.orders = {};
+    layoutDraft.orders[parentKey] = [...ids];
+    applyLayoutDraftToDom();
+  }
+
+  function moveLayoutSelectedOrder(delta) {
+    const el = layoutCandidateById(layoutSelectedId);
+    if (!el) return;
+    const parentKey = el.dataset.cmsLayoutParent;
+    const group = layoutGroupElements(parentKey);
+    if (group.length < 2 || !/(grid|flex)/.test(getComputedStyle(el.parentElement).display)) {
+      notify('Tego elementu nie można przestawić w kolejności. Użyj strzałek położenia.', 'error');
+      return;
+    }
+    const order = layoutCurrentOrder(parentKey);
+    const index = order.indexOf(layoutSelectedId);
+    const target = Math.max(0, Math.min(order.length - 1, index + delta));
+    if (index < 0 || target === index) return;
+    order.splice(index, 1);
+    order.splice(target, 0, layoutSelectedId);
+    updateLayoutOrder(parentKey, order);
+  }
+
+  function nudgeLayoutSelected(dx, dy) {
+    const el = layoutCandidateById(layoutSelectedId);
+    if (!el) return;
+    if (!layoutDraft.offsets) layoutDraft.offsets = {};
+    const old = layoutDraft.offsets[layoutSelectedId] || {x:0,y:0};
+    layoutDraft.offsets[layoutSelectedId] = {
+      x: Math.max(-600, Math.min(600, Number(old.x || 0) + dx)),
+      y: Math.max(-600, Math.min(600, Number(old.y || 0) + dy))
+    };
+    applyLayoutDraftToDom();
+    updateLayoutDesignerSelection();
+  }
+
+  function resetLayoutSelected() {
+    if (!layoutSelectedId) return;
+    delete layoutDraft.offsets?.[layoutSelectedId];
+    Object.keys(layoutDraft.orders || {}).forEach(key => {
+      layoutDraft.orders[key] = (layoutDraft.orders[key] || []).filter(id => id !== layoutSelectedId);
+      if (!layoutDraft.orders[key].length) delete layoutDraft.orders[key];
+    });
+    applyLayoutDraftToDom();
+    updateLayoutDesignerSelection();
+  }
+
+  function cleanupLayoutDesigner() {
+    layoutController?.abort();
+    layoutController = null;
+    layoutEditing = false;
+    layoutDraggedId = null;
+    document.body.classList.remove('cms-layout-mode');
+    document.getElementById('cms-layout-designer')?.remove();
+    layoutCandidates().forEach(el => {
+      el.removeAttribute('draggable');
+      el.classList.remove('cms-layout-editable','cms-layout-selected','cms-layout-dragging');
+    });
+    refreshToolbar();
+  }
+
+  async function cancelLayoutDesigner() {
+    cleanupLayoutDesigner();
+    if (typeof window.render === 'function') await window.render();
+  }
+
+  async function saveLayoutDesigner() {
+    if (!has('page.layout.manage')) return;
+    try {
+      await window.MattCMS.save(`page_layout:${currentRoute()}`, layoutDraft, { backupLabel:`AUTO: przed zmianą układu — ${currentRoute()}` });
+      cleanupLayoutDesigner();
+      notify('Układ strony został zapisany.');
+      if (typeof window.render === 'function') await window.render();
+    } catch (error) { notify(`Nie udało się zapisać układu: ${error.message}`, 'error'); }
+  }
+
+  async function resetPageLayout() {
+    if (!has('page.layout.manage')) return;
+    if (!confirm('Przywrócić domyślne położenie elementów na tej podstronie? Przed zmianą zostanie wykonany backup.')) return;
+    try {
+      layoutDraft = normalizeLayoutDraft({});
+      await window.MattCMS.save(`page_layout:${currentRoute()}`, layoutDraft, { backupLabel:`AUTO: przed resetem układu — ${currentRoute()}` });
+      cleanupLayoutDesigner();
+      notify('Przywrócono domyślny układ tej podstrony.');
+      if (typeof window.render === 'function') await window.render();
+    } catch (error) { notify(`Nie udało się zresetować układu: ${error.message}`, 'error'); }
+  }
+
+  function startLayoutDesigner() {
+    if (!has('page.layout.manage') || layoutEditing) return;
+    layoutEditing = true;
+    layoutSelectedId = null;
+    layoutDraft = normalizeLayoutDraft(window.MattCMS?.get(`page_layout:${currentRoute()}`, {}) || {});
+    layoutController = new AbortController();
+    const signal = layoutController.signal;
+    document.body.classList.add('cms-layout-mode');
+
+    const panel = document.createElement('aside');
+    panel.id = 'cms-layout-designer';
+    panel.innerHTML = `
+      <div class="cms-layout-panel-head"><div><small>TRYB GRAFICZNY</small><strong>PROJEKTOWANIE STRONY</strong></div><button type="button" data-layout-close>×</button></div>
+      <p class="cms-layout-help">Kliknij element, aby go zaznaczyć. Kafelki w tej samej siatce możesz przeciągać. Strzałkami ustawisz dokładne przesunięcie, np. przycisku Twitch.</p>
+      <div class="cms-layout-selected-box"><small>WYBRANY ELEMENT</small><strong data-layout-selected>Kliknij element na stronie</strong><span data-layout-position>Brak zaznaczenia</span></div>
+      <div class="cms-layout-control-title">POŁOŻENIE</div>
+      <div class="cms-layout-nudge-grid">
+        <button type="button" data-layout-nudge="0,-8">↑</button>
+        <button type="button" data-layout-nudge="-8,0">←</button>
+        <button type="button" data-layout-nudge="8,0">→</button>
+        <button type="button" data-layout-nudge="0,8">↓</button>
+      </div>
+      <div class="cms-layout-control-title">KOLEJNOŚĆ W SIATCE</div>
+      <div class="cms-layout-order-actions"><button type="button" data-layout-order="-1">← WCZEŚNIEJ</button><button type="button" data-layout-order="1">PÓŹNIEJ →</button></div>
+      <button type="button" class="cms-layout-reset-element" data-layout-reset-element>RESETUJ WYBRANY ELEMENT</button>
+      <div class="cms-layout-panel-actions"><button type="button" data-layout-cancel>ANULUJ</button><button type="button" data-layout-reset-page>DOMYŚLNY UKŁAD</button><button type="button" class="cms-primary" data-layout-save>ZAPISZ UKŁAD</button></div>`;
+    document.body.appendChild(panel);
+
+    const candidates = layoutCandidates();
+    candidates.forEach(el => {
+      el.classList.add('cms-layout-editable');
+      const group = layoutGroupElements(el.dataset.cmsLayoutParent);
+      const canReorder = group.length > 1 && /(grid|flex)/.test(getComputedStyle(el.parentElement).display);
+      if (canReorder) el.setAttribute('draggable','true');
+    });
+
+    document.addEventListener('click', e => {
+      const panelTarget = e.target.closest('#cms-layout-designer,#cms-admin-toolbar');
+      if (panelTarget) return;
+      const el = e.target.closest('[data-cms-layout-id]');
+      if (!el) return;
+      e.preventDefault(); e.stopPropagation();
+      layoutSelectedId = el.dataset.cmsLayoutId;
+      updateLayoutDesignerSelection();
+    }, { capture:true, signal });
+
+    candidates.forEach(el => {
+      el.addEventListener('dragstart', e => {
+        layoutDraggedId = el.dataset.cmsLayoutId;
+        layoutSelectedId = layoutDraggedId;
+        el.classList.add('cms-layout-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', layoutDraggedId);
+        updateLayoutDesignerSelection();
+      }, { signal });
+      el.addEventListener('dragend', () => { el.classList.remove('cms-layout-dragging'); layoutDraggedId = null; }, { signal });
+      el.addEventListener('dragover', e => {
+        const dragged = layoutCandidateById(layoutDraggedId);
+        if (!dragged || dragged.parentElement !== el.parentElement || dragged === el) return;
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      }, { signal });
+      el.addEventListener('drop', e => {
+        const dragged = layoutCandidateById(layoutDraggedId);
+        if (!dragged || dragged.parentElement !== el.parentElement || dragged === el) return;
+        e.preventDefault();
+        const parentKey = el.dataset.cmsLayoutParent;
+        const order = layoutCurrentOrder(parentKey);
+        const from = order.indexOf(dragged.dataset.cmsLayoutId);
+        const to = order.indexOf(el.dataset.cmsLayoutId);
+        if (from < 0 || to < 0) return;
+        order.splice(from,1);
+        order.splice(to,0,dragged.dataset.cmsLayoutId);
+        updateLayoutOrder(parentKey, order);
+      }, { signal });
+    });
+
+    panel.querySelector('[data-layout-close]').addEventListener('click', cancelLayoutDesigner, { signal });
+    panel.querySelector('[data-layout-cancel]').addEventListener('click', cancelLayoutDesigner, { signal });
+    panel.querySelector('[data-layout-save]').addEventListener('click', saveLayoutDesigner, { signal });
+    panel.querySelector('[data-layout-reset-page]').addEventListener('click', resetPageLayout, { signal });
+    panel.querySelector('[data-layout-reset-element]').addEventListener('click', resetLayoutSelected, { signal });
+    panel.querySelectorAll('[data-layout-nudge]').forEach(btn => btn.addEventListener('click', () => {
+      const [dx,dy] = btn.dataset.layoutNudge.split(',').map(Number); nudgeLayoutSelected(dx,dy);
+    }, { signal }));
+    panel.querySelectorAll('[data-layout-order]').forEach(btn => btn.addEventListener('click', () => moveLayoutSelectedOrder(Number(btn.dataset.layoutOrder)), { signal }));
+
+    applyLayoutDraftToDom();
+    updateLayoutDesignerSelection();
+    refreshToolbar();
+    notify(`Tryb projektowania: wykryto ${candidates.length} elementów do ustawienia.`);
+  }
+
   function ensureToolbar() {
     if (toolbar) return toolbar;
     toolbar = document.createElement('div');
     toolbar.id = 'cms-admin-toolbar';
     toolbar.innerHTML = `
-      <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">›</button>
+      <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek w dowolne miejsce. Dwuklik przywraca położenie domyślne.">⠿</button>
+      <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
+      <button type="button" data-cms-action="layout">✣ UKŁAD</button>
       <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
       <button type="button" data-cms-action="callouts" hidden>▰ KOMUNIKATY</button>
@@ -254,10 +580,12 @@
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
     document.body.appendChild(toolbar);
+    bindToolbarDrag();
     applyToolbarState();
     toolbar.addEventListener('click', e => {
       const action = e.target.closest('[data-cms-action]')?.dataset.cmsAction;
       if (action === 'toggle-toolbar') { setToolbarCollapsed(!isToolbarCollapsed()); return; }
+      if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
       if (action === 'inline') startInlineEdit();
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
@@ -283,7 +611,7 @@
     if (roleTitle) roleTitle.textContent = window.currentUserRole === 'admin' ? 'EDYCJA STRONY' : 'NARZĘDZIA MODERATORA';
     const config = configForRoute(currentRoute());
     const configBtn = $('[data-cms-action="config"]', toolbar);
-    configBtn.hidden = !config || !canConfig(config) || inlineEditing;
+    configBtn.hidden = !config || !canConfig(config) || inlineEditing || layoutEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
     const calloutBtn = $('[data-cms-action="callouts"]', toolbar);
     const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
@@ -291,15 +619,17 @@
     const calloutCount = baseCalloutCount + customCalloutCount;
     if (calloutBtn) {
       // Kreator dymków jest dostępny na KAŻDEJ podstronie, nawet gdy w GitHubie nie ma jeszcze żadnego dymku.
-      calloutBtn.hidden = inlineEditing || !has('page.callouts.manage');
+      calloutBtn.hidden = inlineEditing || layoutEditing || !has('page.callouts.manage');
       calloutBtn.textContent = `▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}`;
     }
+    const layoutBtn = $('[data-cms-action="layout"]', toolbar);
+    if (layoutBtn) layoutBtn.hidden = inlineEditing || layoutEditing || !has('page.layout.manage');
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
-    if (imagesBtn) imagesBtn.hidden = inlineEditing || currentRoute() === 'home' || !has('page.images.manage');
-    $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || !has('page.text.edit');
-    $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || !any('site.navigation.manage','site.links.manage');
-    $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing || !has('github.restore');
-    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || !has('backups.view');
+    if (imagesBtn) imagesBtn.hidden = inlineEditing || layoutEditing || currentRoute() === 'home' || !has('page.images.manage');
+    $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || layoutEditing || !has('page.text.edit');
+    $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
+    $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing || layoutEditing || !has('github.restore');
+    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || layoutEditing || !has('backups.view');
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
     applyToolbarState();
@@ -1839,4 +2169,6 @@
   window.addEventListener('hashchange', () => { if (inlineEditing) finishInlineEdit(); setTimeout(refreshToolbar, 0); });
   document.addEventListener('DOMContentLoaded', () => setTimeout(refreshToolbar, 0));
   setTimeout(refreshToolbar, 600);
+  window.addEventListener('resize', () => { if (toolbar) applyToolbarPosition(); });
+
 })();

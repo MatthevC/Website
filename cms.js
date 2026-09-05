@@ -783,6 +783,121 @@
     }
   }
 
+  function layoutSlug(value) {
+    return String(value || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70) || 'element';
+  }
+
+  function layoutElementLabel(el) {
+    if (!el) return 'Element';
+    if (el.id === 'header-twitch-link') return 'Przycisk TWITCH.TV';
+    const heading = el.matches('h1,h2,h3,h4,strong') ? el : el.querySelector('h1,h2,h3,h4,.reward-card-title,.rule-card-label,strong');
+    const aria = el.getAttribute?.('aria-label') || el.getAttribute?.('title') || '';
+    const text = String(heading?.textContent || aria || el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (text) return text.slice(0, 90);
+    const cls = String(el.className || '').split(/\s+/).filter(Boolean)[0] || el.tagName.toLowerCase();
+    return cls.replace(/[-_]+/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
+  }
+
+  function layoutSemanticClass(el) {
+    const tokens = String(el?.className || '').split(/\s+/).filter(Boolean);
+    return tokens.find(token => /(?:^|-)(?:card|callout|notice|bubble|tile|hero|hero-copy|side-note|feature|info-box|intro-box|download-box|cta|button|btn)$/.test(token))
+      || tokens.find(token => /(?:card|callout|notice|bubble|tile|hero|feature|button|btn)/i.test(token))
+      || tokens[0] || el?.tagName?.toLowerCase() || 'element';
+  }
+
+  function isLayoutCandidate(el) {
+    if (!el || !(el instanceof HTMLElement)) return false;
+    if (el.closest('#cms-admin-toolbar,.cms-modal-backdrop,#cms-layout-designer,.user-menu,.profile-modal,.account-management-modal')) return false;
+    if (el.id === 'header-twitch-link') return true;
+    if (!el.closest('#app')) return false;
+    if (el.tagName === 'ARTICLE') return true;
+    const tokens = String(el.className || '').split(/\s+/).filter(Boolean);
+    const semantic = tokens.some(token => /(?:^|-)(?:card|callout|notice|bubble|tile|hero-copy|side-note|feature-card|info-box|intro-box|download-box|cta)$/.test(token));
+    const cta = (el.matches('a,button')) && tokens.some(token => /(?:button|btn|cta)$/i.test(token));
+    const special = el.matches('.discord-channel-section,.twitch-download-box,.twitch-official-mini,.rewards-side-note,.rewards-hero-copy,[data-cms-callout-id],[data-custom-callout-id]');
+    if (!(semantic || cta || special)) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width >= 45 && rect.height >= 22;
+  }
+
+  function layoutParentKey(parent, path = 'home') {
+    if (!parent) return 'root';
+    if (parent.id) return `id:${parent.id}`;
+    const route = routeKey(path);
+    const section = parent.closest('section[id],section,.page-panel,.content-wrap') || parent;
+    const heading = section.querySelector?.(':scope > h1,:scope > h2,:scope > h3,h1,h2,h3')?.textContent || '';
+    const cls = String(parent.className || '').split(/\s+/).filter(Boolean).slice(0, 3).join('-') || parent.tagName.toLowerCase();
+    return `${route}:${layoutSlug(cls)}:${layoutSlug(heading || parent.getAttribute?.('aria-label') || '')}`;
+  }
+
+  function layoutElements(path = 'home') {
+    const root = document.getElementById('app');
+    const raw = [];
+    const twitch = document.getElementById('header-twitch-link');
+    if (twitch) raw.push(twitch);
+    if (root) raw.push(...root.querySelectorAll('article,[class],[data-cms-callout-id],[data-custom-callout-id]'));
+    const candidates = raw.filter(isLayoutCandidate);
+    const counts = new Map();
+    candidates.forEach((el) => {
+      const explicit = el.id ? `id-${layoutSlug(el.id)}` : '';
+      const dataKey = el.dataset.streamerLogin || el.dataset.rewardFamily || el.dataset.cmsCalloutId || el.dataset.customCalloutId || '';
+      const base = explicit || `${layoutSlug(layoutSemanticClass(el))}-${layoutSlug(dataKey || layoutElementLabel(el))}`;
+      const n = (counts.get(base) || 0) + 1;
+      counts.set(base, n);
+      const key = `${base}${n > 1 ? `-${n}` : ''}`;
+      el.dataset.cmsLayoutId = key;
+      el.dataset.cmsLayoutLabel = layoutElementLabel(el);
+      el.dataset.cmsLayoutParent = layoutParentKey(el.parentElement, path);
+    });
+    return candidates;
+  }
+
+  function applyPageLayout(path = 'home') {
+    const p = routeKey(path);
+    const data = get(`page_layout:${p}`, {}) || {};
+    const elements = layoutElements(p);
+    const byId = new Map(elements.map(el => [el.dataset.cmsLayoutId, el]));
+
+    elements.forEach(el => {
+      el.style.removeProperty('order');
+      el.style.removeProperty('translate');
+      el.classList.remove('cms-layout-applied');
+    });
+
+    Object.entries(data.offsets || {}).forEach(([id, pos]) => {
+      const el = byId.get(id);
+      if (!el) return;
+      const x = Math.max(-600, Math.min(600, Number(pos?.x || 0)));
+      const y = Math.max(-600, Math.min(600, Number(pos?.y || 0)));
+      if (x || y) {
+        el.style.translate = `${x}px ${y}px`;
+        el.classList.add('cms-layout-applied');
+      }
+    });
+
+    const groups = new Map();
+    elements.forEach(el => {
+      const key = el.dataset.cmsLayoutParent;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(el);
+    });
+
+    Object.entries(data.orders || {}).forEach(([parentKey, ids]) => {
+      const group = groups.get(parentKey) || [];
+      if (group.length < 2 || !Array.isArray(ids)) return;
+      const parent = group[0]?.parentElement;
+      const display = parent ? getComputedStyle(parent).display : '';
+      if (!/(grid|flex)/.test(display)) return;
+      const rank = new Map(ids.map((id, i) => [id, i]));
+      group.forEach((el, index) => {
+        const order = rank.has(el.dataset.cmsLayoutId) ? rank.get(el.dataset.cmsLayoutId) : ids.length + index;
+        el.style.order = String(order);
+      });
+    });
+  }
+
   function applyRoute(path) {
     applyGlobal();
     applyStructured(path);
@@ -791,12 +906,14 @@
     applyPageImages(path);
     applyPageBanner(path);
     applyCustomPageCallouts(path);
+    applyPageLayout(path);
   }
 
   window.MattCMS = {
     ready, get, save, remove, createBackup, createManualBackup, listBackups, getBackup, deleteBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
+    layoutElements, layoutParentKey, layoutElementLabel, applyPageLayout,
     pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts,
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
