@@ -1,1 +1,0 @@
-Dodano obsługę oczekującej zmiany nicku: pending_username. Należy dodać proces potwierdzania po stronie Supabase Edge Function lub triggera.
