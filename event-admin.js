@@ -1,6 +1,7 @@
-// Backup bezpieczeństwa przed każdą zmianą eventów. Funkcja działa tylko dla administratora.
+// Backup bezpieczeństwa przed każdą zmianą eventów. Działa dla administratora oraz moderatora z odpowiednim uprawnieniem.
+function mattEventCan(permission){ return window.currentUserIsAdmin === true || window.mattCan?.(permission) === true; }
 async function mattEventSafetyBackup(label){
-  if(window.currentUserIsAdmin !== true) throw new Error('Brak uprawnień administratora.');
+  if(!['events.create','events.edit','events.delete'].some(mattEventCan)) throw new Error('Brak uprawnień do zarządzania eventami.');
   if(!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny. Uruchom CMS_UPDATE_AUDIT_BACKUPS.sql w Supabase.');
   return window.MattCMS.createBackup(label);
 }
@@ -41,35 +42,16 @@ function mattFriendlyImageLabel(file,title){
 
 (() => {
 
-let isAdmin = false;
+let canCreateEvent = false;
+
+function refreshEventCreateAccess(){
+  canCreateEvent = mattEventCan('events.create');
+  if(canCreateEvent) showAddButton(); else hideAddButton();
+}
 
 async function checkAdmin(){
-  try{
-    const {data:{session}} = await supabaseClient.auth.getSession();
-
-    if(!session){
-      isAdmin=false;
-      hideAddButton();
-      return;
-    }
-
-    const {data:profile}=await supabaseClient
-      .from("profiles")
-      .select("role")
-      .eq("email",session.user.email)
-      .maybeSingle();
-
-    isAdmin = profile?.role === "admin";
-    window.currentUserIsAdmin = isAdmin;
-    window.dispatchEvent(new CustomEvent("matt-auth-change",{detail:{isAdmin}}));
-
-    if(isAdmin) showAddButton();
-    else hideAddButton();
-
-  }catch(e){
-    console.error("Admin check error",e);
-    hideAddButton();
-  }
+  // Uprawnienia ładuje auth-ui.js. To wywołanie tylko synchronizuje widok.
+  refreshEventCreateAccess();
 }
 
 function getAddButton(){
@@ -105,7 +87,7 @@ function initEvents(){
    if(btn){
       e.preventDefault();
 
-      if(!isAdmin){
+      if(!canCreateEvent){
         return;
       }
 
@@ -122,8 +104,8 @@ function initEvents(){
  if(save){
  save.onclick=async()=>{
 
-   if(!isAdmin){
-     alert("Brak uprawnień");
+   if(!mattEventCan('events.create')){
+     alert("Brak uprawnień do dodawania eventów");
      return;
    }
 
@@ -225,9 +207,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 
  // Aktualizacja stanu po zmianie logowania bez ponownego odpytywania Supabase.
  // Nie wywołujemy tutaj checkAdmin(), bo checkAdmin sam emituje matt-auth-change.
- window.addEventListener("matt-auth-change",(event)=>{
-   isAdmin = event.detail?.isAdmin === true;
-   if(isAdmin) showAddButton(); else hideAddButton();
+ window.addEventListener("matt-auth-change",()=>{
+   refreshEventCreateAccess();
  });
 });
 
@@ -250,12 +231,11 @@ document.addEventListener("click", function(e){
 
 // Edycja eventów dla administratora
 (() => {
-function admin(){ 
- return window.currentUserIsAdmin === true; 
-}
+function canEditEvent(){ return mattEventCan('events.edit'); }
+function canDeleteEvent(){ return mattEventCan('events.delete'); }
 
 async function openEdit(id){
- if(!admin()) return;
+ if(!canEditEvent()) return;
  const editEventModal = document.getElementById("editEventModal");
  const editEventId = document.getElementById("editEventId");
  const editEventTitle = document.getElementById("editEventTitle");
@@ -321,7 +301,7 @@ document.addEventListener("click",async e=>{
  const del=e.target.closest(".delete-event-btn");
  if(del){
   e.preventDefault(); e.stopPropagation();
-  if(!admin()) return;
+  if(!canDeleteEvent()) return;
   const title=del.dataset.title || "ten event";
   if(!confirm(`Czy na pewno usunąć event „${title}”? Operację można później cofnąć z backupu.`)) return;
   del.disabled=true;
@@ -340,16 +320,10 @@ document.addEventListener("click",async e=>{
  }
 });
 function updateEditButtons(){
- const allowed = window.currentUserIsAdmin === true;
- document.querySelectorAll(".edit-event-btn, .delete-event-btn").forEach(x=>{
-  if(allowed){
-    x.style.display="inline-flex";
-    x.hidden=false;
-  }else{
-    x.style.display="none";
-    x.hidden=true;
-  }
- });
+ const editAllowed = canEditEvent();
+ const deleteAllowed = canDeleteEvent();
+ document.querySelectorAll('.edit-event-btn').forEach(x=>{ x.style.display=editAllowed?'inline-flex':'none'; x.hidden=!editAllowed; });
+ document.querySelectorAll('.delete-event-btn').forEach(x=>{ x.style.display=deleteAllowed?'inline-flex':'none'; x.hidden=!deleteAllowed; });
 }
 window.updateEditButtons=updateEditButtons;
 window.addEventListener("matt-auth-change",updateEditButtons);
@@ -360,7 +334,7 @@ document.getElementById("closeEditEvent")?.addEventListener("click",()=>{
  if(modal) modal.style.display="none";
 });
 document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
- if(!admin()) return;
+ if(!canEditEvent()) return;
  const msg=document.getElementById("editEventMsg");
  try{
   await mattEventSafetyBackup(`AUTO: przed edycją eventu — ${document.getElementById('editEventTitle')?.value || 'event'}`);
@@ -421,11 +395,12 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 function renderEditButtons(){
- document.querySelectorAll(".detailEditEventSlot").forEach(slot=>{
-  if(window.currentUserIsAdmin){
-   const title=(slot.dataset.eventTitle||"").replace(/"/g,"&quot;");
-   slot.innerHTML=`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button><button class="delete-event-btn cms-event-delete" data-id="${slot.dataset.eventId}" data-title="${title}">🗑 USUŃ EVENT</button>`;
-  } else slot.innerHTML="";
+ const editAllowed=mattEventCan('events.edit');
+ const deleteAllowed=mattEventCan('events.delete');
+ document.querySelectorAll('.detailEditEventSlot').forEach(slot=>{
+  if(!editAllowed && !deleteAllowed){ slot.innerHTML=''; return; }
+  const title=(slot.dataset.eventTitle||'').replace(/"/g,'&quot;');
+  slot.innerHTML=`${editAllowed?`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button>`:''}${deleteAllowed?`<button class="delete-event-btn cms-event-delete" data-id="${slot.dataset.eventId}" data-title="${title}">🗑 USUŃ EVENT</button>`:''}`;
  });
 }
 window.addEventListener("matt-auth-change",renderEditButtons);

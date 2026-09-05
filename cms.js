@@ -46,18 +46,28 @@
     return cache.has(key) ? cache.get(key) : fallback;
   }
 
-  function requireAdmin() {
-    if (window.currentUserIsAdmin !== true) throw new Error('Brak uprawnień administratora.');
+  function can(permission) {
+    return window.mattCan?.(permission) === true || window.currentUserIsAdmin === true;
+  }
+
+  function requirePermission(permission, message = 'Brak wymaganego uprawnienia.') {
+    if (!can(permission)) throw new Error(message);
+  }
+
+  function requireAuthenticatedEditor() {
+    if (window.currentUserIsAdmin === true) return;
+    if (window.currentUserRole !== 'moderator') throw new Error('Brak uprawnień do edycji strony.');
   }
 
   async function createBackup(label = 'Backup automatyczny', options = {}) {
-    requireAdmin();
     const type = options?.type === 'manual' ? 'manual' : 'automatic';
+    if (type === 'manual') requirePermission('backups.manual.create', 'Brak uprawnienia do tworzenia ręcznych backupów.');
+    else requireAuthenticatedEditor();
     const { data, error } = await supabaseClient.rpc('matt_create_backup_v2', { p_label: label, p_type: type });
     if (error) {
       const raw = String(error.message || 'Nieznany błąd');
       if (raw.includes('matt_create_backup_v2') || raw.includes('schema cache') || error.code === 'PGRST202') {
-        throw new Error('Brakuje aktualizacji backupów i logów w Supabase. Uruchom plik CMS_UPDATE_AUDIT_BACKUPS.sql w SQL Editorze, a potem odśwież stronę.');
+        throw new Error('Brakuje aktualizacji ról / backupów w Supabase. Uruchom CMS_UPDATE_ROLES_PERMISSIONS.sql, a potem odśwież stronę.');
       }
       throw new Error(`Nie udało się utworzyć backupu: ${raw}`);
     }
@@ -69,29 +79,28 @@
   }
 
   async function save(key, data, options = {}) {
-    requireAdmin();
+    requireAuthenticatedEditor();
     if (options.backup !== false) {
       await createBackup(options.backupLabel || `AUTO: przed zmianą CMS — ${key}`);
     }
-    const payload = { key, data, updated_at: new Date().toISOString() };
-    const { error } = await supabaseClient.from('cms_data').upsert(payload, { onConflict: 'key' });
+    const { error } = await supabaseClient.rpc('matt_cms_save', { p_key: key, p_data: data });
     if (error) throw error;
     cache.set(key, data);
     return data;
   }
 
   async function remove(key, options = {}) {
-    requireAdmin();
+    requirePermission('github.restore', 'Brak uprawnienia do przywracania wersji z GitHuba.');
     if (options.backup !== false) {
       await createBackup(options.backupLabel || `AUTO: przed przywróceniem z GitHuba — ${key}`);
     }
-    const { error } = await supabaseClient.from('cms_data').delete().eq('key', key);
+    const { error } = await supabaseClient.rpc('matt_cms_remove', { p_key: key });
     if (error) throw error;
     cache.delete(key);
   }
 
   async function listBackups(type = null) {
-    requireAdmin();
+    requirePermission('backups.view', 'Brak uprawnienia do podglądu backupów.');
     let query = supabaseClient
       .from('cms_backups')
       .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type')
@@ -105,7 +114,7 @@
   }
 
   async function getBackup(id) {
-    requireAdmin();
+    requirePermission('backups.view', 'Brak uprawnienia do podglądu backupów.');
     const { data, error } = await supabaseClient
       .from('cms_backups')
       .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type,snapshot')
@@ -116,21 +125,20 @@
   }
 
   async function deleteBackup(id) {
-    requireAdmin();
     const { data, error } = await supabaseClient.rpc('matt_delete_backup', { p_backup_id: Number(id) });
     if (error) throw error;
     return data;
   }
 
   async function restoreBackup(id) {
-    requireAdmin();
+    requirePermission('backups.restore', 'Brak uprawnienia do przywracania backupów.');
     const { data, error } = await supabaseClient.rpc('matt_restore_backup', { p_backup_id: Number(id) });
     if (error) throw error;
     return data;
   }
 
   async function restoreSnapshot(snapshot, label = 'Przywrócenie z pliku') {
-    requireAdmin();
+    requirePermission('backups.import', 'Brak uprawnienia do importu backupu JSON.');
     const { data, error } = await supabaseClient.rpc('matt_restore_snapshot', { p_snapshot: snapshot, p_label: label });
     if (error) throw error;
     return data;

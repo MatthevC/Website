@@ -3002,7 +3002,7 @@ function eventCard(event) {
         <p>${escapeHtml(event.excerpt)}</p>
         <div class="event-actions">
           <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>
-          ${event.fallback ? "" : `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}" ${window.currentUserIsAdmin === true ? "" : "hidden"}>✎ EDYTUJ POST</button><button class="delete-event-btn" data-id="${escapeHtml(event.id)}" data-title="${escapeHtml(event.title)}" ${window.currentUserIsAdmin === true ? "" : "hidden"}>🗑 USUŃ</button>`}
+          ${event.fallback ? "" : `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}" ${(window.currentUserIsAdmin === true || window.mattCan?.('events.edit') === true) ? "" : "hidden"}>✎ EDYTUJ POST</button><button class="delete-event-btn" data-id="${escapeHtml(event.id)}" data-title="${escapeHtml(event.title)}" ${(window.currentUserIsAdmin === true || window.mattCan?.('events.delete') === true) ? "" : "hidden"}>🗑 USUŃ</button>`}
         </div>
 
       </div>
@@ -3241,12 +3241,13 @@ function setupDownloadsPage() {
   });
 }
 
-function updateEventAdminButton(isAdmin) {
+function updateEventAdminButton() {
   const btn = document.getElementById("addEventButton");
   if (!btn) return;
-  btn.hidden = !isAdmin;
-  btn.style.display = isAdmin ? "inline-flex" : "none";
-  btn.style.visibility = isAdmin ? "visible" : "hidden";
+  const allowed = window.currentUserIsAdmin === true || window.mattCan?.('events.create') === true;
+  btn.hidden = !allowed;
+  btn.style.display = allowed ? "inline-flex" : "none";
+  btn.style.visibility = allowed ? "visible" : "hidden";
 }
 
 async function renderEvents() {
@@ -3570,7 +3571,7 @@ async function render() {
     `;
     await renderEvents();
     if (window.MattCMS) window.MattCMS.applyRoute(path);
-    updateEventAdminButton(window.currentUserIsAdmin === true);
+    updateEventAdminButton();
     updateLinks();
     setupContactForm();
     setupImagePreview();
@@ -3908,7 +3909,7 @@ document.addEventListener("click", (event) => {
 
 window.addEventListener("matt-auth-change", (e) => {
   window.currentUserIsAdmin = e.detail?.isAdmin === true;
-  updateEventAdminButton(window.currentUserIsAdmin);
+  updateEventAdminButton();
 });
 
 

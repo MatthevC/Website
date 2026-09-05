@@ -1,6 +1,92 @@
 const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 
 
+const MATT_PERMISSION_GROUPS = [
+  { name: "EVENTY", items: [
+    ["events.create","Dodawanie eventów","Tworzenie nowych eventów i wgrywanie grafik."],
+    ["events.edit","Edycja eventów","Zmiana istniejących eventów i ich grafik."],
+    ["events.delete","Usuwanie eventów","Usuwanie istniejących eventów."]
+  ]},
+  { name: "PLIKI DO POBRANIA", items: [
+    ["downloads.create","Dodawanie plików","Dodawanie nowych plików z dysku."],
+    ["downloads.edit","Edycja plików","Zmiana danych i podmiana plików."],
+    ["downloads.delete","Usuwanie plików","Usuwanie własnych wpisów i ukrywanie plików z GitHuba."],
+    ["downloads.reorder","Zmiana kolejności","Przestawianie kolejności plików."]
+  ]},
+  { name: "STRONA / TREŚCI", items: [
+    ["page.text.edit","Edycja tekstów","Wizualna edycja tekstów na każdej podstronie."],
+    ["page.callouts.manage","Komunikaty","Dodawanie, edycja i usuwanie komunikatów."],
+    ["page.images.manage","Grafiki podstron","Zmiana obrazów i grafik nagłówkowych."],
+    ["home.hero.manage","Grafika powitalna","Zmiana głównej grafiki strony startowej."],
+    ["site.navigation.manage","Menu / kategorie","Edycja kategorii i podkategorii w menu."],
+    ["site.links.manage","Linki social media","Zmiana linków Twitch, Discord, Instagram i TikTok."],
+    ["github.restore","Cofanie do wersji z GitHuba","Usuwanie nadpisań CMS i przywracanie wersji bazowej."]
+  ]},
+  { name: "REGULAMINY / MODERACJA / STREAMERZY", items: [
+    ["rules.manage","Regulaminy","Dodawanie, edycja, usuwanie i kolejność zasad."],
+    ["streamers.manage","Polecani streamerzy","Pełna edycja listy polecanych streamerów."],
+    ["streamers.autofill","Automatyczna konfiguracja Twitch","Pobieranie danych streamera przez Twitch API."],
+    ["moderation.people.manage","Osoby w moderacji","Edycja składu moderacji i zdjęć."],
+    ["moderation.benefits.manage","Korzyści moderacji","Edycja listy korzyści."],
+    ["commands.manage","Komendy","Edycja komend widza, VIP i moderacji."]
+  ]},
+  { name: "DISCORD / KONTAKT", items: [
+    ["discord.channels.manage","Opis kanałów Discord","Kategorie, kanały, opisy i kolejność."],
+    ["discord.join.manage","Dołączanie / podgląd Discorda","Edycja podglądu i komunikatów Discorda."],
+    ["contact.topics.manage","Wnioski / Kontakt","Edycja tematów formularza kontaktowego."]
+  ]},
+  { name: "BACKUPY", items: [
+    ["backups.view","Dostęp do backupów","Podgląd i pobieranie kopii bezpieczeństwa."],
+    ["backups.manual.create","Tworzenie ręcznych backupów","Tworzenie zapisów w kategorii Ręczne zapisy."],
+    ["backups.restore","Przywracanie backupów","Przywracanie kopii zapisanych na liście."],
+    ["backups.import","Import backupu JSON","Wczytywanie kopii bezpieczeństwa z dysku."],
+    ["backups.delete.automatic","Usuwanie automatycznych zapisów","Ręczne usuwanie automatycznych kopii."],
+    ["backups.delete.manual","Usuwanie ręcznych zapisów","Usuwanie ręcznych kopii bezpieczeństwa."]
+  ]},
+  { name: "KONTROLA", items: [
+    ["audit.view","Logi zmian","Dostęp do historii działań z ostatnich 14 dni."]
+  ]}
+];
+
+window.currentUserRole = "guest";
+window.currentUserPermissions = [];
+window.currentUserIsAdmin = false;
+window.mattCan = function(permission) {
+  if (window.currentUserIsAdmin === true) return true;
+  return Array.isArray(window.currentUserPermissions) && window.currentUserPermissions.includes(permission);
+};
+window.mattCanAny = function(...permissions) {
+  return permissions.flat().some(permission => window.mattCan(permission));
+};
+
+function mattApplyAccess(role = "user", permissions = []) {
+  const normalizedRole = String(role || "user").toLowerCase();
+  const normalizedPermissions = Array.isArray(permissions) ? [...new Set(permissions.map(String))] : [];
+  window.currentUserRole = normalizedRole;
+  window.currentUserPermissions = normalizedPermissions;
+  window.currentUserIsAdmin = normalizedRole === "admin";
+  window.dispatchEvent(new CustomEvent("matt-auth-change", {
+    detail: { isAdmin: window.currentUserIsAdmin, role: normalizedRole, permissions: normalizedPermissions }
+  }));
+}
+
+async function mattLoadOwnAccess(profile) {
+  try {
+    const { data, error } = await supabaseClient.rpc("matt_get_my_access");
+    if (error) throw error;
+    const access = data && typeof data === "object" ? data : {};
+    mattApplyAccess(access.role || profile?.role || "user", Array.isArray(access.permissions) ? access.permissions : []);
+  } catch (error) {
+    // Kompatybilność przed uruchomieniem migracji v2.5.1.
+    const fallbackRole = String(profile?.role || "user").toLowerCase();
+    mattApplyAccess(fallbackRole, []);
+    if (fallbackRole === "moderator") {
+      console.warn("[MATT ACCESS] Brakuje migracji ról/uprawnień v2.5.1:", error?.message || error);
+    }
+  }
+}
+
+
 function mattAuditEscape(value = "") {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -12,6 +98,7 @@ function mattAuditEscape(value = "") {
 
 function mattAuditCategory(action = "") {
   const a = String(action || "").toLowerCase();
+  if (a.startsWith("account.") || a.startsWith("access.")) return "KONTA / UPRAWNIENIA";
   if (a.startsWith("profile.") || a.startsWith("auth.")) return "PROFIL / KONTO";
   if (a.startsWith("event.")) return "EVENTY";
   if (a.startsWith("backup.")) return "BACKUPY";
@@ -35,7 +122,9 @@ function mattAuditActionLabel(action = "") {
     "backup.automatic.created": "Utworzono automatyczny zapis",
     "backup.manual.created": "Utworzono ręczny zapis",
     "backup.automatic.deleted": "Usunięto automatyczny zapis",
-    "backup.manual.deleted": "Usunięto ręczny zapis"
+    "backup.manual.deleted": "Usunięto ręczny zapis",
+    "account.created": "Utworzono konto",
+    "access.changed": "Zmieniono rolę / uprawnienia"
   };
   return labels[action] || String(action || "Zdarzenie");
 }
@@ -49,7 +138,7 @@ function mattAuditFormatDate(value) {
 }
 
 async function mattOpenAuditLogs() {
-  if (window.currentUserIsAdmin !== true) return;
+  if (!window.mattCan?.("audit.view")) return;
 
   let modal = document.getElementById("adminAuditModal");
   if (!modal) {
@@ -59,7 +148,7 @@ async function mattOpenAuditLogs() {
     modal.innerHTML = `
       <div class="audit-box" role="dialog" aria-modal="true" aria-labelledby="auditTitle">
         <header class="audit-head">
-          <div><span>TYLKO ADMINISTRATOR</span><h2 id="auditTitle">LOGI ZMIAN</h2><p>Historia działań z ostatnich 14 dni. Hasła, tokeny i sekrety nigdy nie są zapisywane w logach.</p></div>
+          <div><span>UPRAWNIENIE: LOGI ZMIAN</span><h2 id="auditTitle">LOGI ZMIAN</h2><p>Historia działań z ostatnich 14 dni. Hasła, tokeny i sekrety nigdy nie są zapisywane w logach.</p></div>
           <button type="button" class="audit-close" aria-label="Zamknij">×</button>
         </header>
         <div class="audit-toolbar">
@@ -69,6 +158,7 @@ async function mattOpenAuditLogs() {
             <option value="CMS / STRONA">CMS / STRONA</option>
             <option value="EVENTY">EVENTY</option>
             <option value="PROFIL / KONTO">PROFIL / KONTO</option>
+            <option value="KONTA / UPRAWNIENIA">KONTA / UPRAWNIENIA</option>
             <option value="BACKUPY">BACKUPY</option>
             <option value="INNE">INNE</option>
           </select>
@@ -151,6 +241,223 @@ async function mattOpenAuditLogs() {
 }
 
 
+function mattRoleLabel(role = "user") {
+  const value = String(role || "user").toLowerCase();
+  if (value === "admin") return "ADMINISTRATOR";
+  if (value === "moderator") return "MODERATOR";
+  return "UŻYTKOWNIK";
+}
+
+function mattAllPermissionKeys() {
+  return MATT_PERMISSION_GROUPS.flatMap(group => group.items.map(item => item[0]));
+}
+
+async function mattOpenAccountManager() {
+  if (window.currentUserIsAdmin !== true) return;
+
+  let modal = document.getElementById("accountManagerModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "accountManagerModal";
+    modal.className = "accounts-modal";
+    modal.innerHTML = `
+      <div class="accounts-box" role="dialog" aria-modal="true" aria-labelledby="accountsTitle">
+        <header class="accounts-head">
+          <div><span>TYLKO ADMINISTRATOR</span><h2 id="accountsTitle">ZARZĄDZAJ KONTAMI</h2><p>Twórz konta i nadawaj role. Moderator otrzymuje wyłącznie zaznaczone uprawnienia.</p></div>
+          <button type="button" class="accounts-close" aria-label="Zamknij">×</button>
+        </header>
+        <div class="accounts-toolbar">
+          <input type="search" data-account-search placeholder="Szukaj po nicku lub e-mailu…">
+          <button type="button" class="accounts-primary" data-account-new>+ NOWE KONTO</button>
+          <button type="button" data-account-refresh>ODŚWIEŻ</button>
+        </div>
+        <div class="accounts-layout">
+          <aside class="accounts-list" data-account-list><div class="accounts-empty">Ładowanie kont…</div></aside>
+          <main class="accounts-main" data-account-main><div class="accounts-empty">Wybierz konto z listy albo utwórz nowe.</div></main>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector(".accounts-close")?.addEventListener("click", () => modal.classList.remove("active"));
+    modal.addEventListener("click", event => { if (event.target === modal) modal.classList.remove("active"); });
+  }
+
+  modal.classList.add("active");
+  const listEl = modal.querySelector("[data-account-list]");
+  const mainEl = modal.querySelector("[data-account-main]");
+  const searchEl = modal.querySelector("[data-account-search]");
+  const newBtn = modal.querySelector("[data-account-new]");
+  const refreshBtn = modal.querySelector("[data-account-refresh]");
+  let accounts = [];
+  let selectedUserId = null;
+
+  const renderList = () => {
+    if (!listEl) return;
+    const needle = String(searchEl?.value || "").trim().toLowerCase();
+    const filtered = accounts.filter(account => !needle || [account.username, account.email, account.role].filter(Boolean).join(" ").toLowerCase().includes(needle));
+    listEl.innerHTML = filtered.length ? filtered.map(account => {
+      const own = account.auth_user_id === window.currentUserProfile?.auth_user_id;
+      const permissionCount = account.role === "admin" ? mattAllPermissionKeys().length : (Array.isArray(account.permissions) ? account.permissions.length : 0);
+      return `<button type="button" class="account-row ${selectedUserId === account.auth_user_id ? "active" : ""}" data-account-id="${mattAuditEscape(account.auth_user_id)}">
+        <img src="${mattAuditEscape(account.avatar_url || MATT_DEFAULT_AVATAR)}" alt="">
+        <span><strong>${mattAuditEscape(account.username || "Użytkownik")}${own ? ' <em>TO TY</em>' : ""}</strong><small>${mattAuditEscape(account.email || "")}</small></span>
+        <b class="account-role account-role-${mattAuditEscape(account.role || "user")}">${mattAuditEscape(mattRoleLabel(account.role))}</b>
+        <i>${permissionCount} upr.</i>
+      </button>`;
+    }).join("") : '<div class="accounts-empty">Brak kont pasujących do wyszukiwania.</div>';
+    listEl.querySelectorAll("[data-account-id]").forEach(button => button.addEventListener("click", () => openAccessEditor(button.dataset.accountId)));
+  };
+
+  const loadAccounts = async ({ keepSelection = true } = {}) => {
+    if (refreshBtn) refreshBtn.disabled = true;
+    if (listEl) listEl.innerHTML = '<div class="accounts-empty">Ładowanie kont…</div>';
+    try {
+      const { data, error } = await supabaseClient.rpc("matt_admin_list_accounts");
+      if (error) throw error;
+      accounts = (data || []).map(account => ({ ...account, role: String(account.role || "user").toLowerCase(), permissions: Array.isArray(account.permissions) ? account.permissions : [] }));
+      if (!keepSelection) selectedUserId = null;
+      renderList();
+      if (selectedUserId && accounts.some(account => account.auth_user_id === selectedUserId)) openAccessEditor(selectedUserId, false);
+    } catch (error) {
+      console.error("Nie udało się wczytać kont:", error);
+      if (listEl) listEl.innerHTML = `<div class="accounts-empty">${mattAuditEscape(error.message || "Błąd odczytu kont")}<br><br>Uruchom <b>CMS_UPDATE_ROLES_PERMISSIONS.sql</b> w Supabase.</div>`;
+    } finally {
+      if (refreshBtn) refreshBtn.disabled = false;
+    }
+  };
+
+  const permissionHtml = (selected = [], disabled = false) => {
+    const checked = new Set(selected);
+    return MATT_PERMISSION_GROUPS.map(group => `<fieldset class="account-permission-group"><legend>${mattAuditEscape(group.name)}</legend>${group.items.map(([key,label,description]) => `<label class="account-permission-item"><input type="checkbox" value="${mattAuditEscape(key)}" data-account-permission ${checked.has(key) ? "checked" : ""} ${disabled ? "disabled" : ""}><span><strong>${mattAuditEscape(label)}</strong><small>${mattAuditEscape(description)}</small></span></label>`).join("")}</fieldset>`).join("");
+  };
+
+  const syncPermissionEditor = (container, role) => {
+    const roleValue = String(role || "user");
+    const permissionsWrap = container.querySelector("[data-account-permissions-wrap]");
+    const info = container.querySelector("[data-role-info]");
+    const checkboxes = [...container.querySelectorAll("[data-account-permission]")];
+    const bulk = container.querySelector("[data-permission-bulk]");
+    if (roleValue === "admin") {
+      permissionsWrap.hidden = false;
+      checkboxes.forEach(box => { box.checked = true; box.disabled = true; });
+      if (bulk) bulk.hidden = true;
+      if (info) info.innerHTML = "<strong>Administrator</strong> automatycznie ma wszystkie uprawnienia. Nie trzeba ich zaznaczać osobno.";
+    } else if (roleValue === "moderator") {
+      permissionsWrap.hidden = false;
+      checkboxes.forEach(box => { box.disabled = false; });
+      if (bulk) bulk.hidden = false;
+      if (info) info.innerHTML = "<strong>Moderator</strong> może wykonywać wyłącznie operacje zaznaczone poniżej. Kontrola działa również po stronie Supabase.";
+    } else {
+      permissionsWrap.hidden = true;
+      checkboxes.forEach(box => { box.checked = false; box.disabled = false; });
+      if (bulk) bulk.hidden = true;
+      if (info) info.innerHTML = "<strong>Użytkownik</strong> nie ma narzędzi administracyjnych ani moderatorskich.";
+    }
+  };
+
+  const openAccessEditor = (userId, rerenderList = true) => {
+    const account = accounts.find(item => item.auth_user_id === userId);
+    if (!account || !mainEl) return;
+    selectedUserId = userId;
+    if (rerenderList) renderList();
+    const own = account.auth_user_id === window.currentUserProfile?.auth_user_id;
+    const selectedPermissions = account.role === "admin" ? mattAllPermissionKeys() : account.permissions;
+    mainEl.innerHTML = `<section class="account-editor">
+      <div class="account-editor-title"><div><span>UPRAWNIENIA KONTA</span><h3>${mattAuditEscape(account.username || "Użytkownik")}</h3><p>${mattAuditEscape(account.email || "")}</p></div><b class="account-role account-role-${mattAuditEscape(account.role)}">${mattAuditEscape(mattRoleLabel(account.role))}</b></div>
+      <label class="account-role-select">Rola
+        <select data-account-role ${own && account.role === "admin" ? "disabled" : ""}>
+          <option value="user" ${account.role === "user" ? "selected" : ""}>Użytkownik — brak uprawnień</option>
+          <option value="moderator" ${account.role === "moderator" ? "selected" : ""}>Moderator — wybierz uprawnienia</option>
+          <option value="admin" ${account.role === "admin" ? "selected" : ""}>Administrator — pełne uprawnienia</option>
+        </select>
+      </label>
+      ${own && account.role === "admin" ? '<div class="account-warning">Dla bezpieczeństwa nie możesz odebrać sobie roli administratora z poziomu strony.</div>' : ""}
+      <div class="account-role-info" data-role-info></div>
+      <div class="account-permission-bulk" data-permission-bulk><button type="button" data-check-all>ZAZNACZ WSZYSTKO</button><button type="button" data-clear-all>WYCZYŚĆ</button></div>
+      <div class="account-permissions" data-account-permissions-wrap>${permissionHtml(selectedPermissions, account.role === "admin")}</div>
+      <div class="account-editor-actions"><button type="button" class="accounts-primary" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button></div>
+    </section>`;
+    const roleSelect = mainEl.querySelector("[data-account-role]");
+    syncPermissionEditor(mainEl, roleSelect?.value || account.role);
+    roleSelect?.addEventListener("change", () => syncPermissionEditor(mainEl, roleSelect.value));
+    mainEl.querySelector("[data-check-all]")?.addEventListener("click", () => mainEl.querySelectorAll("[data-account-permission]").forEach(box => box.checked = true));
+    mainEl.querySelector("[data-clear-all]")?.addEventListener("click", () => mainEl.querySelectorAll("[data-account-permission]").forEach(box => box.checked = false));
+    mainEl.querySelector("[data-save-access]")?.addEventListener("click", async event => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = "ZAPISYWANIE…";
+      try {
+        const role = roleSelect?.value || "user";
+        const permissions = role === "moderator" ? [...mainEl.querySelectorAll("[data-account-permission]:checked")].map(box => box.value) : [];
+        const { error } = await supabaseClient.rpc("matt_admin_set_account_access", { p_user_id: account.auth_user_id, p_role: role, p_permissions: permissions });
+        if (error) throw error;
+        await loadAccounts({ keepSelection: true });
+      } catch (error) {
+        alert(error.message || "Nie udało się zapisać uprawnień.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "ZAPISZ ROLĘ I UPRAWNIENIA";
+      }
+    });
+  };
+
+  const openCreateForm = () => {
+    selectedUserId = null;
+    renderList();
+    if (!mainEl) return;
+    mainEl.innerHTML = `<section class="account-create">
+      <div class="account-editor-title"><div><span>NOWE KONTO</span><h3>UTWÓRZ UŻYTKOWNIKA</h3><p>Nowe konto zawsze powstaje jako zwykły użytkownik bez uprawnień. Rolę nadajesz później z listy.</p></div></div>
+      <form data-create-account-form>
+        <label>Nick / nazwa użytkownika<input name="username" minlength="2" maxlength="32" required autocomplete="off"></label>
+        <label>E-mail<input name="email" type="email" required autocomplete="off"></label>
+        <label>Hasło tymczasowe<div class="account-password-row"><input name="password" type="text" minlength="8" required autocomplete="off"><button type="button" data-generate-password>GENERUJ</button></div><small>Przekaż hasło użytkownikowi bezpiecznym kanałem. Użytkownik może je później sam zmienić w „Edytuj profil”.</small></label>
+        <div class="account-warning">Po utworzeniu konto nie ma żadnych uprawnień. Dopiero z listy wybierasz Moderator lub Administrator.</div>
+        <button class="accounts-primary" type="submit">UTWÓRZ KONTO</button>
+        <p data-create-account-msg></p>
+      </form>
+    </section>`;
+    const form = mainEl.querySelector("[data-create-account-form]");
+    const msg = mainEl.querySelector("[data-create-account-msg]");
+    mainEl.querySelector("[data-generate-password]")?.addEventListener("click", () => {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+      const values = crypto.getRandomValues(new Uint32Array(16));
+      form.elements.password.value = [...values].map(value => chars[value % chars.length]).join("");
+    });
+    form?.addEventListener("submit", async event => {
+      event.preventDefault();
+      const submit = form.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      submit.textContent = "TWORZENIE…";
+      msg.textContent = "";
+      try {
+        const payload = { action: "create", username: form.elements.username.value.trim(), email: form.elements.email.value.trim(), password: form.elements.password.value };
+        const { data, error } = await supabaseClient.functions.invoke("admin-manage-users", { body: payload });
+        if (error) {
+          let message = error.message || "Nie udało się utworzyć konta.";
+          try { if (error.context?.json) { const body = await error.context.json(); if (body?.error) message = body.error; } } catch (_) {}
+          throw new Error(message);
+        }
+        if (!data?.ok) throw new Error(data?.error || "Nie udało się utworzyć konta.");
+        msg.textContent = `Konto ${data.username || payload.username} zostało utworzone jako Użytkownik.`;
+        await loadAccounts({ keepSelection: false });
+        if (data.userId) openAccessEditor(data.userId);
+      } catch (error) {
+        msg.textContent = `${error.message || "Błąd tworzenia konta"} Jeśli funkcja nie jest wdrożona, utwórz Edge Function „admin-manage-users”.`;
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "UTWÓRZ KONTO";
+      }
+    });
+  };
+
+  searchEl.oninput = renderList;
+  newBtn.onclick = openCreateForm;
+  refreshBtn.onclick = () => loadAccounts({ keepSelection: true });
+  await loadAccounts({ keepSelection: false });
+}
+
+window.mattOpenAccountManager = mattOpenAccountManager;
+
+
 function mattSetHeaderUser(profile) {
   const open = document.getElementById("openLogin");
   const name = document.getElementById("headerUserName");
@@ -211,15 +518,16 @@ async function mattLoadUserHeader() {
   const admin = document.getElementById("adminLink");
   const logout = document.getElementById("logoutBtn");
   const auditLogs = document.getElementById("adminAuditLogsBtn");
+  const manageAccounts = document.getElementById("manageAccountsBtn");
   if (!open) return;
 
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    window.currentUserIsAdmin = false;
     window.currentUserProfile = null;
-    window.dispatchEvent(new CustomEvent("matt-auth-change", { detail: { isAdmin: false } }));
+    mattApplyAccess("guest", []);
     mattSetHeaderUser(null);
     if (auditLogs) auditLogs.hidden = true;
+    if (manageAccounts) manageAccounts.hidden = true;
     open.onclick = () => modal?.classList.add("active");
     return;
   }
@@ -229,13 +537,22 @@ async function mattLoadUserHeader() {
     if (!profile) {
       mattSetHeaderUser({ username: session.user.email?.split("@")[0] || "UŻYTKOWNIK", avatar_url: null });
       if (auditLogs) auditLogs.hidden = true;
+      if (manageAccounts) manageAccounts.hidden = true;
+      mattApplyAccess("user", []);
       return;
     }
 
     window.currentUserProfile = profile;
-    window.currentUserIsAdmin = profile.role === "admin";
-    window.dispatchEvent(new CustomEvent("matt-auth-change", { detail: { isAdmin: window.currentUserIsAdmin } }));
-    if (auditLogs) { auditLogs.hidden = !window.currentUserIsAdmin; auditLogs.onclick = window.currentUserIsAdmin ? (() => { menu?.classList.remove("show"); mattOpenAuditLogs(); }) : null; }
+    await mattLoadOwnAccess(profile);
+    const canAudit = window.mattCan("audit.view");
+    if (auditLogs) {
+      auditLogs.hidden = !canAudit;
+      auditLogs.onclick = canAudit ? (() => { menu?.classList.remove("show"); mattOpenAuditLogs(); }) : null;
+    }
+    if (manageAccounts) {
+      manageAccounts.hidden = !window.currentUserIsAdmin;
+      manageAccounts.onclick = window.currentUserIsAdmin ? (() => { menu?.classList.remove("show"); mattOpenAccountManager(); }) : null;
+    }
     mattSetHeaderUser(profile);
 
     open.onclick = (e) => {
