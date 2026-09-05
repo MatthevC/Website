@@ -9854,3 +9854,17 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .cms-event-form-actions-right{width:100%;margin-left:0}
   .cms-event-form-actions button,.cms-event-form-actions-right button{flex:1}
 }
+
+
+/* === EVENT TRWA BEZ DATY KONCA === */
+.event-ongoing-status{display:inline-flex;align-items:center;gap:8px;color:#f5f5f5;font-family:Rajdhani,sans-serif;font-weight:800;letter-spacing:.7px}
+.event-ongoing-infinity{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:28px;padding:0 8px;border:1px solid rgba(255,52,56,.46);border-radius:7px;background:rgba(255,52,56,.10);color:var(--red);font-size:28px;line-height:1}
+.event-ongoing-note{margin-top:4px;color:#777b84;font-size:11px;font-weight:500;line-height:1.35}
+.cms-event-ongoing-toggle{display:flex;align-items:center;gap:10px;margin:8px 0 12px;padding:11px 12px;border:1px solid #303238;border-radius:8px;background:#111216;cursor:pointer;transition:border-color .18s,background .18s}
+.cms-event-ongoing-toggle:hover,.cms-event-date-card.is-ongoing .cms-event-ongoing-toggle{border-color:rgba(255,52,56,.7);background:rgba(255,52,56,.07)}
+.cms-event-ongoing-toggle input{width:18px!important;height:18px!important;margin:0!important;accent-color:var(--red)}
+.cms-event-ongoing-toggle span{display:grid;gap:1px}
+.cms-event-ongoing-toggle strong{color:#f2f2f2;font:800 12px Rajdhani,sans-serif;letter-spacing:.7px}
+.cms-event-ongoing-toggle small{color:#777b84;font-size:10px}
+[data-event-end-fields]{transition:opacity .18s,filter .18s}
+[data-event-end-fields].is-disabled{opacity:.32;filter:grayscale(.4)}

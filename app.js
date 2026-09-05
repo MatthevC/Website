@@ -328,6 +328,10 @@ function isEventEnded(event) {
   return now >= end;
 }
 
+function isEventOngoing(event) {
+  return Boolean(event && !event.endDate);
+}
+
 function generalRulesPage() {
   return `
     <div class="container content-wrap">
@@ -3202,7 +3206,7 @@ async function renderEventDetail(id) {
         ${event.mainImage ? `<div class="event-detail-image"><img style="object-fit:${event.mainImageFit || "contain"};object-position:center" src="${escapeHtml(event.mainImage)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}<div class="event-time"><span>🕒</span> ${formatTime(event.date)}</div></strong></div>
-          <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div></strong></div>
+          <div><small>ZAKOŃCZENIE</small><strong>${isEventOngoing(event) ? '<span class="event-ongoing-status"><span class="event-ongoing-infinity">∞</span><span>TRWA</span></span><div class="event-ongoing-note">bez określonej daty zakończenia</div>' : `${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div>`}</strong></div>
         </div>
         <div class="event-detail-description article-text">
           ${escapeHtml(event.content || event.excerpt || "").replace(/\n/g, "<br><br>")}
