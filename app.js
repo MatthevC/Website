@@ -328,6 +328,15 @@ function isEventEnded(event) {
   return now >= end;
 }
 
+function isEventOngoing(event) {
+  return Boolean(event) && !event.endDate;
+}
+
+function eventEndStatusHtml(event) {
+  if (isEventOngoing(event)) return '<span class="event-ongoing-value"><b>∞</b> W TRAKCIE</span>';
+  return `${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div>`;
+}
+
 function generalRulesPage() {
   return `
     <div class="container content-wrap">
@@ -2890,13 +2899,15 @@ async function loadEvents() {
 
 function eventCard(event) {
   const ended = isEventEnded(event);
+  const ongoing = isEventOngoing(event);
+  const statusBadge = ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : '');
   const cover = event.image
-    ? `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}">
+    ? `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
          <img style="object-fit:${escapeHtml(event.imageFit || "contain")};object-position:center" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}" loading="lazy">
-         ${ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : ""}
+         ${statusBadge}
        </div>`
-    : `<div class="event-cover${ended ? " event-cover-ended" : ""}">
-         ${ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : ""}
+    : `<div class="event-cover${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
+         ${statusBadge}
        </div>`;
 
   return `
@@ -3202,7 +3213,7 @@ async function renderEventDetail(id) {
         ${event.mainImage ? `<div class="event-detail-image"><img style="object-fit:${event.mainImageFit || "contain"};object-position:center" src="${escapeHtml(event.mainImage)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}<div class="event-time"><span>🕒</span> ${formatTime(event.date)}</div></strong></div>
-          <div><small>ZAKOŃCZENIE</small><strong>${formatDate(event.endDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.endDate)}</div></strong></div>
+          <div class="${isEventOngoing(event) ? 'event-date-ongoing' : ''}"><small>ZAKOŃCZENIE</small><strong>${eventEndStatusHtml(event)}</strong></div>
         </div>
         <div class="event-detail-description article-text">
           ${escapeHtml(event.content || event.excerpt || "").replace(/\n/g, "<br><br>")}

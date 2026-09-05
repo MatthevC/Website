@@ -1035,7 +1035,8 @@
         status: $('small', node)?.textContent.trim() || '',
         kind: role,
         image: $('img.member-avatar', node)?.getAttribute('src') || '',
-        initial: $('span.member-avatar', node)?.textContent.trim() || ''
+        initial: $('span.member-avatar', node)?.textContent.trim() || '',
+        twitch: node.matches('a[href]') ? (node.getAttribute('href') || '') : ''
       });
     });
     return {
@@ -2363,8 +2364,8 @@
         formEdit(i>=0?'EDYTUJ GRUPĘ':'DODAJ GRUPĘ',cur,fields,async v=>{v.members=cur.members||[];if(i>=0)data.memberGroups[i]=v;else data.memberGroups.push(v);await save('Grupa zapisana.');},makeDraft);
       };
       const editMember=(gi,mi)=>{
-        const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:''};
-        const fields=[{name:'name',label:'Nick / nazwa',required:true},{name:'status',label:'Status / opis'},{name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},{name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma obrazu w wersji bazowej.'}];
+        const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:'',twitch:''};
+        const fields=[{name:'name',label:'Nick / nazwa',required:true},{name:'status',label:'Status / opis'},{name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},{name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma obrazu w wersji bazowej.'},{name:'twitch',label:'Kanał Twitch (opcjonalnie)',placeholder:'https://www.twitch.tv/nazwa',help:'Jeśli podasz adres, kliknięcie tej osoby w podglądzie Discorda otworzy Twitch w nowej karcie.'}];
         const makeDraft=v=>{const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=v;else arr.push(v);return d;};
         formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{if(mi>=0)data.memberGroups[gi].members[mi]=v;else data.memberGroups[gi].members.push(v);await save('Osoba zapisana.');},makeDraft);
       };
@@ -2980,6 +2981,15 @@
     return !Number.isNaN(d.getTime()) && d.getTime() <= Date.now();
   }
 
+  function eventAdminIsOngoing(value) {
+    return !value;
+  }
+
+  function eventAdminEndHtml(value) {
+    if (eventAdminIsOngoing(value)) return '<span class="event-ongoing-value"><b>∞</b> W TRAKCIE</span>';
+    return `${eventAdminFormatDate(value)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(value)}</div>`;
+  }
+
   async function eventAdminBackup(label) {
     if (!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny.');
     return window.MattCMS.createBackup(label);
@@ -3023,8 +3033,10 @@
     const view = eventAdminRowToView(row);
     if (typeof window.eventCard === 'function') return window.eventCard(view);
     const ended = eventAdminIsEnded(row?.end_date);
+    const ongoing = eventAdminIsOngoing(row?.end_date);
+    const badge = ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : '');
     return `<article class="event-card${ended?' event-ended':''}">
-      <div class="event-cover event-cover-image${ended?' event-cover-ended':''}">${view.image?`<img src="${window.MattCMS.escape(view.image)}" style="object-fit:${window.MattCMS.escape(view.imageFit)}" alt="">`:''}${ended?'<div class="event-ended-badge">ZAKOŃCZONY</div>':''}</div>
+      <div class="event-cover event-cover-image${ended?' event-cover-ended':''}${ongoing?' event-cover-ongoing':''}">${view.image?`<img src="${window.MattCMS.escape(view.image)}" style="object-fit:${window.MattCMS.escape(view.imageFit)}" alt="">`:''}${badge}</div>
       <div class="event-body"><div class="event-date">${eventAdminFormatDate(view.date)}</div><h2>${window.MattCMS.escape(view.title)}</h2><p>${window.MattCMS.escape(view.excerpt)}</p><div class="event-actions"><span class="event-read">CZYTAJ CAŁOŚĆ →</span></div></div>
     </article>`;
   }
@@ -3035,7 +3047,7 @@
       <div class="event-publish-top"><span>OPUBLIKOWANO</span>${eventAdminFormatDate(v.publishDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.publishDate)}</div></div>
       <div class="event-title-admin-row"><h1>${window.MattCMS.escape(v.title)}</h1></div>
       ${v.mainImage?`<div class="event-detail-image"><img src="${window.MattCMS.escape(v.mainImage)}" style="object-fit:${window.MattCMS.escape(v.mainImageFit)};object-position:center" alt=""></div>`:''}
-      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div><small>ZAKOŃCZENIE</small><strong>${eventAdminFormatDate(v.endDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.endDate)}</div></strong></div></div>
+      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div class="${eventAdminIsOngoing(v.endDate)?'event-date-ongoing':''}"><small>ZAKOŃCZENIE</small><strong>${eventAdminEndHtml(v.endDate)}</strong></div></div>
       <div class="event-detail-description article-text">${window.MattCMS.escape(v.content || '').replace(/\n/g,'<br><br>')}</div>
     </article>`;
   }
@@ -3057,8 +3069,9 @@
         </div>
         <div class="cms-manager-list cms-events-manager-list">${rows.length ? rows.map((row,index)=>{
           const ended=eventAdminIsEnded(row.end_date);
+          const ongoing=eventAdminIsOngoing(row.end_date);
           return `<article class="cms-manager-item cms-event-manager-item">
-            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ended?'ZAKOŃCZONY':'AKTYWNY'}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
+            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ended?'ZAKOŃCZONY':ongoing?'∞ W TRAKCIE':'AKTYWNY'}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
             <div>${has('events.edit')?`<button type="button" data-event-edit="${esc(row.id)}">EDYTUJ</button>`:''}<button type="button" data-event-view="${esc(row.id)}">PODGLĄD</button>${has('events.delete')?`<button class="danger" type="button" data-event-delete="${esc(row.id)}">USUŃ</button>`:''}</div>
           </article>`;
         }).join('') : '<div class="cms-empty">Nie ma jeszcze żadnych eventów w Supabase.</div>'}</div>
@@ -3109,7 +3122,7 @@
         startDate:start.date, startTime:start.time||'00:00', endDate:end.date, endTime:end.time||'00:00',
         publishDate:publish.date||today, publishTime:publish.time||nowTime,
         image:row?.image_url||'', imageFit:row?.image_fit||'contain',
-        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain', endedNow:false
+        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain', ongoing:!row?.end_date, endedNow:false
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
@@ -3123,12 +3136,15 @@
 
             <section class="cms-event-editor-section">
               <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.</span></header>
+              <div class="cms-event-status-options">
+                <div class="cms-event-ongoing-row">${fieldHtml({name:'ongoing',label:'∞ Event trwa — bez określonej daty zakończenia',type:'checkbox'},current.ongoing)}<p>Po zaznaczeniu nie musisz podawać daty końca. Na stronie pojawi się status <strong>∞ W TRAKCIE</strong>.</p></div>
+                <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>Po zaznaczeniu data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</p></div>
+              </div>
               <div class="cms-event-date-cards">
                 <div class="cms-event-date-card"><b>ROZPOCZĘCIE</b>${fieldHtml({name:'startDate',label:'Data',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina',type:'time'},current.startTime)}</div>
-                <div class="cms-event-date-card"><b>ZAKOŃCZENIE</b>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div>
+                <div class="cms-event-date-card" data-event-end-card><b>ZAKOŃCZENIE</b><div class="cms-event-end-ongoing-label" data-event-end-ongoing hidden><strong>∞ W TRAKCIE</strong><span>Bez daty końcowej</span></div><div data-event-end-fields>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div></div>
                 <div class="cms-event-date-card"><b>PUBLIKACJA</b>${fieldHtml({name:'publishDate',label:'Data',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina',type:'time'},current.publishTime)}</div>
               </div>
-              <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>Po zaznaczeniu data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</p></div>
             </section>
 
             <section class="cms-event-editor-section">
@@ -3164,7 +3180,7 @@
       };
       const currentPreviewRow=()=>{
         const image=imageFromField('image'); const main=imageFromField('mainImage');
-        let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
+        let endDate=form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
         if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
         return {
           id:row?.id||'podglad-eventu', title:String(form.elements.title?.value||'NOWY EVENT'), description:String(form.elements.description?.value||''),
@@ -3173,7 +3189,19 @@
           image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:String(form.elements.mainImageFit?.value||'contain')
         };
       };
-      const renderPreview=()=>{const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
+      const syncEventStatusFields=()=>{
+        const ongoing=Boolean(form.elements.ongoing?.checked);
+        const endedNow=Boolean(form.elements.endedNow?.checked);
+        if(ongoing && endedNow) form.elements.endedNow.checked=false;
+        if(form.elements.ongoing) form.elements.ongoing.disabled=Boolean(form.elements.endedNow?.checked);
+        const fields=$('[data-event-end-fields]',form);
+        const label=$('[data-event-end-ongoing]',form);
+        if(fields) fields.hidden=ongoing;
+        if(label) label.hidden=!ongoing;
+        if(form.elements.endDate) form.elements.endDate.disabled=ongoing;
+        if(form.elements.endTime) form.elements.endTime.disabled=ongoing;
+      };
+      const renderPreview=()=>{syncEventStatusFields();const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
       form.addEventListener('input',renderPreview); form.addEventListener('change',()=>requestAnimationFrame(renderPreview));
       $$('[data-event-preview-mode]',form).forEach(btn=>btn.addEventListener('click',()=>{previewMode=btn.dataset.eventPreviewMode==='detail'?'detail':'card';$$('[data-event-preview-mode]',form).forEach(x=>x.classList.toggle('active',x===btn));renderPreview();}));
       $('[data-back]',form)?.addEventListener('click',draw);
@@ -3192,7 +3220,9 @@
           const mainImageFile=form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
           if(imageFile) image=await uploadEventImage(imageFile,title,'event');
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
-          let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value); if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          let endDate=form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
+          if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          if(!form.elements.ongoing?.checked && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ Event trwa”.');
           const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:String(form.elements.mainImageFit?.value||'contain')};
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);

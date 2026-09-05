@@ -819,6 +819,20 @@
     return 'avatar-gray';
   }
 
+  function renderDiscordMember(member = {}, gi = 0, mi = 0) {
+    const m = member || {};
+    const twitch = String(m.twitch || '').trim();
+    const attrs = `class="discord-member${twitch ? ' discord-member-link' : ''}" data-cms-preview-member="${gi}:${mi}"`;
+    const open = twitch
+      ? `<a ${attrs} href="${escapeHtml(safeHref(twitch))}" target="_blank" rel="noopener" title="Otwórz kanał Twitch: ${escapeHtml(m.name || '')}">`
+      : `<div ${attrs}>`;
+    const close = twitch ? '</a>' : '</div>';
+    const avatar = m.image
+      ? `<img class="member-avatar member-photo" src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name||'')}">`
+      : `<span class="member-avatar ${avatarClass(m.kind)}">${escapeHtml(m.initial || String(m.name||'?').charAt(0).toUpperCase())}</span>`;
+    return `${open}${avatar}<div><strong class="${roleClass(m.kind)}">${escapeHtml(m.name || '')}</strong><small>${escapeHtml(m.status || '')}</small></div>${twitch ? '<span class="discord-member-twitch-mark" aria-hidden="true">↗</span>' : ''}${close}`;
+  }
+
   function renderDiscordJoinPreview(data) {
     const section = document.getElementById('discord-preview');
     if (!section || !data || typeof data !== 'object') return;
@@ -874,7 +888,7 @@
           </main>
           <aside class="discord-app-members discord-members-expanded">
             <div class="discord-members-search">Aktywność — <span data-discord-online-count>—</span> ◉</div>
-            ${memberGroups.map((group,gi)=>`<div data-cms-preview-member-group="${gi}"><div class="discord-member-group">${escapeHtml(group.title || 'UŻYTKOWNICY')} — ${(group.members||[]).length}</div>${(group.members||[]).map((m,mi)=>`<div class="discord-member" data-cms-preview-member="${gi}:${mi}">${m.image?`<img class="member-avatar member-photo" src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name||'')}">`:`<span class="member-avatar ${avatarClass(m.kind)}">${escapeHtml(m.initial || String(m.name||'?').charAt(0).toUpperCase())}</span>`}<div><strong class="${roleClass(m.kind)}">${escapeHtml(m.name || '')}</strong><small>${escapeHtml(m.status || '')}</small></div></div>`).join('')}</div>`).join('')}
+            ${memberGroups.map((group,gi)=>`<div data-cms-preview-member-group="${gi}"><div class="discord-member-group">${escapeHtml(group.title || 'UŻYTKOWNICY')} — ${(group.members||[]).length}</div>${(group.members||[]).map((m,mi)=>renderDiscordMember(m,gi,mi)).join('')}</div>`).join('')}
           </aside>
         </div>
       </div>`;
@@ -1124,7 +1138,7 @@
     pageImageElements, pageImageInfo, applyPageImages, pageDecorGraphicElements, pageDecorGraphicInfo, normalizeDecorGraphicItem, applyPageDecorGraphics, redCalloutElements, calloutInfo, applyPageCallouts,
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
-    renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview,
+    renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview, renderDiscordMember,
     twitchLoginFromUrl, twitchClipSlugFromUrl, normalizeStreamer,
     get loadError() { return loadError; }
   };
