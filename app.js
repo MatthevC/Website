@@ -3002,7 +3002,7 @@ function eventCard(event) {
         <p>${escapeHtml(event.excerpt)}</p>
         <div class="event-actions">
           <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>
-          ${event.fallback ? "" : `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}" ${(window.currentUserIsAdmin === true || window.mattCan?.('events.edit') === true) ? "" : "hidden"}>✎ EDYTUJ POST</button><button class="delete-event-btn" data-id="${escapeHtml(event.id)}" data-title="${escapeHtml(event.title)}" ${(window.currentUserIsAdmin === true || window.mattCan?.('events.delete') === true) ? "" : "hidden"}>🗑 USUŃ</button>`}
+          ${event.fallback ? "" : `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}" ${window.mattHasPermission?.('events.edit') ? "" : "hidden"}>✎ EDYTUJ POST</button><button class="delete-event-btn" data-id="${escapeHtml(event.id)}" data-title="${escapeHtml(event.title)}" ${window.mattHasPermission?.('events.delete') ? "" : "hidden"}>🗑 USUŃ</button>`}
         </div>
 
       </div>
@@ -3241,13 +3241,12 @@ function setupDownloadsPage() {
   });
 }
 
-function updateEventAdminButton() {
+function updateEventAdminButton(isAdmin) {
   const btn = document.getElementById("addEventButton");
   if (!btn) return;
-  const allowed = window.currentUserIsAdmin === true || window.mattCan?.('events.create') === true;
-  btn.hidden = !allowed;
-  btn.style.display = allowed ? "inline-flex" : "none";
-  btn.style.visibility = allowed ? "visible" : "hidden";
+  btn.hidden = !isAdmin;
+  btn.style.display = isAdmin ? "inline-flex" : "none";
+  btn.style.visibility = isAdmin ? "visible" : "hidden";
 }
 
 async function renderEvents() {
@@ -3571,7 +3570,7 @@ async function render() {
     `;
     await renderEvents();
     if (window.MattCMS) window.MattCMS.applyRoute(path);
-    updateEventAdminButton();
+    updateEventAdminButton(window.mattHasPermission?.('events.create') === true);
     updateLinks();
     setupContactForm();
     setupImagePreview();
@@ -3909,7 +3908,9 @@ document.addEventListener("click", (event) => {
 
 window.addEventListener("matt-auth-change", (e) => {
   window.currentUserIsAdmin = e.detail?.isAdmin === true;
-  updateEventAdminButton();
+  if (e.detail?.role) window.currentUserRole = e.detail.role;
+  if (Array.isArray(e.detail?.permissions)) window.currentUserPermissions = e.detail.permissions;
+  updateEventAdminButton(window.mattHasPermission?.('events.create') === true);
 });
 
 

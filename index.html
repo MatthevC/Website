@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Oficjalna strona społeczności kanału Twitch. Regulaminy, komendy, VIP, moderacja, Discord i eventy.">
   <title>MatthevC — Centrum społeczności</title>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header class="site-header">
@@ -75,8 +75,8 @@
           <div id="userMenu" class="user-menu">
             <a id="adminLink" style="display:none" href="admin/">Panel administratora</a>
             <button id="editProfileBtn">Edytuj profil</button>
-            <button id="manageAccountsBtn" type="button" hidden>Zarządzaj kontami</button>
             <button id="adminAuditLogsBtn" type="button" hidden>Logi zmian</button>
+            <button id="manageAccountsBtn" type="button" hidden>Zarządzaj kontami</button>
             <button id="logoutBtn">Wyloguj</button>
           </div>
         </div>
@@ -139,6 +139,39 @@
   </div>
 </div>
 
+<div id="firstLoginSetupModal" class="profile-modal first-login-setup-modal" aria-hidden="true">
+  <div class="profile-box profile-box-modern first-login-setup-box" role="dialog" aria-modal="true" aria-labelledby="firstLoginSetupTitle">
+    <div class="profile-heading">
+      <div>
+        <span class="profile-kicker">PIERWSZE LOGOWANIE</span>
+        <h2 id="firstLoginSetupTitle">DOKOŃCZ KONFIGURACJĘ KONTA</h2>
+        <p>Administrator utworzył konto tymczasowe. Zanim przejdziesz dalej, podaj swój adres e-mail i ustaw własne hasło.</p>
+      </div>
+    </div>
+    <div class="first-login-user-card">
+      <img id="firstLoginAvatar" src="pictures/social/default-avatar.svg" alt="Avatar użytkownika">
+      <div><small>KONTO</small><strong id="firstLoginUsername">UŻYTKOWNIK</strong><span>Po zapisaniu hasło tymczasowe przestanie działać.</span></div>
+    </div>
+    <label class="profile-field">Twój adres e-mail
+      <input id="firstLoginEmail" type="email" autocomplete="email" placeholder="np. nazwa@gmail.com">
+    </label>
+    <div class="profile-form-grid">
+      <label class="profile-field">Nowe hasło
+        <input id="firstLoginPassword" type="password" autocomplete="new-password" placeholder="Minimum 8 znaków">
+      </label>
+      <label class="profile-field">Powtórz nowe hasło
+        <input id="firstLoginPasswordRepeat" type="password" autocomplete="new-password" placeholder="Powtórz hasło">
+      </label>
+    </div>
+    <div class="first-login-security-note">
+      <strong>WYMAGANE</strong>
+      <span>Nie można zamknąć tego okna ani korzystać ze strony przed zakończeniem konfiguracji konta.</span>
+    </div>
+    <button id="firstLoginSave" class="profile-save-btn" type="button">ZAPISZ E-MAIL I NOWE HASŁO</button>
+    <p id="firstLoginMsg" class="profile-message"></p>
+  </div>
+</div>
+
   <main id="app"></main>
 
   <footer class="site-footer">
@@ -174,13 +207,13 @@
 <script src="cms.js?v=8"></script>
 <script src="app.js?v=61"></script>
 <script src="auth-ui.js?v=6"></script>
-<script src="cms-admin.js?v=10"></script>
+<script src="cms-admin.js?v=9"></script>
 
 <div id="loginModal" class="login-overlay" style="display:none">
 <div class="login-modal">
 <button id="closeLogin" class="login-close">×</button>
 <h2>LOGIN</h2>
-<p>Zaloguj się jako administrator</p>
+<p>Zaloguj się swoim nickiem</p>
 <input id="loginNick" placeholder="Twój Nick">
 <input id="loginPass" type="password" placeholder="Hasło">
 <button id="loginBtn" class="login-submit">ZALOGUJ</button>
@@ -281,7 +314,7 @@
 <button id="saveEditEvent" class="login-submit">ZAPISZ ZMIANY</button>
 <p id="editEventMsg"></p>
 </div></div></div>
-<script src="event-admin.js?v=4"></script>
+<script src="event-admin.js?v=3"></script>
 
 <div id="idleLogoutModal" class="login-overlay" style="display:none">
  <div class="login-modal idle-warning">

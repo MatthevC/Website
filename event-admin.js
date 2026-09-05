@@ -1,7 +1,6 @@
-// Backup bezpieczeństwa przed każdą zmianą eventów. Działa dla administratora oraz moderatora z odpowiednim uprawnieniem.
-function mattEventCan(permission){ return window.currentUserIsAdmin === true || window.mattCan?.(permission) === true; }
+// Backup bezpieczeństwa przed każdą zmianą eventów. Funkcja działa tylko dla administratora.
 async function mattEventSafetyBackup(label){
-  if(!['events.create','events.edit','events.delete'].some(mattEventCan)) throw new Error('Brak uprawnień do zarządzania eventami.');
+  if(!(window.mattHasPermission?.('events.create') || window.mattHasPermission?.('events.edit') || window.mattHasPermission?.('events.delete'))) throw new Error('Brak uprawnień do eventów.');
   if(!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny. Uruchom CMS_UPDATE_AUDIT_BACKUPS.sql w Supabase.');
   return window.MattCMS.createBackup(label);
 }
@@ -42,16 +41,25 @@ function mattFriendlyImageLabel(file,title){
 
 (() => {
 
-let canCreateEvent = false;
-
-function refreshEventCreateAccess(){
-  canCreateEvent = mattEventCan('events.create');
-  if(canCreateEvent) showAddButton(); else hideAddButton();
-}
+let isAdmin = false;
 
 async function checkAdmin(){
-  // Uprawnienia ładuje auth-ui.js. To wywołanie tylko synchronizuje widok.
-  refreshEventCreateAccess();
+  try{
+    const {data:{session}} = await supabaseClient.auth.getSession();
+    if(!session){ isAdmin=false; hideAddButton(); return; }
+    const {data,error}=await supabaseClient.rpc('matt_get_my_access');
+    if(error) throw error;
+    const role=String(data?.role||'user').toLowerCase();
+    const perms=Array.isArray(data?.permissions)?data.permissions:[];
+    window.currentUserRole=role;
+    window.currentUserPermissions=perms;
+    window.currentUserIsAdmin=role==='admin';
+    isAdmin = role==='admin' || perms.includes('events.create');
+    if(isAdmin) showAddButton(); else hideAddButton();
+  }catch(e){
+    console.error('Event permission check error',e);
+    hideAddButton();
+  }
 }
 
 function getAddButton(){
@@ -87,7 +95,7 @@ function initEvents(){
    if(btn){
       e.preventDefault();
 
-      if(!canCreateEvent){
+      if(!isAdmin){
         return;
       }
 
@@ -104,8 +112,8 @@ function initEvents(){
  if(save){
  save.onclick=async()=>{
 
-   if(!mattEventCan('events.create')){
-     alert("Brak uprawnień do dodawania eventów");
+   if(!isAdmin){
+     alert("Brak uprawnień");
      return;
    }
 
@@ -208,7 +216,8 @@ document.addEventListener("DOMContentLoaded",()=>{
  // Aktualizacja stanu po zmianie logowania bez ponownego odpytywania Supabase.
  // Nie wywołujemy tutaj checkAdmin(), bo checkAdmin sam emituje matt-auth-change.
  window.addEventListener("matt-auth-change",()=>{
-   refreshEventCreateAccess();
+   isAdmin = window.mattHasPermission?.('events.create') === true;
+   if(isAdmin) showAddButton(); else hideAddButton();
  });
 });
 
@@ -231,11 +240,11 @@ document.addEventListener("click", function(e){
 
 // Edycja eventów dla administratora
 (() => {
-function canEditEvent(){ return mattEventCan('events.edit'); }
-function canDeleteEvent(){ return mattEventCan('events.delete'); }
+function admin(){ return window.mattHasPermission?.('events.edit') === true; }
+function canDelete(){ return window.mattHasPermission?.('events.delete') === true; }
 
 async function openEdit(id){
- if(!canEditEvent()) return;
+ if(!admin()) return;
  const editEventModal = document.getElementById("editEventModal");
  const editEventId = document.getElementById("editEventId");
  const editEventTitle = document.getElementById("editEventTitle");
@@ -301,7 +310,7 @@ document.addEventListener("click",async e=>{
  const del=e.target.closest(".delete-event-btn");
  if(del){
   e.preventDefault(); e.stopPropagation();
-  if(!canDeleteEvent()) return;
+  if(!canDelete()) return;
   const title=del.dataset.title || "ten event";
   if(!confirm(`Czy na pewno usunąć event „${title}”? Operację można później cofnąć z backupu.`)) return;
   del.disabled=true;
@@ -320,10 +329,10 @@ document.addEventListener("click",async e=>{
  }
 });
 function updateEditButtons(){
- const editAllowed = canEditEvent();
- const deleteAllowed = canDeleteEvent();
- document.querySelectorAll('.edit-event-btn').forEach(x=>{ x.style.display=editAllowed?'inline-flex':'none'; x.hidden=!editAllowed; });
- document.querySelectorAll('.delete-event-btn').forEach(x=>{ x.style.display=deleteAllowed?'inline-flex':'none'; x.hidden=!deleteAllowed; });
+ const canEdit = window.mattHasPermission?.('events.edit') === true;
+ const canDel = window.mattHasPermission?.('events.delete') === true;
+ document.querySelectorAll('.edit-event-btn').forEach(x=>{x.style.display=canEdit?'inline-flex':'none';x.hidden=!canEdit;});
+ document.querySelectorAll('.delete-event-btn').forEach(x=>{x.style.display=canDel?'inline-flex':'none';x.hidden=!canDel;});
 }
 window.updateEditButtons=updateEditButtons;
 window.addEventListener("matt-auth-change",updateEditButtons);
@@ -334,7 +343,7 @@ document.getElementById("closeEditEvent")?.addEventListener("click",()=>{
  if(modal) modal.style.display="none";
 });
 document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
- if(!canEditEvent()) return;
+ if(!admin()) return;
  const msg=document.getElementById("editEventMsg");
  try{
   await mattEventSafetyBackup(`AUTO: przed edycją eventu — ${document.getElementById('editEventTitle')?.value || 'event'}`);
@@ -395,14 +404,16 @@ document.addEventListener("DOMContentLoaded",()=>{
 });
 
 function renderEditButtons(){
- const editAllowed=mattEventCan('events.edit');
- const deleteAllowed=mattEventCan('events.delete');
+ const canEdit=window.mattHasPermission?.('events.edit')===true;
+ const canDel=window.mattHasPermission?.('events.delete')===true;
  document.querySelectorAll('.detailEditEventSlot').forEach(slot=>{
-  if(!editAllowed && !deleteAllowed){ slot.innerHTML=''; return; }
-  const title=(slot.dataset.eventTitle||'').replace(/"/g,'&quot;');
-  slot.innerHTML=`${editAllowed?`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button>`:''}${deleteAllowed?`<button class="delete-event-btn cms-event-delete" data-id="${slot.dataset.eventId}" data-title="${title}">🗑 USUŃ EVENT</button>`:''}`;
+   if(canEdit || canDel){
+     const title=(slot.dataset.eventTitle||'').replace(/"/g,'&quot;');
+     slot.innerHTML=`${canEdit?`<button class="edit-event-btn login-submit" data-id="${slot.dataset.eventId}">✎ EDYTUJ EVENT</button>`:''}${canDel?`<button class="delete-event-btn cms-event-delete" data-id="${slot.dataset.eventId}" data-title="${title}">🗑 USUŃ EVENT</button>`:''}`;
+   } else slot.innerHTML='';
  });
 }
+
 window.addEventListener("matt-auth-change",renderEditButtons);
 window.addEventListener("matt-event-detail-rendered",renderEditButtons);
 document.addEventListener("DOMContentLoaded",renderEditButtons);

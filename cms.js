@@ -46,28 +46,23 @@
     return cache.has(key) ? cache.get(key) : fallback;
   }
 
-  function can(permission) {
-    return window.mattCan?.(permission) === true || window.currentUserIsAdmin === true;
+  function requireLoggedIn() {
+    if (!window.currentUserRole || window.currentUserRole === 'guest') throw new Error('Musisz być zalogowany.');
   }
 
-  function requirePermission(permission, message = 'Brak wymaganego uprawnienia.') {
-    if (!can(permission)) throw new Error(message);
-  }
-
-  function requireAuthenticatedEditor() {
-    if (window.currentUserIsAdmin === true) return;
-    if (window.currentUserRole !== 'moderator') throw new Error('Brak uprawnień do edycji strony.');
+  function requirePermission(permission) {
+    requireLoggedIn();
+    if (permission && !window.mattHasPermission?.(permission)) throw new Error('Brak wymaganego uprawnienia.');
   }
 
   async function createBackup(label = 'Backup automatyczny', options = {}) {
+    requireLoggedIn();
     const type = options?.type === 'manual' ? 'manual' : 'automatic';
-    if (type === 'manual') requirePermission('backups.manual.create', 'Brak uprawnienia do tworzenia ręcznych backupów.');
-    else requireAuthenticatedEditor();
     const { data, error } = await supabaseClient.rpc('matt_create_backup_v2', { p_label: label, p_type: type });
     if (error) {
       const raw = String(error.message || 'Nieznany błąd');
       if (raw.includes('matt_create_backup_v2') || raw.includes('schema cache') || error.code === 'PGRST202') {
-        throw new Error('Brakuje aktualizacji ról / backupów w Supabase. Uruchom CMS_UPDATE_ROLES_PERMISSIONS.sql, a potem odśwież stronę.');
+        throw new Error('Brakuje aktualizacji backupów i logów w Supabase. Uruchom plik CMS_UPDATE_AUDIT_BACKUPS.sql w SQL Editorze, a potem odśwież stronę.');
       }
       throw new Error(`Nie udało się utworzyć backupu: ${raw}`);
     }
@@ -79,7 +74,7 @@
   }
 
   async function save(key, data, options = {}) {
-    requireAuthenticatedEditor();
+    requireLoggedIn();
     if (options.backup !== false) {
       await createBackup(options.backupLabel || `AUTO: przed zmianą CMS — ${key}`);
     }
@@ -90,7 +85,7 @@
   }
 
   async function remove(key, options = {}) {
-    requirePermission('github.restore', 'Brak uprawnienia do przywracania wersji z GitHuba.');
+    requireLoggedIn();
     if (options.backup !== false) {
       await createBackup(options.backupLabel || `AUTO: przed przywróceniem z GitHuba — ${key}`);
     }
@@ -100,7 +95,7 @@
   }
 
   async function listBackups(type = null) {
-    requirePermission('backups.view', 'Brak uprawnienia do podglądu backupów.');
+    requirePermission('backups.view');
     let query = supabaseClient
       .from('cms_backups')
       .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type')
@@ -114,7 +109,7 @@
   }
 
   async function getBackup(id) {
-    requirePermission('backups.view', 'Brak uprawnienia do podglądu backupów.');
+    requirePermission('backups.view');
     const { data, error } = await supabaseClient
       .from('cms_backups')
       .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type,snapshot')
@@ -125,20 +120,21 @@
   }
 
   async function deleteBackup(id) {
+    requireLoggedIn();
     const { data, error } = await supabaseClient.rpc('matt_delete_backup', { p_backup_id: Number(id) });
     if (error) throw error;
     return data;
   }
 
   async function restoreBackup(id) {
-    requirePermission('backups.restore', 'Brak uprawnienia do przywracania backupów.');
+    requirePermission('backups.restore');
     const { data, error } = await supabaseClient.rpc('matt_restore_backup', { p_backup_id: Number(id) });
     if (error) throw error;
     return data;
   }
 
   async function restoreSnapshot(snapshot, label = 'Przywrócenie z pliku') {
-    requirePermission('backups.import', 'Brak uprawnienia do importu backupu JSON.');
+    requirePermission('backups.import');
     const { data, error } = await supabaseClient.rpc('matt_restore_snapshot', { p_snapshot: snapshot, p_label: label });
     if (error) throw error;
     return data;

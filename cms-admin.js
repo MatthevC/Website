@@ -112,10 +112,9 @@
     };
   }
 
-  function can(permission) { return window.currentUserIsAdmin === true || window.mattCan?.(permission) === true; }
-  function hasAny(...permissions) { return window.currentUserIsAdmin === true || permissions.flat().some(permission => can(permission)); }
-  const cmsPermissionKeys = ['page.text.edit','page.callouts.manage','page.images.manage','home.hero.manage','site.navigation.manage','site.links.manage','github.restore','rules.manage','streamers.manage','moderation.people.manage','moderation.benefits.manage','commands.manage','contact.topics.manage','discord.channels.manage','discord.join.manage','downloads.create','downloads.edit','downloads.delete','downloads.reorder','backups.view','backups.manual.create','backups.restore','backups.import','backups.delete.automatic','backups.delete.manual'];
-  function isAdmin() { return window.currentUserIsAdmin === true || (window.currentUserRole === 'moderator' && cmsPermissionKeys.some(permission => can(permission))); }
+  function isAdmin() { return window.currentUserRole === 'admin' || window.currentUserIsAdmin === true || (window.currentUserRole === 'moderator' && Array.isArray(window.currentUserPermissions) && window.currentUserPermissions.length > 0); }
+  function has(permission) { return window.mattHasPermission?.(permission) === true; }
+  function any(...permissions) { return permissions.some(has); }
 
   function formatBackupDate(value) {
     try { return new Intl.DateTimeFormat('pl-PL', { dateStyle:'medium', timeStyle:'short' }).format(new Date(value)); }
@@ -135,7 +134,7 @@
   }
 
   async function resetCmsKey(key, label = 'tę sekcję') {
-    if (!isAdmin() || !can('github.restore')) return;
+    if (!has('github.restore')) { notify('Brak uprawnienia do przywracania wersji z GitHuba.', 'error'); return; }
     if (window.MattCMS?.get(key, null) == null) {
       notify('Ta sekcja już korzysta z treści bazowej z GitHuba.');
       return;
@@ -164,6 +163,8 @@
 
   function openModal(title, html) {
     ensureModal();
+    const kicker = $('.cms-modal-head small', modal);
+    if (kicker) kicker.textContent = window.currentUserRole === 'admin' ? 'PANEL ADMINISTRATORA' : 'PANEL MODERATORA';
     $('#cms-modal-title', modal).textContent = title;
     $('#cms-modal-body', modal).innerHTML = html;
     modal.classList.add('active');
@@ -193,17 +194,23 @@
   }
 
   function configForRoute(route) {
-    if (route === 'home') return { label: 'GRAFIKA POWITALNA', action: openHomeHeroManager, permission: 'home.hero.manage' };
-    if (route === 'recommended') return { label: 'STREAMERZY', action: openStreamersManager, permission: 'streamers.manage' };
-    if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager, permission: 'moderation.people.manage' };
-    if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager, permission: 'moderation.benefits.manage' };
-    if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager, permission: 'commands.manage' };
-    if (['viewer/downloads','downloads'].includes(route)) return { label: 'PLIKI DO POBRANIA', action: openDownloadsManager, permission: ['downloads.create','downloads.edit','downloads.delete','downloads.reorder'] };
-    if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager, permission: 'contact.topics.manage' };
-    if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager, permission: 'discord.channels.manage' };
-    if (route === 'discord/join') return { label: 'PODGLĄD / KOMUNIKATY', action: openDiscordJoinManager, permission: 'discord.join.manage' };
-    if (route.startsWith('rules/') && route !== 'rules/game-picks') return { label: 'ZASADY REGULAMINU', action: openRulesManager, permission: 'rules.manage' };
+    if (route === 'home') return { label: 'GRAFIKA POWITALNA', action: openHomeHeroManager, permission:'home.hero.manage' };
+    if (route === 'recommended') return { label: 'STREAMERZY', action: openStreamersManager, permission:'streamers.manage' };
+    if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager, permission:'moderation.people.manage' };
+    if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager, permission:'moderation.benefits.manage' };
+    if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager, permission:'commands.manage' };
+    if (['viewer/downloads','downloads'].includes(route)) return { label: 'PLIKI DO POBRANIA', action: openDownloadsManager, permission:'downloads.any' };
+    if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager, permission:'contact.topics.manage' };
+    if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager, permission:'discord.channels.manage' };
+    if (route === 'discord/join') return { label: 'PODGLĄD / KOMUNIKATY', action: openDiscordJoinManager, permission:'discord.join.manage' };
+    if (route.startsWith('rules/') && route !== 'rules/game-picks') return { label: 'ZASADY REGULAMINU', action: openRulesManager, permission:'rules.manage' };
     return null;
+  }
+
+  function canConfig(config) {
+    if (!config) return false;
+    if (config.permission === 'downloads.any') return any('downloads.create','downloads.edit','downloads.delete','downloads.reorder');
+    return has(config.permission);
   }
 
   function ensureToolbar() {
@@ -227,12 +234,12 @@
       if (action === 'inline') startInlineEdit();
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
-      if (action === 'config') { const cfg=configForRoute(currentRoute()); if (cfg && (Array.isArray(cfg.permission)?hasAny(cfg.permission):can(cfg.permission))) cfg.action(); }
-      if (action === 'callouts') openPageCalloutsManager();
-      if (action === 'images') openPageImagesManager();
-      if (action === 'site') openSiteSettingsManager();
+      if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
+      if (action === 'callouts' && has('page.callouts.manage')) openPageCalloutsManager();
+      if (action === 'images' && has('page.images.manage')) openPageImagesManager();
+      if (action === 'site' && any('site.navigation.manage','site.links.manage')) openSiteSettingsManager();
       if (action === 'reset-page') resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie');
-      if (action === 'backups') openBackupsManager();
+      if (action === 'backups' && has('backups.view')) openBackupsManager();
     });
     return toolbar;
   }
@@ -243,36 +250,35 @@
       return;
     }
     ensureToolbar();
-    const titleRole = $('.cms-toolbar-title span', toolbar);
-    if (titleRole) titleRole.textContent = window.currentUserIsAdmin ? 'ADMIN' : 'MODERATOR';
-
+    const roleBadge = $('.cms-toolbar-title span', toolbar);
+    const roleTitle = $('.cms-toolbar-title strong', toolbar);
+    if (roleBadge) roleBadge.textContent = window.currentUserRole === 'admin' ? 'ADMIN' : 'MOD';
+    if (roleTitle) roleTitle.textContent = window.currentUserRole === 'admin' ? 'EDYCJA STRONY' : 'NARZĘDZIA MODERATORA';
     const config = configForRoute(currentRoute());
     const configBtn = $('[data-cms-action="config"]', toolbar);
-    const canConfig = Boolean(config) && (Array.isArray(config?.permission) ? hasAny(config.permission) : can(config?.permission));
-    configBtn.hidden = !canConfig || inlineEditing;
+    configBtn.hidden = !config || !canConfig(config) || inlineEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
-
     const calloutBtn = $('[data-cms-action="callouts"]', toolbar);
     const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
     const customCalloutCount = window.MattCMS?.customPageCallouts?.(currentRoute())?.length || 0;
     const calloutCount = baseCalloutCount + customCalloutCount;
     if (calloutBtn) {
-      calloutBtn.hidden = inlineEditing || !can('page.callouts.manage');
+      // Kreator dymków jest dostępny na KAŻDEJ podstronie, nawet gdy w GitHubie nie ma jeszcze żadnego dymku.
+      calloutBtn.hidden = inlineEditing || !has('page.callouts.manage');
       calloutBtn.textContent = `▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}`;
     }
-
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
-    if (imagesBtn) imagesBtn.hidden = inlineEditing || currentRoute() === 'home' || !can('page.images.manage');
-    $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || !can('page.text.edit');
-    $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || !hasAny('site.navigation.manage','site.links.manage');
-    $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing || !can('github.restore') || !can('page.text.edit');
-    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || !hasAny('backups.view','backups.manual.create','backups.restore','backups.import','backups.delete.automatic','backups.delete.manual');
+    if (imagesBtn) imagesBtn.hidden = inlineEditing || currentRoute() === 'home' || !has('page.images.manage');
+    $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || !has('page.text.edit');
+    $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || !any('site.navigation.manage','site.links.manage');
+    $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing || !has('github.restore');
+    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || !has('backups.view');
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
   }
 
   function startInlineEdit() {
-    if (!isAdmin() || !can('page.text.edit') || inlineEditing) return;
+    if (!has('page.text.edit') || inlineEditing) return;
     const items = window.MattCMS?.decorateEditable(currentRoute()) || [];
     inlineSnapshot = new Map(items.map(el => [el, el.innerHTML]));
     items.forEach(el => {
@@ -287,7 +293,7 @@
   }
 
   async function saveInlineEdit() {
-    if (!inlineEditing || !isAdmin() || !can('page.text.edit')) return;
+    if (!inlineEditing || !has('page.text.edit')) return;
     try {
       const key = `page:${currentRoute()}`;
       const data = {};
@@ -547,8 +553,7 @@
     return obj;
   }
 
-  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady, permission }) {
-    if (permission && !can(permission)) return;
+  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady }) {
     let items = clone(window.MattCMS?.get(key, null) || fallback() || []);
     if (typeof normalizeItem === 'function') items = items.map(item => normalizeItem(clone(item)));
     const esc = window.MattCMS.escape;
@@ -569,7 +574,7 @@
     };
 
     const drawList = () => {
-      openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>${can('github.restore') ? '<button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button>' : ''}</div><p>Strzałkami możesz ustawić kolejność wyświetlania. Supabase przechowuje tylko nadpisanie tej sekcji.</p></div>
+      openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Strzałkami możesz ustawić kolejność wyświetlania. Supabase przechowuje tylko nadpisanie tej sekcji.</p></div>
         <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button><button class="danger" type="button" data-delete="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add]', body)?.addEventListener('click', () => drawForm(-1));
@@ -661,7 +666,7 @@
   }
 
   function openRulesManager() {
-    if (!can('rules.manage')) return;
+    if (!isAdmin()) return;
     const route = currentRoute();
     const key = `rules:${route}`;
     let items = clone(window.MattCMS?.get(key, null) || extractRules());
@@ -689,7 +694,7 @@
       openModal('REGULAMIN — ZASADY', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
         <button class="cms-primary" data-add-rule>+ DODAJ ZASADĘ</button>
         <button data-save-rule-order>✓ ZAPISZ KOLEJNOŚĆ</button>
-        ${can('github.restore') ? '<button data-reset-rules>↶ PRZYWRÓĆ Z GITHUBA</button>' : ''}
+        <button data-reset-rules>↶ PRZYWRÓĆ Z GITHUBA</button>
       </div><p>Każda zasada to osobny dymek. Numeracja jest automatyczna — pierwszy element zawsze otrzymuje numer 01.</p></div>
       <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(item.label || item.title || `ZASADA ${index+1}`)}</strong></div><div>
         <button data-rule-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button>
@@ -740,7 +745,7 @@
   }
 
   function openHomeHeroManager() {
-    if (!can('home.hero.manage')) return;
+    if (!isAdmin()) return;
     const baseImg = document.querySelector('.hero-main.hero-main-image > img');
     const override = clone(window.MattCMS?.get('home_hero_image', null) || {});
     const displayUrl = override.url || baseImg?.getAttribute('src') || '';
@@ -750,7 +755,7 @@
       {name:'url',label:'Grafika „WITAJ W MATT\'S WORLD”',type:'image-file',folder:'home'},
       {name:'alt',label:'Opis grafiki (ALT)'}
     ];
-    openModal('STRONA GŁÓWNA — GRAFIKA POWITALNA', `<div class="cms-manager-actions"><div class="cms-manager-action-group">${can('github.restore') ? '<button type="button" data-reset-hero>↶ PRZYWRÓĆ GRAFIKĘ Z GITHUBA</button>' : ''}</div><p>Wybierz nową grafikę bezpośrednio z dysku. Plik zostanie zapisany w Supabase Storage tylko przez konto administratora.</p></div>
+    openModal('STRONA GŁÓWNA — GRAFIKA POWITALNA', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-hero>↶ PRZYWRÓĆ GRAFIKĘ Z GITHUBA</button></div><p>Wybierz nową grafikę bezpośrednio z dysku. Plik zostanie zapisany w Supabase Storage tylko przez konto administratora.</p></div>
       <form id="cms-hero-form" class="cms-form">${fieldHtml(fields[0], displayUrl)}${fieldHtml(fields[1], displayAlt)}
       <div class="cms-form-actions"><button type="button" data-back>← ANULUJ</button><button class="cms-primary" type="submit">ZAPISZ GRAFIKĘ</button></div></form>`);
     const body = $('#cms-modal-body', modal);
@@ -791,10 +796,10 @@
   }
 
   function openSiteSettingsManager() {
-    if (!hasAny('site.navigation.manage','site.links.manage')) return;
+    if (!isAdmin()) return;
     openModal('MENU I LINKI STRONY', `<div class="cms-site-settings-grid">
-      ${can('site.navigation.manage') ? '<button class="cms-site-setting-card" type="button" data-open-navigation><strong>☰ KATEGORIE I PODKATEGORIE</strong><span>Dodawanie, edycja, usuwanie i zmiana kolejności pozycji w górnym menu.</span></button>' : ''}
-      ${can('site.links.manage') ? '<button class="cms-site-setting-card" type="button" data-open-links><strong>↗ LINKI SOCIAL MEDIA</strong><span>Zmień adres Twitch, Discord, Instagram i TikTok używany przez ikony oraz przyciski strony.</span></button>' : ''}
+      ${has('site.navigation.manage')?'<button class="cms-site-setting-card" type="button" data-open-navigation><strong>☰ KATEGORIE I PODKATEGORIE</strong><span>Dodawanie, edycja, usuwanie i zmiana kolejności pozycji w górnym menu.</span></button>':''}
+      ${has('site.links.manage')?'<button class="cms-site-setting-card" type="button" data-open-links><strong>↗ LINKI SOCIAL MEDIA</strong><span>Zmień adres Twitch, Discord, Instagram i TikTok używany przez ikony oraz przyciski strony.</span></button>':''}
     </div>`);
     const body = $('#cms-modal-body', modal);
     $('[data-open-navigation]', body)?.addEventListener('click', openNavigationManager);
@@ -802,7 +807,7 @@
   }
 
   function openNavigationManager() {
-    if (!can('site.navigation.manage')) return;
+    if (!isAdmin()) return;
     let items = clone(window.MattCMS?.get('navigation', null) || window.MattCMS?.extractNavigationFromDom?.() || []);
     const esc = window.MattCMS.escape;
 
@@ -831,7 +836,7 @@
       openModal('MENU — KATEGORIE I PODKATEGORIE', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
         <button class="cms-primary" data-add-nav>+ DODAJ KATEGORIĘ</button>
         <button data-save-nav-order>✓ ZAPISZ KOLEJNOŚĆ</button>
-        ${can('github.restore') ? '<button data-reset-nav>↶ PRZYWRÓĆ Z GITHUBA</button>' : ''}
+        <button data-reset-nav>↶ PRZYWRÓĆ Z GITHUBA</button>
         <button data-site-back>← MENU / LINKI</button>
       </div><p>Kategoria bez podkategorii działa jak zwykły link. Po dodaniu podkategorii automatycznie staje się rozwijanym menu.</p></div>
       <div class="cms-discord-list">${items.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.label || 'BEZ NAZWY')}</strong><p>${cat.children?.length ? `${cat.children.length} podkategorii` : esc(cat.href || 'Brak linku')}</p></div><div>
@@ -902,7 +907,7 @@
   }
 
   function openSiteLinksManager() {
-    if (!can('site.links.manage')) return;
+    if (!isAdmin()) return;
     const current = { ...SITE_CONFIG, ...(window.MattCMS?.get('site_links', {}) || {}) };
     const fields = [
       {name:'twitchUrl',label:'Twitch — link przy ikonie / TWITCH.TV',type:'url',required:true},
@@ -938,7 +943,6 @@
     };
 
     const bindTwitchAutofill = form => {
-      if (!can('streamers.autofill')) return;
       const channelField = form.elements?.channelUrl?.closest('.cms-field');
       if (!channelField || channelField.querySelector('[data-twitch-autofill]')) return;
 
@@ -1015,7 +1019,7 @@
     };
 
     openArrayManager({
-      key:'streamers', title:'POLECANI STREAMERZY', singular:'streamera', fallback:extractStreamers, permission:'streamers.manage',
+      key:'streamers', title:'POLECANI STREAMERZY', singular:'streamera', fallback:extractStreamers,
       label:item=>item.displayName || item.login,
       normalizeItem:normalizeStreamer,
       onFormReady:bindTwitchAutofill,
@@ -1042,7 +1046,7 @@
 
   function openModeratorsManager() {
     openArrayManager({
-      key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name, permission:'moderation.people.manage',
+      key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name,
       fields:[
         {name:'name',label:'Nick / nazwa',required:true},{name:'role',label:'Rola / stanowisko',required:true},
         {name:'description',label:'Opis osoby',type:'textarea',required:true},{name:'twitch',label:'Link Twitch',type:'url'},
@@ -1053,14 +1057,14 @@
 
   function openBenefitsManager() {
     openArrayManager({
-      key:'moderator_benefits', title:'MODERACJA / KORZYŚCI', singular:'korzyść', fallback:extractBenefits, label:item=>item.title, permission:'moderation.benefits.manage',
+      key:'moderator_benefits', title:'MODERACJA / KORZYŚCI', singular:'korzyść', fallback:extractBenefits, label:item=>item.title,
       fields:[{name:'title',label:'Nazwa korzyści',required:true},{name:'description',label:'Opis korzyści',type:'textarea',required:true}]
     });
   }
 
   function openCommandsManager() {
     openArrayManager({
-      key:'commands', title:'KOMENDY', singular:'komendę', fallback:()=>window.MATT_COMMANDS_DEFAULT || [], label:item=>item.command, permission:'commands.manage',
+      key:'commands', title:'KOMENDY', singular:'komendę', fallback:()=>window.MATT_COMMANDS_DEFAULT || [], label:item=>item.command,
       fields:[
         {name:'command',label:'Komenda',required:true},{name:'description',label:'Opis',type:'textarea',required:true},
         {name:'category',label:'Kategoria',required:true},{name:'subcategory',label:'Podkategoria (opcjonalnie)'},
@@ -1071,7 +1075,7 @@
 
 
   function openDownloadsManager() {
-    if (!hasAny('downloads.create','downloads.edit','downloads.delete','downloads.reorder')) return;
+    if (!isAdmin()) return;
     const esc = window.MattCMS?.escape || (v => String(v || ''));
     const baseItems = clone(window.MattDownloads?.baseItems || []);
     let config = clone(window.MattDownloads?.getConfig?.() || { order: [], overrides: {}, hidden: [], custom: [] });
@@ -1114,56 +1118,50 @@
       } catch (error) { notify(`Błąd zapisu: ${error.message}`, 'error'); }
     };
 
+
     const draw = () => {
       const visible = visibleItems();
       const hiddenBase = baseItems.filter(item => hiddenSet().has(String(item.id)));
-      const canCreate = can('downloads.create');
-      const canEdit = can('downloads.edit');
-      const canDelete = can('downloads.delete');
-      const canReorder = can('downloads.reorder');
-      const canGitHub = can('github.restore');
       openModal('DO POBRANIA — PLIKI', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
-        ${canCreate ? '<button class="cms-primary" type="button" data-add-download>+ DODAJ PLIK</button>' : ''}
-        ${canReorder ? '<button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>' : ''}
-        ${canGitHub ? '<button type="button" data-reset-downloads>↶ WSZYSTKO Z GITHUBA</button>' : ''}
-      </div><p>Widoczne akcje odpowiadają uprawnieniom przypisanym do Twojego konta.</p></div>
-      <div class="cms-manager-list">${visible.length ? visible.map((item,index)=>`<article class="cms-manager-item cms-download-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${esc(String(item.type || window.MattDownloads?.typeFromHref?.(item.href) || 'PLIK').toUpperCase())} / ${item.source==='github'?'GITHUB':'CMS'}</small><div><strong>${esc(item.title || 'Plik')}</strong><span>${esc([item.sizeLabel,item.category].filter(Boolean).join(' • '))}</span></div></div><div>${canReorder?`<button type="button" data-download-up="${esc(item.id)}" ${index===0?'disabled':''}>↑</button><button type="button" data-download-down="${esc(item.id)}" ${index===visible.length-1?'disabled':''}>↓</button>`:''}${canEdit?`<button type="button" data-edit-download="${esc(item.id)}">EDYTUJ</button>`:''}${item.source==='github'&&canEdit&&canGitHub?`<button type="button" data-reset-download="${esc(item.id)}" ${config.overrides[item.id]?'':'disabled'}>↶ GITHUB</button>`:''}${canDelete?`<button class="danger" type="button" data-delete-download="${esc(item.id)}">USUŃ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak plików do pobrania.</div>'}</div>
-      ${hiddenBase.length&&canEdit&&canGitHub?`<section class="cms-download-hidden"><header><strong>UKRYTE PLIKI Z GITHUBA</strong></header><div class="cms-manager-list">${hiddenBase.map(item=>`<article class="cms-manager-item"><div><small>UKRYTY</small><strong>${esc(item.title)}</strong></div><div><button type="button" data-restore-download="${esc(item.id)}">PRZYWRÓĆ</button></div></article>`).join('')}</div></section>`:''}`);
+        <button class="cms-primary" type="button" data-add-download>+ DODAJ PLIK</button>
+        <button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>
+        <button type="button" data-reset-downloads>↶ WSZYSTKO Z GITHUBA</button>
+      </div><p>Nowe pliki wybierasz z dysku. Możesz też zmienić opis, kategorię, podmienić istniejący plik lub zmienić kolejność wyświetlania.</p></div>
+      <div class="cms-manager-list">${visible.length ? visible.map((item,index)=>`<article class="cms-manager-item cms-download-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${esc(String(item.type || window.MattDownloads?.typeFromHref?.(item.href) || 'PLIK').toUpperCase())} / ${item.source==='github'?'GITHUB':'CMS'}</small><div><strong>${esc(item.title || 'Plik')}</strong><span>${esc([item.sizeLabel,item.category].filter(Boolean).join(' • '))}</span></div></div><div><button type="button" data-download-up="${esc(item.id)}" ${index===0?'disabled':''}>↑</button><button type="button" data-download-down="${esc(item.id)}" ${index===visible.length-1?'disabled':''}>↓</button><button type="button" data-edit-download="${esc(item.id)}">EDYTUJ</button>${item.source==='github'?`<button type="button" data-reset-download="${esc(item.id)}" ${config.overrides[item.id]?'':'disabled'}>↶ GITHUB</button>`:''}<button class="danger" type="button" data-delete-download="${esc(item.id)}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak plików do pobrania. Dodaj pierwszy.</div>'}</div>
+      ${hiddenBase.length?`<section class="cms-download-hidden"><header><strong>UKRYTE PLIKI Z GITHUBA</strong></header><div class="cms-manager-list">${hiddenBase.map(item=>`<article class="cms-manager-item"><div><small>UKRYTY</small><strong>${esc(item.title)}</strong></div><div><button type="button" data-restore-download="${esc(item.id)}">PRZYWRÓĆ</button></div></article>`).join('')}</div></section>`:''}`);
 
-      $('[data-add-download]', modal)?.addEventListener('click', () => { if (canCreate) edit(null); });
-      $('[data-save-order]', modal)?.addEventListener('click', () => { if (canReorder) save('Kolejność plików została zapisana.', false); });
+      $('[data-add-download]', modal)?.addEventListener('click', () => edit(null));
+      $('[data-save-order]', modal)?.addEventListener('click', () => save('Kolejność plików została zapisana.', false));
       $('[data-reset-downloads]', modal)?.addEventListener('click', async () => {
-        if (!canGitHub) return;
-        if (!confirm('Przywrócić całą sekcję plików do wersji z GitHuba?')) return;
+        if (!confirm('Przywrócić całą sekcję plików do wersji z GitHuba? Własne pliki CMS znikną z listy, ale backup zachowa konfigurację.')) return;
         try { await window.MattCMS.remove('downloads_config'); notify('Przywrócono pliki z GitHuba.'); await rerender(); }
         catch(error){ notify(error.message,'error'); }
       });
 
-      $$('[data-download-up]', modal).forEach(btn => btn.addEventListener('click', () => { if (canReorder) move(btn.dataset.downloadUp, -1); }));
-      $$('[data-download-down]', modal).forEach(btn => btn.addEventListener('click', () => { if (canReorder) move(btn.dataset.downloadDown, 1); }));
-      $$('[data-edit-download]', modal).forEach(btn => btn.addEventListener('click', () => { if (canEdit) edit(btn.dataset.editDownload); }));
+      $$('[data-download-up]', modal).forEach(btn => btn.addEventListener('click', () => move(btn.dataset.downloadUp, -1)));
+      $$('[data-download-down]', modal).forEach(btn => btn.addEventListener('click', () => move(btn.dataset.downloadDown, 1)));
+      $$('[data-edit-download]', modal).forEach(btn => btn.addEventListener('click', () => edit(btn.dataset.editDownload)));
       $$('[data-reset-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
-        if (!canEdit || !canGitHub) return;
         const id=String(btn.dataset.resetDownload); delete config.overrides[id]; config.hidden=config.hidden.filter(x=>String(x)!==id); await save('Przywrócono dane pliku z GitHuba.');
       }));
       $$('[data-delete-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
-        if (!canDelete) return;
         const id=String(btn.dataset.deleteDownload); const base=baseMap.has(id);
         const item=visibleItems().find(x=>String(x.id)===id);
         if (!confirm(`Usunąć z listy „${item?.title || 'ten plik'}”?`)) return;
-        if (base) { if (!config.hidden.includes(id)) config.hidden.push(id); }
-        else config.custom=config.custom.filter(x=>String(x.id)!==id);
+        if (base) {
+          if (!config.hidden.includes(id)) config.hidden.push(id);
+        } else {
+          config.custom=config.custom.filter(x=>String(x.id)!==id);
+        }
         config.order=config.order.filter(x=>String(x)!==id);
         await save('Plik został usunięty z listy.');
       }));
       $$('[data-restore-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
-        if (!canEdit || !canGitHub) return;
         const id=String(btn.dataset.restoreDownload); config.hidden=config.hidden.filter(x=>String(x)!==id); if(!config.order.includes(id))config.order.push(id); await save('Plik został przywrócony.');
       }));
     };
 
     const move = (id, direction) => {
-      if (!can('downloads.reorder')) return;
       const list=visibleItems(); const index=list.findIndex(x=>String(x.id)===String(id)); const target=index+direction;
       if(index<0||target<0||target>=list.length)return;
       [list[index],list[target]]=[list[target],list[index]];
@@ -1173,20 +1171,24 @@
 
     const edit = (id) => {
       id = id ? String(id) : '';
-      const isNew=!id;
-      if (isNew && !can('downloads.create')) return;
-      if (!isNew && !can('downloads.edit')) return;
       const base = id ? baseMap.get(id) : null;
       const custom = id ? customMap().get(id) : null;
       const current = clone(base ? { ...base, ...(config.overrides[id] || {}) } : (custom || {
         id:'', title:'', description:'', category:'', type:'', sizeLabel:'', href:'', storagePath:'', fileName:'', secondaryHref:'', secondaryLabel:''
       }));
+      const isNew=!id;
       openModal(isNew?'DODAJ PLIK DO POBRANIA':'EDYTUJ PLIK DO POBRANIA', `<form id="cms-download-form" class="cms-form">
         <label class="cms-field"><span>Nazwa wyświetlana</span><input name="title" required maxlength="120" value="${esc(current.title||'')}"></label>
         <label class="cms-field"><span>Opis</span><textarea name="description" rows="5" maxlength="700" required>${esc(current.description||'')}</textarea></label>
-        <div class="cms-form-grid two"><label class="cms-field"><span>Kategoria</span><input name="category" maxlength="80" placeholder="Np. TWITCH, DBD, RESHADE" value="${esc(current.category||'')}"></label><label class="cms-field"><span>Typ pliku</span><input name="type" maxlength="10" placeholder="Uzupełni się z pliku" value="${esc(current.type||'')}"></label></div>
-        <label class="cms-field"><span>${isNew?'Plik z dysku':'Podmień plik (opcjonalnie)'}</span><div class="cms-download-file-row"><label class="cms-download-file-button">📁 WYBIERZ PLIK<input type="file" name="file" ${isNew?'required':''} hidden></label><span data-download-file-name>${esc(current.fileName || (current.href ? decodeURIComponent(String(current.href).split('?')[0].split('/').pop()||'Aktualny plik') : 'Nie wybrano pliku'))}</span></div><small>Maksymalnie 50 MB.</small></label>
-        <div class="cms-form-grid two"><label class="cms-field"><span>Dodatkowy przycisk — tekst</span><input name="secondaryLabel" maxlength="40" value="${esc(current.secondaryLabel||'')}"></label><label class="cms-field"><span>Dodatkowy przycisk — link</span><input name="secondaryHref" value="${esc(current.secondaryHref||'')}"></label></div>
+        <div class="cms-form-grid two">
+          <label class="cms-field"><span>Kategoria</span><input name="category" maxlength="80" placeholder="Np. TWITCH, DBD, RESHADE" value="${esc(current.category||'')}"></label>
+          <label class="cms-field"><span>Typ pliku</span><input name="type" maxlength="10" placeholder="Uzupełni się z pliku" value="${esc(current.type||'')}"></label>
+        </div>
+        <label class="cms-field"><span>${isNew?'Plik z dysku':'Podmień plik (opcjonalnie)'}</span><div class="cms-download-file-row"><label class="cms-download-file-button">📁 WYBIERZ PLIK<input type="file" name="file" ${isNew?'required':''} hidden></label><span data-download-file-name>${esc(current.fileName || (current.href ? decodeURIComponent(String(current.href).split('?')[0].split('/').pop()||'Aktualny plik') : 'Nie wybrano pliku'))}</span></div><small>Maksymalnie 50 MB. Przy edycji możesz zostawić obecny plik bez zmian.</small></label>
+        <div class="cms-form-grid two">
+          <label class="cms-field"><span>Dodatkowy przycisk — tekst (opcjonalnie)</span><input name="secondaryLabel" maxlength="40" placeholder="Np. ZOBACZ REGULAMIN" value="${esc(current.secondaryLabel||'')}"></label>
+          <label class="cms-field"><span>Dodatkowy przycisk — link (opcjonalnie)</span><input name="secondaryHref" placeholder="#/rules/twitch lub https://..." value="${esc(current.secondaryHref||'')}"></label>
+        </div>
         ${current.href?`<div class="cms-download-current"><small>AKTUALNY PLIK</small><a href="${esc(current.href)}" target="_blank" rel="noopener">${esc(current.fileName || current.href)}</a></div>`:''}
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">${isNew?'DODAJ PLIK':'ZAPISZ ZMIANY'}</button></div>
       </form>`);
@@ -1194,17 +1196,39 @@
       input?.addEventListener('change',()=>{const file=input.files?.[0];if(file)label.textContent=`${file.name} • ${cmsPrettyBytes(file.size)}`;});
       $('[data-back]',form)?.addEventListener('click',draw);
       form.addEventListener('submit',async e=>{
-        e.preventDefault(); if ((isNew&&!can('downloads.create'))||(!isNew&&!can('downloads.edit'))) return;
-        const submit=$('button[type="submit"]',form); submit.disabled=true; submit.textContent='ZAPISYWANIE…';
+        e.preventDefault(); const submit=$('button[type="submit"]',form); submit.disabled=true; submit.textContent='ZAPISYWANIE…';
         try {
           const file=input.files?.[0]||null;
-          let next={...current,title:String(form.elements.title.value||'').trim(),description:String(form.elements.description.value||'').trim(),category:String(form.elements.category.value||'').trim()||'PLIK',type:String(form.elements.type.value||'').trim().toUpperCase(),secondaryLabel:String(form.elements.secondaryLabel.value||'').trim(),secondaryHref:String(form.elements.secondaryHref.value||'').trim()};
+          let next={...current,
+            title:String(form.elements.title.value||'').trim(),
+            description:String(form.elements.description.value||'').trim(),
+            category:String(form.elements.category.value||'').trim()||'PLIK',
+            type:String(form.elements.type.value||'').trim().toUpperCase(),
+            secondaryLabel:String(form.elements.secondaryLabel.value||'').trim(),
+            secondaryHref:String(form.elements.secondaryHref.value||'').trim()
+          };
           if(isNew && !file)throw new Error('Wybierz plik z dysku.');
-          if(file){ submit.textContent='WYSYŁANIE PLIKU…'; const uploaded=await uploadCmsDownload(file,next.title||file.name); next={...next,...uploaded}; if(!String(form.elements.type.value||'').trim())next.type=uploaded.type; }
+          if(file){
+            submit.textContent='WYSYŁANIE PLIKU…';
+            const uploaded=await uploadCmsDownload(file,next.title||file.name);
+            next={...next,...uploaded};
+            if(!String(form.elements.type.value||'').trim())next.type=uploaded.type;
+          }
           if(!next.href)throw new Error('Brakuje pliku do pobrania.');
           if(!next.type)next.type=window.MattDownloads?.typeFromHref?.(next.href)||'PLIK';
-          if(base){ const override={}; ['title','description','category','type','sizeLabel','href','storagePath','fileName','secondaryHref','secondaryLabel'].forEach(key=>{const bv=base[key]??'';const nv=next[key]??'';if(String(bv)!==String(nv))override[key]=nv;}); if(Object.keys(override).length)config.overrides[id]=override;else delete config.overrides[id]; config.hidden=config.hidden.filter(x=>String(x)!==id); }
-          else { const itemId=id||`download-${slugify(next.title||next.fileName||'plik')}-${Date.now()}`; next.id=itemId; const idx=config.custom.findIndex(x=>String(x.id)===itemId); if(idx>=0)config.custom[idx]=next;else config.custom.push(next); if(!config.order.includes(itemId))config.order.push(itemId); }
+          if(base){
+            const override={};
+            ['title','description','category','type','sizeLabel','href','storagePath','fileName','secondaryHref','secondaryLabel'].forEach(key=>{
+              const bv=base[key]??''; const nv=next[key]??''; if(String(bv)!==String(nv))override[key]=nv;
+            });
+            if(Object.keys(override).length)config.overrides[id]=override; else delete config.overrides[id];
+            config.hidden=config.hidden.filter(x=>String(x)!==id);
+          }else{
+            const itemId=id||`download-${slugify(next.title||next.fileName||'plik')}-${Date.now()}`;
+            next.id=itemId; const idx=config.custom.findIndex(x=>String(x.id)===itemId);
+            if(idx>=0)config.custom[idx]=next;else config.custom.push(next);
+            if(!config.order.includes(itemId))config.order.push(itemId);
+          }
           await save(isNew?'Plik został dodany.':'Plik został zaktualizowany.',false);
         }catch(error){notify(error.message,'error');submit.disabled=false;submit.textContent=isNew?'DODAJ PLIK':'ZAPISZ ZMIANY';}
       });
@@ -1213,12 +1237,10 @@
     draw();
   }
 
-
   function openTopicsManager() {
-    if (!can('contact.topics.manage')) return;
     let topics = clone(window.MattCMS?.get('contact_topics', null) || extractTopics());
     const draw = () => {
-      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button>${can('github.restore') ? '<button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button>' : ''}</div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button><button class="danger" data-delete-topic="${index}">USUŃ</button></div></article>`).join('')}</div>`);
+      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button><button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button><button class="danger" data-delete-topic="${index}">USUŃ</button></div></article>`).join('')}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add-topic]', body).addEventListener('click', () => editTopic(-1));
       $('[data-reset-topics]', body).addEventListener('click', () => resetCmsKey('contact_topics', 'tematy formularza'));
@@ -1238,10 +1260,9 @@
 
 
   function openDiscordJoinManager() {
-    if (!can('discord.join.manage')) return;
     const esc = window.MattCMS.escape;
     const drawHub = () => {
-      openModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne dla administratora oraz moderatorów z odpowiednim uprawnieniem i zapisują się w CMS.</p></div>
+      openModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne wyłącznie dla administratora i zapisują się w CMS.</p></div>
       <div class="cms-feature-grid"><article class="cms-feature-card"><span>01</span><div><strong>KOMUNIKATY NAD PODGLĄDEM</strong><p>Dodawaj komunikaty podobne do czerwonego „ZACZNIJ OD #konfiguracja-tickets”, zmieniaj ich kolejność, kolor, ikonę, treść i przycisk.</p></div><button data-open-bubbles>EDYTUJ →</button></article><article class="cms-feature-card"><span>02</span><div><strong>PODGLĄD SERWERA</strong><p>Zmieniaj kategorie i kanały w makiecie Discorda, wiadomości na czacie, członków, nagłówki i opis podglądu.</p></div><button data-open-preview>EDYTUJ →</button></article></div>`);
       const body=$('#cms-modal-body',modal);
       $$('[data-open-bubbles]',body).forEach(b=>b.addEventListener('click',openBubbles));
@@ -1253,7 +1274,7 @@
       const move=(from,to)=>{if(to<0||to>=items.length)return;const [x]=items.splice(from,1);items.splice(to,0,x);draw();};
       const save=async(message)=>{try{await window.MattCMS.save('discord_join_bubbles',items);window.MattCMS.renderDiscordJoinBubbles(items);notify(message);draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
       const draw=()=>{
-        openModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>${can('github.restore') ? '<button data-reset>↶ Z GITHUBA</button>' : ''}</div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
+        openModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
         const body=$('#cms-modal-body',modal);
         $('[data-hub]',body).addEventListener('click',drawHub);$('[data-add]',body).addEventListener('click',()=>edit(-1));$('[data-save-order]',body).addEventListener('click',()=>save('Kolejność komunikatów zapisana.'));$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_bubbles','komunikaty strony Discord'));
         $$('[data-up]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.up),Number(b.dataset.up)-1)));$$('[data-down]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.down),Number(b.dataset.down)+1)));$$('[data-edit]',body).forEach(b=>b.addEventListener('click',()=>edit(Number(b.dataset.edit))));$$('[data-delete]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delete);if(!confirm(`Usunąć komunikat „${items[i]?.title||''}”?`))return;items.splice(i,1);await save('Komunikat usunięty.');}));
@@ -1311,7 +1332,7 @@
       const save=async(message,redraw=true)=>{try{await window.MattCMS.save('discord_join_preview',data);window.MattCMS.renderDiscordJoinPreview(data);notify(message);if(redraw)draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
       const move=(arr,from,to)=>{if(to<0||to>=arr.length)return;const [x]=arr.splice(from,1);arr.splice(to,0,x);draw();};
       const draw=()=>{
-        openModal('DISCORD — EDYCJA PODGLĄDU', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button data-general>✎ NAGŁÓWEK / USTAWIENIA</button><button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button>${can('github.restore') ? '<button data-reset>↶ Z GITHUBA</button>' : ''}</div><p>Makieta jest poglądowa. Nazwa serwera, ikona i liczniki nadal mogą być automatycznie pobierane z prawdziwego zaproszenia Discord.</p></div>
+        openModal('DISCORD — EDYCJA PODGLĄDU', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button data-general>✎ NAGŁÓWEK / USTAWIENIA</button><button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button><button data-reset>↶ Z GITHUBA</button></div><p>Makieta jest poglądowa. Nazwa serwera, ikona i liczniki nadal mogą być automatycznie pobierane z prawdziwego zaproszenia Discord.</p></div>
         <div class="cms-preview-admin-grid"><section><header><strong>KATEGORIE I KANAŁY</strong><button class="cms-primary" data-add-cat>+ KATEGORIA</button></header>${data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div><button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${esc(ch.href||'')}</small></div><div><button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button></div></article>`).join('')}</section>
         <section><header><strong>WIADOMOŚCI W PODGLĄDZIE</strong><button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button></header><div class="cms-manager-list">${data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div><button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button></div></article>`).join('')}</div></section>
         <section><header><strong>LISTA OSÓB</strong><button class="cms-primary" data-add-group>+ GRUPA</button></header>${data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>`<article><div><span>${esc(m.initial||String(m.name||'?').charAt(0))}</span><strong>${esc(m.name||'osoba')}</strong><small>${esc(m.status||'')}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('')}</section></div>`);
@@ -1337,7 +1358,6 @@
   }
 
   function openDiscordManager() {
-    if (!can('discord.channels.manage')) return;
     let categories = clone(window.MattCMS?.get('discord_channels', null) || extractDiscordCategories());
     const esc = window.MattCMS.escape;
 
@@ -1363,7 +1383,7 @@
       openModal('DISCORD — KANAŁY I KATEGORIE', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
         <button class="cms-primary" data-add-category>+ DODAJ KATEGORIĘ</button>
         <button data-save-discord-order>✓ ZAPISZ KOLEJNOŚĆ</button>
-        ${can('github.restore') ? '<button data-reset-discord>↶ PRZYWRÓĆ Z GITHUBA</button>' : ''}
+        <button data-reset-discord>↶ PRZYWRÓĆ Z GITHUBA</button>
       </div><p>Możesz zmieniać nazwę, ikonę, opis i wyróżnienie każdego komunikatu kanału, dodawać nowe kanały oraz całe kategorie.</p></div>
         <div class="cms-discord-list">${categories.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>${esc(cat.icon || '📁')} KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.title)}</strong><p>${esc(cat.description || '')}</p></div><div>
           <button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===categories.length-1?'disabled':''}>↓</button>
@@ -1421,7 +1441,7 @@
   }
 
   function openPageCalloutsManager() {
-    if (!can('page.callouts.manage')) return;
+    if (!isAdmin()) return;
     const route = currentRoute();
     const baseKey = `page_callouts:${route}`;
     const customKey = `page_custom_callouts:${route}`;
@@ -1454,7 +1474,7 @@
         <div class="cms-manager-actions cms-bubbles-main-actions">
           <div class="cms-manager-action-group">
             <button class="cms-primary" type="button" data-add-custom>+ DODAJ NOWY KOMUNIKAT</button>
-            ${can('github.restore') ? '<button type="button" data-reset-base>↶ KOMUNIKATY Z GITHUBA</button>' : ''}
+            <button type="button" data-reset-base>↶ KOMUNIKATY Z GITHUBA</button>
             <button type="button" data-remove-custom ${custom.length?'':'disabled'}>USUŃ WŁASNE KOMUNIKATY</button>
           </div>
           <p>Kreator działa na każdej podstronie. Możesz edytować komunikaty istniejące w plikach GitHuba albo tworzyć własne bez zmiany kodu.</p>
@@ -1465,7 +1485,7 @@
           <div class="cms-manager-list">${baseItems.length ? baseItems.map((item,index)=>{
             const raw = overrides[item.id];
             const state = raw && typeof raw === 'object' && raw.hidden === true ? 'USUNIĘTY ZE STRONY' : (raw != null ? 'ZMODYFIKOWANY' : 'Z GITHUBA');
-            return `<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${state}</small><strong>${esc((item.text || 'Komunikat').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit-base="${esc(item.id)}">EDYTUJ</button><button class="danger" type="button" data-hide-base="${esc(item.id)}">${state==='USUNIĘTY ZE STRONY'?'PRZYWRÓĆ':'USUŃ ZE STRONY'}</button>${can('github.restore') ? `<button type="button" data-reset-one="${esc(item.id)}" ${raw!=null?'':'disabled'}>↶ GITHUB</button>` : ''}</div></article>`;
+            return `<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${state}</small><strong>${esc((item.text || 'Komunikat').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit-base="${esc(item.id)}">EDYTUJ</button><button class="danger" type="button" data-hide-base="${esc(item.id)}">${state==='USUNIĘTY ZE STRONY'?'PRZYWRÓĆ':'USUŃ ZE STRONY'}</button><button type="button" data-reset-one="${esc(item.id)}" ${raw!=null?'':'disabled'}>↶ GITHUB</button></div></article>`;
           }).join('') : '<div class="cms-empty">W plikach GitHuba nie ma wykrytego komunikatu na tej podstronie. Nadal możesz utworzyć własny poniżej.</div>'}</div>
         </section>
 
@@ -1614,7 +1634,7 @@
   }
 
   function openPageImagesManager() {
-    if (!can('page.images.manage')) return;
+    if (!isAdmin()) return;
     const route = currentRoute();
     const key = `page_images:${route}`;
     const bannerKey = `page_banner:${route}`;
@@ -1627,8 +1647,8 @@
       const images = currentImages();
       const banner = clone(window.MattCMS?.get(bannerKey, null) || null);
       const bannerBlock = route === 'home' ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
-      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${bannerBlock}<div class="cms-manager-actions"><div class="cms-manager-action-group">${can('github.restore') ? '<button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button>' : ''}</div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
-        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button>${can('github.restore') ? `<button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button>` : ''}</div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów. Nadal możesz dodać grafikę nagłówkową powyżej.</div>'}</div>`);
+      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${bannerBlock}<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
+        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów. Nadal możesz dodać grafikę nagłówkową powyżej.</div>'}</div>`);
       const body=$('#cms-modal-body',modal);
       $('[data-reset-images]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie grafiki tej podstrony'));
       $$('[data-image-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editImage(btn.dataset.imageEdit)));
@@ -1652,7 +1672,7 @@
       if(!item) return draw();
       const current=overrides[id]||{url:item.src,alt:item.alt};
       const fields=[{name:'image',label:'Grafika',type:'image-file'},{name:'alt',label:'Opis grafiki (ALT)',help:'Krótki opis obrazu dla dostępności i wyszukiwarek.'}];
-      openModal('ZMIEŃ GRAFIKĘ',`<form id="cms-page-image-form" class="cms-form">${fieldHtml(fields[0],current.url||item.src)}${fieldHtml(fields[1],current.alt??item.alt)}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button>${can('github.restore') ? '<button type="button" data-base>↶ Z GITHUBA</button>' : ''}<button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      openModal('ZMIEŃ GRAFIKĘ',`<form id="cms-page-image-form" class="cms-form">${fieldHtml(fields[0],current.url||item.src)}${fieldHtml(fields[1],current.alt??item.alt)}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-base>↶ Z GITHUBA</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form=$('#cms-page-image-form',modal);bindImageFileFields(form,fields);$('[data-back]',form)?.addEventListener('click',draw);$('[data-base]',form)?.addEventListener('click',async()=>{delete overrides[id];await saveOverrideMap(key,overrides,'Grafika została przywrócona z GitHuba.');});
       form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||item.src);const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,item.label||id,`pages/${route}`);const alt=String(form.elements.alt?.value||'').trim();const baseUrl=item.baseSrc;const baseAlt=item.baseAlt||'';if(url===baseUrl&&alt===baseAlt)delete overrides[id];else overrides[id]={url,alt};await saveOverrideMap(key,overrides,'Grafika została zapisana.');}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
     };
@@ -1668,7 +1688,7 @@
   }
 
   async function openBackupsManager() {
-    if (!can('backups.view')) return;
+    if (!has('backups.view')) return;
     let activeType = 'automatic';
 
     const renderBackupItem = (b) => {
@@ -1685,8 +1705,8 @@
         </div>
         <div>
           <button type="button" data-download-backup="${Number(b.id)}">POBIERZ JSON</button>
-          ${can('backups.restore') ? `<button type="button" data-restore-backup="${Number(b.id)}">PRZYWRÓĆ</button>` : ''}
-          ${can(b.backup_type === 'manual' ? 'backups.delete.manual' : 'backups.delete.automatic') ? `<button class="danger" type="button" data-delete-backup="${Number(b.id)}">USUŃ</button>` : ''}
+          ${has('backups.restore') ? `<button type="button" data-restore-backup="${Number(b.id)}">PRZYWRÓĆ</button>` : ''}
+          ${(b.backup_type === 'manual' ? has('backups.delete.manual') : has('backups.delete.automatic')) ? `<button class="danger" type="button" data-delete-backup="${Number(b.id)}">USUŃ</button>` : ''}
         </div>
       </article>`;
     };
@@ -1710,8 +1730,9 @@
           ` : `
             <div class="cms-manager-actions cms-backup-actions">
               <div class="cms-manager-action-group">
-                ${can('backups.manual.create') ? '<button class="cms-primary" type="button" data-create-backup>+ UTWÓRZ RĘCZNY ZAPIS</button>' : ''}
-                ${can('backups.import') ? '<button type="button" data-import-backup>↑ WCZYTAJ PLIK JSON</button><input type="file" data-backup-file accept="application/json,.json" hidden>' : ''}
+                ${has('backups.manual.create')?'<button class="cms-primary" type="button" data-create-backup>+ UTWÓRZ RĘCZNY ZAPIS</button>':''}
+                ${has('backups.import')?'<button type="button" data-import-backup>↑ WCZYTAJ PLIK JSON</button>':''}
+                <input type="file" data-backup-file accept="application/json,.json" hidden>
               </div>
               <p>Ręczne zapisy nie są objęte limitem 10 kopii i nie są usuwane automatycznie. Widać przy nich autora oraz datę utworzenia.</p>
             </div>
@@ -1729,7 +1750,6 @@
 
         const fileInput = $('[data-backup-file]', body);
         $('[data-create-backup]', body)?.addEventListener('click', async () => {
-          if (!can('backups.manual.create')) return;
           const label = prompt('Nazwa ręcznego zapisu:', `Ręczny zapis — ${new Date().toLocaleString('pl-PL')}`);
           if (label === null) return;
           try {
@@ -1739,9 +1759,8 @@
           } catch (e) { notify(e.message, 'error'); }
         });
 
-        $('[data-import-backup]', body)?.addEventListener('click', () => { if (can('backups.import')) fileInput?.click(); });
+        $('[data-import-backup]', body)?.addEventListener('click', () => fileInput?.click());
         fileInput?.addEventListener('change', async () => {
-          if (!can('backups.import')) return;
           const file = fileInput.files?.[0];
           if (!file) return;
           try {
@@ -1766,7 +1785,6 @@
         }));
 
         $$('[data-restore-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
-          if (!can('backups.restore')) return;
           const id = Number(btn.dataset.restoreBackup);
           const selected = backups.find(x => Number(x.id) === id);
           if (!confirm(`Przywrócić zapis #${id} „${selected?.label || ''}”? Bieżący stan zostanie automatycznie zabezpieczony przed przywróceniem.`)) return;
@@ -1777,21 +1795,19 @@
         $$('[data-delete-backup]', body).forEach(btn => btn.addEventListener('click', async () => {
           const id = Number(btn.dataset.deleteBackup);
           const selected = backups.find(x => Number(x.id) === id);
-          const deletePermission = selected?.backup_type === 'manual' ? 'backups.delete.manual' : 'backups.delete.automatic';
-          if (!can(deletePermission)) return;
           if (!confirm(`Usunąć ${selected?.backup_type === 'manual' ? 'ręczny' : 'automatyczny'} zapis #${id} „${selected?.label || ''}”? Tej operacji nie da się cofnąć.`)) return;
           try { await window.MattCMS.deleteBackup(id); notify('Zapis został usunięty.'); await draw(); }
           catch (e) { notify(`Nie udało się usunąć: ${e.message}`, 'error'); }
         }));
       } catch (error) {
-        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać nowych backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Uruchom najnowszy plik <code>CMS_UPDATE_ROLES_PERMISSIONS.sql</code> w Supabase.</div>`);
+        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać nowych backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Uruchom plik <code>CMS_UPDATE_AUDIT_BACKUPS.sql</code> w Supabase.</div>`);
       }
     };
 
     await draw();
   }
 
-  window.addEventListener('matt-auth-change', () => { if (!isAdmin() && inlineEditing) cancelInlineEdit(); refreshToolbar(); });
+  window.addEventListener('matt-auth-change', () => { if (!has('page.text.edit') && inlineEditing) cancelInlineEdit(); refreshToolbar(); });
   window.addEventListener('hashchange', () => { if (inlineEditing) finishInlineEdit(); setTimeout(refreshToolbar, 0); });
   document.addEventListener('DOMContentLoaded', () => setTimeout(refreshToolbar, 0));
   setTimeout(refreshToolbar, 600);
