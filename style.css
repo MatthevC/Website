@@ -8898,3 +8898,42 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   border-radius:12px;
   padding:12px 14px;
 }
+
+/* v2.5.8 — account management security tools */
+.account-security-heading{margin-top:18px}
+.account-security-card{
+  display:grid;gap:12px;padding:14px;border:1px solid #2a2d34;border-radius:10px;
+  background:#0f1014
+}
+.account-email-tool{display:grid;gap:7px}
+.account-email-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.account-email-row input{
+  min-width:0;border:1px solid #30333b;border-radius:9px;background:#090a0d;color:#fff;
+  padding:11px 12px;font:600 12px/1.2 inherit;outline:none
+}
+.account-email-row input:focus{border-color:#ef303a;box-shadow:0 0 0 3px rgba(239,48,58,.09)}
+.account-email-row input:disabled{opacity:.52;cursor:not-allowed}
+.account-email-row button,.account-security-actions button,.account-temp-password button{
+  border:1px solid #343740;border-radius:8px;background:#18191e;color:#e6e7eb;
+  padding:10px 12px;font:800 10px/1 inherit;cursor:pointer
+}
+.account-email-row button:hover:not(:disabled),.account-security-actions button:hover:not(:disabled),.account-temp-password button:hover:not(:disabled){border-color:#ef303a;color:#fff}
+.account-email-row button:disabled,.account-security-actions button:disabled{opacity:.32;cursor:not-allowed}
+.account-security-actions{display:flex;gap:8px;flex-wrap:wrap}
+.account-security-actions .danger{margin-left:auto}
+.account-temp-password{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;
+  padding:12px;border:1px solid rgba(255,173,51,.34);border-radius:9px;background:rgba(255,173,51,.06)
+}
+.account-temp-password[hidden]{display:none!important}
+.account-temp-password>span{grid-column:1/-1;color:#ffb34a;font-size:9px;font-weight:900;letter-spacing:.12em}
+.account-temp-password code{
+  min-width:0;overflow:auto;padding:10px 12px;border-radius:7px;background:#08090c;color:#fff;
+  border:1px solid #30323a;font:800 13px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace
+}
+.account-temp-password small{grid-column:1/-1;color:#8f929b;font-size:9px;line-height:1.45}
+@media(max-width:650px){
+  .account-email-row{grid-template-columns:1fr}.account-email-row button{width:100%}
+  .account-security-actions{display:grid;grid-template-columns:1fr}.account-security-actions .danger{margin-left:0}
+  .account-temp-password{grid-template-columns:1fr}.account-temp-password button{width:100%}
+}

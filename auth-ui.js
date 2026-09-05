@@ -61,6 +61,9 @@ function mattAuditActionLabel(action = "") {
     "auth.email_changed": "Zmieniono e-mail",
     "account.created": "Utworzono konto",
     "account.first_setup_completed": "Zakończono pierwszą konfigurację",
+    "account.password_reset": "Zresetowano hasło",
+    "account.email_changed_by_manager": "Zmieniono e-mail użytkownika",
+    "account.deleted": "Usunięto konto",
     "access.changed": "Zmieniono rolę / uprawnienia",
     "backup.automatic.created": "Utworzono automatyczny zapis",
     "backup.manual.created": "Utworzono ręczny zapis",
@@ -272,7 +275,8 @@ async function mattLoadUserHeader() {
     window.dispatchEvent(new CustomEvent("matt-auth-change", { detail: { isAdmin: access.isAdmin, role: access.role, permissions: access.permissions } }));
     const canViewAudit = window.mattHasPermission?.("audit.view") === true;
     if (auditLogs) { auditLogs.hidden = !canViewAudit; auditLogs.onclick = canViewAudit ? (() => { menu?.classList.remove("show"); mattOpenAuditLogs(); }) : null; }
-    if (manageAccounts) { manageAccounts.hidden = !access.isAdmin; manageAccounts.onclick = access.isAdmin ? (() => { menu?.classList.remove("show"); mattOpenAccountManager(); }) : null; }
+    const canManageAccounts = access.isAdmin || window.mattHasPermission?.("accounts.view") === true;
+    if (manageAccounts) { manageAccounts.hidden = !canManageAccounts; manageAccounts.onclick = canManageAccounts ? (() => { menu?.classList.remove("show"); mattOpenAccountManager(); }) : null; }
     mattSetHeaderUser(profile);
 
     if (profile.must_complete_account === true) {
@@ -360,10 +364,12 @@ async function mattForceFirstLoginSetup(session, profile) {
 }
 
 async function mattOpenAccountManager() {
-  if (window.currentUserIsAdmin !== true) return;
+  const canAccount = permission => window.currentUserIsAdmin === true || window.mattHasPermission?.(permission) === true;
+  if (!canAccount("accounts.view")) return;
 
   const sessionRes = await supabaseClient.auth.getSession();
   const viewerUserId = sessionRes?.data?.session?.user?.id || "";
+  const viewerIsAdmin = window.currentUserIsAdmin === true || String(window.currentUserRole || "").toLowerCase() === "admin";
 
   let modal = document.getElementById("accountManagerModal");
   if (!modal) {
@@ -373,9 +379,9 @@ async function mattOpenAccountManager() {
     modal.innerHTML = `<div class="account-manager-box" role="dialog" aria-modal="true">
       <header class="account-manager-head">
         <div>
-          <span>TYLKO ADMINISTRATOR</span>
+          <span>ZARZĄDZANIE KONTAMI</span>
           <h2>ZARZĄDZAJ KONTAMI</h2>
-          <p>Twórz konta tymczasowe, przypisuj role i kontroluj dokładne uprawnienia moderatorów.</p>
+          <p>Podglądaj użytkowników, nadawaj role i uprawnienia oraz wykonuj awaryjne operacje na kontach zgodnie z przydzielonym zakresem dostępu.</p>
         </div>
         <button type="button" data-account-close aria-label="Zamknij">×</button>
       </header>
@@ -433,8 +439,8 @@ async function mattOpenAccountManager() {
   };
 
   const accountStatus = account => {
-    const technical = /@pending\.mattsworld\.invalid$/i.test(String(account.email || ""));
-    if (technical) return `<span class="account-badge pending">PIERWSZE LOGOWANIE</span>`;
+    const technical = account?.must_complete_account === true;
+    if (technical) return `<span class="account-badge pending">WYMAGA KONFIGURACJI</span>`;
     if (account.role === "admin") return `<span class="account-badge admin">ADMIN · ${catalog.length} upr.</span>`;
     if (account.role === "moderator") return `<span class="account-badge moderator">MODERATOR · ${(account.permissions || []).length} upr.</span>`;
     return `<span class="account-badge user">UŻYTKOWNIK · 0 upr.</span>`;
@@ -458,7 +464,7 @@ async function mattOpenAccountManager() {
       <section class="account-list-panel">
         <div class="account-panel-title">
           <div><small>KONTA</small><strong>${accounts.length} użytkowników</strong></div>
-          <button class="account-primary" type="button" data-new-account>+ NOWE KONTO</button>
+          ${canAccount("accounts.create") ? '<button class="account-primary" type="button" data-new-account>+ NOWE KONTO</button>' : ''}
         </div>
         <div class="account-list">${accounts.map(a => {
           const isSelf = a.auth_user_id === viewerUserId;
@@ -466,7 +472,7 @@ async function mattOpenAccountManager() {
             <img src="${mattAccountEscape(a.avatar_url || MATT_DEFAULT_AVATAR)}" alt="">
             <span>
               <strong>${mattAccountEscape(a.username || 'Użytkownik')}${isSelf ? ' <em>TY</em>' : ''}</strong>
-              <small>${/@pending\.mattsworld\.invalid$/i.test(String(a.email||'')) ? 'E-mail ustawi przy pierwszym logowaniu' : mattAccountEscape(a.email || 'Brak e-maila')}</small>
+              <small>${a.must_complete_account === true ? 'Konto wymaga ustawienia/zmiany danych logowania' : mattAccountEscape(a.email || 'Brak e-maila')}</small>
             </span>
             ${accountStatus(a)}
           </button>`;
@@ -489,11 +495,18 @@ async function mattOpenAccountManager() {
     const currentRole = String(account.role || "user").toLowerCase();
     const selectedPermissions = new Set(effectivePermissions(account));
     const meta = roleMeta(currentRole);
+    const targetIsAdmin = currentRole === "admin";
+    const canChangeRole = !isSelf && canAccount("accounts.role.change") && (viewerIsAdmin || !targetIsAdmin);
+    const canChangePermissions = !isSelf && canAccount("accounts.permissions.change") && (viewerIsAdmin || !targetIsAdmin);
+    const canResetPassword = !isSelf && canAccount("accounts.password.reset") && (viewerIsAdmin || !targetIsAdmin);
+    const canChangeEmail = !isSelf && canAccount("accounts.email.change") && (viewerIsAdmin || !targetIsAdmin);
+    const canDeleteAccount = !isSelf && canAccount("accounts.delete") && (viewerIsAdmin || !targetIsAdmin);
 
     const roleOptions = ["user","moderator","admin"].map(role => {
       const m = roleMeta(role);
       const active = currentRole === role;
-      return `<option value="${role}" ${active ? 'selected' : ''}>${m.label}</option>`;
+      const disabled = role === "admin" && !viewerIsAdmin && !active;
+      return `<option value="${role}" ${active ? 'selected' : ''} ${disabled ? 'disabled' : ''}>${m.label}${disabled ? ' — tylko administrator' : ''}</option>`;
     }).join("");
 
     const permissionSections = [...groups.entries()].map(([group, items]) => {
@@ -507,7 +520,7 @@ async function mattOpenAccountManager() {
         <header><h4>${mattAccountEscape(group)}</h4><span data-group-count>${activeCount}/${items.length}</span></header>
         ${items.map(item => {
           const checked = currentRole === "admin" || (currentRole === "moderator" && selectedPermissions.has(item.permission));
-          const disabled = isSelf || currentRole !== "moderator";
+          const disabled = isSelf || currentRole !== "moderator" || !canChangePermissions;
           return `<label class="account-permission ${disabled ? 'readonly' : ''}">
             <input type="checkbox" value="${mattAccountEscape(item.permission)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
             <span>
@@ -525,7 +538,7 @@ async function mattOpenAccountManager() {
         <div>
           <small>${isSelf ? 'TWOJE KONTO · PODGLĄD' : 'EDYCJA KONTA'}</small>
           <h3>${mattAccountEscape(account.username || 'Użytkownik')}</h3>
-          <p>${/@pending\.mattsworld\.invalid$/i.test(String(account.email||'')) ? 'Konto oczekuje na pierwsze logowanie i ustawienie prawdziwego e-maila.' : mattAccountEscape(account.email || '')}</p>
+          <p>${account.must_complete_account === true ? 'Konto wymaga dokończenia konfiguracji danych logowania.' : mattAccountEscape(account.email || '')}</p>
         </div>
         <div class="account-editor-badges">${isSelf ? '<span class="account-badge self">TWOJE KONTO</span>' : ''}${accountStatus(account)}</div>
       </div>
@@ -538,10 +551,10 @@ async function mattOpenAccountManager() {
       </div>
       <div class="account-role-select-wrap">
         <label class="account-form-label" for="account-role-select">Wybór roli</label>
-        <select id="account-role-select" name="account-role-choice" class="account-role-select" ${isSelf ? 'disabled' : ''}>
+        <select id="account-role-select" name="account-role-choice" class="account-role-select" ${!canChangeRole ? 'disabled' : ''}>
           ${roleOptions}
         </select>
-        <div class="account-role-help">${isSelf ? 'To jest Twoje konto — zmiana własnej roli jest zablokowana.' : 'Wybierz jedną rolę z listy. Dla Moderatora możesz niżej zaznaczyć dokładne uprawnienia.'}</div>
+        <div class="account-role-help">${isSelf ? 'To jest Twoje konto — zmiana własnej roli jest zablokowana.' : canChangeRole ? 'Wybierz jedną rolę z listy. Dla Moderatora możesz niżej zaznaczyć dokładne uprawnienia.' : 'Nie masz uprawnienia do zmiany roli tego konta.'}</div>
       </div>
       <div class="account-role-note" data-role-note></div>
 
@@ -549,16 +562,35 @@ async function mattOpenAccountManager() {
         <div><small>UPRAWNIENIA</small><h4>Zakres dostępu</h4></div>
         <div class="account-permission-tools">
           <span class="account-permission-total" data-permission-total>${permissionCount}/${catalog.length} aktywnych</span>
-          <button type="button" data-select-all ${currentRole !== 'moderator' || isSelf ? 'disabled' : ''}>ZAZNACZ WSZYSTKO</button>
-          <button type="button" data-clear-all ${currentRole !== 'moderator' || isSelf ? 'disabled' : ''}>WYCZYŚĆ</button>
+          <button type="button" data-select-all ${currentRole !== 'moderator' || !canChangePermissions ? 'disabled' : ''}>ZAZNACZ WSZYSTKO</button>
+          <button type="button" data-clear-all ${currentRole !== 'moderator' || !canChangePermissions ? 'disabled' : ''}>WYCZYŚĆ</button>
         </div>
       </div>
       <div class="account-permissions" data-permissions>${permissionSections}</div>
 
+      <div class="account-section-heading account-security-heading">
+        <div><small>KONTO / BEZPIECZEŃSTWO</small><h4>Operacje awaryjne</h4></div>
+        <span>${isSelf ? 'WŁASNE KONTO CHRONIONE' : 'DOSTĘP WG UPRAWNIEŃ'}</span>
+      </div>
+      <div class="account-security-card">
+        <div class="account-email-tool">
+          <label class="account-form-label" for="account-admin-email">Adres e-mail użytkownika</label>
+          <div class="account-email-row">
+            <input id="account-admin-email" type="email" data-admin-email value="${mattAccountEscape(account.email || '')}" ${!canChangeEmail ? 'disabled' : ''}>
+            <button type="button" data-change-email ${!canChangeEmail ? 'disabled' : ''}>ZMIEŃ E-MAIL</button>
+          </div>
+        </div>
+        <div class="account-security-actions">
+          <button type="button" data-reset-password ${!canResetPassword ? 'disabled' : ''}>↻ RESETUJ HASŁO</button>
+          <button type="button" class="danger" data-delete-account ${!canDeleteAccount ? 'disabled' : ''}>USUŃ UŻYTKOWNIKA</button>
+        </div>
+        <div class="account-temp-password" data-temp-password hidden></div>
+      </div>
+
       <div class="account-editor-actions">
         ${isSelf
           ? `<button class="account-primary protected" type="button" disabled>🔒 WŁASNE KONTO CHRONIONE</button>`
-          : `<button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button>`}
+          : (canChangeRole || canChangePermissions) ? `<button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button>` : `<button class="account-primary protected" type="button" disabled>BRAK UPRAWNIEŃ DO ZMIANY ROLI / UPRAWNIEŃ</button>`}
       </div>
       <p class="account-message" data-account-message></p>`;
   };
@@ -566,6 +598,12 @@ async function mattOpenAccountManager() {
   const bindSelected = account => {
     if (!account) return;
     const isSelf = account.auth_user_id === viewerUserId;
+    const targetIsAdmin = String(account.role || "user").toLowerCase() === "admin";
+    const canChangeRole = !isSelf && canAccount("accounts.role.change") && (viewerIsAdmin || !targetIsAdmin);
+    const canChangePermissions = !isSelf && canAccount("accounts.permissions.change") && (viewerIsAdmin || !targetIsAdmin);
+    const canResetPassword = !isSelf && canAccount("accounts.password.reset") && (viewerIsAdmin || !targetIsAdmin);
+    const canChangeEmail = !isSelf && canAccount("accounts.email.change") && (viewerIsAdmin || !targetIsAdmin);
+    const canDeleteAccount = !isSelf && canAccount("accounts.delete") && (viewerIsAdmin || !targetIsAdmin);
     const roleSelect = body.querySelector('select[name="account-role-choice"]');
     const permsWrap = body.querySelector("[data-permissions]");
     const note = body.querySelector("[data-role-note]");
@@ -590,7 +628,7 @@ async function mattOpenAccountManager() {
           cb.checked = false;
           cb.disabled = true;
         } else {
-          cb.disabled = isSelf;
+          cb.disabled = !canChangePermissions;
         }
       });
 
@@ -603,8 +641,8 @@ async function mattOpenAccountManager() {
         if (counter) counter.textContent = `${groupBoxes.filter(cb => cb.checked).length}/${groupBoxes.length}`;
       });
 
-      if (selectAll) selectAll.disabled = role !== "moderator" || isSelf;
-      if (clearAll) clearAll.disabled = role !== "moderator" || isSelf;
+      if (selectAll) selectAll.disabled = role !== "moderator" || !canChangePermissions;
+      if (clearAll) clearAll.disabled = role !== "moderator" || !canChangePermissions;
 
       if (note) {
         note.innerHTML = role === "admin"
@@ -619,26 +657,99 @@ async function mattOpenAccountManager() {
     body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(input => input.addEventListener("change", syncPermissionUi));
 
     selectAll?.addEventListener("click", () => {
-      if (selectedRole() !== "moderator" || isSelf) return;
+      if (selectedRole() !== "moderator" || !canChangePermissions) return;
       body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(cb => { cb.checked = true; });
       syncPermissionUi();
     });
 
     clearAll?.addEventListener("click", () => {
-      if (selectedRole() !== "moderator" || isSelf) return;
+      if (selectedRole() !== "moderator" || !canChangePermissions) return;
       body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(cb => { cb.checked = false; });
       syncPermissionUi();
     });
 
     syncPermissionUi();
 
+    const invokeAccountAction = async payload => {
+      const { data, error } = await supabaseClient.functions.invoke("admin-manage-users", { body: payload });
+      if (error) {
+        let detail = data?.error || "";
+        if (!detail && error?.context?.json) {
+          try { detail = (await error.context.json())?.error || ""; } catch (_) {}
+        }
+        throw new Error(detail || error?.message || "Operacja na koncie nie powiodła się.");
+      }
+      if (!data?.ok) throw new Error(data?.error || "Operacja na koncie nie powiodła się.");
+      return data;
+    };
+
+    body.querySelector("[data-reset-password]")?.addEventListener("click", async () => {
+      if (!canResetPassword) return;
+      if (!confirm(`Zresetować hasło użytkownika ${account.username || 'Użytkownik'}? Zostanie wygenerowane nowe hasło tymczasowe.`)) return;
+      const button = body.querySelector("[data-reset-password]");
+      const result = body.querySelector("[data-temp-password]");
+      const message = body.querySelector("[data-account-message]");
+      button.disabled = true;
+      if (message) message.textContent = "Resetowanie hasła…";
+      try {
+        const data = await invokeAccountAction({ action:"reset_password", userId:account.auth_user_id });
+        if (result) {
+          result.hidden = false;
+          result.innerHTML = `<span>NOWE HASŁO TYMCZASOWE</span><code>${mattAccountEscape(data.temporaryPassword || '')}</code><button type="button" data-copy-temp>KOPIUJ</button><small>Hasło jest pokazane tylko teraz. Użytkownik przy logowaniu zostanie poproszony o ustawienie własnego hasła.</small>`;
+          result.querySelector("[data-copy-temp]")?.addEventListener("click", async e => {
+            try { await navigator.clipboard.writeText(data.temporaryPassword || ''); e.currentTarget.textContent = "SKOPIOWANO"; } catch (_) {}
+          });
+        }
+        if (message) message.textContent = "Hasło zostało zresetowane.";
+      } catch (error) {
+        if (message) message.textContent = error?.message || "Nie udało się zresetować hasła.";
+      } finally { button.disabled = false; }
+    });
+
+    body.querySelector("[data-change-email]")?.addEventListener("click", async () => {
+      if (!canChangeEmail) return;
+      const input = body.querySelector("[data-admin-email]");
+      const email = String(input?.value || "").trim().toLowerCase();
+      const button = body.querySelector("[data-change-email]");
+      const message = body.querySelector("[data-account-message]");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { if (message) message.textContent = "Podaj poprawny adres e-mail."; return; }
+      if (!confirm(`Zmienić e-mail użytkownika ${account.username || 'Użytkownik'} na ${email}?`)) return;
+      button.disabled = true;
+      if (message) message.textContent = "Zmiana e-maila…";
+      try {
+        await invokeAccountAction({ action:"change_email", userId:account.auth_user_id, email });
+        selectedId = account.auth_user_id;
+        await load();
+      } catch (error) {
+        if (message) message.textContent = error?.message || "Nie udało się zmienić e-maila.";
+      } finally { button.disabled = false; }
+    });
+
+    body.querySelector("[data-delete-account]")?.addEventListener("click", async () => {
+      if (!canDeleteAccount) return;
+      const typed = prompt(`Usunięcie konta jest nieodwracalne. Aby usunąć użytkownika ${account.username || 'Użytkownik'}, wpisz jego nick dokładnie:`);
+      if (typed !== String(account.username || '')) return;
+      const button = body.querySelector("[data-delete-account]");
+      const message = body.querySelector("[data-account-message]");
+      button.disabled = true;
+      if (message) message.textContent = "Usuwanie użytkownika…";
+      try {
+        await invokeAccountAction({ action:"delete_user", userId:account.auth_user_id });
+        selectedId = viewerUserId;
+        await load();
+      } catch (error) {
+        if (message) message.textContent = error?.message || "Nie udało się usunąć użytkownika.";
+        button.disabled = false;
+      }
+    });
+
     body.querySelector("[data-save-access]")?.addEventListener("click", async () => {
-      if (isSelf) return;
+      if (isSelf || (!canChangeRole && !canChangePermissions)) return;
       const button = body.querySelector("[data-save-access]");
       const message = body.querySelector("[data-account-message]");
-      const role = selectedRole();
+      const role = canChangeRole ? selectedRole() : String(account.role || "user").toLowerCase();
       const selectedPermissions = role === "moderator"
-        ? [...body.querySelectorAll("[data-permissions] input:checked")].map(x => x.value)
+        ? (canChangePermissions ? [...body.querySelectorAll("[data-permissions] input:checked")].map(x => x.value) : (Array.isArray(account.permissions) ? account.permissions : []))
         : [];
 
       button.disabled = true;
@@ -662,6 +773,7 @@ async function mattOpenAccountManager() {
   };
 
   const renderCreate = () => {
+    if (!canAccount("accounts.create")) { draw(); return; }
     body.innerHTML = `<div class="account-create-card">
       <button type="button" class="account-back" data-back-accounts>← WRÓĆ DO LISTY</button>
       <small>NOWE KONTO TYMCZASOWE</small>
@@ -689,7 +801,11 @@ async function mattOpenAccountManager() {
         const { data, error } = await supabaseClient.functions.invoke("admin-manage-users", {
           body: { action: "create", username, password }
         });
-        if (error) throw error;
+        if (error) {
+          let detail = data?.error || "";
+          if (!detail && error?.context?.json) { try { detail = (await error.context.json())?.error || ""; } catch (_) {} }
+          throw new Error(detail || error?.message || "Nie udało się utworzyć konta.");
+        }
         if (!data?.ok) throw new Error(data?.error || "Nie udało się utworzyć konta.");
         message.textContent = "Konto utworzone. Użytkownik przy pierwszym logowaniu ustawi swój e-mail i nowe hasło.";
         selectedId = data.userId;
