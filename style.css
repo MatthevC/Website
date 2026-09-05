@@ -2400,6 +2400,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 /* === WYSZUKIWARKA NAGRÓD === */
 .reward-search-panel {
   display: grid;
+  margin-bottom: 2rem;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: .85rem;
   align-items: center;
