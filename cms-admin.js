@@ -150,7 +150,7 @@
     if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager };
     if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager };
     if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager };
-    if (route === 'discord/join') return { label: 'PODGLĄD / DYMKI', action: openDiscordJoinManager };
+    if (route === 'discord/join') return { label: 'PODGLĄD / KOMUNIKATY', action: openDiscordJoinManager };
     if (route.startsWith('rules/') && route !== 'rules/game-picks') return { label: 'ZASADY REGULAMINU', action: openRulesManager };
     return null;
   }
@@ -163,7 +163,7 @@
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
-      <button type="button" data-cms-action="callouts" hidden>▰ DYMKI</button>
+      <button type="button" data-cms-action="callouts" hidden>▰ KOMUNIKATY</button>
       <button type="button" data-cms-action="images">▧ GRAFIKI</button>
       <button type="button" data-cms-action="site">☰ MENU / LINKI</button>
       <button type="button" data-cms-action="reset-page">↶ Z GITHUBA</button>
@@ -203,7 +203,7 @@
     if (calloutBtn) {
       // Kreator dymków jest dostępny na KAŻDEJ podstronie, nawet gdy w GitHubie nie ma jeszcze żadnego dymku.
       calloutBtn.hidden = inlineEditing;
-      calloutBtn.textContent = `▰ DYMKI${calloutCount ? ` (${calloutCount})` : ''}`;
+      calloutBtn.textContent = `▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}`;
     }
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
     if (imagesBtn) imagesBtn.hidden = inlineEditing || currentRoute() === 'home';
@@ -659,7 +659,7 @@
       const current = index >= 0 ? items[index] : { icon:'📌', label:'', title:'', description:'', extraHtml:'', wide:false };
       const fields = [
         {name:'icon',label:'Ikona / emoji'},
-        {name:'label',label:'Krótka etykieta dymku',required:true},
+        {name:'label',label:'Krótka etykieta komunikatu',required:true},
         {name:'title',label:'Tytuł zasady',required:true},
         {name:'description',label:'Treść zasady',type:'textarea',required:true},
         {name:'wide',label:'Wyświetl dymek na pełną szerokość',type:'checkbox'}
@@ -1036,8 +1036,8 @@
   function openDiscordJoinManager() {
     const esc = window.MattCMS.escape;
     const drawHub = () => {
-      openModal('DISCORD — PODGLĄD I DYMKI', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ DYMKI / KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne wyłącznie dla administratora i zapisują się w CMS.</p></div>
-      <div class="cms-feature-grid"><article class="cms-feature-card"><span>01</span><div><strong>DYMKI NAD PODGLĄDEM</strong><p>Dodawaj komunikaty podobne do czerwonego „ZACZNIJ OD #konfiguracja-tickets”, zmieniaj ich kolejność, kolor, ikonę, treść i przycisk.</p></div><button data-open-bubbles>EDYTUJ →</button></article><article class="cms-feature-card"><span>02</span><div><strong>PODGLĄD SERWERA</strong><p>Zmieniaj kategorie i kanały w makiecie Discorda, wiadomości na czacie, członków, nagłówki i opis podglądu.</p></div><button data-open-preview>EDYTUJ →</button></article></div>`);
+      openModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne wyłącznie dla administratora i zapisują się w CMS.</p></div>
+      <div class="cms-feature-grid"><article class="cms-feature-card"><span>01</span><div><strong>KOMUNIKATY NAD PODGLĄDEM</strong><p>Dodawaj komunikaty podobne do czerwonego „ZACZNIJ OD #konfiguracja-tickets”, zmieniaj ich kolejność, kolor, ikonę, treść i przycisk.</p></div><button data-open-bubbles>EDYTUJ →</button></article><article class="cms-feature-card"><span>02</span><div><strong>PODGLĄD SERWERA</strong><p>Zmieniaj kategorie i kanały w makiecie Discorda, wiadomości na czacie, członków, nagłówki i opis podglądu.</p></div><button data-open-preview>EDYTUJ →</button></article></div>`);
       const body=$('#cms-modal-body',modal);
       $$('[data-open-bubbles]',body).forEach(b=>b.addEventListener('click',openBubbles));
       $$('[data-open-preview]',body).forEach(b=>b.addEventListener('click',openPreview));
@@ -1048,15 +1048,15 @@
       const move=(from,to)=>{if(to<0||to>=items.length)return;const [x]=items.splice(from,1);items.splice(to,0,x);draw();};
       const save=async(message)=>{try{await window.MattCMS.save('discord_join_bubbles',items);window.MattCMS.renderDiscordJoinBubbles(items);notify(message);draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
       const draw=()=>{
-        openModal('DISCORD — DYMKI / KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / DYMKI</button><button class="cms-primary" data-add>+ DODAJ DYMEK</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy dymek może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'DYMEK')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak dymków. Dodaj pierwszy.</div>'}</div>`);
+        openModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
         const body=$('#cms-modal-body',modal);
-        $('[data-hub]',body).addEventListener('click',drawHub);$('[data-add]',body).addEventListener('click',()=>edit(-1));$('[data-save-order]',body).addEventListener('click',()=>save('Kolejność dymków zapisana.'));$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_bubbles','dymki strony Discord'));
+        $('[data-hub]',body).addEventListener('click',drawHub);$('[data-add]',body).addEventListener('click',()=>edit(-1));$('[data-save-order]',body).addEventListener('click',()=>save('Kolejność komunikatów zapisana.'));$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_bubbles','komunikaty strony Discord'));
         $$('[data-up]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.up),Number(b.dataset.up)-1)));$$('[data-down]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.down),Number(b.dataset.down)+1)));$$('[data-edit]',body).forEach(b=>b.addEventListener('click',()=>edit(Number(b.dataset.edit))));$$('[data-delete]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delete);if(!confirm(`Usunąć dymek „${items[i]?.title||''}”?`))return;items.splice(i,1);await save('Dymek usunięty.');}));
       };
       const edit=index=>{
         const cur=index>=0?items[index]:{icon:'⚙',kicker:'',title:'',highlight:'',description:'',emphasis:'',buttonText:'',buttonUrl:'',style:'red'};
-        const fields=[{name:'style',label:'Wygląd dymku',type:'select',options:[{value:'red',label:'Czerwony / MATT\'S WORLD'},{value:'discord',label:'Fioletowy / Discord'},{value:'dark',label:'Ciemny / neutralny'},{value:'green',label:'Zielony / pozytywny'}]},{name:'icon',label:'Ikona / emoji'},{name:'kicker',label:'Mały nagłówek'},{name:'title',label:'Tytuł',required:true},{name:'highlight',label:'Wyróżniony fragment tytułu',help:'Np. #konfiguracja-tickets — będzie w kolorze akcentu.'},{name:'description',label:'Główny opis',type:'textarea',required:true},{name:'emphasis',label:'Dodatkowe wyróżnienie na dole',type:'textarea'},{name:'buttonText',label:'Tekst przycisku'},{name:'buttonUrl',label:'Link przycisku',help:'Zostaw puste, aby użyć głównego linku do Discorda.'}];
-        openModal(index>=0?'EDYTUJ DYMEK':'DODAJ DYMEK',`<form id="cms-discord-bubble-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+        const fields=[{name:'style',label:'Wygląd komunikatu',type:'select',options:[{value:'red',label:'Czerwony / MATT\'S WORLD'},{value:'discord',label:'Fioletowy / Discord'},{value:'dark',label:'Ciemny / neutralny'},{value:'green',label:'Zielony / pozytywny'}]},{name:'icon',label:'Ikona / emoji'},{name:'kicker',label:'Mały nagłówek'},{name:'title',label:'Tytuł',required:true},{name:'highlight',label:'Wyróżniony fragment tytułu',help:'Np. #konfiguracja-tickets — będzie w kolorze akcentu.'},{name:'description',label:'Główny opis',type:'textarea',required:true},{name:'emphasis',label:'Dodatkowe wyróżnienie na dole',type:'textarea'},{name:'buttonText',label:'Tekst przycisku'},{name:'buttonUrl',label:'Link przycisku',help:'Zostaw puste, aby użyć głównego linku do Discorda.'}];
+        openModal(index>=0?'EDYTUJ KOMUNIKAT':'DODAJ KOMUNIKAT',`<form id="cms-discord-bubble-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
         const form=$('#cms-discord-bubble-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v={...cur,...parseFields(form,fields),id:cur.id||`dymek-${Date.now()}`};if(index>=0)items[index]=v;else items.push(v);await save('Dymek zapisany.');});
       };
       draw();
@@ -1068,7 +1068,7 @@
       const save=async(message,redraw=true)=>{try{await window.MattCMS.save('discord_join_preview',data);window.MattCMS.renderDiscordJoinPreview(data);notify(message);if(redraw)draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
       const move=(arr,from,to)=>{if(to<0||to>=arr.length)return;const [x]=arr.splice(from,1);arr.splice(to,0,x);draw();};
       const draw=()=>{
-        openModal('DISCORD — EDYCJA PODGLĄDU', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / DYMKI</button><button data-general>✎ NAGŁÓWEK / USTAWIENIA</button><button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button><button data-reset>↶ Z GITHUBA</button></div><p>Makieta jest poglądowa. Nazwa serwera, ikona i liczniki nadal mogą być automatycznie pobierane z prawdziwego zaproszenia Discord.</p></div>
+        openModal('DISCORD — EDYCJA PODGLĄDU', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button data-general>✎ NAGŁÓWEK / USTAWIENIA</button><button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button><button data-reset>↶ Z GITHUBA</button></div><p>Makieta jest poglądowa. Nazwa serwera, ikona i liczniki nadal mogą być automatycznie pobierane z prawdziwego zaproszenia Discord.</p></div>
         <div class="cms-preview-admin-grid"><section><header><strong>KATEGORIE I KANAŁY</strong><button class="cms-primary" data-add-cat>+ KATEGORIA</button></header>${data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div><button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${esc(ch.href||'')}</small></div><div><button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button></div></article>`).join('')}</section>
         <section><header><strong>WIADOMOŚCI W PODGLĄDZIE</strong><button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button></header><div class="cms-manager-list">${data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div><button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button></div></article>`).join('')}</div></section>
         <section><header><strong>LISTA OSÓB</strong><button class="cms-primary" data-add-group>+ GRUPA</button></header>${data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>`<article><div><span>${esc(m.initial||String(m.name||'?').charAt(0))}</span><strong>${esc(m.name||'osoba')}</strong><small>${esc(m.status||'')}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('')}</section></div>`);
@@ -1120,7 +1120,7 @@
         <button class="cms-primary" data-add-category>+ DODAJ KATEGORIĘ</button>
         <button data-save-discord-order>✓ ZAPISZ KOLEJNOŚĆ</button>
         <button data-reset-discord>↶ PRZYWRÓĆ Z GITHUBA</button>
-      </div><p>Możesz zmieniać nazwę, ikonę, opis i wyróżnienie każdego dymku kanału, dodawać nowe kanały oraz całe kategorie.</p></div>
+      </div><p>Możesz zmieniać nazwę, ikonę, opis i wyróżnienie każdego komunikatu kanału, dodawać nowe kanały oraz całe kategorie.</p></div>
         <div class="cms-discord-list">${categories.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>${esc(cat.icon || '📁')} KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.title)}</strong><p>${esc(cat.description || '')}</p></div><div>
           <button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===categories.length-1?'disabled':''}>↓</button>
           <button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-delete-cat="${ci}">USUŃ</button>
@@ -1155,10 +1155,10 @@
       const fields=[
         {name:'icon',label:'Ikona / emoji'},
         {name:'name',label:'Nazwa kanału',required:true},
-        {name:'description',label:'Pełny opis kanału / treść dymku',type:'textarea',required:true},
+        {name:'description',label:'Pełny opis kanału / treść komunikatu',type:'textarea',required:true},
         {name:'featured',label:'Wyróżniony kanał',type:'checkbox'}
       ];
-      openModal(hi>=0?'EDYTUJ KANAŁ / DYMEK':'DODAJ KANAŁ / DYMEK',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      openModal(hi>=0?'EDYTUJ KANAŁ / KOMUNIKAT':'DODAJ KANAŁ / KOMUNIKAT',`<form id="cms-channel-form" class="cms-form"><div class="cms-form-context">Kategoria: <strong>${esc(categories[ci].title)}</strong></div>${fields.map(f=>fieldHtml(f,ch[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form=$('#cms-channel-form',modal);$('[data-back]',form).addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const v=parseFields(form,fields);if(hi>=0)categories[ci].channels[hi]={...ch,...v};else categories[ci].channels.push(v);await saveAndRender('Kanał zapisany.');});
     };
 
@@ -1206,37 +1206,37 @@
     const draw = () => {
       const baseItems = getBaseItems();
       const custom = normalizedCustom();
-      openModal(`DYMKI — ${route.toUpperCase()}`, `
+      openModal(`KOMUNIKATY — ${route.toUpperCase()}`, `
         <div class="cms-manager-actions cms-bubbles-main-actions">
           <div class="cms-manager-action-group">
-            <button class="cms-primary" type="button" data-add-custom>+ DODAJ NOWY DYMEK</button>
-            <button type="button" data-reset-base>↶ DYMKI Z GITHUBA</button>
-            <button type="button" data-remove-custom ${custom.length?'':'disabled'}>USUŃ WŁASNE DYMKI</button>
+            <button class="cms-primary" type="button" data-add-custom>+ DODAJ NOWY KOMUNIKAT</button>
+            <button type="button" data-reset-base>↶ KOMUNIKATY Z GITHUBA</button>
+            <button type="button" data-remove-custom ${custom.length?'':'disabled'}>USUŃ WŁASNE KOMUNIKATY</button>
           </div>
-          <p>Kreator działa na każdej podstronie. Możesz edytować dymki istniejące w plikach GitHuba albo tworzyć własne bez zmiany kodu.</p>
+          <p>Kreator działa na każdej podstronie. Możesz edytować komunikaty istniejące w plikach GitHuba albo tworzyć własne bez zmiany kodu.</p>
         </div>
 
         <section class="cms-bubble-manager-section">
-          <header><div><small>01 / DYMKI Z PLIKÓW GITHUB</small><strong>ISTNIEJĄCE ELEMENTY NA TEJ PODSTRONIE</strong></div><span>${baseItems.length}</span></header>
+          <header><div><small>01 / KOMUNIKATY Z PLIKÓW GITHUB</small><strong>ISTNIEJĄCE ELEMENTY NA TEJ PODSTRONIE</strong></div><span>${baseItems.length}</span></header>
           <div class="cms-manager-list">${baseItems.length ? baseItems.map((item,index)=>{
             const raw = overrides[item.id];
             const state = raw && typeof raw === 'object' && raw.hidden === true ? 'USUNIĘTY ZE STRONY' : (raw != null ? 'ZMODYFIKOWANY' : 'Z GITHUBA');
             return `<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${state}</small><strong>${esc((item.text || 'Dymek').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit-base="${esc(item.id)}">EDYTUJ</button><button class="danger" type="button" data-hide-base="${esc(item.id)}">${state==='USUNIĘTY ZE STRONY'?'PRZYWRÓĆ':'USUŃ ZE STRONY'}</button><button type="button" data-reset-one="${esc(item.id)}" ${raw!=null?'':'disabled'}>↶ GITHUB</button></div></article>`;
-          }).join('') : '<div class="cms-empty">W plikach GitHuba nie ma wykrytego dymku na tej podstronie. Nadal możesz utworzyć własny poniżej.</div>'}</div>
+          }).join('') : '<div class="cms-empty">W plikach GitHuba nie ma wykrytego komunikatu na tej podstronie. Nadal możesz utworzyć własny poniżej.</div>'}</div>
         </section>
 
         <section class="cms-bubble-manager-section">
-          <header><div><small>02 / KREATOR</small><strong>WŁASNE DYMKI NA TEJ PODSTRONIE</strong></div><span>${custom.length}</span></header>
-          <div class="cms-manager-list">${custom.length ? custom.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${styleLabel(item.style)}</small><strong>${esc(item.title || 'DYMEK')}</strong></div><div><button type="button" data-custom-up="${index}" ${index===0?'disabled':''}>↑</button><button type="button" data-custom-down="${index}" ${index===custom.length-1?'disabled':''}>↓</button><button type="button" data-edit-custom="${index}">EDYTUJ</button><button class="danger" type="button" data-delete-custom="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Nie utworzono jeszcze własnych dymków. Kliknij „+ DODAJ NOWY DYMEK”.</div>'}</div>
+          <header><div><small>02 / KREATOR</small><strong>WŁASNE KOMUNIKATY NA TEJ PODSTRONIE</strong></div><span>${custom.length}</span></header>
+          <div class="cms-manager-list">${custom.length ? custom.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${styleLabel(item.style)}</small><strong>${esc(item.title || 'KOMUNIKAT')}</strong></div><div><button type="button" data-custom-up="${index}" ${index===0?'disabled':''}>↑</button><button type="button" data-custom-down="${index}" ${index===custom.length-1?'disabled':''}>↓</button><button type="button" data-edit-custom="${index}">EDYTUJ</button><button class="danger" type="button" data-delete-custom="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Nie utworzono jeszcze własnych komunikatów. Kliknij „+ DODAJ NOWY KOMUNIKAT”.</div>'}</div>
         </section>`);
 
       const body = $('#cms-modal-body', modal);
       $('[data-add-custom]',body)?.addEventListener('click',()=>editCustom(-1));
-      $('[data-reset-base]',body)?.addEventListener('click',()=>resetCmsKey(baseKey,'wszystkie dymki pochodzące z GitHuba na tej podstronie'));
+      $('[data-reset-base]',body)?.addEventListener('click',()=>resetCmsKey(baseKey,'wszystkie komunikaty pochodzące z GitHuba na tej podstronie'));
       $('[data-remove-custom]',body)?.addEventListener('click',async()=>{
         if(!customItems.length) return;
-        if(!confirm('Usunąć wszystkie własne dymki z tej podstrony? Przed zmianą zostanie wykonany backup.')) return;
-        customItems=[]; await saveCustom('Własne dymki zostały usunięte.');
+        if(!confirm('Usunąć wszystkie własne komunikaty z tej podstrony? Przed zmianą zostanie wykonany backup.')) return;
+        customItems=[]; await saveCustom('Własne komunikaty zostały usunięte.');
       });
       $$('[data-edit-base]',body).forEach(btn=>btn.addEventListener('click',()=>editBase(btn.dataset.editBase)));
       $$('[data-hide-base]',body).forEach(btn=>btn.addEventListener('click',async()=>{
@@ -1252,7 +1252,7 @@
       $$('[data-reset-one]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const id=btn.dataset.resetOne; if(overrides[id]==null) return;
         if(!confirm('Przywrócić ten dymek dokładnie do wersji z GitHuba?')) return;
-        delete overrides[id]; await saveBase('Dymek przywrócony z GitHuba.');
+        delete overrides[id]; await saveBase('Komunikat przywrócony z GitHuba.');
       }));
       $$('[data-custom-up]',body).forEach(btn=>btn.addEventListener('click',()=>moveCustom(Number(btn.dataset.customUp),-1)));
       $$('[data-custom-down]',body).forEach(btn=>btn.addEventListener('click',()=>moveCustom(Number(btn.dataset.customDown),1)));
@@ -1260,7 +1260,7 @@
       $$('[data-delete-custom]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const index=Number(btn.dataset.deleteCustom); if(!customItems[index]) return;
         if(!confirm(`Usunąć dymek „${customItems[index].title || 'bez nazwy'}”?`)) return;
-        customItems.splice(index,1); await saveCustom('Dymek został usunięty.');
+        customItems.splice(index,1); await saveCustom('Komunikat został usunięty.');
       }));
     };
 
@@ -1268,14 +1268,14 @@
       const target=index+direction;
       if(index<0 || target<0 || index>=customItems.length || target>=customItems.length) return;
       [customItems[index],customItems[target]]=[customItems[target],customItems[index]];
-      await saveCustom('Kolejność dymków została zmieniona.');
+      await saveCustom('Kolejność komunikatów została zmieniona.');
     };
 
     const editBase = id => {
       const item=getBaseItems().find(x=>x.id===id); if(!item) return draw();
       const raw=overrides[id];
       const current=typeof raw==='string'?raw:(raw?.html || item.html);
-      openModal('EDYTUJ DYMEK Z GITHUBA', `<div class="cms-manager-actions"><p>Kliknij w treść poniżej i edytuj ją wizualnie. Ten element nadal zachowa swój obecny wygląd i położenie na podstronie.</p></div>
+      openModal('EDYTUJ KOMUNIKAT Z GITHUBA', `<div class="cms-manager-actions"><p>Kliknij w treść poniżej i edytuj ją wizualnie. Ten element nadal zachowa swój obecny wygląd i położenie na podstronie.</p></div>
         <div class="cms-rich-callout-editor" contenteditable="true" spellcheck="true" data-rich-editor>${current}</div>
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-base>↶ TREŚĆ Z GITHUBA</button><button class="cms-primary" type="button" data-save>ZAPISZ</button></div>`);
       const body=$('#cms-modal-body',modal), editor=$('[data-rich-editor]',body);
@@ -1292,9 +1292,9 @@
 
     const editCustom = index => {
       const isEdit=index>=0;
-      const cur=isEdit ? clone(customItems[index]) : {style:'red',icon:'i',kicker:'WAŻNE',title:'NOWY DYMEK',text:'Wpisz treść komunikatu.',buttonLabel:'',buttonUrl:''};
+      const cur=isEdit ? clone(customItems[index]) : {style:'red',icon:'i',kicker:'WAŻNE',title:'NOWY KOMUNIKAT',text:'Wpisz treść komunikatu.',buttonLabel:'',buttonUrl:''};
       const fields=[
-        {name:'style',label:'Kolor / styl dymku',type:'select',options:[
+        {name:'style',label:'Kolor / styl komunikatu',type:'select',options:[
           {value:'red',label:'Czerwony — MATT’S WORLD'},
           {value:'discord',label:'Fioletowy — Discord'},
           {value:'dark',label:'Ciemny'},
@@ -1304,18 +1304,18 @@
         ]},
         {name:'icon',label:'Ikona / emoji',placeholder:'np. !, i, ⚠️, 🎮'},
         {name:'kicker',label:'Mały nagłówek',placeholder:'np. WAŻNE / WSKAZÓWKA'},
-        {name:'title',label:'Tytuł dymku',required:true},
-        {name:'text',label:'Treść dymku',type:'textarea',required:true},
+        {name:'title',label:'Tytuł komunikatu',required:true},
+        {name:'text',label:'Treść komunikatu',type:'textarea',required:true},
         {name:'buttonLabel',label:'Tekst przycisku (opcjonalnie)',placeholder:'np. PRZEJDŹ DALEJ'},
         {name:'buttonUrl',label:'Link przycisku (opcjonalnie)',placeholder:'https://... lub #/discord/join'}
       ];
-      openModal(isEdit?'EDYTUJ WŁASNY DYMEK':'DODAJ NOWY DYMEK', `<form id="cms-custom-page-callout-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-callout-live-preview"><small>PODGLĄD</small><div data-bubble-preview></div></div><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ DYMEK</button></div></form>`);
+      openModal(isEdit?'EDYTUJ WŁASNY KOMUNIKAT':'DODAJ NOWY KOMUNIKAT', `<form id="cms-custom-page-callout-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-callout-live-preview"><small>PODGLĄD</small><div data-bubble-preview></div></div><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ KOMUNIKAT</button></div></form>`);
       const form=$('#cms-custom-page-callout-form',modal);
       const preview=$('[data-bubble-preview]',form);
       const renderPreview=()=>{
         const v=parseFields(form,fields);
         const style=esc(v.style||'red');
-        preview.innerHTML=`<article class="cms-page-callout cms-page-callout-${style}"><div class="cms-page-callout-icon">${esc(v.icon||'i')}</div><div class="cms-page-callout-copy">${v.kicker?`<small>${esc(v.kicker)}</small>`:''}<h2>${esc(v.title||'NOWY DYMEK')}</h2>${v.text?`<p>${esc(v.text).replace(/\\n/g,'<br>')}</p>`:''}${v.buttonLabel?`<span class="cms-page-callout-button">${esc(v.buttonLabel)}</span>`:''}</div></article>`;
+        preview.innerHTML=`<article class="cms-page-callout cms-page-callout-${style}"><div class="cms-page-callout-icon">${esc(v.icon||'i')}</div><div class="cms-page-callout-copy">${v.kicker?`<small>${esc(v.kicker)}</small>`:''}<h2>${esc(v.title||'NOWY KOMUNIKAT')}</h2>${v.text?`<p>${esc(v.text).replace(/\\n/g,'<br>')}</p>`:''}${v.buttonLabel?`<span class="cms-page-callout-button">${esc(v.buttonLabel)}</span>`:''}</div></article>`;
       };
       form.addEventListener('input',renderPreview); form.addEventListener('change',renderPreview); renderPreview();
       $('[data-back]',form)?.addEventListener('click',draw);
