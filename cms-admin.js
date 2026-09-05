@@ -3,10 +3,34 @@
   let inlineSnapshot = new Map();
   let toolbar = null;
   let modal = null;
+  const TOOLBAR_COLLAPSE_KEY = 'matt_cms_toolbar_collapsed';
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const clone = value => JSON.parse(JSON.stringify(value));
+
+  function isToolbarCollapsed() {
+    try { return localStorage.getItem(TOOLBAR_COLLAPSE_KEY) === '1'; }
+    catch (_) { return false; }
+  }
+
+  function setToolbarCollapsed(value) {
+    try { localStorage.setItem(TOOLBAR_COLLAPSE_KEY, value ? '1' : '0'); }
+    catch (_) {}
+    applyToolbarState();
+  }
+
+  function applyToolbarState() {
+    if (!toolbar) return;
+    const collapsed = isToolbarCollapsed();
+    toolbar.classList.toggle('cms-collapsed', collapsed);
+    const toggleBtn = $('[data-cms-action="toggle-toolbar"]', toolbar);
+    if (toggleBtn) {
+      toggleBtn.innerHTML = collapsed ? '‹' : '›';
+      toggleBtn.title = collapsed ? 'Pokaż pasek administratora' : 'Ukryj pasek administratora';
+      toggleBtn.setAttribute('aria-label', toggleBtn.title);
+    }
+  }
 
   function currentRoute() {
     const raw = location.hash.replace(/^#\/?/, '').split('?')[0].replace(/^\/+|\/+$/g, '');
@@ -218,6 +242,7 @@
     toolbar = document.createElement('div');
     toolbar.id = 'cms-admin-toolbar';
     toolbar.innerHTML = `
+      <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">›</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
@@ -229,8 +254,10 @@
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
     document.body.appendChild(toolbar);
+    applyToolbarState();
     toolbar.addEventListener('click', e => {
       const action = e.target.closest('[data-cms-action]')?.dataset.cmsAction;
+      if (action === 'toggle-toolbar') { setToolbarCollapsed(!isToolbarCollapsed()); return; }
       if (action === 'inline') startInlineEdit();
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
@@ -275,6 +302,7 @@
     $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || !has('backups.view');
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
+    applyToolbarState();
   }
 
   function startInlineEdit() {
