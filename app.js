@@ -1986,16 +1986,35 @@ function roleBadge(role) {
   return "";
 }
 
+function commandAccessTier(command) {
+  const roles = Array.isArray(command?.roles) ? command.roles : [];
+  // Poziom kafelka określamy według najniższego wymaganego poziomu dostępu:
+  // WIDZ > VIP > MODERACJA. Dzięki temu VIP+MOD jest komendą VIP,
+  // a WIDZ+VIP+MOD pozostaje komendą wspólną bez ikonki.
+  if (roles.includes("viewer")) return "viewer";
+  if (roles.includes("vip")) return "vip";
+  if (roles.includes("moderator")) return "moderator";
+  return "none";
+}
+
 function commandCard(command) {
-  const special = command.roles.length === 1 ? command.roles[0] : "shared";
-  // Komendy dostępne dla widza są wspólne i nie dostają żadnych ikon.
-  // Ikony pokazujemy tylko wtedy, gdy widz NIE ma uprawnień do komendy.
-  const badges = command.roles.includes("viewer")
-    ? ""
-    : command.roles.map(roleBadge).join("");
-  const dbdClass = command.command.toLowerCase().includes("queuedbd") ? " command-dbd" : "";
+  const roles = Array.isArray(command?.roles) ? command.roles : [];
+  const tier = commandAccessTier(command);
+  const special = tier === "viewer" || tier === "none" ? "shared" : tier;
+
+  // Zasady ikon:
+  // 1) tylko MOD -> ikonka moderatora,
+  // 2) VIP + MOD -> ikonka VIP,
+  // 3) jeśli komenda jest również dla WIDZA -> bez ikonki.
+  const badges = tier === "vip"
+    ? roleBadge("vip")
+    : tier === "moderator"
+      ? roleBadge("moderator")
+      : "";
+
+  const dbdClass = String(command.command || '').toLowerCase().includes("queuedbd") ? " command-dbd" : "";
   const graphicId = `command-${String(command.command || 'komenda').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item'}`;
-  return `<article class="command command-${special}${dbdClass}" data-command="${escapeHtml(command.command.toLowerCase())} ${escapeHtml(command.description.toLowerCase())}" data-cms-decor-id="${escapeHtml(graphicId)}" data-cms-decor-label="Komenda — ${escapeHtml(command.command)}" data-cms-decor-default-mode="theme">
+  return `<article class="command command-${special}${dbdClass}" data-command="${escapeHtml(String(command.command || '').toLowerCase())} ${escapeHtml(String(command.description || '').toLowerCase())}" data-cms-decor-id="${escapeHtml(graphicId)}" data-cms-decor-label="Komenda — ${escapeHtml(command.command)}" data-cms-decor-default-mode="theme">
     <div class="command-top"><code>${escapeHtml(command.command)}</code><div class="command-badges">${badges}</div></div>
     <span>${escapeHtml(command.description)}</span>
   </article>`;
@@ -2034,18 +2053,14 @@ function setupCommandsPage() {
       const items = commandsData.filter(c => {
         if (c.category !== category) return false;
 
-        // Filtr działa według rodzaju komendy:
-        // - WIDZ pokazuje wyłącznie komendy dostępne dla zwykłego widza.
-        // - VIP pokazuje wyłącznie komendy VIP-only.
-        // - MODERACJA pokazuje wyłącznie komendy MOD-only.
-        const isViewerCommand = c.roles.includes("viewer");
-        const isVipOnly = c.roles.length === 1 && c.roles[0] === "vip";
-        const isModeratorOnly = c.roles.length === 1 && c.roles[0] === "moderator";
-
-        const matchesFilter =
-          (selected.includes("viewer") && isViewerCommand) ||
-          (selected.includes("vip") && isVipOnly) ||
-          (selected.includes("moderator") && isModeratorOnly);
+        // Każda komenda należy do jednego poziomu wyświetlania:
+        // - jeśli ma WIDZA -> WIDZ (bez ikonki),
+        // - jeśli nie ma WIDZA, ale ma VIP -> VIP (również VIP+MOD),
+        // - jeśli ma tylko MOD -> MODERACJA.
+        // To naprawia przypadek nowych komend VIP+MOD, które wcześniej nie
+        // pasowały do żadnego filtra i dlatego znikały ze strony.
+        const tier = commandAccessTier(c);
+        const matchesFilter = selected.includes(tier);
 
         return matchesFilter &&
           (`${c.command} ${c.description}`).toLowerCase().includes(query);

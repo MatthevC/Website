@@ -1062,7 +1062,7 @@
       <div class="cms-image-tools"><small>JPG, PNG, WEBP lub GIF • maks. 10 MB. Adres pliku zapisze się automatycznie.</small><button type="button" data-image-remove ${val ? '' : 'hidden'}>USUŃ ZDJĘCIE</button></div>
     </div>`;
     if (field.type === 'textarea') return `<label class="cms-field"><span>${esc(field.label)}</span><textarea name="${esc(field.name)}" ${field.placeholder?`placeholder="${esc(field.placeholder)}"`:''} ${field.required?'required':''}>${esc(val)}</textarea>${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
-    if (field.type === 'select') return `<label class="cms-field"><span>${esc(field.label)}</span><select name="${esc(field.name)}">${(field.options||[]).map(opt=>{const o=typeof opt==='string'?{value:opt,label:opt}:opt;return `<option value="${esc(o.value)}" ${String(o.value)===String(val)?'selected':''}>${esc(o.label)}</option>`;}).join('')}</select>${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
+    if (field.type === 'select') return `<label class="cms-field"><span>${esc(field.label)}</span><select name="${esc(field.name)}" ${field.required?'required':''}>${(field.options||[]).map(opt=>{const o=typeof opt==='string'?{value:opt,label:opt}:opt;return `<option value="${esc(o.value)}" ${String(o.value)===String(val)?'selected':''}>${esc(o.label)}</option>`;}).join('')}</select>${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
     if (field.type === 'csv') return `<label class="cms-field"><span>${esc(field.label)}</span><input name="${esc(field.name)}" value="${esc(Array.isArray(val)?val.join(', '):val)}" placeholder="oddziel przecinkami"></label>`;
     if (field.type === 'roles') {
       const roles = Array.isArray(val) ? val : [];
@@ -1631,13 +1631,51 @@
   }
 
   function openCommandsManager() {
+    const stored = clone(window.MattCMS?.get('commands', null) || []);
+    const defaults = clone(window.MATT_COMMANDS_DEFAULT || []);
+    const categorySource = stored.length ? stored : defaults;
+    const categories = [...new Set([...defaults, ...categorySource]
+      .map(item => String(item?.category || '').trim())
+      .filter(Boolean))];
+
     openArrayManager({
       key:'commands', title:'KOMENDY', singular:'komendę', fallback:()=>window.MATT_COMMANDS_DEFAULT || [], label:item=>item.command,
       fields:[
-        {name:'command',label:'Komenda',required:true},{name:'description',label:'Opis',type:'textarea',required:true},
-        {name:'category',label:'Kategoria',required:true},{name:'subcategory',label:'Podkategoria (opcjonalnie)'},
+        {name:'command',label:'Komenda',required:true},
+        {name:'description',label:'Opis',type:'textarea',required:true},
+        {name:'category',label:'Kategoria',type:'select',required:true,options:[
+          {value:'',label:'— WYBIERZ KATEGORIĘ —'},
+          ...categories.map(category => ({value:category,label:category}))
+        ]},
+        {name:'subcategory',label:'Podkategoria (opcjonalnie)'},
         {name:'roles',label:'Dostęp dla',type:'roles'}
-      ]
+      ],
+      onFormReady(form, { index }) {
+        if (index < 0) {
+          const route = currentRoute();
+          const roleInputs = [...form.querySelectorAll('input[name="roles"]')];
+          // Nowa komenda tworzona z MODERATOR / KOMENDY startuje jako
+          // moderator-only, więc od razu pojawi się w aktualnym widoku.
+          // Na stronach widza/VIP domyślnie zaznaczamy wszystkie 3 role.
+          roleInputs.forEach(input => {
+            input.checked = route === 'moderator/commands'
+              ? input.value === 'moderator'
+              : true;
+          });
+        }
+      },
+      beforeSave(value) {
+        value.command = String(value.command || '').trim();
+        value.description = String(value.description || '').trim();
+        value.category = String(value.category || '').trim();
+        value.subcategory = String(value.subcategory || '').trim();
+        value.roles = Array.isArray(value.roles) ? [...new Set(value.roles)] : [];
+        if (!value.command) throw new Error('Wpisz komendę.');
+        if (!value.description) throw new Error('Wpisz opis komendy.');
+        if (!value.category || !categories.includes(value.category)) throw new Error('Wybierz kategorię z listy.');
+        if (!value.roles.length) throw new Error('Zaznacz przynajmniej jedną grupę dostępu: WIDZ, VIP lub MODERACJA.');
+        return value;
+      }
     });
   }
 
