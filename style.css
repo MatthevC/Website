@@ -9185,3 +9185,66 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 .cms-decor-slider b{color:#fff;font-weight:800}
 .cms-decor-slider input[type=range]{width:100%;accent-color:#ef2b2d}
 @media(max-width:760px){.cms-decor-live-head{display:grid}.cms-decor-live-head>span{text-align:left}.cms-decor-live-sliders{grid-template-columns:1fr}.cms-decor-live-stage{min-height:190px}}
+
+
+/* === v2.6.9 — NAWIGACJE BOCZNE PRZEZ CAŁĄ STRONĘ === */
+/* Slot zachowuje szerokość pierwszej kolumny siatki, gdy sama nawigacja
+   przechodzi w position:fixed. Dzięki temu treść nie przeskakuje. */
+.matt-sidebar-sticky-slot {
+  min-width: 0;
+  width: 100%;
+  align-self: stretch;
+  position: relative;
+  overflow: visible !important;
+}
+
+.matt-sidebar-sticky-slot > .dixper-toc,
+.matt-sidebar-sticky-slot > .bingo-toc,
+.matt-sidebar-sticky-slot > .site-page-toc,
+.matt-sidebar-sticky-slot > .recommended-toc,
+.matt-sidebar-sticky-slot > .emotes7tv-toc {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#app .matt-sidebar-fixed {
+  position: fixed !important;
+  left: var(--matt-sidebar-left) !important;
+  top: var(--matt-sidebar-top, 104px) !important;
+  width: var(--matt-sidebar-width) !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 80 !important;
+  max-height: calc(100vh - 128px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Rodzice nie mogą przycinać bocznej nawigacji. */
+#app .dixper-reading-layout,
+#app .bingo-reading-layout,
+#app .site-page-nav-layout,
+#app .recommended-reading-layout,
+#app .dixper-shell,
+#app .bingo-shell,
+#app .recommended-panel,
+#app .page-panel.with-global-page-nav,
+#app .content-wrap {
+  overflow: visible !important;
+}
+
+@media (max-width: 900px) {
+  .matt-sidebar-sticky-slot {
+    width: 100%;
+    align-self: auto;
+  }
+  #app .matt-sidebar-fixed {
+    position: sticky !important;
+    left: auto !important;
+    top: 72px !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+}

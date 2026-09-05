@@ -3794,6 +3794,83 @@ document.addEventListener("click", function(e) {
   bind();
 })();
 
+
+/* Trwałe boczne nawigacje.
+   Na desktopie po dojściu do górnej krawędzi ekranu przechodzą w tryb fixed,
+   dzięki czemu nie kończą się razem z przypadkowym kontenerem nadrzędnym.
+   Aktywny punkt nadal zmienia się WYŁĄCZNIE po kliknięciu. */
+(function setupPersistentSidebars(){
+  const NAV_SELECTOR = '.dixper-toc, .bingo-toc, .site-page-toc, .recommended-toc, .emotes7tv-toc';
+  const DESKTOP_MIN = 901;
+  const TOP_OFFSET = 104;
+  let ticking = false;
+
+  function ensureSlot(nav){
+    if (!nav || nav.dataset.persistentSidebarReady === '1') return nav?.parentElement || null;
+    nav.dataset.persistentSidebarReady = '1';
+    const currentParent = nav.parentElement;
+    if (!currentParent) return null;
+    const slot = document.createElement('div');
+    slot.className = 'matt-sidebar-sticky-slot';
+    slot.dataset.sidebarSlot = '1';
+    currentParent.insertBefore(slot, nav);
+    slot.appendChild(nav);
+    return slot;
+  }
+
+  function resetNav(nav){
+    nav.classList.remove('matt-sidebar-fixed');
+    nav.style.removeProperty('--matt-sidebar-left');
+    nav.style.removeProperty('--matt-sidebar-width');
+    nav.style.removeProperty('--matt-sidebar-top');
+  }
+
+  function updateOne(nav){
+    const slot = nav.closest('.matt-sidebar-sticky-slot') || ensureSlot(nav);
+    if (!slot) return;
+
+    if (window.innerWidth < DESKTOP_MIN) {
+      resetNav(nav);
+      return;
+    }
+
+    const slotRect = slot.getBoundingClientRect();
+    const shouldFix = slotRect.top <= TOP_OFFSET;
+    if (!shouldFix) {
+      resetNav(nav);
+      return;
+    }
+
+    const width = Math.max(140, slotRect.width || nav.getBoundingClientRect().width || 220);
+    nav.style.setProperty('--matt-sidebar-left', `${Math.round(slotRect.left)}px`);
+    nav.style.setProperty('--matt-sidebar-width', `${Math.round(width)}px`);
+    nav.style.setProperty('--matt-sidebar-top', `${TOP_OFFSET}px`);
+    nav.classList.add('matt-sidebar-fixed');
+  }
+
+  function updateAll(){
+    ticking = false;
+    document.querySelectorAll(NAV_SELECTOR).forEach(updateOne);
+  }
+
+  function schedule(){
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(updateAll);
+  }
+
+  function bind(){
+    document.querySelectorAll(NAV_SELECTOR).forEach(ensureSlot);
+    schedule();
+  }
+
+  window.addEventListener('scroll', schedule, {passive:true});
+  window.addEventListener('resize', schedule);
+  window.addEventListener('hashchange', () => setTimeout(bind, 0));
+  new MutationObserver(bind).observe(document.body,{childList:true,subtree:true});
+  bind();
+})();
+
 window.addEventListener("hashchange", render);
 
 // Fallback dla przeglądarek/cache: kliknięcie linku Kontakt zawsze uruchamia router.
