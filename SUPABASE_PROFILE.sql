@@ -1,2 +1,0 @@
-create table if not exists profiles (id uuid primary key default gen_random_uuid(), username text unique, email text, role text default ''user'');
-insert into profiles(username,email,role) values(''MatthewC'',''matthewc.twitc@gmail.com'',''admin'') on conflict do nothing;
