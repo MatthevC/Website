@@ -4,7 +4,7 @@
 
   const managedSelectors = [
     '.recommended-grid', '.recommended-toc', '.moderator-grid', '.moderator-benefits-grid',
-    '#commands-results', '.discord-channel-section', '.discord-channels-tags',
+    '#commands-results', '.discord-channel-section', '.discord-channels-tags', '#discord-custom-bubbles', '#discord-preview',
     '#contact-topic', '.event-card', '.event-detail-modern', '#home-events',
     '.collection-toolbar', '.collection-pagination', '.rules-card-grid', '.rules-memory-tags'
   ];
@@ -391,6 +391,112 @@
     select.innerHTML = '<option value="" selected disabled>Wybierz temat</option>' + topics.map(topic => `<option>${escapeHtml(topic)}</option>`).join('');
   }
 
+
+  function discordCalloutStyle(value) {
+    const allowed = new Set(['red','discord','dark','green']);
+    const style = String(value || 'red').toLowerCase();
+    return allowed.has(style) ? style : 'red';
+  }
+
+  function renderDiscordJoinBubbles(items) {
+    const wrap = document.getElementById('discord-custom-bubbles');
+    if (!wrap || !Array.isArray(items)) return;
+    wrap.innerHTML = items.map((item,index) => {
+      const style = discordCalloutStyle(item.style);
+      const rawUrl = String(item.buttonUrl || '').trim();
+      const useDiscord = !rawUrl || rawUrl === 'discord' || rawUrl === 'discordUrl';
+      const href = useDiscord ? '#' : safeHref(rawUrl);
+      const button = String(item.buttonText || '').trim();
+      return `<section class="discord-configure-section discord-callout-${style}" data-discord-callout data-cms-callout="${index}">
+        <div class="discord-configure-icon" aria-hidden="true">${escapeHtml(item.icon || '⚙')}</div>
+        <div class="discord-configure-copy">
+          <span>${escapeHtml(item.kicker || '')}</span>
+          <h2>${escapeHtml(item.title || '')}${item.highlight ? ` <strong>${escapeHtml(item.highlight)}</strong>` : ''}</h2>
+          <p>${escapeHtml(item.description || '')}</p>
+          ${item.emphasis ? `<p class="discord-configure-highlight">${escapeHtml(item.emphasis)}</p>` : ''}
+        </div>
+        ${button ? `<a class="discord-configure-button" href="${escapeHtml(href)}" ${useDiscord?'data-site-link="discordUrl"':''} target="_blank" rel="noopener">${escapeHtml(button)} →</a>` : ''}
+      </section>`;
+    }).join('');
+  }
+
+  function roleClass(kind = '') {
+    const v = String(kind || '').toLowerCase();
+    if (v === 'streamer') return 'role-streamer';
+    if (v === 'moderator' || v === 'mod') return 'role-mod';
+    if (v === 'vip') return 'role-vip';
+    return '';
+  }
+
+  function avatarClass(kind = '') {
+    const v = String(kind || '').toLowerCase();
+    if (v === 'vip') return 'vip avatar-purple';
+    if (v === 'moderator' || v === 'mod') return 'avatar-red';
+    if (v === 'streamer') return 'avatar-gold';
+    return 'avatar-gray';
+  }
+
+  function renderDiscordJoinPreview(data) {
+    const section = document.getElementById('discord-preview');
+    if (!section || !data || typeof data !== 'object') return;
+    const categories = Array.isArray(data.categories) ? data.categories : [];
+    const messages = Array.isArray(data.messages) ? data.messages : [];
+    const memberGroups = Array.isArray(data.memberGroups) ? data.memberGroups : [];
+    const activeChannel = String(data.activeChannel || 'live-alert');
+    const composerText = String(data.composerText || `Napisz na # ${activeChannel}`);
+    const boostLabel = String(data.boostLabel || 'cel dot. wzmocnienia');
+    const boostValue = String(data.boostValue || '2/3');
+
+    section.innerHTML = `
+      <div class="discord-section-title">
+        <div><span>${escapeHtml(data.kicker || '03 / PODGLĄD SERWERA')}</span><h2>${escapeHtml(data.title || "TAK WYGLĄDA MATT'S WORLD")}</h2></div>
+        <p>${escapeHtml(data.description || '')}</p>
+      </div>
+      <div class="discord-showcase-wrap">
+        <div class="discord-showcase-note">
+          <span>${escapeHtml(data.noteBadge || "PODGLĄD MATT'S WORLD")}</span>
+          <strong>${escapeHtml(data.noteTitle || '')}</strong>
+          <p>${escapeHtml(data.noteText || '')}</p>
+        </div>
+        <div class="discord-app-preview discord-app-preview-expanded" aria-label="Przykładowy podgląd serwera MATT'S WORLD">
+          <aside class="discord-app-rail" aria-label="Przykładowe ikony serwerów">
+            <div class="discord-app-home discord-rail-icon discord-rail-home" aria-label="Discord"><svg class="discord-rail-discord-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.54 4.44A16.2 16.2 0 0 0 15.6 3.2l-.48.98a14.8 14.8 0 0 0-6.24 0L8.4 3.2a16.2 16.2 0 0 0-3.94 1.24C2.2 7.72 1.5 11.1 1.84 14.42a15.7 15.7 0 0 0 4.8 2.44l1.17-1.6c-.63-.23-1.22-.5-1.77-.82l.43-.34c3.5 1.64 7.48 1.64 10.98 0l.43.34c-.55.32-1.14.59-1.77.82l1.17 1.6a15.7 15.7 0 0 0 4.8-2.44c.4-3.84-.65-7.19-2.54-9.98ZM8.6 13.6c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Zm6.8 0c-1.02 0-1.85-.94-1.85-2.1s.82-2.1 1.85-2.1 1.87.94 1.85 2.1c0 1.16-.82 2.1-1.85 2.1Z"/></svg></div>
+            <div class="discord-app-server discord-rail-icon discord-current-server" data-discord-rail-server-icon><img src="pictures/logo/matthevc-monkey.png" alt="MATT'S WORLD"></div>
+            <div class="discord-rail-icon rail-orange">🔥</div><div class="discord-rail-icon rail-red">🎮</div><div class="discord-rail-icon rail-blue">⚡</div><div class="discord-rail-icon rail-purple">💀</div><div class="discord-rail-icon rail-green">🧪</div><div class="discord-rail-icon rail-pink">✨</div><div class="discord-rail-icon rail-gold">🏆</div>
+          </aside>
+          <aside class="discord-app-channels">
+            <div class="discord-app-server-title"><strong data-discord-widget-name>MATT'S WORLD</strong><span>⌄</span></div>
+            <div class="discord-app-boost">✦ <span>${escapeHtml(boostLabel)}</span><b>${escapeHtml(boostValue)}</b></div>
+            ${categories.map((cat,ci)=>`<div class="discord-app-channel-section" data-cms-preview-category="${ci}">
+              <div class="discord-app-category">${escapeHtml(cat.title || 'KATEGORIA')} <b>＋</b></div>
+              ${(cat.channels || []).map(ch=>{
+                const name=String(ch.name || 'kanał');
+                const active=Boolean(ch.active) || name.toLowerCase()===activeChannel.toLowerCase();
+                const href=safeHref(ch.href || '#/discord/channels');
+                return `<a class="discord-app-channel${active?' active live':''}${ch.vip?' vip':''}" href="${escapeHtml(href)}"><span>${escapeHtml(ch.icon || '＃')}</span> ${escapeHtml(name)}</a>`;
+              }).join('')}
+            </div>`).join('')}
+          </aside>
+          <main class="discord-app-chat discord-live-chat">
+            <header class="discord-app-chat-head"><div><span class="channel-live-dot">●</span><strong>${escapeHtml(activeChannel)}</strong></div><div class="discord-app-chat-icons" aria-hidden="true">⌕　⚑　♟　☻</div></header>
+            <div class="discord-app-messages discord-alert-feed">
+              ${messages.map((m,i)=>`${m.date?`<div class="discord-app-date">${escapeHtml(m.date)}</div>`:''}<article class="discord-message discord-alert-message" data-cms-preview-message="${i}">
+                <div class="discord-avatar avatar-alert">${escapeHtml(m.avatar || String(m.author || 'M').charAt(0).toUpperCase())}</div>
+                <div><div class="discord-message-meta"><strong>${escapeHtml(m.author || 'Użytkownik')}</strong><span>${escapeHtml(m.time || '')}</span></div>
+                <p>${escapeHtml(m.text || '')}</p>
+                ${m.embedTitle || m.embedLinkText || m.embedDescription ? `<div class="discord-live-embed"><div class="discord-live-embed-accent"></div><div class="discord-live-embed-copy"><strong>${escapeHtml(m.embedTitle || '')}</strong><a href="#" data-site-link="twitchUrl" target="_blank" rel="noopener">${escapeHtml(m.embedLinkText || '')}</a><span>${escapeHtml(m.embedDescription || '')}</span>${m.viewers?`<small>${escapeHtml(m.viewers)}</small>`:''}</div><img src="${escapeHtml(m.thumbnail || 'pictures/logo/matthevc-monkey.png')}" alt="Podgląd"><div class="discord-live-preview-box">▶</div></div>`:''}
+                </div></article>`).join('')}
+            </div>
+            <div class="discord-app-composer">＋ <span>${escapeHtml(composerText)}</span><b>🎁　😊　＋</b></div>
+          </main>
+          <aside class="discord-app-members discord-members-expanded">
+            <div class="discord-members-search">Aktywność — <span data-discord-online-count>—</span> ◉</div>
+            ${memberGroups.map((group,gi)=>`<div data-cms-preview-member-group="${gi}"><div class="discord-member-group">${escapeHtml(group.title || 'UŻYTKOWNICY')} — ${(group.members||[]).length}</div>${(group.members||[]).map((m,mi)=>`<div class="discord-member" data-cms-preview-member="${gi}:${mi}">${m.image?`<img class="member-avatar member-photo" src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name||'')}">`:`<span class="member-avatar ${avatarClass(m.kind)}">${escapeHtml(m.initial || String(m.name||'?').charAt(0).toUpperCase())}</span>`}<div><strong class="${roleClass(m.kind)}">${escapeHtml(m.name || '')}</strong><small>${escapeHtml(m.status || '')}</small></div></div>`).join('')}</div>`).join('')}
+          </aside>
+        </div>
+      </div>`;
+  }
+
   function applyStructured(path) {
     const p = routeKey(path);
     if (p === 'home') {
@@ -411,6 +517,10 @@
     if (p === 'discord/channels') {
       const data = get('discord_channels'); if (data) renderDiscordChannels(data);
     }
+    if (p === 'discord/join') {
+      const bubbles = get('discord_join_bubbles'); if (bubbles) renderDiscordJoinBubbles(bubbles);
+      const preview = get('discord_join_preview'); if (preview) renderDiscordJoinPreview(preview);
+    }
     if (p === 'contact') {
       const data = get('contact_topics'); if (data) renderContactTopics(data);
     }
@@ -427,7 +537,7 @@
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
-    renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics,
+    renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview,
     twitchLoginFromUrl, twitchClipSlugFromUrl, normalizeStreamer,
     get loadError() { return loadError; }
   };

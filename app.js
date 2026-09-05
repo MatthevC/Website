@@ -2366,7 +2366,8 @@ function discordJoinPage() {
           </div>
         </section>
 
-<section class="discord-configure-section" id="discord-configure">
+<div id="discord-custom-bubbles" class="discord-custom-bubbles">
+        <section class="discord-configure-section discord-callout-red" id="discord-configure" data-discord-callout>
           <div class="discord-configure-icon" aria-hidden="true">⚙</div>
           <div class="discord-configure-copy">
             <span>02 / TWÓJ DISCORD, TWOJE ZASADY</span>
@@ -2374,8 +2375,9 @@ function discordJoinPage() {
             <p>Po wejściu na serwer koniecznie zajrzyj na kanał <strong>#konfiguracja-tickets</strong>. To właśnie tam możesz dopasować Discorda pod siebie — wybrać interesujące Cię gry i powiadomienia, ograniczyć kanały, których nie potrzebujesz, oraz ustawić serwer tak, żeby był dla Ciebie wygodny zamiast przeładowany.</p>
             <p class="discord-configure-highlight">Kilka kliknięć na początku i później widzisz przede wszystkim to, co naprawdę Cię interesuje.</p>
           </div>
-          <a class="discord-configure-button" id="discord-configure-invite" href="#" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
+          <a class="discord-configure-button" id="discord-configure-invite" href="#" data-site-link="discordUrl" target="_blank" rel="noopener">WEJDŹ I SKONFIGURUJ →</a>
         </section>
+        </div>
 
 <section class="discord-preview-section" id="discord-preview">
   <div class="discord-section-title">
