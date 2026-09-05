@@ -8606,3 +8606,19 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 @media(max-width:800px){
   .cms-image-manager-grid{grid-template-columns:1fr}.cms-graphics-banner-card{grid-template-columns:1fr}.cms-graphics-banner-card img{width:100%;height:150px}.cms-graphics-banner-card>div:last-child button{flex:1}
 }
+
+
+/* ===== CMS v2.4.6 — uniwersalny kreator dymków na każdej podstronie ===== */
+.cms-page-custom-callouts{display:grid;gap:14px;margin:18px 0 24px}
+.cms-page-callout{--bubble-accent:#ef2b2d;--bubble-bg:rgba(239,43,45,.085);display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;align-items:flex-start;padding:18px 20px;border:1px solid color-mix(in srgb,var(--bubble-accent) 55%,transparent);border-radius:14px;background:linear-gradient(135deg,var(--bubble-bg),rgba(255,255,255,.015));box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.cms-page-callout-red{--bubble-accent:#ef2b2d;--bubble-bg:rgba(239,43,45,.095)}
+.cms-page-callout-discord{--bubble-accent:#7c83ff;--bubble-bg:rgba(88,101,242,.12)}
+.cms-page-callout-dark{--bubble-accent:#8b8e96;--bubble-bg:rgba(255,255,255,.045)}
+.cms-page-callout-green{--bubble-accent:#36c66f;--bubble-bg:rgba(35,165,90,.10)}
+.cms-page-callout-blue{--bubble-accent:#4aa8ff;--bubble-bg:rgba(45,139,230,.10)}
+.cms-page-callout-orange{--bubble-accent:#ff9f43;--bubble-bg:rgba(255,159,67,.10)}
+.cms-page-callout-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;border:1px solid color-mix(in srgb,var(--bubble-accent) 52%,transparent);background:color-mix(in srgb,var(--bubble-accent) 13%,transparent);color:var(--bubble-accent);font:900 18px/1 Rajdhani,system-ui,sans-serif}
+.cms-page-callout-copy{min-width:0}.cms-page-callout-copy small{display:block;margin:1px 0 4px;color:var(--bubble-accent);font:900 10px/1.1 Rajdhani,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}.cms-page-callout-copy h2{margin:0 0 7px!important;color:#fff!important;font-size:clamp(18px,2vw,23px)!important;line-height:1.05!important}.cms-page-callout-copy p{margin:0!important;color:#c9cbd1!important;line-height:1.65!important}.cms-page-callout-button{display:inline-flex;align-items:center;justify-content:center;margin-top:13px;padding:9px 13px;border:1px solid color-mix(in srgb,var(--bubble-accent) 70%,#fff 10%);border-radius:8px;background:color-mix(in srgb,var(--bubble-accent) 78%,#121317 22%);color:#fff!important;font:800 11px/1 Rajdhani,system-ui,sans-serif;letter-spacing:.04em;text-decoration:none!important;cursor:pointer}
+.cms-page-callout-button:hover{filter:brightness(1.12)}
+.cms-bubble-manager-section{display:grid;gap:10px;margin-top:18px}.cms-bubble-manager-section>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:#15161a}.cms-bubble-manager-section>header>div{display:flex;flex-direction:column;gap:3px}.cms-bubble-manager-section>header small{color:#ef2b2d;font:900 10px/1 Rajdhani,sans-serif;letter-spacing:.12em}.cms-bubble-manager-section>header strong{font-size:13px}.cms-bubble-manager-section>header>span{min-width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(239,43,45,.25);border-radius:9px;background:rgba(239,43,45,.08);color:#ff6365;font-weight:900}.cms-callout-live-preview{grid-column:1/-1;display:grid;gap:8px;padding:13px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:#0b0c0f}.cms-callout-live-preview>small{color:#7f828b;font:800 10px/1 Rajdhani,sans-serif;letter-spacing:.13em}.cms-callout-live-preview .cms-page-callout{margin:0}.cms-bubbles-main-actions{align-items:flex-start}
+@media(max-width:700px){.cms-page-callout{grid-template-columns:42px minmax(0,1fr);padding:15px;gap:12px}.cms-page-callout-icon{width:40px;height:40px;border-radius:10px}.cms-bubble-manager-section>header{align-items:flex-start}.cms-bubbles-main-actions{flex-direction:column}}

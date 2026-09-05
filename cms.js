@@ -243,7 +243,16 @@
     '.emotes7tv-intro-copy',
     '.emotes7tv-final-note',
     '.dixper-clean-callout',
-    '.vip-card-warning'
+    '.vip-card-warning',
+    '.vip-note',
+    '.bingo-demo-note',
+    '.bingo-image-note',
+    '.contact-note',
+    '.pick-order-intro',
+    '.recommended-note-box',
+    '.reward-note',
+    '.rewards-side-note',
+    '.discord-showcase-note'
   ].join(',');
 
   function redCalloutElements(root = document.getElementById('app')) {
@@ -276,8 +285,79 @@
     const data = get(`page_callouts:${routeKey(path)}`, {}) || {};
     redCalloutElements().forEach(el => {
       const value = data[el.dataset.cmsCalloutId];
-      if (typeof value === 'string') el.innerHTML = sanitizeHtml(value);
+      // Starsze wersje CMS zapisywały sam string HTML. Zachowujemy pełną zgodność.
+      if (typeof value === 'string') {
+        el.hidden = false;
+        el.innerHTML = sanitizeHtml(value);
+        return;
+      }
+      if (value && typeof value === 'object') {
+        el.hidden = value.hidden === true;
+        if (typeof value.html === 'string') el.innerHTML = sanitizeHtml(value.html);
+        return;
+      }
+      el.hidden = false;
     });
+  }
+
+  function normalizeCustomPageCallout(item = {}, index = 0) {
+    const styles = new Set(['red','discord','dark','green','blue','orange']);
+    const style = styles.has(String(item.style || '').toLowerCase()) ? String(item.style).toLowerCase() : 'red';
+    return {
+      id: String(item.id || `dymek-${Date.now()}-${index}`).replace(/[^a-zA-Z0-9_-]/g, '-') || `dymek-${index+1}`,
+      style,
+      icon: String(item.icon || 'i').slice(0, 12),
+      kicker: String(item.kicker || '').trim(),
+      title: String(item.title || 'NOWY DYMEK').trim(),
+      text: String(item.text || '').trim(),
+      buttonLabel: String(item.buttonLabel || '').trim(),
+      buttonUrl: safeHref(item.buttonUrl || '')
+    };
+  }
+
+  function customPageCallouts(path) {
+    const items = get(`page_custom_callouts:${routeKey(path)}`, []);
+    return Array.isArray(items) ? items.map(normalizeCustomPageCallout) : [];
+  }
+
+  function renderCustomPageCallouts(path, sourceItems = null) {
+    document.querySelectorAll('.cms-page-custom-callouts').forEach(el => el.remove());
+    const route = routeKey(path);
+    const items = Array.isArray(sourceItems) ? sourceItems.map(normalizeCustomPageCallout) : customPageCallouts(route);
+    if (!items.length) return;
+
+    const root = document.getElementById('app');
+    if (!root) return;
+    const panel = root.querySelector('.page-panel, .error-panel') || root.querySelector('.content-wrap') || root.firstElementChild || root;
+    if (!panel) return;
+
+    const wrap = document.createElement('section');
+    wrap.className = 'cms-page-custom-callouts';
+    wrap.dataset.cmsCustomCallouts = route;
+    wrap.innerHTML = items.map((item, index) => {
+      const text = escapeHtml(item.text).replace(/\n/g, '<br>');
+      const button = item.buttonLabel ? `<a class="cms-page-callout-button" href="${escapeHtml(item.buttonUrl || '#')}">${escapeHtml(item.buttonLabel)}</a>` : '';
+      return `<article class="cms-page-callout cms-page-callout-${escapeHtml(item.style)}" data-cms-custom-callout-id="${escapeHtml(item.id)}">
+        <div class="cms-page-callout-icon" aria-hidden="true">${escapeHtml(item.icon || 'i')}</div>
+        <div class="cms-page-callout-copy">
+          ${item.kicker ? `<small>${escapeHtml(item.kicker)}</small>` : ''}
+          <h2>${escapeHtml(item.title || 'DYMEK')}</h2>
+          ${text ? `<p>${text}</p>` : ''}
+          ${button}
+        </div>
+      </article>`;
+    }).join('');
+
+    // Własne dymki trafiają zawsze wysoko na podstronie, ale pod dodatkową grafiką nagłówkową.
+    const banner = panel.querySelector(':scope > .cms-page-banner');
+    const back = panel.querySelector(':scope > .back-link');
+    if (banner) banner.insertAdjacentElement('afterend', wrap);
+    else if (back) back.insertAdjacentElement('afterend', wrap);
+    else panel.insertBefore(wrap, panel.firstChild);
+  }
+
+  function applyCustomPageCallouts(path) {
+    renderCustomPageCallouts(path, customPageCallouts(path));
   }
 
   function renderPageBanner(path, data) {
@@ -656,13 +736,15 @@
     applyPageCallouts(path);
     applyPageImages(path);
     applyPageBanner(path);
+    applyCustomPageCallouts(path);
   }
 
   window.MattCMS = {
     ready, get, save, remove, createBackup, listBackups, getBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
-    pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts, renderPageBanner, applyPageBanner,
+    pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts,
+    customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview,
     twitchLoginFromUrl, twitchClipSlugFromUrl, normalizeStreamer,

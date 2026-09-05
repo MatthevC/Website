@@ -197,8 +197,14 @@
     configBtn.hidden = !config || inlineEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
     const calloutBtn = $('[data-cms-action="callouts"]', toolbar);
-    const calloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
-    if (calloutBtn) { calloutBtn.hidden = inlineEditing || calloutCount === 0; calloutBtn.textContent = `▰ DYMKI${calloutCount ? ` (${calloutCount})` : ''}`; }
+    const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
+    const customCalloutCount = window.MattCMS?.customPageCallouts?.(currentRoute())?.length || 0;
+    const calloutCount = baseCalloutCount + customCalloutCount;
+    if (calloutBtn) {
+      // Kreator dymków jest dostępny na KAŻDEJ podstronie, nawet gdy w GitHubie nie ma jeszcze żadnego dymku.
+      calloutBtn.hidden = inlineEditing;
+      calloutBtn.textContent = `▰ DYMKI${calloutCount ? ` (${calloutCount})` : ''}`;
+    }
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
     if (imagesBtn) imagesBtn.hidden = inlineEditing || currentRoute() === 'home';
     $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing;
@@ -1173,44 +1179,152 @@
   function openPageCalloutsManager() {
     if (!isAdmin()) return;
     const route = currentRoute();
-    const key = `page_callouts:${route}`;
-    let overrides = clone(window.MattCMS?.get(key, {}) || {});
+    const baseKey = `page_callouts:${route}`;
+    const customKey = `page_custom_callouts:${route}`;
+    let overrides = clone(window.MattCMS?.get(baseKey, {}) || {});
+    let customItems = clone(window.MattCMS?.get(customKey, []) || []);
     const esc = window.MattCMS.escape;
 
-    const getItems = () => window.MattCMS?.calloutInfo?.(route) || [];
+    const getBaseItems = () => window.MattCMS?.calloutInfo?.(route) || [];
+    const normalizedCustom = () => customItems.map((item,index)=>window.MattCMS?.normalizeCustomPageCallout?.(item,index) || item);
+
+    const saveBase = async (message) => {
+      await saveOverrideMap(baseKey, overrides, message);
+    };
+
+    const saveCustom = async (message) => {
+      try {
+        if (customItems.length) await window.MattCMS.save(customKey, customItems);
+        else if (window.MattCMS.get(customKey, null) != null) await window.MattCMS.remove(customKey);
+        notify(message || 'Dymki zostały zapisane.');
+        await rerender();
+      } catch (error) { notify(`Nie udało się zapisać: ${error.message}`, 'error'); }
+    };
+
+    const styleLabel = style => ({red:'CZERWONY',discord:'DISCORD',dark:'CIEMNY',green:'ZIELONY',blue:'NIEBIESKI',orange:'POMARAŃCZOWY'}[style] || String(style || 'CZERWONY').toUpperCase());
 
     const draw = () => {
-      const items = getItems();
-      openModal(`DYMKI — ${route.toUpperCase()}`, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-all>↶ WSZYSTKIE Z GITHUBA</button></div><p>To są czerwone dymki/komunikaty wykryte na tej podstronie, w tym pola takie jak „Masz taki chat…”. Edytujesz ich zawartość bez zmiany kodu strony.</p></div>
-        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / DYMEK</small><strong>${esc((item.text || 'Czerwony dymek').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit="${esc(item.id)}">EDYTUJ</button><button type="button" data-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join('') : '<div class="cms-empty">Na tej podstronie nie wykryto czerwonych dymków. Jeśli dodamy taki element w plikach GitHuba, pojawi się tutaj automatycznie.</div>'}</div>`);
+      const baseItems = getBaseItems();
+      const custom = normalizedCustom();
+      openModal(`DYMKI — ${route.toUpperCase()}`, `
+        <div class="cms-manager-actions cms-bubbles-main-actions">
+          <div class="cms-manager-action-group">
+            <button class="cms-primary" type="button" data-add-custom>+ DODAJ NOWY DYMEK</button>
+            <button type="button" data-reset-base>↶ DYMKI Z GITHUBA</button>
+            <button type="button" data-remove-custom ${custom.length?'':'disabled'}>USUŃ WŁASNE DYMKI</button>
+          </div>
+          <p>Kreator działa na każdej podstronie. Możesz edytować dymki istniejące w plikach GitHuba albo tworzyć własne bez zmiany kodu.</p>
+        </div>
+
+        <section class="cms-bubble-manager-section">
+          <header><div><small>01 / DYMKI Z PLIKÓW GITHUB</small><strong>ISTNIEJĄCE ELEMENTY NA TEJ PODSTRONIE</strong></div><span>${baseItems.length}</span></header>
+          <div class="cms-manager-list">${baseItems.length ? baseItems.map((item,index)=>{
+            const raw = overrides[item.id];
+            const state = raw && typeof raw === 'object' && raw.hidden === true ? 'USUNIĘTY ZE STRONY' : (raw != null ? 'ZMODYFIKOWANY' : 'Z GITHUBA');
+            return `<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${state}</small><strong>${esc((item.text || 'Dymek').slice(0,100))}${(item.text||'').length>100?'…':''}</strong></div><div><button type="button" data-edit-base="${esc(item.id)}">EDYTUJ</button><button class="danger" type="button" data-hide-base="${esc(item.id)}">${state==='USUNIĘTY ZE STRONY'?'PRZYWRÓĆ':'USUŃ ZE STRONY'}</button><button type="button" data-reset-one="${esc(item.id)}" ${raw!=null?'':'disabled'}>↶ GITHUB</button></div></article>`;
+          }).join('') : '<div class="cms-empty">W plikach GitHuba nie ma wykrytego dymku na tej podstronie. Nadal możesz utworzyć własny poniżej.</div>'}</div>
+        </section>
+
+        <section class="cms-bubble-manager-section">
+          <header><div><small>02 / KREATOR</small><strong>WŁASNE DYMKI NA TEJ PODSTRONIE</strong></div><span>${custom.length}</span></header>
+          <div class="cms-manager-list">${custom.length ? custom.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${styleLabel(item.style)}</small><strong>${esc(item.title || 'DYMEK')}</strong></div><div><button type="button" data-custom-up="${index}" ${index===0?'disabled':''}>↑</button><button type="button" data-custom-down="${index}" ${index===custom.length-1?'disabled':''}>↓</button><button type="button" data-edit-custom="${index}">EDYTUJ</button><button class="danger" type="button" data-delete-custom="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Nie utworzono jeszcze własnych dymków. Kliknij „+ DODAJ NOWY DYMEK”.</div>'}</div>
+        </section>`);
+
       const body = $('#cms-modal-body', modal);
-      $('[data-reset-all]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie czerwone dymki na tej podstronie'));
-      $$('[data-edit]',body).forEach(btn=>btn.addEventListener('click',()=>edit(btn.dataset.edit)));
-      $$('[data-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
-        const id=btn.dataset.reset;
-        if(!Object.prototype.hasOwnProperty.call(overrides,id)) return;
-        if(!confirm('Przywrócić ten dymek do wersji zapisanej w GitHubie?')) return;
-        delete overrides[id];
-        await saveOverrideMap(key,overrides,'Dymek przywrócony z GitHuba.');
+      $('[data-add-custom]',body)?.addEventListener('click',()=>editCustom(-1));
+      $('[data-reset-base]',body)?.addEventListener('click',()=>resetCmsKey(baseKey,'wszystkie dymki pochodzące z GitHuba na tej podstronie'));
+      $('[data-remove-custom]',body)?.addEventListener('click',async()=>{
+        if(!customItems.length) return;
+        if(!confirm('Usunąć wszystkie własne dymki z tej podstrony? Przed zmianą zostanie wykonany backup.')) return;
+        customItems=[]; await saveCustom('Własne dymki zostały usunięte.');
+      });
+      $$('[data-edit-base]',body).forEach(btn=>btn.addEventListener('click',()=>editBase(btn.dataset.editBase)));
+      $$('[data-hide-base]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const id=btn.dataset.hideBase;
+        const item=getBaseItems().find(x=>x.id===id); if(!item) return;
+        const current=overrides[id];
+        const isHidden=current && typeof current==='object' && current.hidden===true;
+        if(isHidden){ delete overrides[id]; await saveBase('Dymek został przywrócony na stronę.'); return; }
+        if(!confirm('Usunąć ten dymek z widoku strony? Będzie można go później przywrócić z GitHuba.')) return;
+        const html=typeof current==='string'?current:(current?.html || item.baseHtml);
+        overrides[id]={html,hidden:true}; await saveBase('Dymek został ukryty na stronie.');
+      }));
+      $$('[data-reset-one]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const id=btn.dataset.resetOne; if(overrides[id]==null) return;
+        if(!confirm('Przywrócić ten dymek dokładnie do wersji z GitHuba?')) return;
+        delete overrides[id]; await saveBase('Dymek przywrócony z GitHuba.');
+      }));
+      $$('[data-custom-up]',body).forEach(btn=>btn.addEventListener('click',()=>moveCustom(Number(btn.dataset.customUp),-1)));
+      $$('[data-custom-down]',body).forEach(btn=>btn.addEventListener('click',()=>moveCustom(Number(btn.dataset.customDown),1)));
+      $$('[data-edit-custom]',body).forEach(btn=>btn.addEventListener('click',()=>editCustom(Number(btn.dataset.editCustom))));
+      $$('[data-delete-custom]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const index=Number(btn.dataset.deleteCustom); if(!customItems[index]) return;
+        if(!confirm(`Usunąć dymek „${customItems[index].title || 'bez nazwy'}”?`)) return;
+        customItems.splice(index,1); await saveCustom('Dymek został usunięty.');
       }));
     };
 
-    const edit = id => {
-      const item = getItems().find(x=>x.id===id);
-      if(!item) return draw();
-      const current = Object.prototype.hasOwnProperty.call(overrides,id) ? overrides[id] : item.html;
-      openModal('EDYTUJ CZERWONY DYMEK', `<div class="cms-manager-actions"><p>Kliknij w treść poniżej i edytuj ją wizualnie. Możesz zostawić pogrubienia, listy i linki. Nie trzeba wpisywać kodu HTML.</p></div>
+    const moveCustom = async (index, direction) => {
+      const target=index+direction;
+      if(index<0 || target<0 || index>=customItems.length || target>=customItems.length) return;
+      [customItems[index],customItems[target]]=[customItems[target],customItems[index]];
+      await saveCustom('Kolejność dymków została zmieniona.');
+    };
+
+    const editBase = id => {
+      const item=getBaseItems().find(x=>x.id===id); if(!item) return draw();
+      const raw=overrides[id];
+      const current=typeof raw==='string'?raw:(raw?.html || item.html);
+      openModal('EDYTUJ DYMEK Z GITHUBA', `<div class="cms-manager-actions"><p>Kliknij w treść poniżej i edytuj ją wizualnie. Ten element nadal zachowa swój obecny wygląd i położenie na podstronie.</p></div>
         <div class="cms-rich-callout-editor" contenteditable="true" spellcheck="true" data-rich-editor>${current}</div>
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-base>↶ TREŚĆ Z GITHUBA</button><button class="cms-primary" type="button" data-save>ZAPISZ</button></div>`);
-      const body=$('#cms-modal-body',modal);
-      const editor=$('[data-rich-editor]',body);
+      const body=$('#cms-modal-body',modal), editor=$('[data-rich-editor]',body);
       $('[data-back]',body)?.addEventListener('click',draw);
       $('[data-base]',body)?.addEventListener('click',()=>{editor.innerHTML=item.baseHtml;});
       $('[data-save]',body)?.addEventListener('click',async()=>{
         const value=window.MattCMS.sanitizeHtml(editor.innerHTML);
         const base=window.MattCMS.sanitizeHtml(item.baseHtml);
-        if(value===base) delete overrides[id]; else overrides[id]=value;
-        await saveOverrideMap(key,overrides,'Dymek został zapisany.');
+        if(value===base) delete overrides[id];
+        else overrides[id]={html:value,hidden:false};
+        await saveBase('Dymek został zapisany.');
+      });
+    };
+
+    const editCustom = index => {
+      const isEdit=index>=0;
+      const cur=isEdit ? clone(customItems[index]) : {style:'red',icon:'i',kicker:'WAŻNE',title:'NOWY DYMEK',text:'Wpisz treść komunikatu.',buttonLabel:'',buttonUrl:''};
+      const fields=[
+        {name:'style',label:'Kolor / styl dymku',type:'select',options:[
+          {value:'red',label:'Czerwony — MATT’S WORLD'},
+          {value:'discord',label:'Fioletowy — Discord'},
+          {value:'dark',label:'Ciemny'},
+          {value:'green',label:'Zielony'},
+          {value:'blue',label:'Niebieski'},
+          {value:'orange',label:'Pomarańczowy'}
+        ]},
+        {name:'icon',label:'Ikona / emoji',placeholder:'np. !, i, ⚠️, 🎮'},
+        {name:'kicker',label:'Mały nagłówek',placeholder:'np. WAŻNE / WSKAZÓWKA'},
+        {name:'title',label:'Tytuł dymku',required:true},
+        {name:'text',label:'Treść dymku',type:'textarea',required:true},
+        {name:'buttonLabel',label:'Tekst przycisku (opcjonalnie)',placeholder:'np. PRZEJDŹ DALEJ'},
+        {name:'buttonUrl',label:'Link przycisku (opcjonalnie)',placeholder:'https://... lub #/discord/join'}
+      ];
+      openModal(isEdit?'EDYTUJ WŁASNY DYMEK':'DODAJ NOWY DYMEK', `<form id="cms-custom-page-callout-form" class="cms-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-callout-live-preview"><small>PODGLĄD</small><div data-bubble-preview></div></div><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ DYMEK</button></div></form>`);
+      const form=$('#cms-custom-page-callout-form',modal);
+      const preview=$('[data-bubble-preview]',form);
+      const renderPreview=()=>{
+        const v=parseFields(form,fields);
+        const style=esc(v.style||'red');
+        preview.innerHTML=`<article class="cms-page-callout cms-page-callout-${style}"><div class="cms-page-callout-icon">${esc(v.icon||'i')}</div><div class="cms-page-callout-copy">${v.kicker?`<small>${esc(v.kicker)}</small>`:''}<h2>${esc(v.title||'NOWY DYMEK')}</h2>${v.text?`<p>${esc(v.text).replace(/\\n/g,'<br>')}</p>`:''}${v.buttonLabel?`<span class="cms-page-callout-button">${esc(v.buttonLabel)}</span>`:''}</div></article>`;
+      };
+      form.addEventListener('input',renderPreview); form.addEventListener('change',renderPreview); renderPreview();
+      $('[data-back]',form)?.addEventListener('click',draw);
+      form.addEventListener('submit',async e=>{
+        e.preventDefault();
+        const v=parseFields(form,fields);
+        const item={...cur,...v,id:cur.id || `dymek-${Date.now()}`};
+        if(isEdit) customItems[index]=item; else customItems.push(item);
+        await saveCustom(isEdit?'Dymek został zaktualizowany.':'Nowy dymek został dodany.');
       });
     };
 
