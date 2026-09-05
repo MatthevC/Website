@@ -2363,10 +2363,123 @@
         formEdit(i>=0?'EDYTUJ GRUPĘ':'DODAJ GRUPĘ',cur,fields,async v=>{v.members=cur.members||[];if(i>=0)data.memberGroups[i]=v;else data.memberGroups.push(v);await save('Grupa zapisana.');},makeDraft);
       };
       const editMember=(gi,mi)=>{
-        const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:''};
-        const fields=[{name:'name',label:'Nick / nazwa',required:true},{name:'status',label:'Status / opis'},{name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},{name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma obrazu w wersji bazowej.'}];
-        const makeDraft=v=>{const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=v;else arr.push(v);return d;};
-        formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{if(mi>=0)data.memberGroups[gi].members[mi]=v;else data.memberGroups[gi].members.push(v);await save('Osoba zapisana.');},makeDraft);
+        const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:'',twitchLogin:''};
+        const fields=[
+          {name:'name',label:'Nick / nazwa',required:true},
+          {name:'status',label:'Status / opis'},
+          {name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},
+          {name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma zdjęcia.'},
+          {name:'twitchLogin',label:'Login Twitch',placeholder:'np. SandyNPC',help:'Możesz podać sam login lub zostawić puste — wtedy wyszukiwanie użyje pola Nick / nazwa.'},
+          {name:'image',label:'Avatar — Z DYSKU',type:'image-file'}
+        ];
+        openDiscordModal(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ', `${liveServerPanel(true)}<form id="cms-preview-form" class="cms-form cms-discord-member-form">${fields.map(f=>fieldHtml(f,cur[f.name])).join('')}<div class="cms-twitch-autofill cms-discord-avatar-twitch"><button type="button" class="cms-twitch-autofill-btn" data-member-twitch-avatar>⚡ POBIERZ AVATAR Z TWITCHA</button><small data-member-twitch-status>Wpisz login Twitch albo nick osoby. Panel znajdzie konto przez połączone Twitch API i pobierze aktualny avatar.</small></div><div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+        const body=$('#cms-modal-body',modal);
+        const form=$('#cms-preview-form',modal);
+        bindImageFileFields(form,fields);
+        let localPreviewUrl='';
+        const imageWrap=form.querySelector('[data-cms-image-field="image"]');
+        const fileInput=imageWrap?.querySelector('[data-image-file]');
+        const hiddenImage=form.elements?.image;
+        const previewImg=imageWrap?.querySelector('[data-image-preview] img');
+        const previewBox=imageWrap?.querySelector('[data-image-preview]');
+        const imageName=imageWrap?.querySelector('[data-image-name]');
+        const removeBtn=imageWrap?.querySelector('[data-image-remove]');
+        const twitchBtn=$('[data-member-twitch-avatar]',form);
+        const twitchStatus=$('[data-member-twitch-status]',form);
+
+        const currentValues=()=>{
+          const v={...cur,...parseFields(form,fields)};
+          if(localPreviewUrl) v.image=localPreviewUrl;
+          return v;
+        };
+        const updateLive=()=>{
+          const v=currentValues();
+          const d=clone(data);
+          const arr=d.memberGroups[gi].members||[];
+          if(mi>=0) arr[mi]=v; else arr.push(v);
+          renderDiscordServerLive(body,d);
+        };
+        const setImageUrl=(url,label='Avatar z Twitcha')=>{
+          if(localPreviewUrl && localPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(localPreviewUrl);
+          localPreviewUrl=String(url||'');
+          if(hiddenImage) hiddenImage.value=String(url||'');
+          if(fileInput) fileInput.value='';
+          if(previewImg){
+            if(url) previewImg.src=String(url); else previewImg.removeAttribute('src');
+          }
+          previewBox?.classList.toggle('is-empty',!url);
+          if(imageName) imageName.textContent=url?label:'Nie wybrano pliku';
+          if(removeBtn) removeBtn.hidden=!url;
+          updateLive();
+        };
+
+        fileInput?.addEventListener('change',()=>{
+          const file=fileInput.files?.[0];
+          if(!file) return;
+          try{validateCmsImage(file);}catch(error){notify(error.message,'error');return;}
+          if(localPreviewUrl && localPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(localPreviewUrl);
+          localPreviewUrl=URL.createObjectURL(file);
+          updateLive();
+        });
+        removeBtn?.addEventListener('click',()=>{
+          if(localPreviewUrl && localPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(localPreviewUrl);
+          localPreviewUrl='';
+          updateLive();
+        });
+        form.addEventListener('input',e=>{if(e.target!==fileInput) updateLive();});
+        form.addEventListener('change',e=>{if(e.target!==fileInput) updateLive();});
+        $('[data-back]',form)?.addEventListener('click',draw);
+
+        twitchBtn?.addEventListener('click',async()=>{
+          const typedLogin=String(form.elements?.twitchLogin?.value||'').trim();
+          const nameLogin=String(form.elements?.name?.value||'').trim();
+          const rawLogin=typedLogin||nameLogin;
+          const login=rawLogin.replace(/^https?:\/\/(?:www\.)?twitch\.tv\//i,'').split(/[\/?#]/)[0].replace(/^@/,'').trim();
+          if(!login){notify('Wpisz login Twitch albo nick osoby.','error');form.elements?.twitchLogin?.focus();return;}
+          if(!window.supabaseClient?.functions){notify('Brak połączenia z funkcjami Supabase.','error');return;}
+          const old=twitchBtn.textContent;
+          twitchBtn.disabled=true;
+          twitchBtn.textContent='⚡ SZUKAM NA TWITCHU…';
+          twitchStatus.textContent=`Szukam konta „${login}”…`;
+          twitchStatus.classList.remove('is-error','is-ok');
+          try{
+            const {data:tw,error}=await window.supabaseClient.functions.invoke('twitch-streamer-autofill',{body:{channelUrl:`https://www.twitch.tv/${login}`}});
+            if(error){
+              let message=error.message||'Nie udało się pobrać danych z Twitcha.';
+              try{if(error.context&&typeof error.context.json==='function'){const payload=await error.context.json();if(payload?.error)message=payload.error;}}catch(_){}
+              throw new Error(message);
+            }
+            if(!tw||tw.ok===false) throw new Error(tw?.error||'Twitch nie zwrócił danych użytkownika.');
+            if(!tw.profileImageUrl) throw new Error('Konto zostało znalezione, ale Twitch nie zwrócił avatara.');
+            if(form.elements?.twitchLogin) form.elements.twitchLogin.value=String(tw.login||login);
+            if(form.elements?.name && (!String(form.elements.name.value||'').trim() || String(form.elements.name.value).trim().toLowerCase()===login.toLowerCase())) form.elements.name.value=String(tw.displayName||login);
+            setImageUrl(tw.profileImageUrl,`Twitch: ${tw.displayName||tw.login||login}`);
+            twitchStatus.textContent=`Znaleziono ${tw.displayName||tw.login||login}. Avatar został wstawiony do podglądu — kliknij ZAPISZ, aby zachować zmianę.`;
+            twitchStatus.classList.add('is-ok');
+            notify('Avatar z Twitcha został pobrany. Sprawdź podgląd i kliknij ZAPISZ.');
+          }catch(error){
+            twitchStatus.textContent=`Nie udało się pobrać avatara: ${error.message}`;
+            twitchStatus.classList.add('is-error');
+            notify(error.message,'error');
+          }finally{twitchBtn.disabled=false;twitchBtn.textContent=old;}
+        });
+
+        updateLive();
+        form.addEventListener('submit',async e=>{
+          e.preventDefault();
+          const submit=$('button[type="submit"]',form);
+          if(submit){submit.disabled=true;submit.textContent='ZAPISYWANIE…';}
+          try{
+            const v={...cur,...parseFields(form,fields)};
+            const file=fileInput?.files?.[0];
+            if(file) v.image=await uploadCmsImage(file,v.name||v.twitchLogin||'discord-osoba','discord/members');
+            else v.image=String(hiddenImage?.value||v.image||'').trim();
+            if(!v.initial) v.initial=String(v.name||'?').charAt(0).toUpperCase();
+            if(mi>=0)data.memberGroups[gi].members[mi]=v;else data.memberGroups[gi].members.push(v);
+            if(localPreviewUrl&&localPreviewUrl.startsWith('blob:'))URL.revokeObjectURL(localPreviewUrl);
+            await save('Osoba zapisana.');
+          }catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}
+        });
       };
       draw();
     };
@@ -3108,9 +3221,8 @@
         title:row?.title||'', description:row?.description||'',
         startDate:start.date, startTime:start.time||'00:00', endDate:end.date, endTime:end.time||'00:00',
         publishDate:publish.date||today, publishTime:publish.time||nowTime,
-        image:row?.image_url||row?.main_image_url||'', imageFit:row?.image_fit||'contain',
-        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain',
-        imageMode:row?.main_image_url ? 'separate' : 'shared', endedNow:false
+        image:row?.image_url||'', imageFit:row?.image_fit||'contain',
+        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain', endedNow:false
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
@@ -3132,18 +3244,11 @@
               <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>Po zaznaczeniu data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</p></div>
             </section>
 
-            <section class="cms-event-editor-section cms-event-images-section">
-              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Możesz użyć jednej grafiki w obu miejscach albo ustawić dwie osobne. Sposób dopasowania pozostaje niezależny.</span></header>
-              <div class="cms-event-image-mode-wrap">
-                <input type="hidden" name="imageMode" value="${esc(current.imageMode)}">
-                <div class="cms-event-image-mode" role="group" aria-label="Tryb grafik eventu">
-                  <button type="button" class="${current.imageMode==='shared'?'active':''}" data-event-image-mode="shared"><span>▣</span><strong>JEDNA GRAFIKA</strong><small>Ten sam obraz na liście i stronie eventu</small></button>
-                  <button type="button" class="${current.imageMode==='separate'?'active':''}" data-event-image-mode="separate"><span>▦</span><strong>DWIE GRAFIKI OSOBNO</strong><small>Oddzielna miniatura i grafika główna</small></button>
-                </div>
-              </div>
-              <div class="cms-event-media-grid cms-event-media-grid-mode-${esc(current.imageMode)}" data-event-media-grid>
-                <div class="cms-event-media-card cms-event-media-primary"><div class="cms-event-media-title"><strong data-event-primary-image-title>${current.imageMode==='shared'?'WSPÓLNA GRAFIKA':'GRAFIKA NA LIŚCIE'}</strong><span data-event-primary-image-help>${current.imageMode==='shared'?'Ten obraz będzie używany w obu miejscach.':'Miniatura widoczna w spisie eventów.'}</span></div>${fieldHtml(imageField,current.image)}<div class="cms-event-fit-block"><strong>DOPASOWANIE NA LIŚCIE</strong>${fieldHtml({name:'imageFit',label:'Sposób wyświetlania',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}</div><div class="cms-event-fit-block cms-event-shared-main-fit" data-event-shared-main-fit ${current.imageMode==='shared'?'':'hidden'}><strong>DOPASOWANIE NA STRONIE EVENTU</strong>${fieldHtml({name:'mainImageFit',label:'Sposób wyświetlania',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div></div>
-                <div class="cms-event-media-card cms-event-media-secondary" data-event-secondary-image ${current.imageMode==='separate'?'':'hidden'}><div class="cms-event-media-title"><strong>GRAFIKA GŁÓWNA</strong><span>Osobna grafika na stronie konkretnego eventu.</span></div>${fieldHtml(mainImageField,current.mainImage)}<div class="cms-event-fit-block"><strong>DOPASOWANIE NA STRONIE EVENTU</strong>${fieldHtml({name:'mainImageFitSeparate',label:'Sposób wyświetlania',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div></div>
+            <section class="cms-event-editor-section">
+              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Osobno możesz ustawić miniaturę listy i dużą grafikę na stronie wydarzenia.</span></header>
+              <div class="cms-event-media-grid">
+                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA NA LIŚCIE</strong><span>Miniatura widoczna w spisie eventów.</span></div>${fieldHtml(imageField,current.image)}${fieldHtml({name:'imageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}</div>
+                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA GŁÓWNA</strong><span>Opcjonalna grafika na stronie konkretnego eventu.</span></div>${fieldHtml(mainImageField,current.mainImage)}${fieldHtml({name:'mainImageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div>
               </div>
             </section>
 
@@ -3164,20 +3269,6 @@
       $('.cms-modal',modal)?.classList.add('cms-modal-event');
       const form=$('#cms-event-form',modal); bindImageFileFields(form,[imageField,mainImageField]);
       let previewMode='card';
-      const imageModeInput=form.elements.imageMode;
-      const setEventImageMode = mode => {
-        const next=mode==='separate'?'separate':'shared';
-        if(imageModeInput) imageModeInput.value=next;
-        $$('[data-event-image-mode]',form).forEach(btn=>btn.classList.toggle('active',btn.dataset.eventImageMode===next));
-        const grid=$('[data-event-media-grid]',form);
-        if(grid){grid.classList.toggle('cms-event-media-grid-mode-shared',next==='shared');grid.classList.toggle('cms-event-media-grid-mode-separate',next==='separate');}
-        const secondary=$('[data-event-secondary-image]',form); if(secondary) secondary.hidden=next!=='separate';
-        const sharedMainFit=$('[data-event-shared-main-fit]',form); if(sharedMainFit) sharedMainFit.hidden=next!=='shared';
-        const title=$('[data-event-primary-image-title]',form); if(title) title.textContent=next==='shared'?'WSPÓLNA GRAFIKA':'GRAFIKA NA LIŚCIE';
-        const help=$('[data-event-primary-image-help]',form); if(help) help.textContent=next==='shared'?'Ten obraz będzie używany w obu miejscach.':'Miniatura widoczna w spisie eventów.';
-        renderPreview();
-      };
-      $$('[data-event-image-mode]',form).forEach(btn=>btn.addEventListener('click',()=>setEventImageMode(btn.dataset.eventImageMode)));
       const imageFromField = name => {
         const wrap=form.querySelector(`[data-cms-image-field="${name}"]`); if(!wrap) return '';
         const file=wrap.querySelector('[data-image-file]')?.files?.[0];
@@ -3185,17 +3276,14 @@
         return wrap.querySelector('[data-image-current]')?.value || '';
       };
       const currentPreviewRow=()=>{
-        const image=imageFromField('image');
-        const imageMode=String(form.elements.imageMode?.value||'shared');
-        const main=imageMode==='shared' ? '' : imageFromField('mainImage');
-        const mainFit=imageMode==='shared' ? String(form.elements.mainImageFit?.value||'contain') : String(form.elements.mainImageFitSeparate?.value||'contain');
+        const image=imageFromField('image'); const main=imageFromField('mainImage');
         let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
         if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
         return {
           id:row?.id||'podglad-eventu', title:String(form.elements.title?.value||'NOWY EVENT'), description:String(form.elements.description?.value||''),
           start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value), end_date:endDate,
           publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),
-          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:mainFit
+          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:String(form.elements.mainImageFit?.value||'contain')
         };
       };
       const renderPreview=()=>{const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
@@ -3212,16 +3300,13 @@
         try{
           const title=String(form.elements.title?.value||'').trim(); const description=String(form.elements.description?.value||'').trim();
           if(!title) throw new Error('Podaj nazwę eventu.'); if(!form.elements.startDate?.value) throw new Error('Podaj datę rozpoczęcia eventu.');
-          const imageMode=String(form.elements.imageMode?.value||'shared');
-          let image=imageFromField('image'), mainImage=imageMode==='shared'?'':imageFromField('mainImage');
+          let image=imageFromField('image'), mainImage=imageFromField('mainImage');
           const imageFile=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
-          const mainImageFile=imageMode==='separate' ? form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0] : null;
+          const mainImageFile=form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
           if(imageFile) image=await uploadEventImage(imageFile,title,'event');
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
-          if(imageMode==='shared') mainImage='';
-          const mainFit=imageMode==='shared' ? String(form.elements.mainImageFit?.value||'contain') : String(form.elements.mainImageFitSeparate?.value||'contain');
           let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value); if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
-          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:mainFit};
+          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:String(form.elements.mainImageFit?.value||'contain')};
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
           const {error}=await query; if(error) throw error;
