@@ -9796,6 +9796,23 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-event-ended-row .cms-check{margin:0;flex:0 1 auto}
 .cms-event-ended-row p{margin:0;max-width:360px;color:#777b84;font-size:11px;line-height:1.45;text-align:right}
 .cms-event-media-grid{padding:15px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.cms-event-image-mode-wrap{padding:15px 16px 0}
+.cms-event-image-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cms-event-image-mode button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;row-gap:2px;align-items:center;text-align:left;border:1px solid rgba(255,255,255,.09);background:#0d0e12;color:#aeb1b7;border-radius:10px;padding:11px 13px;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s,color .18s}
+.cms-event-image-mode button>span{grid-row:1/3;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:#15161b;color:#777;font-size:17px}
+.cms-event-image-mode button strong{font:800 12px Rajdhani,sans-serif;color:#e8e8e8;letter-spacing:.5px}
+.cms-event-image-mode button small{font-size:9px;color:#72767f;line-height:1.3}
+.cms-event-image-mode button:hover{border-color:rgba(239,43,45,.38);background:#121216}
+.cms-event-image-mode button.active{border-color:#ef2b2d;background:linear-gradient(135deg,rgba(239,43,45,.13),#0d0e12);box-shadow:0 0 0 1px rgba(239,43,45,.08) inset}
+.cms-event-image-mode button.active>span{border-color:rgba(239,43,45,.45);background:#251114;color:#ff4b4d}
+.cms-event-media-grid-mode-shared{grid-template-columns:1fr}
+.cms-event-media-grid-mode-shared .cms-event-media-primary{max-width:none}
+.cms-event-fit-block{display:grid;gap:7px;padding-top:4px}
+.cms-event-fit-block>strong{font:800 9px Rajdhani,sans-serif;color:#858a94;letter-spacing:.9px}
+.cms-event-fit-block .cms-field{margin:0}
+.cms-event-fit-block .cms-field>span{font-size:9px!important}
+.cms-event-shared-main-fit{margin-top:4px;padding-top:11px;border-top:1px dashed rgba(255,255,255,.08)}
 .cms-event-media-card{min-width:0;border:1px solid rgba(255,255,255,.08);background:#0d0e12;border-radius:11px;padding:12px;display:grid;gap:11px;align-content:start}
 .cms-event-media-title{display:grid;gap:3px;padding-bottom:9px;border-bottom:1px solid rgba(255,255,255,.06)}
 .cms-event-media-title strong{font:800 12px Rajdhani,sans-serif;color:#fff;letter-spacing:.6px}
@@ -9841,6 +9858,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .cms-event-date-cards{grid-template-columns:1fr}
   .cms-event-date-card{grid-template-columns:1fr 1fr}
   .cms-event-media-grid{grid-template-columns:1fr}
+  .cms-event-image-mode{grid-template-columns:1fr}
 }
 @media(max-width:840px){
   .cms-modal.cms-modal-event{width:100%;max-height:96vh}
@@ -9853,66 +9871,4 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .cms-event-form-actions{align-items:stretch!important;flex-direction:column}
   .cms-event-form-actions-right{width:100%;margin-left:0}
   .cms-event-form-actions button,.cms-event-form-actions-right button{flex:1}
-}
-
-/* === EVENT STATUS CONTROLS v2.6.23 === */
-.cms-event-status-row{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  padding:0 16px 10px;
-}
-.cms-event-status-choice{
-  min-width:0;
-  padding:12px 13px;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:10px;
-  background:#0d0e12;
-  transition:border-color .18s ease,background .18s ease,opacity .18s ease;
-}
-.cms-event-status-choice:has(input:checked){
-  border-color:rgba(239,43,45,.58);
-  background:linear-gradient(135deg,rgba(239,43,45,.10),#0d0e12 72%);
-}
-.cms-event-status-choice .cms-check{
-  margin:0;
-  min-height:30px;
-  font-weight:800;
-}
-.cms-event-status-choice small{
-  display:block;
-  margin:5px 0 0 28px;
-  color:#777b84;
-  font-size:10px;
-  line-height:1.35;
-}
-.cms-event-status-note{
-  margin:0;
-  padding:0 16px 15px;
-  color:#6f737c;
-  font-size:10px;
-  line-height:1.45;
-}
-.cms-event-date-card.is-disabled{
-  opacity:.42;
-  border-style:dashed;
-}
-.cms-event-date-card.is-disabled input{
-  cursor:not-allowed;
-}
-.event-running-value{
-  display:flex !important;
-  align-items:center;
-  gap:8px;
-  color:#ff4a4d !important;
-  font-family:Rajdhani,sans-serif;
-  font-weight:800 !important;
-  letter-spacing:.5px;
-}
-.event-running-value>span{
-  font-size:26px;
-  line-height:1;
-}
-@media (max-width:780px){
-  .cms-event-status-row{grid-template-columns:1fr}
 }

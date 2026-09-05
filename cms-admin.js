@@ -3035,7 +3035,7 @@
       <div class="event-publish-top"><span>OPUBLIKOWANO</span>${eventAdminFormatDate(v.publishDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.publishDate)}</div></div>
       <div class="event-title-admin-row"><h1>${window.MattCMS.escape(v.title)}</h1></div>
       ${v.mainImage?`<div class="event-detail-image"><img src="${window.MattCMS.escape(v.mainImage)}" style="object-fit:${window.MattCMS.escape(v.mainImageFit)};object-position:center" alt=""></div>`:''}
-      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div><small>ZAKOŃCZENIE</small>${v.endDate?`<strong>${eventAdminFormatDate(v.endDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.endDate)}</div></strong>`:'<strong class="event-running-value"><span>∞</span> TRWA</strong>'}</div></div>
+      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div><small>ZAKOŃCZENIE</small><strong>${eventAdminFormatDate(v.endDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.endDate)}</div></strong></div></div>
       <div class="event-detail-description article-text">${window.MattCMS.escape(v.content || '').replace(/\n/g,'<br><br>')}</div>
     </article>`;
   }
@@ -3057,9 +3057,8 @@
         </div>
         <div class="cms-manager-list cms-events-manager-list">${rows.length ? rows.map((row,index)=>{
           const ended=eventAdminIsEnded(row.end_date);
-          const ongoing=!row.end_date;
           return `<article class="cms-manager-item cms-event-manager-item">
-            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ongoing?'∞ TRWA':(ended?'ZAKOŃCZONY':'AKTYWNY')}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
+            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ended?'ZAKOŃCZONY':'AKTYWNY'}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
             <div>${has('events.edit')?`<button type="button" data-event-edit="${esc(row.id)}">EDYTUJ</button>`:''}<button type="button" data-event-view="${esc(row.id)}">PODGLĄD</button>${has('events.delete')?`<button class="danger" type="button" data-event-delete="${esc(row.id)}">USUŃ</button>`:''}</div>
           </article>`;
         }).join('') : '<div class="cms-empty">Nie ma jeszcze żadnych eventów w Supabase.</div>'}</div>
@@ -3109,9 +3108,9 @@
         title:row?.title||'', description:row?.description||'',
         startDate:start.date, startTime:start.time||'00:00', endDate:end.date, endTime:end.time||'00:00',
         publishDate:publish.date||today, publishTime:publish.time||nowTime,
-        image:row?.image_url||'', imageFit:row?.image_fit||'contain',
+        image:row?.image_url||row?.main_image_url||'', imageFit:row?.image_fit||'contain',
         mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain',
-        ongoing:Boolean(editing && !row?.end_date), endedNow:false
+        imageMode:row?.main_image_url ? 'separate' : 'shared', endedNow:false
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
@@ -3127,21 +3126,24 @@
               <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.</span></header>
               <div class="cms-event-date-cards">
                 <div class="cms-event-date-card"><b>ROZPOCZĘCIE</b>${fieldHtml({name:'startDate',label:'Data',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina',type:'time'},current.startTime)}</div>
-                <div class="cms-event-date-card" data-event-end-card><b>ZAKOŃCZENIE</b>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div>
+                <div class="cms-event-date-card"><b>ZAKOŃCZENIE</b>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div>
                 <div class="cms-event-date-card"><b>PUBLIKACJA</b>${fieldHtml({name:'publishDate',label:'Data',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina',type:'time'},current.publishTime)}</div>
               </div>
-              <div class="cms-event-status-row">
-                <div class="cms-event-status-choice cms-event-status-ongoing">${fieldHtml({name:'ongoing',label:'∞ EVENT TRWA',type:'checkbox'},current.ongoing)}<small>Bez określonej daty zakończenia. W sekcji „Zakończenie” pojawi się ∞ TRWA.</small></div>
-                <div class="cms-event-status-choice cms-event-status-ended">${fieldHtml({name:'endedNow',label:'✓ OZNACZ EVENT JAKO ZAKOŃCZONY TERAZ',type:'checkbox'},false)}<small>Data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</small></div>
-              </div>
-              <p class="cms-event-status-note">Opcje „∞ EVENT TRWA” i „ZAKOŃCZONY TERAZ” wzajemnie się wykluczają. Jeśli żadna nie jest zaznaczona, podaj normalną datę zakończenia.</p>
+              <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>Po zaznaczeniu data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</p></div>
             </section>
 
-            <section class="cms-event-editor-section">
-              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Osobno możesz ustawić miniaturę listy i dużą grafikę na stronie wydarzenia.</span></header>
-              <div class="cms-event-media-grid">
-                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA NA LIŚCIE</strong><span>Miniatura widoczna w spisie eventów.</span></div>${fieldHtml(imageField,current.image)}${fieldHtml({name:'imageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}</div>
-                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA GŁÓWNA</strong><span>Opcjonalna grafika na stronie konkretnego eventu.</span></div>${fieldHtml(mainImageField,current.mainImage)}${fieldHtml({name:'mainImageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div>
+            <section class="cms-event-editor-section cms-event-images-section">
+              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Możesz użyć jednej grafiki w obu miejscach albo ustawić dwie osobne. Sposób dopasowania pozostaje niezależny.</span></header>
+              <div class="cms-event-image-mode-wrap">
+                <input type="hidden" name="imageMode" value="${esc(current.imageMode)}">
+                <div class="cms-event-image-mode" role="group" aria-label="Tryb grafik eventu">
+                  <button type="button" class="${current.imageMode==='shared'?'active':''}" data-event-image-mode="shared"><span>▣</span><strong>JEDNA GRAFIKA</strong><small>Ten sam obraz na liście i stronie eventu</small></button>
+                  <button type="button" class="${current.imageMode==='separate'?'active':''}" data-event-image-mode="separate"><span>▦</span><strong>DWIE GRAFIKI OSOBNO</strong><small>Oddzielna miniatura i grafika główna</small></button>
+                </div>
+              </div>
+              <div class="cms-event-media-grid cms-event-media-grid-mode-${esc(current.imageMode)}" data-event-media-grid>
+                <div class="cms-event-media-card cms-event-media-primary"><div class="cms-event-media-title"><strong data-event-primary-image-title>${current.imageMode==='shared'?'WSPÓLNA GRAFIKA':'GRAFIKA NA LIŚCIE'}</strong><span data-event-primary-image-help>${current.imageMode==='shared'?'Ten obraz będzie używany w obu miejscach.':'Miniatura widoczna w spisie eventów.'}</span></div>${fieldHtml(imageField,current.image)}<div class="cms-event-fit-block"><strong>DOPASOWANIE NA LIŚCIE</strong>${fieldHtml({name:'imageFit',label:'Sposób wyświetlania',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}</div><div class="cms-event-fit-block cms-event-shared-main-fit" data-event-shared-main-fit ${current.imageMode==='shared'?'':'hidden'}><strong>DOPASOWANIE NA STRONIE EVENTU</strong>${fieldHtml({name:'mainImageFit',label:'Sposób wyświetlania',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div></div>
+                <div class="cms-event-media-card cms-event-media-secondary" data-event-secondary-image ${current.imageMode==='separate'?'':'hidden'}><div class="cms-event-media-title"><strong>GRAFIKA GŁÓWNA</strong><span>Osobna grafika na stronie konkretnego eventu.</span></div>${fieldHtml(mainImageField,current.mainImage)}<div class="cms-event-fit-block"><strong>DOPASOWANIE NA STRONIE EVENTU</strong>${fieldHtml({name:'mainImageFitSeparate',label:'Sposób wyświetlania',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div></div>
               </div>
             </section>
 
@@ -3162,6 +3164,20 @@
       $('.cms-modal',modal)?.classList.add('cms-modal-event');
       const form=$('#cms-event-form',modal); bindImageFileFields(form,[imageField,mainImageField]);
       let previewMode='card';
+      const imageModeInput=form.elements.imageMode;
+      const setEventImageMode = mode => {
+        const next=mode==='separate'?'separate':'shared';
+        if(imageModeInput) imageModeInput.value=next;
+        $$('[data-event-image-mode]',form).forEach(btn=>btn.classList.toggle('active',btn.dataset.eventImageMode===next));
+        const grid=$('[data-event-media-grid]',form);
+        if(grid){grid.classList.toggle('cms-event-media-grid-mode-shared',next==='shared');grid.classList.toggle('cms-event-media-grid-mode-separate',next==='separate');}
+        const secondary=$('[data-event-secondary-image]',form); if(secondary) secondary.hidden=next!=='separate';
+        const sharedMainFit=$('[data-event-shared-main-fit]',form); if(sharedMainFit) sharedMainFit.hidden=next!=='shared';
+        const title=$('[data-event-primary-image-title]',form); if(title) title.textContent=next==='shared'?'WSPÓLNA GRAFIKA':'GRAFIKA NA LIŚCIE';
+        const help=$('[data-event-primary-image-help]',form); if(help) help.textContent=next==='shared'?'Ten obraz będzie używany w obu miejscach.':'Miniatura widoczna w spisie eventów.';
+        renderPreview();
+      };
+      $$('[data-event-image-mode]',form).forEach(btn=>btn.addEventListener('click',()=>setEventImageMode(btn.dataset.eventImageMode)));
       const imageFromField = name => {
         const wrap=form.querySelector(`[data-cms-image-field="${name}"]`); if(!wrap) return '';
         const file=wrap.querySelector('[data-image-file]')?.files?.[0];
@@ -3169,34 +3185,20 @@
         return wrap.querySelector('[data-image-current]')?.value || '';
       };
       const currentPreviewRow=()=>{
-        const image=imageFromField('image'); const main=imageFromField('mainImage');
+        const image=imageFromField('image');
+        const imageMode=String(form.elements.imageMode?.value||'shared');
+        const main=imageMode==='shared' ? '' : imageFromField('mainImage');
+        const mainFit=imageMode==='shared' ? String(form.elements.mainImageFit?.value||'contain') : String(form.elements.mainImageFitSeparate?.value||'contain');
         let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
-        if(form.elements.ongoing?.checked) endDate=null;
-        else if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+        if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
         return {
           id:row?.id||'podglad-eventu', title:String(form.elements.title?.value||'NOWY EVENT'), description:String(form.elements.description?.value||''),
           start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value), end_date:endDate,
           publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),
-          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:String(form.elements.mainImageFit?.value||'contain')
+          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:mainFit
         };
       };
       const renderPreview=()=>{const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
-      const ongoingInput=form.elements.ongoing;
-      const endedNowInput=form.elements.endedNow;
-      const endDateInput=form.elements.endDate;
-      const endTimeInput=form.elements.endTime;
-      const endCard=$('[data-event-end-card]',form);
-      const syncEventStatus=(source='')=>{
-        if(source==='ongoing' && ongoingInput?.checked && endedNowInput) endedNowInput.checked=false;
-        if(source==='endedNow' && endedNowInput?.checked && ongoingInput) ongoingInput.checked=false;
-        const lockEnd=Boolean(ongoingInput?.checked || endedNowInput?.checked);
-        if(endDateInput) endDateInput.disabled=lockEnd;
-        if(endTimeInput) endTimeInput.disabled=lockEnd;
-        endCard?.classList.toggle('is-disabled',lockEnd);
-        requestAnimationFrame(renderPreview);
-      };
-      ongoingInput?.addEventListener('change',()=>syncEventStatus('ongoing'));
-      endedNowInput?.addEventListener('change',()=>syncEventStatus('endedNow'));
       form.addEventListener('input',renderPreview); form.addEventListener('change',()=>requestAnimationFrame(renderPreview));
       $$('[data-event-preview-mode]',form).forEach(btn=>btn.addEventListener('click',()=>{previewMode=btn.dataset.eventPreviewMode==='detail'?'detail':'card';$$('[data-event-preview-mode]',form).forEach(x=>x.classList.toggle('active',x===btn));renderPreview();}));
       $('[data-back]',form)?.addEventListener('click',draw);
@@ -3210,23 +3212,22 @@
         try{
           const title=String(form.elements.title?.value||'').trim(); const description=String(form.elements.description?.value||'').trim();
           if(!title) throw new Error('Podaj nazwę eventu.'); if(!form.elements.startDate?.value) throw new Error('Podaj datę rozpoczęcia eventu.');
-          let image=imageFromField('image'), mainImage=imageFromField('mainImage');
+          const imageMode=String(form.elements.imageMode?.value||'shared');
+          let image=imageFromField('image'), mainImage=imageMode==='shared'?'':imageFromField('mainImage');
           const imageFile=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
-          const mainImageFile=form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
+          const mainImageFile=imageMode==='separate' ? form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0] : null;
           if(imageFile) image=await uploadEventImage(imageFile,title,'event');
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
-          let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
-          if(form.elements.ongoing?.checked) endDate=null;
-          else if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
-          else if(!endDate) throw new Error('Podaj datę zakończenia albo zaznacz „∞ EVENT TRWA”.');
-          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:String(form.elements.mainImageFit?.value||'contain')};
+          if(imageMode==='shared') mainImage='';
+          const mainFit=imageMode==='shared' ? String(form.elements.mainImageFit?.value||'contain') : String(form.elements.mainImageFitSeparate?.value||'contain');
+          let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value); if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:mainFit};
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
           const {error}=await query; if(error) throw error;
           notify(editing?'Event został zapisany.':'Event został dodany.'); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
         }catch(error){notify(`Nie udało się zapisać eventu: ${error.message}`,'error');if(submit){submit.disabled=false;submit.textContent=editing?'ZAPISZ ZMIANY':'DODAJ EVENT';}}
       });
-      syncEventStatus();
       renderPreview();
     };
 
