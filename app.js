@@ -1,5 +1,28 @@
 let tocScrollLock = false;
 
+function highlightSidebarTarget(target) {
+  if (!target) return;
+  const visual = target.matches?.('section, article, .notice, .vip-hero, header, [class*="hero"]')
+    ? target
+    : target.closest?.('section, article, .notice, .vip-hero, header, [class*="hero"]') || target.parentElement || target;
+  visual.classList.remove('sidebar-nav-highlight');
+  void visual.offsetWidth;
+  visual.classList.add('sidebar-nav-highlight');
+  setTimeout(() => visual.classList.remove('sidebar-nav-highlight'), 2400);
+}
+
+function activateSidebarLink(links, link, sections, targetId, progress) {
+  const target = document.getElementById(targetId);
+  const activeIndex = sections.findIndex(section => section.id === targetId);
+  links.forEach(item => item.classList.toggle('active', item === link));
+  if (progress && activeIndex >= 0 && sections.length) {
+    progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
+  }
+  link?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  if (target) setTimeout(() => highlightSidebarTarget(target), 260);
+}
+
 const app = document.getElementById("app");
 
 const MODERATOR_TEAM = [
@@ -1279,32 +1302,10 @@ function setupDixperPage() {
 
   tocLinks.forEach(link => {
     link.addEventListener("click", () => {
-      const target = document.getElementById(link.dataset.dixperTarget);
-      const activeIndex = sections.findIndex(section => section.id === link.dataset.dixperTarget);
-      tocLinks.forEach(item => item.classList.toggle("active", item === link));
-      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
-      tocScrollLock = true;
-      setTimeout(() => { tocScrollLock = false; }, 1000);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      activateSidebarLink(tocLinks, link, sections, link.dataset.dixperTarget, progress);
     });
   });
 
-  if ("IntersectionObserver" in window && sections.length) {
-    const observer = new IntersectionObserver(entries => {
-      if (tocScrollLock) return;
-      const visible = entries
-        .filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      const activeId = visible.target.id;
-      const activeIndex = sections.findIndex(section => section.id === activeId);
-      tocLinks.forEach(link => link.classList.toggle("active", link.dataset.dixperTarget === activeId));
-      if (progress && activeIndex >= 0) {
-        progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
-      }
-    }, { rootMargin: "-25% 0px -55% 0px", threshold: [0, .15, .35, .6] });
-    sections.forEach(section => observer.observe(section));
-  }
 
   const cards = [...root.querySelectorAll("[data-dixper-clip]")];
   const parent = location.hostname || "matthevc.github.io";
@@ -1498,29 +1499,10 @@ function setupBingoPage() {
 
   links.forEach(link => {
     link.addEventListener("click", () => {
-      const target = document.getElementById(link.dataset.bingoTarget);
-      const activeIndex = sections.findIndex(section => section.id === link.dataset.bingoTarget);
-      links.forEach(item => item.classList.toggle("active", item === link));
-      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
-      tocScrollLock = true;
-      setTimeout(() => { tocScrollLock = false; }, 1000);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      activateSidebarLink(links, link, sections, link.dataset.bingoTarget, progress);
     });
   });
 
-  if ("IntersectionObserver" in window && sections.length) {
-    const observer = new IntersectionObserver(entries => {
-      if (tocScrollLock) return;
-      const visible = entries.filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      const activeId = visible.target.id;
-      const activeIndex = sections.findIndex(section => section.id === activeId);
-      links.forEach(link => link.classList.toggle("active", link.dataset.bingoTarget === activeId));
-      if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
-    }, { rootMargin: "-25% 0px -55% 0px", threshold: [0, .15, .35, .6] });
-    sections.forEach(section => observer.observe(section));
-  }
 }
 
 function rewardsPage() {
@@ -2152,27 +2134,9 @@ function setupEmotes7tvPage() {
   const links = [...root.querySelectorAll("[data-emotes7tv-target]")];
   const sections = [...root.querySelectorAll("[data-emotes7tv-section]")];
   const progress = root.querySelector("[data-emotes7tv-progress]");
-  let lock = false;
   links.forEach(link => link.addEventListener("click", () => {
-    const id = link.dataset.emotes7tvTarget;
-    const index = sections.findIndex(section => section.id === id);
-    links.forEach(item => item.classList.toggle("active", item === link));
-    if (progress && index >= 0) progress.style.height = `${((index + 1) / sections.length) * 100}%`;
-    lock = true;
-    setTimeout(() => { lock = false; }, 900);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    activateSidebarLink(links, link, sections, link.dataset.emotes7tvTarget, progress);
   }));
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(entries => {
-      if (lock) return;
-      const visible = entries.filter(entry => entry.isIntersecting).sort((a,b) => b.intersectionRatio-a.intersectionRatio)[0];
-      if (!visible) return;
-      links.forEach(link => link.classList.toggle("active", link.dataset.emotes7tvTarget === visible.target.id));
-      const index = sections.indexOf(visible.target);
-      if (progress && index >= 0) progress.style.height = `${((index + 1) / sections.length) * 100}%`;
-    }, { rootMargin: "-22% 0px -62% 0px", threshold: [0,.1,.3,.6] });
-    sections.forEach(section => observer.observe(section));
-  }
 }
 
 function setupGlobalPageNavigation() {
@@ -2230,92 +2194,9 @@ function setupGlobalPageNavigation() {
   const links = [...aside.querySelectorAll("[data-site-page-target]")];
   const progress = aside.querySelector("[data-site-page-progress]");
 
-  const keepActiveLinkVisible = (link) => {
-    if (!link) return;
-    link.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  };
-
-  const forceLastSectionAtPageEnd = () => {
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8) {
-      const lastHeading = headings[headings.length - 1];
-      const lastLink = links[links.length - 1];
-      if (lastHeading && lastLink) {
-        links.forEach(item => item.classList.toggle("active", item === lastLink));
-        keepActiveLinkVisible(lastLink);
-        const lastIndex = headings.length - 1;
-        if (progress) progress.style.height = `${((lastIndex + 1) / headings.length) * 100}%`;
-      }
-    }
-  };
-
-  window.addEventListener("scroll", forceLastSectionAtPageEnd, { passive: true });
-
   links.forEach(link => link.addEventListener("click", () => {
-    const targetId = link.dataset.sitePageTarget;
-    const activeIndex = headings.findIndex(heading => heading.id === targetId);
-    links.forEach(item => item.classList.toggle("active", item === link));
-    keepActiveLinkVisible(link);
-    if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
-    tocScrollLock = true;
-    setTimeout(() => { tocScrollLock = false; }, 1000);
-    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    activateSidebarLink(links, link, headings, link.dataset.sitePageTarget, progress);
   }));
-
-  if ("IntersectionObserver" in window) {
-    const isVipPage = currentPath === "viewer/vip" || currentPath === "vip" || currentPath === "vip/how-to" || currentPath === "vip/benefits";
-
-    const observer = new IntersectionObserver(entries => {
-      if (tocScrollLock) return;
-
-      const visible = entries.filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-      if (!visible.length) return;
-
-      // VIP: nagłówek strony jest osobną pozycją "Początek".
-      // Nie pokazujemy jednocześnie pierwszej sekcji przy wejściu na stronę.
-      if (isVipPage) {
-        // VIP: pierwsze dwie karty są obok siebie, więc nie zaznaczamy ich jednocześnie.
-        // Przejście 02 -> 03 następuje płynnie podczas przewijania w dół.
-        if (window.scrollY <= 20) {
-          links.forEach((link, index) => link.classList.toggle("active", index === 0));
-          keepActiveLinkVisible(links[0]);
-          if (progress) progress.style.height = `${(1 / headings.length) * 100}%`;
-          return;
-        }
-
-        const firstSection = headings[1];
-        const benefitsSection = headings[3];
-        if (!firstSection || !benefitsSection) return;
-
-        const firstTop = firstSection.getBoundingClientRect().top + window.scrollY;
-        const benefitsTop = benefitsSection.getBoundingClientRect().top + window.scrollY;
-        const transitionPoint = firstTop + Math.max(0, (benefitsTop - firstTop) * 0.52);
-
-        let activeIndex = 1;
-        if (window.scrollY >= benefitsTop - 80) activeIndex = 3;
-        else if (window.scrollY >= transitionPoint) activeIndex = 2;
-
-        const activeLink = links[activeIndex];
-        links.forEach((link, index) => link.classList.toggle("active", index === activeIndex));
-        keepActiveLinkVisible(activeLink);
-        if (progress) progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
-        return;
-      }
-
-      const active = visible[0];
-      const activeIndex = headings.indexOf(active.target);
-
-      links.forEach(link => link.classList.toggle("active", link.dataset.sitePageTarget === active.target.id));
-      keepActiveLinkVisible(links.find(link => link.dataset.sitePageTarget === active.target.id));
-
-      if (progress && activeIndex >= 0) {
-        progress.style.height = `${((activeIndex + 1) / headings.length) * 100}%`;
-      }
-    }, { rootMargin: "-18% 0px -55% 0px", threshold: [0, .1, .3, .6] });
-
-    headings.forEach(heading => observer.observe(heading));
-  }
 }
 
 function discordJoinPage() {
@@ -3726,49 +3607,11 @@ async function setupRecommendedPage() {
   const sections = [...document.querySelectorAll('[data-recommended-section]')];
   const navLinks = [...document.querySelectorAll('[data-recommended-target]')];
   const progress = document.querySelector('[data-recommended-progress]');
-  let manualNavigation = false;
-  let manualTimer = null;
-
-  const activateLink = (id) => {
-    const activeIndex = sections.findIndex(section => section.id === id);
-    navLinks.forEach(item => item.classList.toggle('active', item.dataset.recommendedTarget === id));
-    if (progress && activeIndex >= 0) progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
-  };
-
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
-      const target = document.getElementById(link.dataset.recommendedTarget);
-      manualNavigation = true;
-      clearTimeout(manualTimer);
-      activateLink(link.dataset.recommendedTarget);
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      manualTimer = setTimeout(() => { manualNavigation = false; }, 900);
+      activateSidebarLink(navLinks, link, sections, link.dataset.recommendedTarget, progress);
     });
   });
-
-  const setActive = (section) => {
-    const index = sections.indexOf(section);
-    navLinks.forEach(link => {
-      link.classList.toggle('active', link.dataset.recommendedTarget === section.id);
-    });
-    if (progress && index >= 0) {
-      progress.style.height = `${((index + 1) / sections.length) * 100}%`;
-    }
-  };
-
-  if ('IntersectionObserver' in window) {
-    const observer = new IntersectionObserver(entries => {
-      if (tocScrollLock) return;
-      const visible = entries
-        .filter(entry => entry.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible && !manualNavigation) setActive(visible.target);
-    }, {
-      rootMargin: '-18% 0px -58% 0px',
-      threshold: [0, .1, .25, .5]
-    });
-    sections.forEach(section => observer.observe(section));
-  }
 }
 
 async function setupDiscordJoinPage() {
@@ -3928,71 +3771,31 @@ document.addEventListener("click", function(e) {
 });
 
 
-/* Global sidebar navigation edge fix.
-   Keeps first/last sections reachable and keeps active item visible. */
-(function setupUniversalSidebarEdgeFix(){
-  const groups = [
-    ["[data-dixper-target]","[data-dixper-section]","data-dixperTarget"],
-    ["[data-bingo-target]","[data-bingo-section]","data-bingoTarget"],
-    ["[data-emotes7tv-target]","[data-emotes7tv-section]","data-emotes7tvTarget"],
-    ["[data-recommended-target]","[data-recommended-section]","data-recommendedTarget"],
-    ["[data-site-page-target]","[data-site-page-section], [data-site-page-heading]","data-site-page-target"],
+/* Global sidebar navigation helper.
+   Aktywny punkt zmienia się wyłącznie po kliknięciu — zwykłe scrollowanie
+   nie przełącza podświetlenia bocznej nawigacji. */
+(function setupUniversalSidebarClickAssist(){
+  const selectors = [
+    '[data-dixper-target]',
+    '[data-bingo-target]',
+    '[data-emotes7tv-target]',
+    '[data-recommended-target]',
+    '[data-site-page-target]'
   ];
 
-  function keepVisible(link){
-    if (!link) return;
-    link.scrollIntoView({block:"nearest", behavior:"smooth"});
-  }
-
   function bind(){
-    groups.forEach(([linkSelector, sectionSelector, key])=>{
-      const links=[...document.querySelectorAll(linkSelector)];
-      const sections=[...document.querySelectorAll(sectionSelector)];
-      if (!links.length || !sections.length || links[0].dataset.sidebarEdgeFix) return;
-
-      links.forEach(l=>l.dataset.sidebarEdgeFix="1");
-
-      let locked=false;
-      const update=()=>{
-        if(locked) return;
-        const maxScroll=window.innerHeight + window.scrollY >= document.documentElement.scrollHeight-8;
-        let section=null;
-
-        if(window.scrollY <= 8) {
-          section=sections[0];
-        } else if(maxScroll) {
-          section=sections[sections.length-1];
-        } else {
-          section=sections.reduce((best,s)=>{
-            const r=s.getBoundingClientRect();
-            const score=Math.abs(r.top-window.innerHeight*0.35);
-            return !best || score<best.score ? {el:s,score} : best;
-          },null)?.el;
-        }
-
-        if(!section) return;
-        const attr=Object.keys(section.dataset).find(k=>k.toLowerCase().includes("section"));
-        const id=section.id;
-        const link=links.find(l=>{
-          const target=l.dataset[key] || l.dataset[key?.replace(/^data-/,"")];
-          return target===id || l.getAttribute("href")==="#"+id;
-        });
-        if(link){
-          links.forEach(x=>x.classList.toggle("active",x===link));
-          keepVisible(link);
-        }
-      };
-
-      window.addEventListener("scroll", update, {passive:true});
-      window.addEventListener("resize", update);
-      setTimeout(update,200);
+    document.querySelectorAll(selectors.join(',')).forEach(link => {
+      if (link.dataset.sidebarClickAssist === '1') return;
+      link.dataset.sidebarClickAssist = '1';
+      link.addEventListener('click', () => {
+        setTimeout(() => link.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}), 40);
+      });
     });
   }
 
   new MutationObserver(bind).observe(document.body,{childList:true,subtree:true});
   bind();
 })();
-
 
 window.addEventListener("hashchange", render);
 

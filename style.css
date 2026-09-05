@@ -8937,3 +8937,62 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   .account-security-actions{display:grid;grid-template-columns:1fr}.account-security-actions .danger{margin-left:0}
   .account-temp-password{grid-template-columns:1fr}.account-temp-password button{width:100%}
 }
+
+/* ===== BOCZNA NAWIGACJA — aktywacja wyłącznie po kliknięciu ===== */
+/* Jeden spójny wygląd na wszystkich podstronach z bocznym spisem treści. */
+#app .dixper-toc-link,
+#app .site-page-toc-link,
+#app .recommended-toc-link {
+  position: relative;
+  border: 1px solid transparent;
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+#app .dixper-toc-link:hover,
+#app .site-page-toc-link:hover,
+#app .recommended-toc-link:hover {
+  color: #fff;
+  background: rgba(239,43,45,.07);
+  border-color: rgba(239,43,45,.14);
+}
+
+#app .dixper-toc-link.active,
+#app .site-page-toc-link.active,
+#app .recommended-toc-link.active {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(239,43,45,.24), rgba(239,43,45,.13)) !important;
+  border-color: rgba(239,43,45,.24) !important;
+  box-shadow: inset 3px 0 0 var(--red), 0 8px 24px rgba(0,0,0,.14) !important;
+  opacity: 1 !important;
+}
+
+#app .dixper-toc-link.active span,
+#app .site-page-toc-link.active span,
+#app .recommended-toc-link.active span {
+  color: #ff5b5d !important;
+}
+
+#app .dixper-toc-track span,
+#app .recommended-toc-track span {
+  background: linear-gradient(180deg, var(--red), #ff5b5d) !important;
+}
+
+/* Krótkie podświetlenie docelowej sekcji po kliknięciu pozycji bocznego menu. */
+.sidebar-nav-highlight {
+  animation: sidebarNavGlow 2.4s ease;
+}
+
+@keyframes sidebarNavGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(239,43,45,0);
+  }
+  18% {
+    box-shadow: 0 0 0 1px rgba(239,43,45,.75), 0 0 36px rgba(239,43,45,.34);
+  }
+  55% {
+    box-shadow: 0 0 0 1px rgba(239,43,45,.42), 0 0 22px rgba(239,43,45,.17);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(239,43,45,0);
+  }
+}
