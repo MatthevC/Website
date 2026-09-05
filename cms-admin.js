@@ -5,9 +5,11 @@
   let modal = null;
   let layoutEditing = false;
   let layoutDraft = null;
+  let layoutGlobalDraft = null;
   let layoutSelectedId = null;
   let layoutController = null;
   let layoutDraggedId = null;
+  let layoutFreeDrag = null;
   const TOOLBAR_COLLAPSE_KEY = 'matt_cms_toolbar_collapsed';
   const TOOLBAR_POSITION_KEY = 'matt_cms_toolbar_position_v2';
 
@@ -321,8 +323,9 @@
   function normalizeLayoutDraft(value) {
     const data = clone(value || {});
     return {
-      version: 1,
+      version: 2,
       offsets: data.offsets && typeof data.offsets === 'object' ? data.offsets : {},
+      sizes: data.sizes && typeof data.sizes === 'object' ? data.sizes : {},
       orders: data.orders && typeof data.orders === 'object' ? data.orders : {}
     };
   }
@@ -335,54 +338,82 @@
     return layoutCandidates().find(el => el.dataset.cmsLayoutId === id) || null;
   }
 
+  function layoutDraftForElement(el) {
+    return el?.dataset?.cmsLayoutZone === 'global' ? layoutGlobalDraft : layoutDraft;
+  }
+
   function layoutGroupElements(parentKey) {
     return layoutCandidates().filter(el => el.dataset.cmsLayoutParent === parentKey);
   }
 
   function layoutCurrentOrder(parentKey) {
     const group = layoutGroupElements(parentKey);
-    const saved = Array.isArray(layoutDraft?.orders?.[parentKey]) ? layoutDraft.orders[parentKey] : [];
+    const draft = layoutDraftForElement(group[0]);
+    const saved = Array.isArray(draft?.orders?.[parentKey]) ? draft.orders[parentKey] : [];
     const ids = group.map(el => el.dataset.cmsLayoutId);
-    const merged = [...saved.filter(id => ids.includes(id)), ...ids.filter(id => !saved.includes(id))];
-    return merged;
+    return [...saved.filter(id => ids.includes(id)), ...ids.filter(id => !saved.includes(id))];
+  }
+
+  function applyDraftDataToElements(draft, elements) {
+    const byId = new Map(elements.map(el => [el.dataset.cmsLayoutId, el]));
+    Object.entries(draft?.offsets || {}).forEach(([id,pos]) => {
+      const el = byId.get(id); if (!el) return;
+      const x = Number(pos?.x || 0), y = Number(pos?.y || 0);
+      if (x || y) { el.style.translate = `${x}px ${y}px`; el.classList.add('cms-layout-applied'); }
+    });
+    Object.entries(draft?.sizes || {}).forEach(([id,size]) => {
+      const el = byId.get(id); if (!el) return;
+      const w = Number(size?.width || 0), h = Number(size?.height || 0);
+      if (w > 0) el.style.width = `${w}px`;
+      if (h > 0) el.style.height = `${h}px`;
+      if (w > 0 || h > 0) el.classList.add('cms-layout-sized');
+    });
+    Object.entries(draft?.orders || {}).forEach(([parentKey, ids]) => {
+      if (!Array.isArray(ids)) return;
+      const group = elements.filter(el => el.dataset.cmsLayoutParent === parentKey);
+      const parent = group[0]?.parentElement;
+      if (!parent || !/(grid|flex)/.test(getComputedStyle(parent).display)) return;
+      const rank = new Map(ids.map((id,i)=>[id,i]));
+      group.forEach((el,i)=>el.style.order=String(rank.has(el.dataset.cmsLayoutId)?rank.get(el.dataset.cmsLayoutId):ids.length+i));
+    });
   }
 
   function applyLayoutDraftToDom() {
     const elements = layoutCandidates();
-    const byId = new Map(elements.map(el => [el.dataset.cmsLayoutId, el]));
     elements.forEach(el => {
-      const pos = layoutDraft?.offsets?.[el.dataset.cmsLayoutId] || {};
-      const x = Number(pos.x || 0), y = Number(pos.y || 0);
-      el.style.translate = (x || y) ? `${x}px ${y}px` : '';
-      el.classList.toggle('cms-layout-applied', !!(x || y));
-      el.style.order = '';
+      el.style.removeProperty('translate');
+      el.style.removeProperty('order');
+      el.style.removeProperty('width');
+      el.style.removeProperty('height');
+      el.classList.remove('cms-layout-applied','cms-layout-sized');
     });
-    Object.entries(layoutDraft?.orders || {}).forEach(([parentKey, ids]) => {
-      if (!Array.isArray(ids)) return;
-      const group = layoutGroupElements(parentKey);
-      const parent = group[0]?.parentElement;
-      if (!parent || !/(grid|flex)/.test(getComputedStyle(parent).display)) return;
-      const rank = new Map(ids.map((id, i) => [id, i]));
-      group.forEach((el, i) => el.style.order = String(rank.has(el.dataset.cmsLayoutId) ? rank.get(el.dataset.cmsLayoutId) : ids.length + i));
-    });
+    applyDraftDataToElements(layoutGlobalDraft, elements.filter(el => el.dataset.cmsLayoutZone === 'global'));
+    applyDraftDataToElements(layoutDraft, elements.filter(el => el.dataset.cmsLayoutZone !== 'global'));
   }
 
   function updateLayoutDesignerSelection() {
     const panel = document.getElementById('cms-layout-designer');
     if (!panel) return;
     const selected = layoutCandidateById(layoutSelectedId);
+    const draft = layoutDraftForElement(selected);
     const label = $('[data-layout-selected]', panel);
     const pos = $('[data-layout-position]', panel);
-    if (label) label.textContent = selected ? (selected.dataset.cmsLayoutLabel || 'Wybrany element') : 'Kliknij element na stronie';
-    const offset = selected ? (layoutDraft?.offsets?.[selected.dataset.cmsLayoutId] || {x:0,y:0}) : {x:0,y:0};
-    if (pos) pos.textContent = selected ? `X ${Number(offset.x||0)} px · Y ${Number(offset.y||0)} px` : 'Brak zaznaczenia';
-    panel.querySelectorAll('[data-layout-nudge],[data-layout-order],[data-layout-reset-element]').forEach(btn => btn.disabled = !selected);
+    const zone = $('[data-layout-zone]', panel);
+    if (label) label.textContent = selected ? (selected.dataset.cmsLayoutLabel || 'Wybrany element') : 'Kliknij dowolny element na stronie';
+    const offset = selected ? (draft?.offsets?.[selected.dataset.cmsLayoutId] || {x:0,y:0}) : {x:0,y:0};
+    const size = selected ? (draft?.sizes?.[selected.dataset.cmsLayoutId] || {}) : {};
+    const rect = selected?.getBoundingClientRect?.();
+    if (pos) pos.textContent = selected ? `X ${Number(offset.x||0)} px · Y ${Number(offset.y||0)} px · ${Math.round(Number(size.width || rect?.width || 0))}×${Math.round(Number(size.height || rect?.height || 0))} px` : 'Brak zaznaczenia';
+    if (zone) zone.textContent = selected ? (selected.dataset.cmsLayoutZone === 'global' ? 'GLOBALNY · NAGŁÓWEK / STOPKA' : `PODSTRONA · ${currentRoute().toUpperCase()}`) : '—';
+    panel.querySelectorAll('[data-layout-nudge],[data-layout-size],[data-layout-order],[data-layout-reset-element]').forEach(btn => btn.disabled = !selected);
     layoutCandidates().forEach(el => el.classList.toggle('cms-layout-selected', !!selected && el === selected));
   }
 
   function updateLayoutOrder(parentKey, ids) {
-    if (!layoutDraft.orders) layoutDraft.orders = {};
-    layoutDraft.orders[parentKey] = [...ids];
+    const group = layoutGroupElements(parentKey);
+    const draft = layoutDraftForElement(group[0]);
+    if (!draft.orders) draft.orders = {};
+    draft.orders[parentKey] = [...ids];
     applyLayoutDraftToDom();
   }
 
@@ -392,52 +423,71 @@
     const parentKey = el.dataset.cmsLayoutParent;
     const group = layoutGroupElements(parentKey);
     if (group.length < 2 || !/(grid|flex)/.test(getComputedStyle(el.parentElement).display)) {
-      notify('Tego elementu nie można przestawić w kolejności. Użyj strzałek położenia.', 'error');
+      notify('Tego elementu nie można przestawić kolejnością. Użyj strzałek położenia.', 'error');
       return;
     }
     const order = layoutCurrentOrder(parentKey);
     const index = order.indexOf(layoutSelectedId);
     const target = Math.max(0, Math.min(order.length - 1, index + delta));
     if (index < 0 || target === index) return;
-    order.splice(index, 1);
-    order.splice(target, 0, layoutSelectedId);
+    order.splice(index, 1); order.splice(target, 0, layoutSelectedId);
     updateLayoutOrder(parentKey, order);
   }
 
   function nudgeLayoutSelected(dx, dy) {
-    const el = layoutCandidateById(layoutSelectedId);
-    if (!el) return;
-    if (!layoutDraft.offsets) layoutDraft.offsets = {};
-    const old = layoutDraft.offsets[layoutSelectedId] || {x:0,y:0};
-    layoutDraft.offsets[layoutSelectedId] = {
-      x: Math.max(-600, Math.min(600, Number(old.x || 0) + dx)),
-      y: Math.max(-600, Math.min(600, Number(old.y || 0) + dy))
+    const el = layoutCandidateById(layoutSelectedId); if (!el) return;
+    const draft = layoutDraftForElement(el);
+    if (!draft.offsets) draft.offsets = {};
+    const old = draft.offsets[layoutSelectedId] || {x:0,y:0};
+    draft.offsets[layoutSelectedId] = {
+      x: Math.max(-1200, Math.min(1200, Number(old.x || 0) + dx)),
+      y: Math.max(-1200, Math.min(1200, Number(old.y || 0) + dy))
     };
-    applyLayoutDraftToDom();
-    updateLayoutDesignerSelection();
+    applyLayoutDraftToDom(); updateLayoutDesignerSelection();
+  }
+
+  function resizeLayoutSelected(dw, dh) {
+    const el = layoutCandidateById(layoutSelectedId); if (!el) return;
+    const draft = layoutDraftForElement(el);
+    if (!draft.sizes) draft.sizes = {};
+    const old = draft.sizes[layoutSelectedId] || {};
+    const rect = el.getBoundingClientRect();
+    const currentW = Number(old.width || rect.width || 100);
+    const currentH = Number(old.height || rect.height || 40);
+    draft.sizes[layoutSelectedId] = {
+      width: Math.max(24, Math.min(1800, currentW + dw)),
+      height: Math.max(16, Math.min(1200, currentH + dh))
+    };
+    applyLayoutDraftToDom(); updateLayoutDesignerSelection();
   }
 
   function resetLayoutSelected() {
-    if (!layoutSelectedId) return;
-    delete layoutDraft.offsets?.[layoutSelectedId];
-    Object.keys(layoutDraft.orders || {}).forEach(key => {
-      layoutDraft.orders[key] = (layoutDraft.orders[key] || []).filter(id => id !== layoutSelectedId);
-      if (!layoutDraft.orders[key].length) delete layoutDraft.orders[key];
+    const el = layoutCandidateById(layoutSelectedId); if (!el) return;
+    const draft = layoutDraftForElement(el);
+    delete draft.offsets?.[layoutSelectedId];
+    delete draft.sizes?.[layoutSelectedId];
+    Object.keys(draft.orders || {}).forEach(key => {
+      draft.orders[key] = (draft.orders[key] || []).filter(id => id !== layoutSelectedId);
+      if (!draft.orders[key].length) delete draft.orders[key];
     });
-    applyLayoutDraftToDom();
-    updateLayoutDesignerSelection();
+    applyLayoutDraftToDom(); updateLayoutDesignerSelection();
+  }
+
+  function resetLayoutDraftZone(zone) {
+    if (zone === 'global') layoutGlobalDraft = normalizeLayoutDraft({});
+    else layoutDraft = normalizeLayoutDraft({});
+    applyLayoutDraftToDom(); updateLayoutDesignerSelection();
+    notify(zone === 'global' ? 'Nagłówek i stopka wróciły do układu bazowego w projekcie. Kliknij ZAPISZ UKŁAD.' : 'Podstrona wróciła do układu bazowego w projekcie. Kliknij ZAPISZ UKŁAD.');
   }
 
   function cleanupLayoutDesigner() {
-    layoutController?.abort();
-    layoutController = null;
-    layoutEditing = false;
-    layoutDraggedId = null;
+    layoutController?.abort(); layoutController = null;
+    layoutEditing = false; layoutDraggedId = null; layoutFreeDrag = null;
     document.body.classList.remove('cms-layout-mode');
     document.getElementById('cms-layout-designer')?.remove();
     layoutCandidates().forEach(el => {
       el.removeAttribute('draggable');
-      el.classList.remove('cms-layout-editable','cms-layout-selected','cms-layout-dragging');
+      el.classList.remove('cms-layout-editable','cms-layout-selected','cms-layout-dragging','cms-layout-free-drag');
     });
     refreshToolbar();
   }
@@ -450,30 +500,20 @@
   async function saveLayoutDesigner() {
     if (!has('page.layout.manage')) return;
     try {
-      await window.MattCMS.save(`page_layout:${currentRoute()}`, layoutDraft, { backupLabel:`AUTO: przed zmianą układu — ${currentRoute()}` });
+      await window.MattCMS.createBackup(`AUTO: przed zmianą pełnego układu — ${currentRoute()}`);
+      await window.MattCMS.save(`page_layout:${currentRoute()}`, layoutDraft, { backup:false });
+      await window.MattCMS.save('page_layout:__global', layoutGlobalDraft, { backup:false });
       cleanupLayoutDesigner();
-      notify('Układ strony został zapisany.');
+      notify('Pełny układ strony został zapisany.');
       if (typeof window.render === 'function') await window.render();
     } catch (error) { notify(`Nie udało się zapisać układu: ${error.message}`, 'error'); }
   }
 
-  async function resetPageLayout() {
-    if (!has('page.layout.manage')) return;
-    if (!confirm('Przywrócić domyślne położenie elementów na tej podstronie? Przed zmianą zostanie wykonany backup.')) return;
-    try {
-      layoutDraft = normalizeLayoutDraft({});
-      await window.MattCMS.save(`page_layout:${currentRoute()}`, layoutDraft, { backupLabel:`AUTO: przed resetem układu — ${currentRoute()}` });
-      cleanupLayoutDesigner();
-      notify('Przywrócono domyślny układ tej podstrony.');
-      if (typeof window.render === 'function') await window.render();
-    } catch (error) { notify(`Nie udało się zresetować układu: ${error.message}`, 'error'); }
-  }
-
   function startLayoutDesigner() {
     if (!has('page.layout.manage') || layoutEditing) return;
-    layoutEditing = true;
-    layoutSelectedId = null;
+    layoutEditing = true; layoutSelectedId = null;
     layoutDraft = normalizeLayoutDraft(window.MattCMS?.get(`page_layout:${currentRoute()}`, {}) || {});
+    layoutGlobalDraft = normalizeLayoutDraft(window.MattCMS?.get('page_layout:__global', {}) || {});
     layoutController = new AbortController();
     const signal = layoutController.signal;
     document.body.classList.add('cms-layout-mode');
@@ -481,20 +521,20 @@
     const panel = document.createElement('aside');
     panel.id = 'cms-layout-designer';
     panel.innerHTML = `
-      <div class="cms-layout-panel-head"><div><small>TRYB GRAFICZNY</small><strong>PROJEKTOWANIE STRONY</strong></div><button type="button" data-layout-close>×</button></div>
-      <p class="cms-layout-help">Kliknij element, aby go zaznaczyć. Kafelki w tej samej siatce możesz przeciągać. Strzałkami ustawisz dokładne przesunięcie, np. przycisku Twitch.</p>
-      <div class="cms-layout-selected-box"><small>WYBRANY ELEMENT</small><strong data-layout-selected>Kliknij element na stronie</strong><span data-layout-position>Brak zaznaczenia</span></div>
-      <div class="cms-layout-control-title">POŁOŻENIE</div>
+      <div class="cms-layout-panel-head"><div><small>PEŁNY TRYB GRAFICZNY</small><strong>PROJEKTOWANIE CAŁEJ STRONY</strong></div><button type="button" data-layout-close>×</button></div>
+      <p class="cms-layout-help">Kliknij praktycznie dowolny widoczny element: logo, grafikę powitalną, nagłówek „CO NOWEGO?”, kategorię menu, tekst, przycisk, kafelek, sekcję albo grafikę. Większość elementów możesz przesuwać bezpośrednio myszką; elementy w siatkach przeciągaj, aby zmienić ich kolejność.</p>
+      <div class="cms-layout-selected-box"><small>WYBRANY ELEMENT</small><strong data-layout-selected>Kliknij dowolny element na stronie</strong><span data-layout-zone>—</span><span data-layout-position>Brak zaznaczenia</span></div>
+      <div class="cms-layout-control-title">POŁOŻENIE · 8 PX</div>
       <div class="cms-layout-nudge-grid">
-        <button type="button" data-layout-nudge="0,-8">↑</button>
-        <button type="button" data-layout-nudge="-8,0">←</button>
-        <button type="button" data-layout-nudge="8,0">→</button>
-        <button type="button" data-layout-nudge="0,8">↓</button>
+        <button type="button" data-layout-nudge="0,-8">↑</button><button type="button" data-layout-nudge="-8,0">←</button><button type="button" data-layout-nudge="8,0">→</button><button type="button" data-layout-nudge="0,8">↓</button>
       </div>
-      <div class="cms-layout-control-title">KOLEJNOŚĆ W SIATCE</div>
+      <div class="cms-layout-control-title">ROZMIAR · 16 PX</div>
+      <div class="cms-layout-size-actions"><button type="button" data-layout-size="-16,0">− SZER.</button><button type="button" data-layout-size="16,0">+ SZER.</button><button type="button" data-layout-size="0,-16">− WYS.</button><button type="button" data-layout-size="0,16">+ WYS.</button></div>
+      <div class="cms-layout-control-title">KOLEJNOŚĆ W SIATCE / MENU</div>
       <div class="cms-layout-order-actions"><button type="button" data-layout-order="-1">← WCZEŚNIEJ</button><button type="button" data-layout-order="1">PÓŹNIEJ →</button></div>
       <button type="button" class="cms-layout-reset-element" data-layout-reset-element>RESETUJ WYBRANY ELEMENT</button>
-      <div class="cms-layout-panel-actions"><button type="button" data-layout-cancel>ANULUJ</button><button type="button" data-layout-reset-page>DOMYŚLNY UKŁAD</button><button type="button" class="cms-primary" data-layout-save>ZAPISZ UKŁAD</button></div>`;
+      <div class="cms-layout-reset-zones"><button type="button" data-layout-reset-page>RESETUJ PODSTRONĘ</button><button type="button" data-layout-reset-global>RESETUJ NAGŁÓWEK / STOPKĘ</button></div>
+      <div class="cms-layout-panel-actions"><button type="button" data-layout-cancel>ANULUJ</button><button type="button" class="cms-primary" data-layout-save>ZAPISZ UKŁAD</button></div>`;
     document.body.appendChild(panel);
 
     const candidates = layoutCandidates();
@@ -502,12 +542,46 @@
       el.classList.add('cms-layout-editable');
       const group = layoutGroupElements(el.dataset.cmsLayoutParent);
       const canReorder = group.length > 1 && /(grid|flex)/.test(getComputedStyle(el.parentElement).display);
-      if (canReorder) el.setAttribute('draggable','true');
+      if (canReorder) {
+        el.setAttribute('draggable','true');
+      } else {
+        el.classList.add('cms-layout-free-drag');
+        el.addEventListener('pointerdown', e => {
+          if (e.button !== 0 || e.target.closest('#cms-layout-designer,#cms-admin-toolbar')) return;
+          const draft = layoutDraftForElement(el);
+          const old = draft?.offsets?.[el.dataset.cmsLayoutId] || {x:0,y:0};
+          layoutSelectedId = el.dataset.cmsLayoutId;
+          layoutFreeDrag = { id:el.dataset.cmsLayoutId, pointerId:e.pointerId, startX:e.clientX, startY:e.clientY, baseX:Number(old.x||0), baseY:Number(old.y||0) };
+          try { el.setPointerCapture(e.pointerId); } catch (_) {}
+          el.classList.add('cms-layout-dragging');
+          updateLayoutDesignerSelection();
+          e.preventDefault();
+        }, {signal});
+        el.addEventListener('pointermove', e => {
+          if (!layoutFreeDrag || layoutFreeDrag.id !== el.dataset.cmsLayoutId || layoutFreeDrag.pointerId !== e.pointerId) return;
+          const draft = layoutDraftForElement(el);
+          if (!draft.offsets) draft.offsets = {};
+          draft.offsets[el.dataset.cmsLayoutId] = {
+            x: Math.max(-1200, Math.min(1200, layoutFreeDrag.baseX + (e.clientX - layoutFreeDrag.startX))),
+            y: Math.max(-1200, Math.min(1200, layoutFreeDrag.baseY + (e.clientY - layoutFreeDrag.startY)))
+          };
+          applyLayoutDraftToDom();
+          updateLayoutDesignerSelection();
+          e.preventDefault();
+        }, {signal});
+        const finishFreeDrag = e => {
+          if (!layoutFreeDrag || layoutFreeDrag.id !== el.dataset.cmsLayoutId) return;
+          try { el.releasePointerCapture(layoutFreeDrag.pointerId); } catch (_) {}
+          layoutFreeDrag = null;
+          el.classList.remove('cms-layout-dragging');
+        };
+        el.addEventListener('pointerup', finishFreeDrag, {signal});
+        el.addEventListener('pointercancel', finishFreeDrag, {signal});
+      }
     });
 
     document.addEventListener('click', e => {
-      const panelTarget = e.target.closest('#cms-layout-designer,#cms-admin-toolbar');
-      if (panelTarget) return;
+      if (e.target.closest('#cms-layout-designer,#cms-admin-toolbar')) return;
       const el = e.target.closest('[data-cms-layout-id]');
       if (!el) return;
       e.preventDefault(); e.stopPropagation();
@@ -517,48 +591,30 @@
 
     candidates.forEach(el => {
       el.addEventListener('dragstart', e => {
-        layoutDraggedId = el.dataset.cmsLayoutId;
-        layoutSelectedId = layoutDraggedId;
-        el.classList.add('cms-layout-dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', layoutDraggedId);
-        updateLayoutDesignerSelection();
-      }, { signal });
-      el.addEventListener('dragend', () => { el.classList.remove('cms-layout-dragging'); layoutDraggedId = null; }, { signal });
-      el.addEventListener('dragover', e => {
-        const dragged = layoutCandidateById(layoutDraggedId);
-        if (!dragged || dragged.parentElement !== el.parentElement || dragged === el) return;
-        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-      }, { signal });
-      el.addEventListener('drop', e => {
-        const dragged = layoutCandidateById(layoutDraggedId);
-        if (!dragged || dragged.parentElement !== el.parentElement || dragged === el) return;
-        e.preventDefault();
-        const parentKey = el.dataset.cmsLayoutParent;
-        const order = layoutCurrentOrder(parentKey);
-        const from = order.indexOf(dragged.dataset.cmsLayoutId);
-        const to = order.indexOf(el.dataset.cmsLayoutId);
-        if (from < 0 || to < 0) return;
-        order.splice(from,1);
-        order.splice(to,0,dragged.dataset.cmsLayoutId);
-        updateLayoutOrder(parentKey, order);
-      }, { signal });
+        layoutDraggedId = el.dataset.cmsLayoutId; layoutSelectedId = layoutDraggedId;
+        el.classList.add('cms-layout-dragging'); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',layoutDraggedId); updateLayoutDesignerSelection();
+      }, {signal});
+      el.addEventListener('dragend',()=>{el.classList.remove('cms-layout-dragging');layoutDraggedId=null;},{signal});
+      el.addEventListener('dragover',e=>{const dragged=layoutCandidateById(layoutDraggedId);if(!dragged||dragged.parentElement!==el.parentElement||dragged===el)return;e.preventDefault();e.dataTransfer.dropEffect='move';},{signal});
+      el.addEventListener('drop',e=>{
+        const dragged=layoutCandidateById(layoutDraggedId);if(!dragged||dragged.parentElement!==el.parentElement||dragged===el)return;
+        e.preventDefault();const parentKey=el.dataset.cmsLayoutParent;const order=layoutCurrentOrder(parentKey);const from=order.indexOf(dragged.dataset.cmsLayoutId);const to=order.indexOf(el.dataset.cmsLayoutId);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,dragged.dataset.cmsLayoutId);updateLayoutOrder(parentKey,order);
+      },{signal});
     });
 
-    panel.querySelector('[data-layout-close]').addEventListener('click', cancelLayoutDesigner, { signal });
-    panel.querySelector('[data-layout-cancel]').addEventListener('click', cancelLayoutDesigner, { signal });
-    panel.querySelector('[data-layout-save]').addEventListener('click', saveLayoutDesigner, { signal });
-    panel.querySelector('[data-layout-reset-page]').addEventListener('click', resetPageLayout, { signal });
-    panel.querySelector('[data-layout-reset-element]').addEventListener('click', resetLayoutSelected, { signal });
-    panel.querySelectorAll('[data-layout-nudge]').forEach(btn => btn.addEventListener('click', () => {
-      const [dx,dy] = btn.dataset.layoutNudge.split(',').map(Number); nudgeLayoutSelected(dx,dy);
-    }, { signal }));
-    panel.querySelectorAll('[data-layout-order]').forEach(btn => btn.addEventListener('click', () => moveLayoutSelectedOrder(Number(btn.dataset.layoutOrder)), { signal }));
+    panel.querySelector('[data-layout-close]').addEventListener('click', cancelLayoutDesigner, {signal});
+    panel.querySelector('[data-layout-cancel]').addEventListener('click', cancelLayoutDesigner, {signal});
+    panel.querySelector('[data-layout-save]').addEventListener('click', saveLayoutDesigner, {signal});
+    panel.querySelector('[data-layout-reset-page]').addEventListener('click', ()=>resetLayoutDraftZone('page'), {signal});
+    panel.querySelector('[data-layout-reset-global]').addEventListener('click', ()=>resetLayoutDraftZone('global'), {signal});
+    panel.querySelector('[data-layout-reset-element]').addEventListener('click', resetLayoutSelected, {signal});
+    panel.querySelectorAll('[data-layout-nudge]').forEach(btn=>btn.addEventListener('click',()=>{const [dx,dy]=btn.dataset.layoutNudge.split(',').map(Number);nudgeLayoutSelected(dx,dy);},{signal}));
+    panel.querySelectorAll('[data-layout-size]').forEach(btn=>btn.addEventListener('click',()=>{const [dw,dh]=btn.dataset.layoutSize.split(',').map(Number);resizeLayoutSelected(dw,dh);},{signal}));
+    panel.querySelectorAll('[data-layout-order]').forEach(btn=>btn.addEventListener('click',()=>moveLayoutSelectedOrder(Number(btn.dataset.layoutOrder)),{signal}));
 
-    applyLayoutDraftToDom();
-    updateLayoutDesignerSelection();
-    refreshToolbar();
-    notify(`Tryb projektowania: wykryto ${candidates.length} elementów do ustawienia.`);
+    applyLayoutDraftToDom(); updateLayoutDesignerSelection(); refreshToolbar();
+    const globalCount=candidates.filter(el=>el.dataset.cmsLayoutZone==='global').length;
+    notify(`Pełny projektant: ${candidates.length} elementów (${globalCount} globalnych + ${candidates.length-globalCount} na podstronie).`);
   }
 
   function ensureToolbar() {

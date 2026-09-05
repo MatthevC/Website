@@ -792,7 +792,16 @@
   function layoutElementLabel(el) {
     if (!el) return 'Element';
     if (el.id === 'header-twitch-link') return 'Przycisk TWITCH.TV';
-    const heading = el.matches('h1,h2,h3,h4,strong') ? el : el.querySelector('h1,h2,h3,h4,.reward-card-title,.rule-card-label,strong');
+    if (el.matches?.('.brand-logo,.brand-logo-wrap')) return 'Logo w nagłówku';
+    if (el.matches?.('.brand,.brand-text')) return 'Marka / nazwa MatthevC';
+    if (el.matches?.('.main-nav')) return 'Główne menu';
+    if (el.matches?.('.site-header')) return 'Nagłówek strony';
+    if (el.matches?.('.site-footer')) return 'Stopka strony';
+    if (el.matches?.('img')) {
+      const alt = String(el.getAttribute('alt') || '').trim();
+      return alt ? `Grafika: ${alt}` : 'Grafika';
+    }
+    const heading = el.matches('h1,h2,h3,h4,strong') ? el : el.querySelector?.('h1,h2,h3,h4,.reward-card-title,.rule-card-label,strong');
     const aria = el.getAttribute?.('aria-label') || el.getAttribute?.('title') || '';
     const text = String(heading?.textContent || aria || el.textContent || '').replace(/\s+/g, ' ').trim();
     if (text) return text.slice(0, 90);
@@ -800,81 +809,126 @@
     return cls.replace(/[-_]+/g, ' ').replace(/\b\w/g, m => m.toUpperCase());
   }
 
+  function layoutElementZone(el) {
+    if (!el) return 'page';
+    return el.closest?.('.site-header,.site-footer') ? 'global' : 'page';
+  }
+
   function layoutSemanticClass(el) {
     const tokens = String(el?.className || '').split(/\s+/).filter(Boolean);
-    return tokens.find(token => /(?:^|-)(?:card|callout|notice|bubble|tile|hero|hero-copy|side-note|feature|info-box|intro-box|download-box|cta|button|btn)$/.test(token))
-      || tokens.find(token => /(?:card|callout|notice|bubble|tile|hero|feature|button|btn)/i.test(token))
+    return tokens.find(token => /(?:card|callout|notice|bubble|tile|hero|feature|button|btn|heading|title|nav|menu|logo|brand|banner|sidebar|toc|grid|section|wrap|panel|box|actions|image|photo)/i.test(token))
       || tokens[0] || el?.tagName?.toLowerCase() || 'element';
+  }
+
+  function layoutDomPath(el, zoneRoot) {
+    const parts = [];
+    let node = el;
+    while (node && node !== zoneRoot && node instanceof HTMLElement && parts.length < 7) {
+      if (node.id) { parts.unshift(`#${layoutSlug(node.id)}`); break; }
+      const tag = node.tagName.toLowerCase();
+      const stableClasses = String(node.className || '').split(/\s+/)
+        .filter(Boolean)
+        .filter(c => !/^cms-|^active$|^selected$|^show$|^hidden$/i.test(c))
+        .slice(0, 2)
+        .map(layoutSlug);
+      const sameTag = node.parentElement ? [...node.parentElement.children].filter(s => s.tagName === node.tagName) : [];
+      const nth = sameTag.length > 1 ? `-${Math.max(1, sameTag.indexOf(node) + 1)}` : '';
+      parts.unshift(`${tag}${stableClasses.length ? '-' + stableClasses.join('-') : ''}${nth}`);
+      node = node.parentElement;
+    }
+    return parts.join('__') || layoutSlug(layoutElementLabel(el));
   }
 
   function isLayoutCandidate(el) {
     if (!el || !(el instanceof HTMLElement)) return false;
-    if (el.closest('#cms-admin-toolbar,.cms-modal-backdrop,#cms-layout-designer,.user-menu,.profile-modal,.account-management-modal')) return false;
-    if (el.id === 'header-twitch-link') return true;
-    if (!el.closest('#app')) return false;
-    if (el.tagName === 'ARTICLE') return true;
-    const tokens = String(el.className || '').split(/\s+/).filter(Boolean);
-    const semantic = tokens.some(token => /(?:^|-)(?:card|callout|notice|bubble|tile|hero-copy|side-note|feature-card|info-box|intro-box|download-box|cta)$/.test(token));
-    const cta = (el.matches('a,button')) && tokens.some(token => /(?:button|btn|cta)$/i.test(token));
-    const special = el.matches('.discord-channel-section,.twitch-download-box,.twitch-official-mini,.rewards-side-note,.rewards-hero-copy,[data-cms-callout-id],[data-custom-callout-id]');
-    if (!(semantic || cta || special)) return false;
+    if (el.closest('#cms-admin-toolbar,.cms-modal-backdrop,#cms-layout-designer,.login-overlay,.profile-modal,.account-management-modal,.user-menu')) return false;
+    if (!el.closest('#app,.site-header,.site-footer')) return false;
+    if (el.matches('script,style,link,meta,br,hr,input,textarea,select,option')) return false;
+    const style = getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity || 1) === 0) return false;
     const rect = el.getBoundingClientRect();
-    return rect.width >= 45 && rect.height >= 22;
+    if (rect.width < 18 || rect.height < 10) return false;
+
+    // Najważniejsze elementy strony: nagłówek, logo, menu, grafiki, teksty,
+    // przyciski, sekcje, boksy i praktycznie każdy wizualny kontener z klasą/id.
+    if (el.matches('.site-header,.site-footer,.brand,.brand-logo-wrap,.brand-logo,.brand-text,.main-nav,.main-nav > a,.main-nav > .nav-dropdown,.main-nav > .nav-dropdown > button,#header-twitch-link,.user-area,.footer-inner,.footer-brand,.footer-links,.footer-links > a')) return true;
+    if (el.matches('section,article,aside,figure,img,h1,h2,h3,h4,p,a,button,nav')) return true;
+    if (el.hasAttribute('data-cms-callout-id') || el.hasAttribute('data-custom-callout-id')) return true;
+
+    const tokens = String(el.className || '').split(/\s+/).filter(Boolean);
+    if (!tokens.length && !el.id) return false;
+    const semantic = tokens.some(token => /(?:hero|card|callout|notice|bubble|tile|feature|info|intro|download|cta|heading|title|section|grid|wrap|content|sidebar|toc|banner|panel|box|actions|row|columns?|image|photo|reward|discord|moderator|recommended|event|rules|quick|home)/i.test(token));
+    if (semantic) return true;
+
+    // Pozostałe classed DIV/SPAN-y tylko wtedy, gdy mają wyraźny własny wygląd.
+    if (el.matches('div,span')) {
+      const bg = style.backgroundColor;
+      const border = parseFloat(style.borderTopWidth || '0') + parseFloat(style.borderRightWidth || '0') + parseFloat(style.borderBottomWidth || '0') + parseFloat(style.borderLeftWidth || '0');
+      const display = style.display;
+      if (border > 0 || (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') || /(grid|flex)/.test(display)) return true;
+    }
+    return false;
   }
 
   function layoutParentKey(parent, path = 'home') {
     if (!parent) return 'root';
-    if (parent.id) return `id:${parent.id}`;
-    const route = routeKey(path);
-    const section = parent.closest('section[id],section,.page-panel,.content-wrap') || parent;
-    const heading = section.querySelector?.(':scope > h1,:scope > h2,:scope > h3,h1,h2,h3')?.textContent || '';
-    const cls = String(parent.className || '').split(/\s+/).filter(Boolean).slice(0, 3).join('-') || parent.tagName.toLowerCase();
-    return `${route}:${layoutSlug(cls)}:${layoutSlug(heading || parent.getAttribute?.('aria-label') || '')}`;
+    const zone = layoutElementZone(parent);
+    const root = zone === 'global' ? (parent.closest('.site-header,.site-footer') || document.body) : document.getElementById('app');
+    if (parent.id) return `${zone}:id:${parent.id}`;
+    return `${zone}:${zone === 'global' ? 'site' : routeKey(path)}:${layoutDomPath(parent, root)}`;
   }
 
   function layoutElements(path = 'home') {
-    const root = document.getElementById('app');
     const raw = [];
-    const twitch = document.getElementById('header-twitch-link');
-    if (twitch) raw.push(twitch);
-    if (root) raw.push(...root.querySelectorAll('article,[class],[data-cms-callout-id],[data-custom-callout-id]'));
-    const candidates = raw.filter(isLayoutCandidate);
+    const header = document.querySelector('.site-header');
+    const root = document.getElementById('app');
+    const footer = document.querySelector('.site-footer');
+    const universalSelector = 'section,article,aside,figure,img,h1,h2,h3,h4,p,a,button,nav,[class],[id]';
+    if (header) raw.push(header, ...header.querySelectorAll(universalSelector));
+    if (root) raw.push(...root.querySelectorAll(universalSelector));
+    if (footer) raw.push(footer, ...footer.querySelectorAll(universalSelector));
+
+    const seen = new Set();
+    const candidates = raw.filter(el => {
+      if (seen.has(el)) return false;
+      seen.add(el);
+      return isLayoutCandidate(el);
+    });
+
     const counts = new Map();
     candidates.forEach((el) => {
+      const zone = layoutElementZone(el);
+      const zoneRoot = zone === 'global' ? (el.closest('.site-header,.site-footer') || document.body) : root;
       const explicit = el.id ? `id-${layoutSlug(el.id)}` : '';
-      const dataKey = el.dataset.streamerLogin || el.dataset.rewardFamily || el.dataset.cmsCalloutId || el.dataset.customCalloutId || '';
-      const base = explicit || `${layoutSlug(layoutSemanticClass(el))}-${layoutSlug(dataKey || layoutElementLabel(el))}`;
+      const dataKey = el.dataset.streamerLogin || el.dataset.rewardFamily || el.dataset.cmsCalloutId || el.dataset.customCalloutId || el.dataset.recommendedTarget || '';
+      const pathKey = layoutDomPath(el, zoneRoot);
+      const semantic = layoutSlug(layoutSemanticClass(el));
+      const base = `${zone}-${explicit || `${semantic}-${dataKey ? layoutSlug(dataKey) : pathKey}`}`;
       const n = (counts.get(base) || 0) + 1;
       counts.set(base, n);
       const key = `${base}${n > 1 ? `-${n}` : ''}`;
       el.dataset.cmsLayoutId = key;
       el.dataset.cmsLayoutLabel = layoutElementLabel(el);
       el.dataset.cmsLayoutParent = layoutParentKey(el.parentElement, path);
+      el.dataset.cmsLayoutZone = zone;
     });
     return candidates;
   }
 
-  function applyPageLayout(path = 'home') {
-    const p = routeKey(path);
-    const data = get(`page_layout:${p}`, {}) || {};
-    const elements = layoutElements(p);
+  function applyOneLayoutData(data, elements) {
     const byId = new Map(elements.map(el => [el.dataset.cmsLayoutId, el]));
-
-    elements.forEach(el => {
-      el.style.removeProperty('order');
-      el.style.removeProperty('translate');
-      el.classList.remove('cms-layout-applied');
-    });
-
     Object.entries(data.offsets || {}).forEach(([id, pos]) => {
-      const el = byId.get(id);
-      if (!el) return;
-      const x = Math.max(-600, Math.min(600, Number(pos?.x || 0)));
-      const y = Math.max(-600, Math.min(600, Number(pos?.y || 0)));
-      if (x || y) {
-        el.style.translate = `${x}px ${y}px`;
-        el.classList.add('cms-layout-applied');
-      }
+      const el = byId.get(id); if (!el) return;
+      const x = Math.max(-1200, Math.min(1200, Number(pos?.x || 0)));
+      const y = Math.max(-1200, Math.min(1200, Number(pos?.y || 0)));
+      if (x || y) { el.style.translate = `${x}px ${y}px`; el.classList.add('cms-layout-applied'); }
+    });
+    Object.entries(data.sizes || {}).forEach(([id, size]) => {
+      const el = byId.get(id); if (!el) return;
+      const w = Number(size?.width || 0), h = Number(size?.height || 0);
+      if (w > 0) el.style.width = `${Math.max(24, Math.min(1800, w))}px`;
+      if (h > 0) el.style.height = `${Math.max(16, Math.min(1200, h))}px`;
+      if (w > 0 || h > 0) el.classList.add('cms-layout-sized');
     });
 
     const groups = new Map();
@@ -883,7 +937,6 @@
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(el);
     });
-
     Object.entries(data.orders || {}).forEach(([parentKey, ids]) => {
       const group = groups.get(parentKey) || [];
       if (group.length < 2 || !Array.isArray(ids)) return;
@@ -891,11 +944,26 @@
       const display = parent ? getComputedStyle(parent).display : '';
       if (!/(grid|flex)/.test(display)) return;
       const rank = new Map(ids.map((id, i) => [id, i]));
-      group.forEach((el, index) => {
-        const order = rank.has(el.dataset.cmsLayoutId) ? rank.get(el.dataset.cmsLayoutId) : ids.length + index;
-        el.style.order = String(order);
-      });
+      group.forEach((el, index) => el.style.order = String(rank.has(el.dataset.cmsLayoutId) ? rank.get(el.dataset.cmsLayoutId) : ids.length + index));
     });
+  }
+
+  function applyPageLayout(path = 'home') {
+    const p = routeKey(path);
+    const pageData = get(`page_layout:${p}`, {}) || {};
+    const globalData = get('page_layout:__global', {}) || {};
+    const elements = layoutElements(p);
+
+    elements.forEach(el => {
+      el.style.removeProperty('order');
+      el.style.removeProperty('translate');
+      el.style.removeProperty('width');
+      el.style.removeProperty('height');
+      el.classList.remove('cms-layout-applied','cms-layout-sized');
+    });
+
+    applyOneLayoutData(globalData, elements.filter(el => el.dataset.cmsLayoutZone === 'global'));
+    applyOneLayoutData(pageData, elements.filter(el => el.dataset.cmsLayoutZone !== 'global'));
   }
 
   function applyRoute(path) {
@@ -913,7 +981,7 @@
     ready, get, save, remove, createBackup, createManualBackup, listBackups, getBackup, deleteBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
-    layoutElements, layoutParentKey, layoutElementLabel, applyPageLayout,
+    layoutElements, layoutParentKey, layoutElementLabel, layoutElementZone, applyPageLayout,
     pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts,
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
