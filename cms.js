@@ -256,6 +256,86 @@
       }
     });
   }
+  function pageDecorGraphicElements(root = document.getElementById('app')) {
+    if (!root) return [];
+    const seen = new Map();
+    return [...root.querySelectorAll('[data-cms-decor-id]')].map((el, index) => {
+      let id = String(el.dataset.cmsDecorId || '').trim();
+      if (!id) {
+        const base = ruleIdPart(el.dataset.cmsDecorLabel || el.textContent || `dekor-${index+1}`) || `dekor-${index+1}`;
+        const count = (seen.get(base) || 0) + 1;
+        seen.set(base, count);
+        id = count > 1 ? `${base}-${count}` : base;
+        el.dataset.cmsDecorId = id;
+      }
+      if (typeof el.__mattCmsDecorLabel !== 'string') {
+        el.__mattCmsDecorLabel = String(el.dataset.cmsDecorLabel || el.querySelector('h1,h2,h3,strong,code')?.textContent || `Kafelek ${index+1}`).trim();
+      }
+      if (typeof el.__mattCmsDecorDefaultMode !== 'string') {
+        el.__mattCmsDecorDefaultMode = String(el.dataset.cmsDecorDefaultMode || 'theme');
+      }
+      return el;
+    });
+  }
+
+  function pageDecorGraphicInfo(path) {
+    return pageDecorGraphicElements().map((el, index) => ({
+      id: el.dataset.cmsDecorId || `dekor-${index+1}`,
+      label: el.dataset.cmsDecorLabel || el.__mattCmsDecorLabel || `Kafelek ${index+1}`,
+      route: routeKey(path),
+      defaultMode: el.dataset.cmsDecorDefaultMode || el.__mattCmsDecorDefaultMode || 'theme'
+    }));
+  }
+
+  function normalizeDecorGraphicItem(item = {}, fallbackMode = 'theme') {
+    const mode = String(item.mode || fallbackMode || 'theme').toLowerCase() === 'normal' ? 'normal' : 'theme';
+    const num = (value, fallback, min, max) => {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.max(min, Math.min(max, n));
+    };
+    return {
+      url: String(item.url || '').trim(),
+      alt: String(item.alt || '').trim(),
+      mode,
+      offsetX: num(item.offsetX, 0, -1500, 1500),
+      offsetY: num(item.offsetY, 0, -1500, 1500),
+      scale: num(item.scale, 100, 5, 800),
+      rotation: num(item.rotation, 0, -3600, 3600),
+      opacity: num(item.opacity, mode === 'normal' ? 32 : 18, 1, 100)
+    };
+  }
+
+  function applyPageDecorGraphics(path) {
+    const route = routeKey(path);
+    const data = get(`page_decor_graphics:${route}`, {}) || {};
+    pageDecorGraphicElements().forEach(el => {
+      el.querySelectorAll(':scope > .cms-decor-graphic').forEach(node => node.remove());
+      el.classList.remove('cms-has-decor-graphic');
+      el.style.removeProperty('--cms-decor-offset-x');
+      el.style.removeProperty('--cms-decor-offset-y');
+      el.style.removeProperty('--cms-decor-rotation');
+      el.style.removeProperty('--cms-decor-scale');
+      el.style.removeProperty('--cms-decor-opacity');
+      const fallbackMode = el.dataset.cmsDecorDefaultMode || 'theme';
+      const item = normalizeDecorGraphicItem(data[el.dataset.cmsDecorId] || {}, fallbackMode);
+      if (!item.url) return;
+      const img = document.createElement('img');
+      img.className = `cms-decor-graphic cms-decor-mode-${item.mode}`;
+      img.src = item.url;
+      img.alt = item.alt || '';
+      img.loading = 'lazy';
+      if (!item.alt) img.setAttribute('aria-hidden', 'true');
+      el.style.setProperty('--cms-decor-offset-x', `${item.offsetX}px`);
+      el.style.setProperty('--cms-decor-offset-y', `${item.offsetY}px`);
+      el.style.setProperty('--cms-decor-rotation', `${item.rotation}deg`);
+      el.style.setProperty('--cms-decor-scale', `${item.scale / 100}`);
+      el.style.setProperty('--cms-decor-opacity', `${item.opacity / 100}`);
+      el.appendChild(img);
+      el.classList.add('cms-has-decor-graphic');
+    });
+  }
+
 
   // Elementy, które w panelu administratora traktujemy jako KOMUNIKATY.
   // Oprócz małych notice/callout obejmujemy również większe bloki typu hero,
@@ -981,6 +1061,7 @@
     applyTextOverrides(path);
     applyPageCallouts(path);
     applyPageImages(path);
+    applyPageDecorGraphics(path);
     applyPageBanner(path);
     applyCustomPageCallouts(path);
     applyPageLayout(path);
@@ -991,7 +1072,7 @@
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
     layoutElements, layoutParentKey, layoutElementLabel, layoutElementZone, applyPageLayout,
-    pageImageElements, pageImageInfo, applyPageImages, redCalloutElements, calloutInfo, applyPageCallouts,
+    pageImageElements, pageImageInfo, applyPageImages, pageDecorGraphicElements, pageDecorGraphicInfo, normalizeDecorGraphicItem, applyPageDecorGraphics, redCalloutElements, calloutInfo, applyPageCallouts,
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview,

@@ -114,13 +114,13 @@ const pages = {
             <img src="pictures/home/matts-world-hero.png" alt="Witaj w Matt's World — gry z widzami, Dead by Daylight i horror game">
           </section>
           <aside class="hero-side">
-            <div class="side-card discord-card">
+            <div class="side-card discord-card" data-cms-decor-id="home-discord" data-cms-decor-label="Start — kafelek NASZ DISCORD" data-cms-decor-default-mode="theme">
               <svg class="discord-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M102.4 13.2A93.2 93.2 0 0 0 78.7 6l-3.4 7.1a86.2 86.2 0 0 0-22.6 0L49.3 6a93.6 93.6 0 0 0-23.8 7.3C10.4 36.1 6.2 58.5 8.3 80.6a94.8 94.8 0 0 0 29.2 14.7l7.1-9.7c-3.9-1.4-7.6-3.1-11.1-5.1l2.7-2.1c21.4 10 44.6 10 65.8 0l2.8 2.1c-3.5 2-7.2 3.7-11.1 5.1l7.1 9.7a94.8 94.8 0 0 0 29.2-14.7c2.4-25.6-4.1-47.8-17.6-67.4ZM42.8 68.1c-6.4 0-11.6-5.9-11.6-13.1s5.1-13.1 11.6-13.1 11.7 5.9 11.6 13.1c0 7.2-5.1 13.1-11.6 13.1Zm42.4 0c-6.4 0-11.6-5.9-11.6-13.1s5.1-13.1 11.6-13.1 11.7 5.9 11.6 13.1c0 7.2-5.1 13.1-11.6 13.1Z"/></svg>
               <h3>NASZ DISCORD</h3>
               <p>Dołącz do naszej społeczności, poznaj ludzi, korzystaj z kanałów i bądź na bieżąco z tym, co dzieje się w MATT'S WORLD.</p>
               <a class="red-link" href="#/discord/join">JAK DOSTAĆ SIĘ NA DISCORD →</a>
             </div>
-            <div class="side-card contact-home-card">
+            <div class="side-card contact-home-card" data-cms-decor-id="home-contact" data-cms-decor-label="Start — kafelek WNIOSKI / KONTAKT" data-cms-decor-default-mode="theme">
               <svg class="contact-watermark" viewBox="0 0 128 96" aria-hidden="true"><path fill="currentColor" d="M12 20h104v56H12V20Zm8 8v4l44 28 44-28v-4l-44 28L20 28Zm0 16v22h88V44L64 72 20 44Z"/></svg>
               <div class="side-card-kicker">FORMULARZ SPOŁECZNOŚCI</div>
               <h3>WNIOSKI / KONTAKT</h3>
@@ -1979,7 +1979,8 @@ function commandCard(command) {
     ? ""
     : command.roles.map(roleBadge).join("");
   const dbdClass = command.command.toLowerCase().includes("queuedbd") ? " command-dbd" : "";
-  return `<article class="command command-${special}${dbdClass}" data-command="${escapeHtml(command.command.toLowerCase())} ${escapeHtml(command.description.toLowerCase())}">
+  const graphicId = `command-${String(command.command || 'komenda').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item'}`;
+  return `<article class="command command-${special}${dbdClass}" data-command="${escapeHtml(command.command.toLowerCase())} ${escapeHtml(command.description.toLowerCase())}" data-cms-decor-id="${escapeHtml(graphicId)}" data-cms-decor-label="Komenda — ${escapeHtml(command.command)}" data-cms-decor-default-mode="theme">
     <div class="command-top"><code>${escapeHtml(command.command)}</code><div class="command-badges">${badges}</div></div>
     <span>${escapeHtml(command.description)}</span>
   </article>`;
@@ -2054,6 +2055,7 @@ function setupCommandsPage() {
 
     if (!total) html = `<div class="empty command-empty">Nie znaleziono komendy pasującej do wyszukiwania.</div>`;
     results.innerHTML = html;
+    if (window.MattCMS?.applyPageDecorGraphics) window.MattCMS.applyPageDecorGraphics(location.hash.replace(/^#\/?/, "") || "home");
   }
 
   filters.forEach(filter => filter.addEventListener("change", renderCommands));

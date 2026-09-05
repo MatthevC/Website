@@ -823,7 +823,7 @@
     const layoutBtn = $('[data-cms-action="layout"]', toolbar);
     if (layoutBtn) layoutBtn.hidden = inlineEditing || layoutEditing || !has('page.layout.manage');
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
-    if (imagesBtn) imagesBtn.hidden = inlineEditing || layoutEditing || currentRoute() === 'home' || !has('page.images.manage');
+    if (imagesBtn) imagesBtn.hidden = inlineEditing || layoutEditing || !has('page.images.manage');
     $('[data-cms-action="inline"]', toolbar).hidden = inlineEditing || layoutEditing || !has('page.text.edit');
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
     $('[data-cms-action="reset-page"]', toolbar).hidden = inlineEditing || layoutEditing || !has('github.restore');
@@ -2193,20 +2193,28 @@
     if (!isAdmin()) return;
     const route = currentRoute();
     const key = `page_images:${route}`;
+    const decorKey = `page_decor_graphics:${route}`;
     const bannerKey = `page_banner:${route}`;
     let overrides = clone(window.MattCMS?.get(key, {}) || {});
+    let decorOverrides = clone(window.MattCMS?.get(decorKey, {}) || {});
     const esc = window.MattCMS.escape;
 
     const currentImages = () => window.MattCMS?.pageImageInfo?.(route) || [];
+    const currentDecorItems = () => window.MattCMS?.pageDecorGraphicInfo?.(route) || [];
 
     const draw = () => {
       const images = currentImages();
+      const decorItems = currentDecorItems();
       const banner = clone(window.MattCMS?.get(bannerKey, null) || null);
       const bannerBlock = route === 'home' ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
-      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${bannerBlock}<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
-        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów. Nadal możesz dodać grafikę nagłówkową powyżej.</div>'}</div>`);
+      const imageSection = `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
+        <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów. Nadal możesz dodać grafikę nagłówkową powyżej.</div>'}</div>`;
+      const decorSection = `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-decor>↶ WSZYSTKIE GRAFIKI KAFELKÓW</button></div><p>Te ustawienia dotyczą grafik dekoracyjnych w kafelkach i dymkach. Możesz wgrać własny obraz, przełączyć tryb „dostosuj kolor do strony”, przesuwać grafikę, obracać ją i powiększać.</p></div>
+        <div class="cms-image-manager-grid">${decorItems.length?decorItems.map((item,index)=>{const saved=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[item.id]||{}, item.defaultMode)||decorOverrides[item.id]||{}; return `<article class="cms-image-manager-card"><div class="cms-image-manager-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}">`:'<div class="cms-empty">BRAK</div>'}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / KAFELEK</small><strong>${esc(item.label||`Kafelek ${index+1}`)}</strong><span>${saved.url?`Tryb: ${saved.mode==='normal'?'normalne kolory':'dostosuj kolor do strony'} • obrót ${Number(saved.rotation||0)}° • przesunięcie ${Number(saved.offsetX||0)} / ${Number(saved.offsetY||0)} px`:'Brak własnej grafiki dekoracyjnej'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-decor-edit="${esc(item.id)}">USTAW GRAFIKĘ</button><button data-decor-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(decorOverrides,item.id)?'':'disabled'}>USUŃ / RESET</button></div></article>`;}).join(''):'<div class="cms-empty">Na tej podstronie nie wykryto kafelków z obsługą dekoracyjnej grafiki.</div>'}</div>`;
+      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${bannerBlock}${imageSection}${decorSection}`);
       const body=$('#cms-modal-body',modal);
       $('[data-reset-images]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie grafiki tej podstrony'));
+      $('[data-reset-decor]',body)?.addEventListener('click',()=>resetCmsKey(decorKey,'wszystkie grafiki dekoracyjne tej podstrony'));
       $$('[data-image-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editImage(btn.dataset.imageEdit)));
       $$('[data-image-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const id=btn.dataset.imageReset;
@@ -2214,6 +2222,14 @@
         if(!confirm('Przywrócić tę grafikę do wersji z GitHuba?')) return;
         delete overrides[id];
         await saveOverrideMap(key,overrides,'Grafika została przywrócona z GitHuba.');
+      }));
+      $$('[data-decor-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editDecor(btn.dataset.decorEdit)));
+      $$('[data-decor-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const id=btn.dataset.decorReset;
+        if(!Object.prototype.hasOwnProperty.call(decorOverrides,id)) return;
+        if(!confirm('Usunąć własną grafikę dekoracyjną dla tego kafelka?')) return;
+        delete decorOverrides[id];
+        await saveOverrideMap(decorKey,decorOverrides,'Grafika dekoracyjna została usunięta.');
       }));
       $('[data-banner-edit]',body)?.addEventListener('click',editBanner);
       $('[data-banner-remove]',body)?.addEventListener('click',async()=>{
@@ -2231,6 +2247,58 @@
       openModal('ZMIEŃ GRAFIKĘ',`<form id="cms-page-image-form" class="cms-form">${fieldHtml(fields[0],current.url||item.src)}${fieldHtml(fields[1],current.alt??item.alt)}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-base>↶ Z GITHUBA</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form=$('#cms-page-image-form',modal);bindImageFileFields(form,fields);$('[data-back]',form)?.addEventListener('click',draw);$('[data-base]',form)?.addEventListener('click',async()=>{delete overrides[id];await saveOverrideMap(key,overrides,'Grafika została przywrócona z GitHuba.');});
       form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||item.src);const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,item.label||id,`pages/${route}`);const alt=String(form.elements.alt?.value||'').trim();const baseUrl=item.baseSrc;const baseAlt=item.baseAlt||'';if(url===baseUrl&&alt===baseAlt)delete overrides[id];else overrides[id]={url,alt};await saveOverrideMap(key,overrides,'Grafika została zapisana.');}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
+    };
+
+    const editDecor = id => {
+      const item=currentDecorItems().find(x=>x.id===id);
+      if(!item) return draw();
+      const current=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[id]||{}, item.defaultMode) || decorOverrides[id] || { url:'', alt:'', mode:item.defaultMode||'theme', offsetX:0, offsetY:0, scale:100, rotation:0, opacity:item.defaultMode==='normal'?32:18 };
+      const fields=[
+        {name:'image',label:'Grafika dekoracyjna',type:'image-file'},
+        {name:'alt',label:'Opis grafiki (ALT)',help:'Opcjonalny opis — jeśli grafika ma być czysto dekoracyjna, możesz zostawić puste.'},
+        {name:'mode',label:'Tryb kolorów',type:'select',options:[{value:'theme',label:'DOSTOSUJ KOLOR DO STRONY (czerwony)'},{value:'normal',label:'NORMALNE KOLORY'}],help:'Tryb czerwony automatycznie dopasowuje obraz do stylistyki strony.'},
+        {name:'offsetX',label:'Przesunięcie poziome (px)',type:'number',help:'Wartość dodatnia przesuwa grafikę w prawo, ujemna w lewo.'},
+        {name:'offsetY',label:'Przesunięcie pionowe (px)',type:'number',help:'Wartość dodatnia przesuwa grafikę w dół, ujemna do góry.'},
+        {name:'scale',label:'Powiększenie (%)',type:'number',help:'Pozwala pokazać tylko fragment grafiki — np. 140 oznacza 140%.'},
+        {name:'rotation',label:'Obrót (stopnie)',type:'number',help:'Możesz wpisać dowolny stopień obrotu, np. -8, 45 albo 180.'},
+        {name:'opacity',label:'Widoczność (%)',type:'number',help:'Im niższa wartość, tym subtelniej grafika będzie widoczna pod treścią.'}
+      ];
+      openModal('GRAFIKA KAFELKA / DYMKA',`<form id="cms-page-decor-form" class="cms-form"><div class="cms-form-context">Edytujesz: <strong>${esc(item.label||id)}</strong></div>${fields.map(f=>fieldHtml(f,f.name==='image'?(current.url||''):current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-remove ${Object.prototype.hasOwnProperty.call(decorOverrides,id)?'':'disabled'}>USUŃ GRAFIKĘ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+      const form=$('#cms-page-decor-form',modal);
+      bindImageFileFields(form,fields);
+      $('[data-back]',form)?.addEventListener('click',draw);
+      $('[data-remove]',form)?.addEventListener('click',async()=>{
+        if(!Object.prototype.hasOwnProperty.call(decorOverrides,id)) return;
+        if(!confirm('Usunąć własną grafikę dekoracyjną dla tego kafelka?')) return;
+        delete decorOverrides[id];
+        await saveOverrideMap(decorKey,decorOverrides,'Grafika dekoracyjna została usunięta.');
+      });
+      form.addEventListener('submit',async e=>{
+        e.preventDefault();
+        const submit=$('button[type="submit"]',form);
+        if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}
+        try {
+          let url=String(form.elements.image?.value||current.url||'').trim();
+          const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
+          if(file) url=await uploadCmsImage(file,item.label||id,`decor/${route}`);
+          if(!url) throw new Error('Wybierz grafikę z dysku albo pozostaw wcześniej zapisaną.');
+          const normalized=window.MattCMS?.normalizeDecorGraphicItem?.({
+            url,
+            alt:String(form.elements.alt?.value||'').trim(),
+            mode:String(form.elements.mode?.value||item.defaultMode||'theme').trim(),
+            offsetX:form.elements.offsetX?.value,
+            offsetY:form.elements.offsetY?.value,
+            scale:form.elements.scale?.value,
+            rotation:form.elements.rotation?.value,
+            opacity:form.elements.opacity?.value
+          }, item.defaultMode) || { url };
+          decorOverrides[id]=normalized;
+          await saveOverrideMap(decorKey,decorOverrides,'Grafika dekoracyjna została zapisana.');
+        } catch(error){
+          notify(error.message,'error');
+          if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}
+        }
+      });
     };
 
     const editBanner = () => {
