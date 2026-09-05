@@ -8267,12 +8267,15 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 }
 #cms-admin-toolbar .cms-toolbar-title{display:flex;flex-direction:column;line-height:1.05;padding:0 8px 0 4px;min-width:86px}
 #cms-admin-toolbar .cms-toolbar-toggle,
+#cms-admin-toolbar .cms-toolbar-orientation,
 #cms-admin-toolbar .cms-toolbar-drag-handle{
   width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;
   border-radius:10px;padding:0;font-size:19px;font-weight:900;line-height:1;
   background:#15161b;color:#fff;border:1px solid rgba(255,255,255,.16)
 }
-#cms-admin-toolbar .cms-toolbar-toggle:hover,#cms-admin-toolbar .cms-toolbar-drag-handle:hover{background:#202126}
+#cms-admin-toolbar .cms-toolbar-toggle:hover,
+#cms-admin-toolbar .cms-toolbar-orientation:hover,
+#cms-admin-toolbar .cms-toolbar-drag-handle:hover{background:#202126}
 #cms-admin-toolbar .cms-toolbar-drag-handle{cursor:grab;color:#aeb1bb;font-size:21px;touch-action:none}
 #cms-admin-toolbar.cms-toolbar-dragging .cms-toolbar-drag-handle{cursor:grabbing;color:#fff}
 #cms-admin-toolbar.cms-docked-left{
@@ -8282,6 +8285,37 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   right:0!important;left:auto!important;border-right:0;border-radius:14px 0 0 14px
 }
 #cms-admin-toolbar.cms-docked-right .cms-toolbar-drag-handle{order:999}
+
+/* Orientacja pionowa paska administratora */
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  align-items:stretch;
+  width:220px;
+  max-width:calc(100vw - 16px);
+  max-height:calc(100vh - 16px);
+  overflow:auto;
+  gap:7px;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) .cms-toolbar-drag-handle{grid-column:1;grid-row:1;order:initial;width:100%}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) .cms-toolbar-orientation{grid-column:2;grid-row:1;width:100%}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) .cms-toolbar-toggle{grid-column:3;grid-row:1;width:100%}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) .cms-toolbar-title{
+  grid-column:1/-1;
+  min-width:0;
+  padding:8px 7px 9px;
+  border-bottom:1px solid rgba(255,255,255,.08)
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-orientation):not(.cms-toolbar-toggle){
+  grid-column:1/-1;
+  width:100%;
+  min-height:40px;
+  text-align:left;
+}
+#cms-admin-toolbar.cms-toolbar-vertical.cms-docked-left{border-radius:0 14px 14px 0}
+#cms-admin-toolbar.cms-toolbar-vertical.cms-docked-right{border-radius:14px 0 0 14px}
+#cms-admin-toolbar.cms-toolbar-vertical.cms-docked-right .cms-toolbar-drag-handle{order:initial}
+
 #cms-admin-toolbar.cms-dock-preview-left{
   box-shadow:0 0 0 2px rgba(239,43,45,.48),0 18px 55px rgba(0,0,0,.45);
   border-left-color:#ef2b2d
@@ -8296,6 +8330,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 #cms-admin-toolbar.cms-collapsed .cms-toolbar-title,
 #cms-admin-toolbar.cms-collapsed > button:not(.cms-toolbar-toggle){display:none !important}
 #cms-admin-toolbar.cms-collapsed .cms-toolbar-toggle{width:42px;height:42px}
+#cms-admin-toolbar.cms-toolbar-vertical.cms-collapsed{display:flex;width:auto;max-width:none;overflow:visible}
 #cms-admin-toolbar .cms-toolbar-title span{font-size:10px;letter-spacing:.18em;color:#ef2b2d;font-weight:800}
 #cms-admin-toolbar .cms-toolbar-title strong{font-size:11px;color:#fff;letter-spacing:.05em;margin-top:4px}
 #cms-admin-toolbar button,.cms-manager-item button,.cms-discord-category button,.cms-form-actions button,.cms-manager-actions button{
@@ -8402,6 +8437,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   #cms-admin-toolbar{left:10px;right:10px;bottom:10px;overflow:auto;justify-content:flex-start}
   #cms-admin-toolbar.cms-docked-left{left:0!important;right:auto!important;max-width:calc(100vw - 10px)}
   #cms-admin-toolbar.cms-docked-right{right:0!important;left:auto!important;max-width:calc(100vw - 10px)}
+  #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){width:min(220px,calc(100vw - 10px));max-height:calc(100vh - 20px)}
   #cms-admin-toolbar .cms-toolbar-title{display:none}
   .cms-modal-backdrop{padding:8px}.cms-modal{width:100%;max-height:94vh}.cms-modal-head,.cms-modal-body{padding:15px}
   .cms-manager-actions,.cms-manager-item,.cms-discord-category>header{align-items:stretch;flex-direction:column}.cms-manager-item>div:last-child,.cms-discord-category>header>div:last-child{width:100%}

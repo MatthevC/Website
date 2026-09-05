@@ -11,6 +11,7 @@
   let layoutDraggedId = null;
   let layoutFreeDrag = null;
   const TOOLBAR_COLLAPSE_KEY = 'matt_cms_toolbar_collapsed';
+  const TOOLBAR_ORIENTATION_KEY = 'matt_cms_toolbar_orientation_v1';
   const TOOLBAR_POSITION_KEY = 'matt_cms_toolbar_position_v3';
   const TOOLBAR_POSITION_OLD_KEY = 'matt_cms_toolbar_position_v2';
   const TOOLBAR_DOCK_SNAP = 34;
@@ -24,9 +25,25 @@
     catch (_) { return false; }
   }
 
+  function getToolbarOrientation() {
+    try { return localStorage.getItem(TOOLBAR_ORIENTATION_KEY) === 'vertical' ? 'vertical' : 'horizontal'; }
+    catch (_) { return 'horizontal'; }
+  }
+
+  function setToolbarOrientation(value) {
+    const orientation = value === 'vertical' ? 'vertical' : 'horizontal';
+    try { localStorage.setItem(TOOLBAR_ORIENTATION_KEY, orientation); }
+    catch (_) {}
+    // Pionowy pasek ma zawsze być przyklejony do lewej lub prawej krawędzi.
+    if (orientation === 'vertical') ensureToolbarDocked();
+    applyToolbarState();
+  }
+
   function setToolbarCollapsed(value) {
     try { localStorage.setItem(TOOLBAR_COLLAPSE_KEY, value ? '1' : '0'); }
     catch (_) {}
+    // Po zwinięciu uchwyt ma zawsze zostać przy lewej lub prawej krawędzi.
+    if (value) ensureToolbarDocked();
     applyToolbarState();
   }
 
@@ -59,6 +76,20 @@
     const mode = side === 'right' ? 'dock-right' : 'dock-left';
     try { localStorage.setItem(TOOLBAR_POSITION_KEY, JSON.stringify({ mode, top:Math.round(top) })); }
     catch (_) {}
+  }
+
+  function ensureToolbarDocked(preferredSide = null) {
+    if (!toolbar) return;
+    const current = getToolbarPosition();
+    if (!preferredSide && (current?.mode === 'dock-left' || current?.mode === 'dock-right')) return;
+
+    const rect = toolbar.getBoundingClientRect();
+    const side = preferredSide === 'left' || preferredSide === 'right'
+      ? preferredSide
+      : ((rect.left + rect.width / 2) <= window.innerWidth / 2 ? 'left' : 'right');
+    const maxTop = Math.max(8, window.innerHeight - Math.max(48, rect.height || toolbar.offsetHeight || 48) - 8);
+    const top = Math.max(8, Math.min(maxTop, Number.isFinite(rect.top) ? rect.top : 18));
+    saveToolbarDock(side, top);
   }
 
   function resetToolbarPosition() {
@@ -133,8 +164,14 @@
         const maxTop = Math.max(8, window.innerHeight - height - 8);
         const desiredLeft = ev.clientX - dx;
         const top = Math.max(8, Math.min(maxTop, ev.clientY - dy));
+        const vertical = getToolbarOrientation() === 'vertical';
 
-        if (desiredLeft <= TOOLBAR_DOCK_SNAP) {
+        if (vertical) {
+          // W orientacji pionowej pasek zawsze jest dokowany. Przeciągnięcie przez
+          // środek ekranu przełącza go pomiędzy lewą i prawą krawędzią.
+          dockCandidate = ev.clientX <= window.innerWidth / 2 ? 'left' : 'right';
+          toolbar.style.left = dockCandidate === 'left' ? '0px' : `${maxLeft}px`;
+        } else if (desiredLeft <= TOOLBAR_DOCK_SNAP) {
           dockCandidate = 'left';
           toolbar.style.left = '0px';
         } else if (desiredLeft >= maxLeft - TOOLBAR_DOCK_SNAP) {
@@ -155,10 +192,11 @@
         document.removeEventListener('pointermove', move);
         toolbar.classList.remove('cms-toolbar-dragging','cms-dock-preview-left','cms-dock-preview-right');
         const end = toolbar.getBoundingClientRect();
-        if (dockCandidate) {
-          saveToolbarDock(dockCandidate, end.top);
+        if (dockCandidate || getToolbarOrientation() === 'vertical') {
+          const side = dockCandidate || (end.left + end.width/2 <= window.innerWidth/2 ? 'left' : 'right');
+          saveToolbarDock(side, end.top);
           applyToolbarPosition();
-          notify(`Pasek przypięty do ${dockCandidate === 'right' ? 'prawej' : 'lewej'} krawędzi.`);
+          notify(`Pasek przypięty do ${side === 'right' ? 'prawej' : 'lewej'} krawędzi.`);
         } else {
           saveToolbarPosition(end.left, end.top);
         }
@@ -171,12 +209,22 @@
   function applyToolbarState() {
     if (!toolbar) return;
     const collapsed = isToolbarCollapsed();
+    const orientation = getToolbarOrientation();
+    if (collapsed || orientation === 'vertical') ensureToolbarDocked();
     toolbar.classList.toggle('cms-collapsed', collapsed);
+    toolbar.classList.toggle('cms-toolbar-vertical', orientation === 'vertical');
+    toolbar.classList.toggle('cms-toolbar-horizontal', orientation !== 'vertical');
     const toggleBtn = $('[data-cms-action="toggle-toolbar"]', toolbar);
     if (toggleBtn) {
       toggleBtn.innerHTML = collapsed ? '☰' : '−';
       toggleBtn.title = collapsed ? 'Pokaż pasek administratora' : 'Ukryj pasek administratora';
       toggleBtn.setAttribute('aria-label', toggleBtn.title);
+    }
+    const orientationBtn = $('[data-cms-action="toolbar-orientation"]', toolbar);
+    if (orientationBtn) {
+      orientationBtn.innerHTML = orientation === 'vertical' ? '↔' : '↕';
+      orientationBtn.title = orientation === 'vertical' ? 'Zmień pasek na poziomy' : 'Zmień pasek na pionowy';
+      orientationBtn.setAttribute('aria-label', orientationBtn.title);
     }
     applyToolbarPosition();
   }
@@ -713,6 +761,7 @@
     toolbar.innerHTML = `
       <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek. Dosuń do lewej lub prawej krawędzi, aby go przypiąć. Dwuklik przywraca położenie domyślne.">⠿</button>
       <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
+      <button type="button" class="cms-toolbar-orientation" data-cms-action="toolbar-orientation" aria-label="Zmień pasek na pionowy" title="Zmień pasek na pionowy">↕</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
       <button type="button" data-cms-action="inline">✎ EDYTUJ TEKSTY</button>
@@ -730,6 +779,10 @@
     toolbar.addEventListener('click', e => {
       const action = e.target.closest('[data-cms-action]')?.dataset.cmsAction;
       if (action === 'toggle-toolbar') { setToolbarCollapsed(!isToolbarCollapsed()); return; }
+      if (action === 'toolbar-orientation') {
+        setToolbarOrientation(getToolbarOrientation() === 'vertical' ? 'horizontal' : 'vertical');
+        return;
+      }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
       if (action === 'inline') startInlineEdit();
       if (action === 'save') saveInlineEdit();
