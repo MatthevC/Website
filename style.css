@@ -9414,3 +9414,64 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-decor-live-quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
 .cms-decor-live-quick button{min-height:34px;padding:0 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:#16181d;color:#d9dce3;font:700 11px Rajdhani,sans-serif;letter-spacing:.35px;cursor:pointer}
 .cms-decor-live-quick button:hover{border-color:rgba(239,43,45,.55);background:#1d1719;color:#fff}
+
+
+/* v2.6.15 — podgląd grafiki dekoracyjnej pobierany 1:1 z aktualnego kafelka */
+.cms-decor-live-stage{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:180px;
+  padding:18px;
+  border:1px dashed rgba(255,255,255,.14);
+  border-radius:14px;
+  background:#090a0d;
+}
+.cms-decor-live-stage-command{min-height:150px}
+.cms-decor-live-source-host{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.cms-decor-preview-source{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  flex:0 1 auto;
+  pointer-events:none!important;
+  user-select:none!important;
+}
+.cms-decor-preview-source *{pointer-events:none!important}
+.cms-decor-preview-source.command{
+  width:min(100%, 620px)!important;
+  min-height:82px!important;
+  text-align:left;
+}
+.cms-decor-live-stage-command .cms-decor-live-source-host{justify-content:stretch}
+.cms-decor-live-stage-command .cms-decor-preview-source.command{width:100%!important}
+.cms-decor-live-fallback{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  width:min(100%,520px);
+  min-height:240px;
+  border:1px solid rgba(239,43,45,.28);
+  border-radius:16px;
+  background:radial-gradient(circle at 85% 15%,rgba(239,43,45,.16),transparent 38%),linear-gradient(145deg,#191919,#101010);
+}
+.cms-decor-preview-media-placeholder{
+  display:block;
+  max-width:100%;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  background-color:#101216;
+  background-position:center;
+  background-size:cover;
+}
+.cms-decor-live-stage .cms-decor-live-fake-copy{left:22px;bottom:20px}
+@media(max-width:760px){
+  .cms-decor-live-stage{padding:10px;min-height:150px}
+  .cms-decor-preview-source{max-width:100%!important}
+}

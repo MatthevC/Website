@@ -2272,6 +2272,7 @@
     const editDecor = id => {
       const item=currentDecorItems().find(x=>x.id===id);
       if(!item) return draw();
+      const sourceEl=(window.MattCMS?.pageDecorGraphicElements?.()||[]).find(el=>el.dataset?.cmsDecorId===id)||null;
       const current=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[id]||{}, item.defaultMode) || decorOverrides[id] || { url:'', alt:'', mode:item.defaultMode||'theme', offsetX:0, offsetY:0, scale:100, stretchX:100, stretchY:100, rotation:0, opacity:item.defaultMode==='normal'?32:18 };
       const fields=[
         {name:'image',label:'Grafika dekoracyjna',type:'image-file'},
@@ -2286,9 +2287,17 @@
         {name:'opacity',label:'Widoczność (%)',type:'number',help:'Im niższa wartość, tym subtelniej grafika będzie widoczna pod treścią.'}
       ];
       const slider = (name,label,min,max,step,value,suffix='') => `<label class="cms-decor-slider"><span>${label}<b data-live-value="${name}">${esc(value)}${suffix}</b></span><input type="range" data-live-slider="${name}" min="${min}" max="${max}" step="${step}" value="${esc(value)}"></label>`;
+      const previewInfo=sourceEl
+        ? 'Wygląd podglądu został pobrany bezpośrednio z kafelka na aktualnej stronie.'
+        : 'Nie udało się odnaleźć kafelka w aktualnym widoku — używany jest podgląd awaryjny.';
       const livePreview = `<section class="cms-decor-live-editor">
-        <div class="cms-decor-live-head"><div><small>PODGLĄD NA ŻYWO</small><strong>${esc(item.label||id)}</strong></div><span>Zmiany poniżej nie są zapisywane, dopóki nie klikniesz ZAPISZ.</span></div>
-        <div class="cms-decor-live-stage" data-decor-live-stage><div class="cms-decor-live-fake-copy"><strong>${esc(item.label||'KAFELEK')}</strong><span>Podgląd położenia grafiki</span></div><img data-decor-live-img ${current.url?`src="${esc(current.url)}"`:''} alt=""></div>
+        <div class="cms-decor-live-head"><div><small>PODGLĄD NA ŻYWO · 1:1</small><strong>${esc(item.label||id)}</strong></div><span>${esc(previewInfo)} Zmiany nie są zapisywane, dopóki nie klikniesz ZAPISZ.</span></div>
+        <div class="cms-decor-live-stage${sourceEl?.matches?.('.command')?' cms-decor-live-stage-command':''}" data-decor-live-stage>
+          <div class="cms-decor-live-source-host" data-decor-source-host></div>
+          <div class="cms-decor-live-fallback" data-decor-live-fallback data-cms-decor-id="preview-fallback" ${sourceEl?'hidden':''}>
+            <div class="cms-decor-live-fake-copy"><strong>${esc(item.label||'KAFELEK')}</strong><span>Podgląd położenia grafiki</span></div>
+          </div>
+        </div>
         <div class="cms-decor-live-sliders">
           ${slider('offsetX','POZYCJA X',-500,500,1,Number(current.offsetX||0),' px')}
           ${slider('offsetY','POZYCJA Y',-500,500,1,Number(current.offsetY||0),' px')}
@@ -2308,17 +2317,88 @@
       const form=$('#cms-page-decor-form',modal);
       bindImageFileFields(form,fields);
 
-      const liveImg=$('[data-decor-live-img]',form);
       const liveStage=$('[data-decor-live-stage]',form);
+      const sourceHost=$('[data-decor-source-host]',form);
+      const fallbackRoot=$('[data-decor-live-fallback]',form);
+      let liveRoot=null;
+      let liveImg=null;
+
+      const sanitizePreviewClone=(source,clone)=>{
+        const sourceRect=source.getBoundingClientRect();
+        const sourceStyle=getComputedStyle(source);
+        clone.classList.add('cms-decor-preview-source');
+        clone.classList.remove('cms-has-decor-graphic','cms-layout-editable','cms-layout-selected','cms-layout-free-drag','cms-layout-applied','cms-layout-sized');
+        clone.querySelectorAll('.cms-decor-graphic').forEach(node=>node.remove());
+        clone.querySelectorAll('script').forEach(node=>node.remove());
+        clone.querySelectorAll('iframe,video,audio').forEach(media=>{
+          const box=document.createElement('div');
+          box.className='cms-decor-preview-media-placeholder';
+          const r=media.getBoundingClientRect();
+          box.style.width=`${Math.max(80,Math.round(r.width||260))}px`;
+          box.style.height=`${Math.max(54,Math.round(r.height||140))}px`;
+          if(media.tagName==='VIDEO'&&media.getAttribute('poster')) box.style.backgroundImage=`url("${String(media.getAttribute('poster')).replace(/"/g,'\\"')}")`;
+          media.replaceWith(box);
+        });
+        [clone,...clone.querySelectorAll('*')].forEach(node=>{
+          if(!(node instanceof Element)) return;
+          [...node.attributes].forEach(attr=>{ if(/^on/i.test(attr.name)) node.removeAttribute(attr.name); });
+          node.removeAttribute('id');
+          node.removeAttribute('contenteditable');
+          node.removeAttribute('draggable');
+          if(node.matches('input,select,textarea')) node.removeAttribute('name');
+          if(node.matches('button')) node.setAttribute('type','button');
+          if(node.matches('a')) { node.removeAttribute('href'); node.removeAttribute('target'); }
+        });
+        clone.setAttribute('aria-hidden','true');
+        clone.setAttribute('inert','');
+        clone.style.setProperty('width',`${Math.max(220,Math.round(sourceRect.width||420))}px`);
+        clone.style.setProperty('max-width','100%');
+        clone.style.setProperty('box-sizing','border-box');
+        clone.style.setProperty('margin','0');
+        clone.style.setProperty('translate','0 0');
+        clone.style.removeProperty('order');
+        // Kopiujemy najważniejsze cechy powierzchni źródłowego kafelka. Dzięki temu
+        // również elementy zależne od kontekstu rodzica wyglądają jak na stronie.
+        ['background','background-color','background-image','border','border-radius','box-shadow','color','font-family','font-size','font-weight','line-height','padding','min-height'].forEach(prop=>{
+          const value=sourceStyle.getPropertyValue(prop);
+          if(value) clone.style.setProperty(prop,value);
+        });
+        return clone;
+      };
+
+      if(sourceEl&&sourceHost){
+        const cloneEl=sanitizePreviewClone(sourceEl,sourceEl.cloneNode(true));
+        sourceHost.appendChild(cloneEl);
+        liveRoot=cloneEl;
+      } else {
+        liveRoot=fallbackRoot;
+        if(fallbackRoot) fallbackRoot.hidden=false;
+      }
+
+      if(liveRoot){
+        liveImg=document.createElement('img');
+        liveImg.className='cms-decor-graphic';
+        liveImg.alt='';
+        liveImg.setAttribute('aria-hidden','true');
+        if(current.url) liveImg.src=current.url;
+        liveRoot.appendChild(liveImg);
+      }
+
       const valueFor=name=>Number(form.elements[name]?.value || ((name==='scale'||name==='stretchX'||name==='stretchY')?100:name==='opacity'?18:0));
       const updateLive=()=>{
-        if(!liveImg||!liveStage) return;
+        if(!liveRoot||!liveImg||!liveStage) return;
         const mode=String(form.elements.mode?.value||item.defaultMode||'theme');
         const x=valueFor('offsetX'), y=valueFor('offsetY'), rot=valueFor('rotation'), scale=valueFor('scale'), stretchX=valueFor('stretchX'), stretchY=valueFor('stretchY'), opacity=valueFor('opacity');
-        liveImg.classList.toggle('cms-decor-preview-theme',mode!=='normal');
-        liveImg.classList.toggle('cms-decor-preview-normal',mode==='normal');
-        liveImg.style.transform=`translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rot}deg) scale(${Math.max(.05,scale/100)}) scaleX(${Math.max(.1,stretchX/100)}) scaleY(${Math.max(.1,stretchY/100)})`;
-        liveImg.style.opacity=String(Math.max(.01,Math.min(1,opacity/100)));
+        liveImg.classList.toggle('cms-decor-mode-theme',mode!=='normal');
+        liveImg.classList.toggle('cms-decor-mode-normal',mode==='normal');
+        liveRoot.style.setProperty('--cms-decor-offset-x',`${x}px`);
+        liveRoot.style.setProperty('--cms-decor-offset-y',`${y}px`);
+        liveRoot.style.setProperty('--cms-decor-rotation',`${rot}deg`);
+        liveRoot.style.setProperty('--cms-decor-scale',`${Math.max(.05,scale/100)}`);
+        liveRoot.style.setProperty('--cms-decor-stretch-x',`${Math.max(.1,stretchX/100)}`);
+        liveRoot.style.setProperty('--cms-decor-stretch-y',`${Math.max(.1,stretchY/100)}`);
+        liveRoot.style.setProperty('--cms-decor-opacity',`${Math.max(.01,Math.min(1,opacity/100))}`);
+        liveRoot.classList.toggle('cms-has-decor-graphic',Boolean(liveImg.getAttribute('src')));
         ['offsetX','offsetY','rotation','scale','stretchX','stretchY','opacity'].forEach(name=>{
           const out=form.querySelector(`[data-live-value="${name}"]`);
           if(out){const suffix=name==='rotation'?'°':(['scale','stretchX','stretchY','opacity'].includes(name)?'%':' px');out.textContent=`${valueFor(name)}${suffix}`;}
@@ -2354,6 +2434,7 @@
       },0));
       form.querySelector('[data-cms-image-field="image"] [data-image-remove]')?.addEventListener('click',()=>{
         if(liveImg) liveImg.removeAttribute('src');
+        updateLive();
       });
       updateLive();
 
