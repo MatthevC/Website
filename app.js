@@ -1169,16 +1169,10 @@ function dixperPage() {
   const clipParent = location.hostname || "matthevc.github.io";
   const clipsHtml = clips.map((clip, index) => `
     <article class="dixper-clip-card" data-dixper-clip data-clip-slug="${clip.slug}" data-clip-channel="${clip.channel}">
-      <div class="dixper-clip-placeholder dixper-clip-preview" data-dixper-clip-slot>
-        <iframe
-          class="dixper-clip-preview-frame"
-          src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip.slug)}&parent=${encodeURIComponent(clipParent)}&autoplay=false&muted=true"
-          title="Miniatura klipu Twitch — ${clip.channel}"
-          loading="lazy"
-          tabindex="-1"
-          aria-hidden="true"
-          allow="fullscreen">
-        </iframe>
+      <div class="dixper-clip-placeholder dixper-clip-preview" data-dixper-clip-slot data-clip-url="${clip.url}">
+        <div class="dixper-clip-static-preview" data-dixper-thumbnail aria-hidden="true">
+          <span class="dixper-clip-static-brand">TWITCH CLIP</span>
+        </div>
         <button type="button" class="dixper-clip-preview-cover" data-dixper-play aria-label="Odtwórz klip ${index + 1} od ${clip.channel}">
           <span class="dixper-preview-play">▶</span>
           <span class="dixper-preview-copy">
@@ -1311,6 +1305,27 @@ function setupDixperPage() {
   const parent = location.hostname || "matthevc.github.io";
   let activeCard = null;
 
+  async function hydrateClipThumbnail(card) {
+    const slot = card?.querySelector('[data-dixper-clip-slot]');
+    const thumb = slot?.querySelector('[data-dixper-thumbnail]');
+    const url = slot?.dataset.clipUrl;
+    if (!slot || !thumb || !url || slot.dataset.thumbnailTried === '1') return;
+    slot.dataset.thumbnailTried = '1';
+    try {
+      const endpoint = `https://clips.twitch.tv/oembed?url=${encodeURIComponent(url)}`;
+      const response = await fetch(endpoint, { mode:'cors', credentials:'omit' });
+      if (!response.ok) return;
+      const data = await response.json();
+      const image = String(data?.thumbnail_url || '').trim();
+      if (!image) return;
+      thumb.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.18)), url("${image.replace(/"/g, '%22')}")`;
+      thumb.classList.add('has-thumbnail');
+      if (!card.classList.contains('playing')) slot.dataset.originalMarkup = slot.innerHTML;
+    } catch (_) {
+      // Brak miniatury nie jest błędem strony — pozostaje lekki placeholder bez playera.
+    }
+  }
+
   function resetCard(card) {
     const slot = card?.querySelector("[data-dixper-clip-slot]");
     if (!slot || !slot.dataset.originalMarkup) return;
@@ -1346,6 +1361,7 @@ function setupDixperPage() {
     const slot = card.querySelector("[data-dixper-clip-slot]");
     if (slot) slot.dataset.originalMarkup = slot.innerHTML;
     bindPlayButton(card);
+    hydrateClipThumbnail(card);
   });
 }
 
@@ -3769,8 +3785,8 @@ document.addEventListener("click", function(e) {
 
 
 /* Global sidebar navigation helper.
-   Aktywny punkt zmienia się wyłącznie po kliknięciu — zwykłe scrollowanie
-   nie przełącza podświetlenia bocznej nawigacji. */
+   Kliknięcie przewija do sekcji, a scroll-spy poniżej aktualizuje aktywny punkt
+   podczas ręcznego przewijania strony. */
 (function setupUniversalSidebarClickAssist(){
   const selectors = [
     '[data-dixper-target]',
@@ -3794,6 +3810,75 @@ document.addEventListener("click", function(e) {
   bind();
 })();
 
+
+
+
+/* === v2.6.11 — SCROLL-SPY DLA WSZYSTKICH BOCZNYCH NAWIGACJI ===
+   Użytkownik zmienił wymaganie: aktywna pozycja ma teraz śledzić sekcję podczas
+   ręcznego scrollowania. Działa również po portalowaniu nawigacji do <body>. */
+(function setupUniversalSidebarScrollSpy(){
+  const configs = [
+    { nav: '.dixper-toc', link: '[data-dixper-target]', attr: 'dixperTarget', progress: '[data-dixper-progress]' },
+    { nav: '.bingo-toc', link: '[data-bingo-target]', attr: 'bingoTarget', progress: '[data-bingo-progress]' },
+    { nav: '.emotes7tv-toc', link: '[data-emotes7tv-target]', attr: 'emotes7tvTarget', progress: '[data-emotes7tv-progress]' },
+    { nav: '.recommended-toc', link: '[data-recommended-target]', attr: 'recommendedTarget', progress: '[data-recommended-progress]' },
+    { nav: '.site-page-toc', link: '[data-site-page-target]', attr: 'sitePageTarget', progress: '[data-site-page-progress]' }
+  ];
+  const HEADER_OFFSET = 138;
+  let raf = 0;
+
+  function targetId(link, cfg){
+    return link?.dataset?.[cfg.attr] || '';
+  }
+
+  function updateNav(nav, cfg){
+    const links = [...nav.querySelectorAll(cfg.link)];
+    if (!links.length) return;
+    const pairs = links.map(link => ({ link, id: targetId(link, cfg), section: document.getElementById(targetId(link, cfg)) }))
+      .filter(item => item.id && item.section && item.section.offsetParent !== null);
+    if (!pairs.length) return;
+
+    // Wybieramy ostatnią sekcję, której początek minął linię pod nagłówkiem.
+    // Gdy jesteśmy jeszcze przed pierwszą sekcją, aktywna pozostaje pierwsza.
+    let active = pairs[0];
+    for (const item of pairs) {
+      const rect = item.section.getBoundingClientRect();
+      if (rect.top <= HEADER_OFFSET) active = item;
+      else break;
+    }
+
+    // Na samym dole dokumentu wymuszamy ostatnią sekcję — zapobiega sytuacji,
+    // gdy bardzo krótka ostatnia sekcja nigdy nie przejdzie przez linię offsetu.
+    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6;
+    if (atBottom) active = pairs[pairs.length - 1];
+
+    links.forEach(link => link.classList.toggle('active', link === active.link));
+    const progress = nav.querySelector(cfg.progress);
+    if (progress) {
+      const idx = pairs.findIndex(item => item.link === active.link);
+      progress.style.height = `${((idx + 1) / pairs.length) * 100}%`;
+    }
+    active.link?.scrollIntoView?.({ block:'nearest', inline:'nearest', behavior:'auto' });
+  }
+
+  function update(){
+    raf = 0;
+    configs.forEach(cfg => {
+      document.querySelectorAll(cfg.nav).forEach(nav => updateNav(nav, cfg));
+    });
+  }
+
+  function schedule(){
+    if (raf) return;
+    raf = requestAnimationFrame(update);
+  }
+
+  window.addEventListener('scroll', schedule, { passive:true });
+  window.addEventListener('resize', schedule, { passive:true });
+  window.addEventListener('hashchange', () => setTimeout(schedule, 0));
+  new MutationObserver(schedule).observe(document.body, { childList:true, subtree:true });
+  schedule();
+})();
 
 /* Trwałe boczne nawigacje — wersja odporna na edytor UKŁAD.
    WAŻNE: edytor układu używa CSS `translate` na dowolnych kontenerach.

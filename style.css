@@ -3008,6 +3008,39 @@ button, a { -webkit-tap-highlight-color: transparent; }
   pointer-events: none;
 }
 
+
+/* v2.6.11: lekki podgląd bez uruchamiania 4 instancji Twitch/IVS Player.
+   Prawdziwy iframe powstaje dopiero po kliknięciu konkretnego klipu. */
+.dixper-clip-static-preview {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 78% 28%, rgba(145,71,255,.24), transparent 34%),
+    linear-gradient(135deg, #17121f, #08090c 60%, #131018);
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.01);
+}
+.dixper-clip-static-preview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.32));
+}
+.dixper-clip-static-preview.has-thumbnail {
+  background-size: cover;
+  background-position: center;
+}
+.dixper-clip-static-brand {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  z-index: 1;
+  color: rgba(255,255,255,.74);
+  font: 800 10px Rajdhani,sans-serif;
+  letter-spacing: .12em;
+}
+
 .dixper-clip-preview-cover {
   position: absolute;
   inset: 0;
