@@ -2911,7 +2911,6 @@ function eventCard(event) {
         <p>${escapeHtml(event.excerpt)}</p>
         <div class="event-actions">
           <a class="event-read" href="#/events/${encodeURIComponent(event.id)}">CZYTAJ CAŁOŚĆ →</a>
-          ${event.fallback ? "" : `<button class="edit-event-btn" data-id="${escapeHtml(event.id)}" ${window.mattHasPermission?.('events.edit') ? "" : "hidden"}>✎ EDYTUJ POST</button><button class="delete-event-btn" data-id="${escapeHtml(event.id)}" data-title="${escapeHtml(event.title)}" ${window.mattHasPermission?.('events.delete') ? "" : "hidden"}>🗑 USUŃ</button>`}
         </div>
 
       </div>
@@ -3150,13 +3149,6 @@ function setupDownloadsPage() {
   });
 }
 
-function updateEventAdminButton(isAdmin) {
-  const btn = document.getElementById("addEventButton");
-  if (!btn) return;
-  btn.hidden = !isAdmin;
-  btn.style.display = isAdmin ? "inline-flex" : "none";
-  btn.style.visibility = isAdmin ? "visible" : "hidden";
-}
 
 async function renderEvents() {
   const events = await loadEvents();
@@ -3205,7 +3197,7 @@ async function renderEventDetail(id) {
           <span>OPUBLIKOWANO</span>
           ${formatDate(event.publishDate)}<div class="event-time"><span>🕒</span> ${formatTime(event.publishDate)}</div>
         </div>
-        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1><div class="detailEditEventSlot" data-event-id="${escapeHtml(event.id)}" data-event-title="${escapeHtml(event.title)}"></div></div>
+        <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1></div>
         
         ${event.mainImage ? `<div class="event-detail-image"><img style="object-fit:${event.mainImageFit || "contain"};object-position:center" src="${escapeHtml(event.mainImage)}" alt="${escapeHtml(event.title)}"></div>` : ""}
         <div class="event-dates-box">
@@ -3436,7 +3428,6 @@ async function render() {
       <div class="container content-wrap events-page">
         <div class="section-heading events-heading">
           <div><h2>NAJNOWSZE EVENTY</h2></div>
-          <button class="admin-add-event" id="addEventButton" hidden>+ DODAJ EVENT</button>
           <p>Najnowsze wpisy na górze</p>
         </div>
 
@@ -3479,7 +3470,6 @@ async function render() {
     `;
     await renderEvents();
     if (window.MattCMS) window.MattCMS.applyRoute(path);
-    updateEventAdminButton(window.mattHasPermission?.('events.create') === true);
     updateLinks();
     setupContactForm();
     setupImagePreview();
@@ -3781,7 +3771,6 @@ window.addEventListener("matt-auth-change", (e) => {
   window.currentUserIsAdmin = e.detail?.isAdmin === true;
   if (e.detail?.role) window.currentUserRole = e.detail.role;
   if (Array.isArray(e.detail?.permissions)) window.currentUserPermissions = e.detail.permissions;
-  updateEventAdminButton(window.mattHasPermission?.('events.create') === true);
 });
 
 

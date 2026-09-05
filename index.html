@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Oficjalna strona społeczności kanału Twitch. Regulaminy, komendy, VIP, moderacja, Discord i eventy.">
   <title>MatthevC — Centrum społeczności</title>
-  <link rel="stylesheet" href="style.css?v=79">
+  <link rel="stylesheet" href="style.css?v=80">
 </head>
 <body>
   <header class="site-header">
@@ -205,9 +205,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script src="cms.js?v=72"></script>
-<script src="app.js?v=76"></script>
+<script src="app.js?v=77"></script>
 <script src="auth-ui.js?v=11"></script>
-<script src="cms-admin.js?v=76"></script>
+<script src="cms-admin.js?v=77"></script>
 
 <div id="loginModal" class="login-overlay" style="display:none">
 <div class="login-modal">
@@ -226,95 +226,6 @@
 <button id="resetSend" class="login-submit">WYŚLIJ RESET HASŁA</button>
 </div>
 </div></div>
-
-<div id="eventModal" class="event-overlay" style="display:none">
-<div class="event-modal">
-<button id="closeEvent" class="login-close">×</button>
-<h2>DODAJ NOWY EVENT</h2>
-<div class="event-form-modern">
-<label>Nazwa wydarzenia:<small>Widoczna nazwa eventu.</small></label>
-<input id="eventTitle" placeholder="Nazwa eventu">
-
-<label>Data rozpoczęcia:<small>Początek wydarzenia.</small></label>
-<div class="datetime-field">
-<div class="input-icon"><input id="eventStart" type="date"><button type="button" class="picker-icon date-trigger">📅</button></div>
-<div class="input-icon"><input id="eventStartTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger">🕒</button></div>
-</div>
-
-<label>Data zakończenia:<small>Koniec wydarzenia.</small></label>
-<div class="datetime-field">
-<div class="input-icon"><input id="eventEnd" type="date"><button type="button" class="picker-icon date-trigger">📅</button></div>
-<div class="input-icon"><input id="eventEndTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger">🕒</button></div>
-<label class="event-ended-toggle"><input id="eventEndedManual" type="checkbox"> Zakończony</label>
-</div>
-
-<label>Data publikacji:<small>Kiedy wpis pojawi się na stronie.</small></label>
-<div class="datetime-field">
-<div class="input-icon"><input id="eventPublish" type="date"><button type="button" class="picker-icon date-trigger">📅</button></div>
-<div class="input-icon"><input id="eventPublishTime" type="time" value="00:00"><button type="button" class="picker-icon time-trigger">🕒</button></div>
-</div>
-
-<label>Grafika:<small>Wybierz plik z komputera.</small></label>
-<div class="file-upload-box">
-  <label class="custom-file-btn">📁 WYBIERZ GRAFIKĘ<input id="eventImage" type="file" accept="image/*" hidden></label>
-  <span id="eventImageName">Nie wybrano pliku</span>
-</div>
-<div id="eventImagePreview" class="event-image-preview" style="display:none"><img src="" alt="Podgląd grafiki"></div>
-
-<label>Opis:<small>Informacje dla społeczności.</small></label>
-<textarea id="eventDesc" placeholder="Opis eventu"></textarea>
-
-<button id="saveEvent" class="login-submit">DODAJ EVENT</button>
-<p id="eventMsg"></p>
-</div>
-</div>
-</div></div>
-
-
-<div id="editEventModal" class="event-overlay" style="display:none">
-<div class="event-modal">
-<button id="closeEditEvent" class="login-close">×</button>
-<h2>EDYTUJ EVENT</h2>
-<div class="event-fields">
-<input id="editEventId" type="hidden">
-<label class="edit-field-label">Tytuł wydarzenia</label>
-<input id="editEventTitle" placeholder="Nazwa eventu">
-
-<label class="edit-field-label">Data rozpoczęcia</label>
-<div class="edit-date-row"><input id="editEventStart" type="date"><input id="editEventStartTime" type="time"></div>
-
-<label class="edit-field-label">Data zakończenia</label>
-<div class="edit-date-row"><input id="editEventEnd" type="date"><input id="editEventEndTime" type="time"></div>
-
-<label class="edit-field-label">Data publikacji</label>
-<div class="edit-date-row"><input id="editEventPublish" type="date"><input id="editEventPublishTime" type="time"></div>
-<div class="file-upload-box edit-file-box">
-  <label class="custom-file-btn">📁 ZMIEŃ GRAFIKĘ<input id="editEventImage" type="file" accept="image/*" hidden></label>
-  <span id="editEventImageName">Nie wybrano nowej grafiki</span>
-</div>
-
-<div class="edit-image-previews">
-  <div class="edit-image-preview-card">
-    <h4>PODGLĄD AVATARA</h4>
-    <div class="event-image-preview edit-preview"><img id="editEventPreviewImg" src="" alt="Avatar"></div>
-  </div>
-  <div class="edit-image-preview-card">
-    <h4>PODGLĄD GRAFIKI GŁÓWNEJ</h4>
-    <div class="event-image-preview edit-preview"><img id="editMainPreviewImg" src="" alt="Grafika główna"></div>
-  </div>
-</div>
-
-<label class="edit-field-label">Sposób wyświetlania avatara</label>
-<select id="editEventImageFit" class="edit-select"><option value="contain">Dopasuj całość</option><option value="cover">Przytnij do ramki</option><option value="fill">Rozciągnij</option><option value="scale-down">Zmniejsz bez powiększania</option></select>
-
-<label class="edit-field-label">Sposób wyświetlania grafiki głównej</label>
-<select id="editEventMainImageFit" class="edit-select"><option value="contain">Dopasuj całość</option><option value="cover">Przytnij do ramki</option><option value="fill">Rozciągnij</option><option value="scale-down">Zmniejsz bez powiększania</option></select>
-
-<label class="edit-field-label">Opis wydarzenia<label class="edit-field-label">Opis wydarzenia</label><textarea id="editEventDesc" placeholder="Opis eventu"></textarea>
-<button id="saveEditEvent" class="login-submit">ZAPISZ ZMIANY</button>
-<p id="editEventMsg"></p>
-</div></div></div>
-<script src="event-admin.js?v=3"></script>
 
 <div id="idleLogoutModal" class="login-overlay" style="display:none">
  <div class="login-modal idle-warning">

@@ -420,6 +420,7 @@
     if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager, permission:'moderation.people.manage' };
     if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager, permission:'moderation.benefits.manage' };
     if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager, permission:'commands.manage' };
+    if (route === 'events' || route.startsWith('events/')) return { label: 'EVENTY', action: openEventsManager, permission:'events.any' };
     if (['viewer/downloads','downloads'].includes(route)) return { label: 'PLIKI DO POBRANIA', action: openDownloadsManager, permission:'downloads.any' };
     if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager, permission:'contact.topics.manage' };
     if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager, permission:'discord.channels.manage' };
@@ -431,6 +432,7 @@
   function canConfig(config) {
     if (!config) return false;
     if (config.permission === 'downloads.any') return any('downloads.create','downloads.edit','downloads.delete','downloads.reorder');
+    if (config.permission === 'events.any') return any('events.create','events.edit','events.delete');
     return has(config.permission);
   }
 
@@ -2931,6 +2933,249 @@
       const updateBannerPreview=()=>{const img=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img');if(img)img.style.objectFit=String(form.elements.fit?.value||'cover');};
       form.elements.fit?.addEventListener('change',updateBannerPreview);form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.addEventListener('change',()=>setTimeout(updateBannerPreview,0));updateBannerPreview();
       $('[data-back]',form)?.addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||'');const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,`naglowek-${route}`,`pages/${route}`);if(!url)throw new Error('Wybierz grafikę z dysku.');await window.MattCMS.save(bannerKey,{url,alt:String(form.elements.alt?.value||'Grafika podstrony').trim(),fit:String(form.elements.fit?.value||'cover')});notify('Grafika nagłówkowa została zapisana.');await rerender();}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
+    };
+
+    draw();
+  }
+
+
+  function eventAdminPad(value) { return String(value).padStart(2, '0'); }
+
+  function eventAdminSplitDateTime(value) {
+    if (!value) return { date:'', time:'' };
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return { date:'', time:'' };
+    return {
+      date:`${d.getFullYear()}-${eventAdminPad(d.getMonth()+1)}-${eventAdminPad(d.getDate())}`,
+      time:`${eventAdminPad(d.getHours())}:${eventAdminPad(d.getMinutes())}`
+    };
+  }
+
+  function eventAdminCombineDateTime(date, time) {
+    const d = String(date || '').trim();
+    if (!d) return null;
+    const t = String(time || '00:00').trim() || '00:00';
+    return `${d}T${t}:00`;
+  }
+
+  function eventAdminFormatDate(value) {
+    if (!value) return 'Brak daty';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Brak daty';
+    try { return new Intl.DateTimeFormat('pl-PL',{day:'numeric',month:'long',year:'numeric'}).format(d); }
+    catch (_) { return String(value); }
+  }
+
+  function eventAdminFormatTime(value) {
+    if (!value) return '--:--';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '--:--';
+    try { return new Intl.DateTimeFormat('pl-PL',{hour:'2-digit',minute:'2-digit',hour12:false}).format(d); }
+    catch (_) { return '--:--'; }
+  }
+
+  function eventAdminIsEnded(value) {
+    if (!value) return false;
+    const d = new Date(value);
+    return !Number.isNaN(d.getTime()) && d.getTime() <= Date.now();
+  }
+
+  async function eventAdminBackup(label) {
+    if (!window.MattCMS?.createBackup) throw new Error('Moduł backupu nie jest dostępny.');
+    return window.MattCMS.createBackup(label);
+  }
+
+  async function uploadEventImage(file, title, slot='event') {
+    validateCmsImage(file);
+    if (!window.supabaseClient) throw new Error('Brak połączenia z Supabase.');
+    const safeTitle = slugify(title || 'event').slice(0,48) || 'event';
+    const path = `${slot}-${safeTitle}-${cmsCompactStamp()}.${cmsImageExtension(file)}`;
+    const { error } = await window.supabaseClient.storage.from('events').upload(path, file, {
+      cacheControl:'3600', upsert:false, contentType:file.type || undefined
+    });
+    if (error) throw new Error(`Nie udało się wysłać grafiki eventu: ${error.message}`);
+    return window.supabaseClient.storage.from('events').getPublicUrl(path).data.publicUrl;
+  }
+
+  async function fetchEventRows() {
+    const { data, error } = await window.supabaseClient.from('events').select('*').order('start_date',{ascending:false});
+    if (error) throw new Error(error.message);
+    return Array.isArray(data) ? data : [];
+  }
+
+  function eventAdminRowToView(row) {
+    return {
+      id: row?.id || 'podglad-eventu',
+      title: row?.title || 'NOWY EVENT',
+      date: row?.start_date || null,
+      endDate: row?.end_date || null,
+      image: row?.image_url || '',
+      imageFit: row?.image_fit || 'contain',
+      mainImage: row?.main_image_url || row?.image_url || '',
+      mainImageFit: row?.main_image_fit || 'contain',
+      excerpt: String(row?.description || '').length > 150 ? String(row.description).slice(0,150) + '...' : String(row?.description || ''),
+      content: String(row?.description || ''),
+      publishDate: row?.publish_date || null
+    };
+  }
+
+  function eventAdminPreviewCard(row) {
+    const view = eventAdminRowToView(row);
+    if (typeof window.eventCard === 'function') return window.eventCard(view);
+    const ended = eventAdminIsEnded(row?.end_date);
+    return `<article class="event-card${ended?' event-ended':''}">
+      <div class="event-cover event-cover-image${ended?' event-cover-ended':''}">${view.image?`<img src="${window.MattCMS.escape(view.image)}" style="object-fit:${window.MattCMS.escape(view.imageFit)}" alt="">`:''}${ended?'<div class="event-ended-badge">ZAKOŃCZONY</div>':''}</div>
+      <div class="event-body"><div class="event-date">${eventAdminFormatDate(view.date)}</div><h2>${window.MattCMS.escape(view.title)}</h2><p>${window.MattCMS.escape(view.excerpt)}</p><div class="event-actions"><span class="event-read">CZYTAJ CAŁOŚĆ →</span></div></div>
+    </article>`;
+  }
+
+  function eventAdminPreviewDetail(row) {
+    const v = eventAdminRowToView(row);
+    return `<article class="page-panel event-detail-modern cms-event-detail-preview">
+      <div class="event-publish-top"><span>OPUBLIKOWANO</span>${eventAdminFormatDate(v.publishDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.publishDate)}</div></div>
+      <div class="event-title-admin-row"><h1>${window.MattCMS.escape(v.title)}</h1></div>
+      ${v.mainImage?`<div class="event-detail-image"><img src="${window.MattCMS.escape(v.mainImage)}" style="object-fit:${window.MattCMS.escape(v.mainImageFit)};object-position:center" alt=""></div>`:''}
+      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div><small>ZAKOŃCZENIE</small><strong>${eventAdminFormatDate(v.endDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.endDate)}</div></strong></div></div>
+      <div class="event-detail-description article-text">${window.MattCMS.escape(v.content || '').replace(/\n/g,'<br><br>')}</div>
+    </article>`;
+  }
+
+  function openEventsManager() {
+    if (!isAdmin() || !any('events.create','events.edit','events.delete')) return;
+    const esc = window.MattCMS.escape;
+    let rows = [];
+
+    const draw = async () => {
+      openModal('EVENTY', '<div class="cms-empty">Ładowanie eventów…</div>');
+      try { rows = await fetchEventRows(); }
+      catch (error) { openModal('EVENTY', `<div class="cms-empty">Nie udało się pobrać eventów.<br><br><strong>${esc(error.message)}</strong></div>`); return; }
+
+      openModal('EVENTY', `
+        <div class="cms-manager-actions">
+          <div class="cms-manager-action-group">${has('events.create')?'<button class="cms-primary" type="button" data-event-add>+ DODAJ EVENT</button>':''}</div>
+          <p>Eventy nadal wyglądają na stronie dokładnie tak jak wcześniej. Tutaj tylko przeniesiono ich dodawanie, edycję i usuwanie do wspólnego panelu administratora.</p>
+        </div>
+        <div class="cms-manager-list cms-events-manager-list">${rows.length ? rows.map((row,index)=>{
+          const ended=eventAdminIsEnded(row.end_date);
+          return `<article class="cms-manager-item cms-event-manager-item">
+            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ended?'ZAKOŃCZONY':'AKTYWNY'}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
+            <div>${has('events.edit')?`<button type="button" data-event-edit="${esc(row.id)}">EDYTUJ</button>`:''}<button type="button" data-event-view="${esc(row.id)}">PODGLĄD</button>${has('events.delete')?`<button class="danger" type="button" data-event-delete="${esc(row.id)}">USUŃ</button>`:''}</div>
+          </article>`;
+        }).join('') : '<div class="cms-empty">Nie ma jeszcze żadnych eventów w Supabase.</div>'}</div>
+      `);
+      const body=$('#cms-modal-body',modal);
+      $('[data-event-add]',body)?.addEventListener('click',()=>openEventForm(null));
+      $$('[data-event-edit]',body).forEach(btn=>btn.addEventListener('click',()=>openEventForm(rows.find(row=>String(row.id)===String(btn.dataset.eventEdit))||null)));
+      $$('[data-event-view]',body).forEach(btn=>btn.addEventListener('click',()=>openEventReadPreview(rows.find(row=>String(row.id)===String(btn.dataset.eventView))||null)));
+      $$('[data-event-delete]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const row=rows.find(item=>String(item.id)===String(btn.dataset.eventDelete));
+        if(!row || !has('events.delete')) return;
+        if(!confirm(`Usunąć event „${row.title||'Bez nazwy'}”? Przed usunięciem zostanie utworzony automatyczny backup.`)) return;
+        btn.disabled=true;
+        try {
+          await eventAdminBackup(`AUTO: przed usunięciem eventu — ${row.title||'event'}`);
+          const {error}=await window.supabaseClient.from('events').delete().eq('id',row.id);
+          if(error) throw error;
+          notify('Event został usunięty.');
+          if(currentRoute()===`events/${row.id}`){ location.hash='#/events'; return; }
+          if(typeof window.render==='function') await window.render();
+          await draw(); refreshToolbar();
+        } catch(error){ notify(`Nie udało się usunąć eventu: ${error.message}`,'error'); btn.disabled=false; }
+      }));
+    };
+
+    const openEventReadPreview = row => {
+      if(!row) return draw();
+      openModal('PODGLĄD EVENTU', `<div class="cms-manager-actions"><button type="button" data-back>← WRÓĆ DO EVENTÓW</button><p>Podgląd używa tych samych klas i układu co właściwa strona eventu.</p></div><div class="cms-event-preview-tabs"><button class="active" type="button" data-event-static-mode="card">KARTA NA LIŚCIE</button><button type="button" data-event-static-mode="detail">STRONA EVENTU</button></div><div class="cms-event-static-preview" data-event-static-preview>${eventAdminPreviewCard(row)}</div>`);
+      const body=$('#cms-modal-body',modal); $('[data-back]',body)?.addEventListener('click',draw);
+      $$('[data-event-static-mode]',body).forEach(btn=>btn.addEventListener('click',()=>{
+        $$('[data-event-static-mode]',body).forEach(x=>x.classList.toggle('active',x===btn));
+        const preview=$('[data-event-static-preview]',body); if(preview) preview.innerHTML=btn.dataset.eventStaticMode==='detail'?eventAdminPreviewDetail(row):eventAdminPreviewCard(row);
+      }));
+    };
+
+    const openEventForm = row => {
+      const editing=Boolean(row?.id);
+      if(editing && !has('events.edit')) return draw();
+      if(!editing && !has('events.create')) return draw();
+      const now=new Date();
+      const today=`${now.getFullYear()}-${eventAdminPad(now.getMonth()+1)}-${eventAdminPad(now.getDate())}`;
+      const nowTime=`${eventAdminPad(now.getHours())}:${eventAdminPad(now.getMinutes())}`;
+      const start=eventAdminSplitDateTime(row?.start_date);
+      const end=eventAdminSplitDateTime(row?.end_date);
+      const publish=eventAdminSplitDateTime(row?.publish_date);
+      const current={
+        title:row?.title||'', description:row?.description||'',
+        startDate:start.date, startTime:start.time||'00:00', endDate:end.date, endTime:end.time||'00:00',
+        publishDate:publish.date||today, publishTime:publish.time||nowTime,
+        image:row?.image_url||'', imageFit:row?.image_fit||'contain',
+        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain', endedNow:false
+      };
+      const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
+      const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
+      openModal(editing?'EDYTUJ EVENT':'DODAJ EVENT', `<form id="cms-event-form" class="cms-form cms-event-form">
+        <div class="cms-event-editor-layout">
+          <section class="cms-event-form-fields">
+            ${fieldHtml({name:'title',label:'Nazwa wydarzenia',required:true},current.title)}
+            <div class="cms-event-date-grid">${fieldHtml({name:'startDate',label:'Data rozpoczęcia',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina rozpoczęcia',type:'time'},current.startTime)}${fieldHtml({name:'endDate',label:'Data zakończenia',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina zakończenia',type:'time'},current.endTime)}${fieldHtml({name:'publishDate',label:'Data publikacji',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina publikacji',type:'time'},current.publishTime)}</div>
+            ${fieldHtml({name:'endedNow',label:'Oznacz jako zakończony teraz',type:'checkbox'},false)}
+            ${fieldHtml(imageField,current.image)}
+            ${fieldHtml({name:'imageFit',label:'Dopasowanie grafiki na liście',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}
+            ${fieldHtml(mainImageField,current.mainImage)}
+            ${fieldHtml({name:'mainImageFit',label:'Dopasowanie grafiki głównej',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}
+            ${fieldHtml({name:'description',label:'Opis wydarzenia',type:'textarea',required:true},current.description)}
+          </section>
+          <aside class="cms-event-live-panel"><div class="cms-event-live-head"><div><small>PODGLĄD NA ŻYWO</small><strong>Tak event będzie wyglądał na stronie</strong></div><span>Zmiany nie zapisują się, dopóki nie klikniesz ZAPISZ.</span></div><div class="cms-event-preview-tabs"><button class="active" type="button" data-event-preview-mode="card">KARTA NA LIŚCIE</button><button type="button" data-event-preview-mode="detail">STRONA EVENTU</button></div><div class="cms-event-live-preview" data-event-live-preview></div></aside>
+        </div>
+        <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button>${editing&&has('events.delete')?'<button class="danger" type="button" data-delete-current>USUŃ EVENT</button>':''}<button class="cms-primary" type="submit">${editing?'ZAPISZ ZMIANY':'DODAJ EVENT'}</button></div>
+      </form>`);
+      const form=$('#cms-event-form',modal); bindImageFileFields(form,[imageField,mainImageField]);
+      let previewMode='card';
+      const imageFromField = name => {
+        const wrap=form.querySelector(`[data-cms-image-field="${name}"]`); if(!wrap) return '';
+        const file=wrap.querySelector('[data-image-file]')?.files?.[0];
+        if(file) return wrap.querySelector('[data-image-preview] img')?.src || '';
+        return wrap.querySelector('[data-image-current]')?.value || '';
+      };
+      const currentPreviewRow=()=>{
+        const image=imageFromField('image'); const main=imageFromField('mainImage');
+        let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
+        if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+        return {
+          id:row?.id||'podglad-eventu', title:String(form.elements.title?.value||'NOWY EVENT'), description:String(form.elements.description?.value||''),
+          start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value), end_date:endDate,
+          publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),
+          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:String(form.elements.mainImageFit?.value||'contain')
+        };
+      };
+      const renderPreview=()=>{const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
+      form.addEventListener('input',renderPreview); form.addEventListener('change',()=>requestAnimationFrame(renderPreview));
+      $$('[data-event-preview-mode]',form).forEach(btn=>btn.addEventListener('click',()=>{previewMode=btn.dataset.eventPreviewMode==='detail'?'detail':'card';$$('[data-event-preview-mode]',form).forEach(x=>x.classList.toggle('active',x===btn));renderPreview();}));
+      $('[data-back]',form)?.addEventListener('click',draw);
+      $('[data-delete-current]',form)?.addEventListener('click',async()=>{
+        if(!row?.id || !has('events.delete')) return;
+        if(!confirm(`Usunąć event „${row.title||'Bez nazwy'}”?`)) return;
+        try{await eventAdminBackup(`AUTO: przed usunięciem eventu — ${row.title||'event'}`);const {error}=await window.supabaseClient.from('events').delete().eq('id',row.id);if(error)throw error;notify('Event usunięty.');if(currentRoute()===`events/${row.id}`){location.hash='#/events';return;}if(typeof window.render==='function')await window.render();await draw();refreshToolbar();}catch(error){notify(error.message,'error');}
+      });
+      form.addEventListener('submit',async e=>{
+        e.preventDefault(); const submit=$('button[type="submit"]',form); if(submit){submit.disabled=true;submit.textContent='ZAPISYWANIE…';}
+        try{
+          const title=String(form.elements.title?.value||'').trim(); const description=String(form.elements.description?.value||'').trim();
+          if(!title) throw new Error('Podaj nazwę eventu.'); if(!form.elements.startDate?.value) throw new Error('Podaj datę rozpoczęcia eventu.');
+          let image=imageFromField('image'), mainImage=imageFromField('mainImage');
+          const imageFile=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
+          const mainImageFile=form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
+          if(imageFile) image=await uploadEventImage(imageFile,title,'event');
+          if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
+          let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value); if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:String(form.elements.mainImageFit?.value||'contain')};
+          await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
+          const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
+          const {error}=await query; if(error) throw error;
+          notify(editing?'Event został zapisany.':'Event został dodany.'); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
+        }catch(error){notify(`Nie udało się zapisać eventu: ${error.message}`,'error');if(submit){submit.disabled=false;submit.textContent=editing?'ZAPISZ ZMIANY':'DODAJ EVENT';}}
+      });
+      renderPreview();
     };
 
     draw();
