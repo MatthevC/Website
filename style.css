@@ -9187,9 +9187,10 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 @media(max-width:760px){.cms-decor-live-head{display:grid}.cms-decor-live-head>span{text-align:left}.cms-decor-live-sliders{grid-template-columns:1fr}.cms-decor-live-stage{min-height:190px}}
 
 
-/* === v2.6.9 — NAWIGACJE BOCZNE PRZEZ CAŁĄ STRONĘ === */
-/* Slot zachowuje szerokość pierwszej kolumny siatki, gdy sama nawigacja
-   przechodzi w position:fixed. Dzięki temu treść nie przeskakuje. */
+/* === v2.6.10 — NAWIGACJE BOCZNE PRZEZ CAŁĄ STRONĘ === */
+/* Slot pozostaje w oryginalnej kolumnie. Na desktopie sama nawigacja jest
+   przenoszona do BODY, więc transform/translate/overflow rodziców nie może
+   ograniczyć position:fixed. */
 .matt-sidebar-sticky-slot {
   min-width: 0;
   width: 100%;
@@ -9207,20 +9208,56 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   box-sizing: border-box;
 }
 
-#app .matt-sidebar-fixed {
+/* Nie używamy #app w selektorze, bo fixed na desktopie jest portalowany do body. */
+body > .matt-sidebar-fixed {
   position: fixed !important;
   left: var(--matt-sidebar-left) !important;
   top: var(--matt-sidebar-top, 104px) !important;
   width: var(--matt-sidebar-width) !important;
   right: auto !important;
   bottom: auto !important;
-  z-index: 80 !important;
+  z-index: 9990 !important;
   max-height: calc(100vh - 128px) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
+  box-sizing: border-box !important;
 }
 
-/* Rodzice nie mogą przycinać bocznej nawigacji. */
+/* Zachowujemy czerwony wygląd aktywnego punktu również po przeniesieniu do body. */
+body > .matt-sidebar-fixed .dixper-toc-link,
+body > .matt-sidebar-fixed .site-page-toc-link,
+body > .matt-sidebar-fixed .recommended-toc-link {
+  position: relative;
+  border: 1px solid transparent;
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+body > .matt-sidebar-fixed .dixper-toc-link:hover,
+body > .matt-sidebar-fixed .site-page-toc-link:hover,
+body > .matt-sidebar-fixed .recommended-toc-link:hover {
+  color: #fff;
+  background: rgba(239,43,45,.07);
+  border-color: rgba(239,43,45,.14);
+}
+body > .matt-sidebar-fixed .dixper-toc-link.active,
+body > .matt-sidebar-fixed .site-page-toc-link.active,
+body > .matt-sidebar-fixed .recommended-toc-link.active {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(239,43,45,.24), rgba(239,43,45,.13)) !important;
+  border-color: rgba(239,43,45,.24) !important;
+  box-shadow: inset 3px 0 0 var(--red), 0 8px 24px rgba(0,0,0,.14) !important;
+  opacity: 1 !important;
+}
+body > .matt-sidebar-fixed .dixper-toc-link.active span,
+body > .matt-sidebar-fixed .site-page-toc-link.active span,
+body > .matt-sidebar-fixed .recommended-toc-link.active span {
+  color: #ff5b5d !important;
+}
+body > .matt-sidebar-fixed .dixper-toc-track span,
+body > .matt-sidebar-fixed .recommended-toc-track span {
+  background: linear-gradient(180deg, var(--red), #ff5b5d) !important;
+}
+
+/* Rodzice nadal pozostają overflow:visible dla naturalnego układu i mobile. */
 #app .dixper-reading-layout,
 #app .bingo-reading-layout,
 #app .site-page-nav-layout,
@@ -9238,7 +9275,12 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     width: 100%;
     align-self: auto;
   }
-  #app .matt-sidebar-fixed {
+  /* Na mobile JS wkłada nawigację z powrotem do slotu — pozostaje naturalny sticky. */
+  .matt-sidebar-sticky-slot > .dixper-toc,
+  .matt-sidebar-sticky-slot > .bingo-toc,
+  .matt-sidebar-sticky-slot > .site-page-toc,
+  .matt-sidebar-sticky-slot > .recommended-toc,
+  .matt-sidebar-sticky-slot > .emotes7tv-toc {
     position: sticky !important;
     left: auto !important;
     top: 72px !important;
@@ -9248,3 +9290,4 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
     overflow-y: hidden !important;
   }
 }
+

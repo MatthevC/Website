@@ -3795,62 +3795,130 @@ document.addEventListener("click", function(e) {
 })();
 
 
-/* Trwałe boczne nawigacje.
-   Na desktopie po dojściu do górnej krawędzi ekranu przechodzą w tryb fixed,
-   dzięki czemu nie kończą się razem z przypadkowym kontenerem nadrzędnym.
-   Aktywny punkt nadal zmienia się WYŁĄCZNIE po kliknięciu. */
+/* Trwałe boczne nawigacje — wersja odporna na edytor UKŁAD.
+   WAŻNE: edytor układu używa CSS `translate` na dowolnych kontenerach.
+   Taki transform tworzy nowy containing block i potrafi sprawić, że position:fixed
+   zachowuje się jak element przypięty do sekcji zamiast do viewportu.
+   Dlatego na desktopie aktywna boczna nawigacja jest portalowana bezpośrednio
+   do document.body, a w jej oryginalnym miejscu zostaje slot utrzymujący kolumnę. */
 (function setupPersistentSidebars(){
   const NAV_SELECTOR = '.dixper-toc, .bingo-toc, .site-page-toc, .recommended-toc, .emotes7tv-toc';
   const DESKTOP_MIN = 901;
   const TOP_OFFSET = 104;
+  const states = new WeakMap();
   let ticking = false;
 
-  function ensureSlot(nav){
-    if (!nav || nav.dataset.persistentSidebarReady === '1') return nav?.parentElement || null;
-    nav.dataset.persistentSidebarReady = '1';
-    const currentParent = nav.parentElement;
-    if (!currentParent) return null;
+  function makeState(nav){
+    let state = states.get(nav);
+    if (state?.slot?.isConnected) return state;
+
+    // Nawigacja przeniesiona wcześniej do body, ale jej slot zniknął po zmianie route.
+    if (nav.parentElement === document.body && state && !state.slot?.isConnected) {
+      nav.remove();
+      states.delete(nav);
+      return null;
+    }
+
+    const parent = nav.parentElement;
+    if (!parent || parent === document.body) return state || null;
+
     const slot = document.createElement('div');
     slot.className = 'matt-sidebar-sticky-slot';
     slot.dataset.sidebarSlot = '1';
-    currentParent.insertBefore(slot, nav);
+    parent.insertBefore(slot, nav);
     slot.appendChild(nav);
-    return slot;
+    nav.dataset.persistentSidebarReady = '1';
+    state = { slot };
+    states.set(nav, state);
+    return state;
   }
 
-  function resetNav(nav){
+  function clearFixedStyles(nav){
     nav.classList.remove('matt-sidebar-fixed');
     nav.style.removeProperty('--matt-sidebar-left');
     nav.style.removeProperty('--matt-sidebar-width');
     nav.style.removeProperty('--matt-sidebar-top');
   }
 
-  function updateOne(nav){
-    const slot = nav.closest('.matt-sidebar-sticky-slot') || ensureSlot(nav);
-    if (!slot) return;
+  function restoreNav(nav, state){
+    clearFixedStyles(nav);
+    if (state?.slot?.isConnected && nav.parentElement !== state.slot) {
+      state.slot.appendChild(nav);
+    }
+    if (state?.slot) {
+      state.slot.style.removeProperty('min-height');
+      state.slot.style.removeProperty('height');
+    }
+  }
 
+  function removeOrphan(nav, state){
+    if (state?.slot?.isConnected) return false;
+    clearFixedStyles(nav);
+    nav.remove();
+    states.delete(nav);
+    return true;
+  }
+
+  function updateOne(nav){
+    const state = states.get(nav) || makeState(nav);
+    if (!state) return;
+    if (removeOrphan(nav, state)) return;
+
+    const slot = state.slot;
+
+    // Na tabletach/telefonach wracamy do naturalnego sticky w drzewie #app.
     if (window.innerWidth < DESKTOP_MIN) {
-      resetNav(nav);
+      restoreNav(nav, state);
       return;
     }
 
     const slotRect = slot.getBoundingClientRect();
     const shouldFix = slotRect.top <= TOP_OFFSET;
+
     if (!shouldFix) {
-      resetNav(nav);
+      restoreNav(nav, state);
       return;
     }
 
-    const width = Math.max(140, slotRect.width || nav.getBoundingClientRect().width || 220);
-    nav.style.setProperty('--matt-sidebar-left', `${Math.round(slotRect.left)}px`);
+    // Zanim przeniesiemy nawigację do body, zachowujemy jej wysokość i szerokość
+    // w slocie. Grid nie zapada się, a lewa pozycja pozostaje stabilna.
+    if (nav.parentElement === slot) {
+      const navRect = nav.getBoundingClientRect();
+      const navHeight = Math.max(1, Math.ceil(navRect.height));
+      slot.style.minHeight = `${navHeight}px`;
+    }
+
+    const freshSlotRect = slot.getBoundingClientRect();
+    const width = Math.max(140, freshSlotRect.width || nav.getBoundingClientRect().width || 220);
+    nav.style.setProperty('--matt-sidebar-left', `${Math.round(freshSlotRect.left)}px`);
     nav.style.setProperty('--matt-sidebar-width', `${Math.round(width)}px`);
     nav.style.setProperty('--matt-sidebar-top', `${TOP_OFFSET}px`);
     nav.classList.add('matt-sidebar-fixed');
+
+    // Klucz naprawy: fixed musi być dzieckiem body, aby żaden translate/transform,
+    // overflow ani wysokość kontenera podstrony nie mógł go zatrzymać.
+    if (nav.parentElement !== document.body) document.body.appendChild(nav);
+  }
+
+  function cleanupOrphans(){
+    document.querySelectorAll(`body > ${NAV_SELECTOR.split(',').map(s => `${s.trim()}.matt-sidebar-fixed`).join(', body > ')}`).forEach(nav => {
+      const state = states.get(nav);
+      if (!state?.slot?.isConnected) {
+        clearFixedStyles(nav);
+        nav.remove();
+        states.delete(nav);
+      }
+    });
   }
 
   function updateAll(){
     ticking = false;
-    document.querySelectorAll(NAV_SELECTOR).forEach(updateOne);
+    cleanupOrphans();
+    document.querySelectorAll(NAV_SELECTOR).forEach(nav => {
+      // Nie chwytamy starej nawigacji wiszącej w body bez aktywnego slotu.
+      if (nav.parentElement === document.body && !states.get(nav)?.slot?.isConnected) return;
+      updateOne(nav);
+    });
   }
 
   function schedule(){
@@ -3860,13 +3928,19 @@ document.addEventListener("click", function(e) {
   }
 
   function bind(){
-    document.querySelectorAll(NAV_SELECTOR).forEach(ensureSlot);
+    cleanupOrphans();
+    document.querySelectorAll(NAV_SELECTOR).forEach(nav => {
+      if (nav.parentElement !== document.body) makeState(nav);
+    });
     schedule();
   }
 
   window.addEventListener('scroll', schedule, {passive:true});
   window.addEventListener('resize', schedule);
-  window.addEventListener('hashchange', () => setTimeout(bind, 0));
+  window.addEventListener('hashchange', () => {
+    // Render podmienia #app. Stary portal zostanie usunięty po zniknięciu slotu.
+    setTimeout(bind, 0);
+  });
   new MutationObserver(bind).observe(document.body,{childList:true,subtree:true});
   bind();
 })();

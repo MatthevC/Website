@@ -961,6 +961,9 @@
 
   function isLayoutCandidate(el) {
     if (!el || !(el instanceof HTMLElement)) return false;
+    // Boczne nawigacje muszą być niezależne od transformacji edytora UKŁAD.
+    // Ich pozycją zarządza osobny mechanizm sticky/fixed w app.js.
+    if (el.matches?.('.dixper-toc,.bingo-toc,.site-page-toc,.recommended-toc,.emotes7tv-toc,.matt-sidebar-sticky-slot')) return false;
     if (el.closest('#cms-admin-toolbar,.cms-modal-backdrop,#cms-layout-designer,.login-overlay,.profile-modal,.account-management-modal,.user-menu')) return false;
     if (!el.closest('#app,.site-header,.site-footer')) return false;
     if (el.matches('script,style,link,meta,br,hr,input,textarea,select,option')) return false;
