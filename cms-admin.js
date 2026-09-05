@@ -2272,14 +2272,16 @@
     const editDecor = id => {
       const item=currentDecorItems().find(x=>x.id===id);
       if(!item) return draw();
-      const current=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[id]||{}, item.defaultMode) || decorOverrides[id] || { url:'', alt:'', mode:item.defaultMode||'theme', offsetX:0, offsetY:0, scale:100, rotation:0, opacity:item.defaultMode==='normal'?32:18 };
+      const current=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[id]||{}, item.defaultMode) || decorOverrides[id] || { url:'', alt:'', mode:item.defaultMode||'theme', offsetX:0, offsetY:0, scale:100, stretchX:100, stretchY:100, rotation:0, opacity:item.defaultMode==='normal'?32:18 };
       const fields=[
         {name:'image',label:'Grafika dekoracyjna',type:'image-file'},
         {name:'alt',label:'Opis grafiki (ALT)',help:'Opcjonalny opis — jeśli grafika ma być czysto dekoracyjna, możesz zostawić puste.'},
         {name:'mode',label:'Tryb kolorów',type:'select',options:[{value:'theme',label:'DOSTOSUJ KOLOR DO STRONY (czerwony)'},{value:'normal',label:'NORMALNE KOLORY'}],help:'Tryb czerwony automatycznie dopasowuje obraz do stylistyki strony.'},
         {name:'offsetX',label:'Przesunięcie poziome X (px)',type:'number',help:'Możesz wpisać również wartość poza zakresem suwaka.'},
         {name:'offsetY',label:'Przesunięcie pionowe Y (px)',type:'number',help:'Możesz wpisać również wartość poza zakresem suwaka.'},
-        {name:'scale',label:'Powiększenie (%)',type:'number',help:'Powiększając i przesuwając obraz możesz pokazać tylko jego wybrany fragment.'},
+        {name:'scale',label:'Zoom / przybliżenie (%)',type:'number',help:'Poniżej 100% oddala grafikę, powyżej 100% ją przybliża.'},
+        {name:'stretchX',label:'Rozciągnięcie poziome X (%)',type:'number',help:'100% = naturalne proporcje. Większa wartość rozciąga grafikę na boki.'},
+        {name:'stretchY',label:'Rozciągnięcie pionowe Y (%)',type:'number',help:'100% = naturalne proporcje. Większa wartość rozciąga grafikę w górę i w dół.'},
         {name:'rotation',label:'Obrót (stopnie)',type:'number',help:'Pole liczbowe pozwala wpisać dowolny kąt, np. -725°, 45° albo 1080°.'},
         {name:'opacity',label:'Widoczność (%)',type:'number',help:'Im niższa wartość, tym subtelniej grafika będzie widoczna pod treścią.'}
       ];
@@ -2291,8 +2293,15 @@
           ${slider('offsetX','POZYCJA X',-500,500,1,Number(current.offsetX||0),' px')}
           ${slider('offsetY','POZYCJA Y',-500,500,1,Number(current.offsetY||0),' px')}
           ${slider('rotation','OBRÓT',-360,360,1,Number(current.rotation||0),'°')}
-          ${slider('scale','POWIĘKSZENIE',20,300,1,Number(current.scale||100),'%')}
+          ${slider('scale','ZOOM / PRZYBLIŻENIE',10,400,1,Number(current.scale||100),'%')}
+          ${slider('stretchX','ROZCIĄGNIĘCIE X',20,400,1,Number(current.stretchX||100),'%')}
+          ${slider('stretchY','ROZCIĄGNIĘCIE Y',20,400,1,Number(current.stretchY||100),'%')}
           ${slider('opacity','WIDOCZNOŚĆ',1,100,1,Number(current.opacity||18),'%')}
+        </div>
+        <div class="cms-decor-live-quick">
+          <button type="button" data-live-zoom="-10">− ODDAL 10%</button>
+          <button type="button" data-live-zoom="10">+ PRZYBLIŻ 10%</button>
+          <button type="button" data-live-reset-shape>↶ PROPORCJE 100%</button>
         </div>
       </section>`;
       openModal('GRAFIKA KAFELKA / DYMKA',`<form id="cms-page-decor-form" class="cms-form"><div class="cms-form-context">Edytujesz: <strong>${esc(item.label||id)}</strong></div>${livePreview}${fields.map(f=>fieldHtml(f,f.name==='image'?(current.url||''):current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-remove ${Object.prototype.hasOwnProperty.call(decorOverrides,id)?'':'disabled'}>USUŃ GRAFIKĘ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
@@ -2301,18 +2310,18 @@
 
       const liveImg=$('[data-decor-live-img]',form);
       const liveStage=$('[data-decor-live-stage]',form);
-      const valueFor=name=>Number(form.elements[name]?.value || (name==='scale'?100:name==='opacity'?18:0));
+      const valueFor=name=>Number(form.elements[name]?.value || ((name==='scale'||name==='stretchX'||name==='stretchY')?100:name==='opacity'?18:0));
       const updateLive=()=>{
         if(!liveImg||!liveStage) return;
         const mode=String(form.elements.mode?.value||item.defaultMode||'theme');
-        const x=valueFor('offsetX'), y=valueFor('offsetY'), rot=valueFor('rotation'), scale=valueFor('scale'), opacity=valueFor('opacity');
+        const x=valueFor('offsetX'), y=valueFor('offsetY'), rot=valueFor('rotation'), scale=valueFor('scale'), stretchX=valueFor('stretchX'), stretchY=valueFor('stretchY'), opacity=valueFor('opacity');
         liveImg.classList.toggle('cms-decor-preview-theme',mode!=='normal');
         liveImg.classList.toggle('cms-decor-preview-normal',mode==='normal');
-        liveImg.style.transform=`translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rot}deg) scale(${Math.max(.05,scale/100)})`;
+        liveImg.style.transform=`translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rot}deg) scale(${Math.max(.05,scale/100)}) scaleX(${Math.max(.1,stretchX/100)}) scaleY(${Math.max(.1,stretchY/100)})`;
         liveImg.style.opacity=String(Math.max(.01,Math.min(1,opacity/100)));
-        ['offsetX','offsetY','rotation','scale','opacity'].forEach(name=>{
+        ['offsetX','offsetY','rotation','scale','stretchX','stretchY','opacity'].forEach(name=>{
           const out=form.querySelector(`[data-live-value="${name}"]`);
-          if(out){const suffix=name==='rotation'?'°':(name==='scale'||name==='opacity'?'%':' px');out.textContent=`${valueFor(name)}${suffix}`;}
+          if(out){const suffix=name==='rotation'?'°':(['scale','stretchX','stretchY','opacity'].includes(name)?'%':' px');out.textContent=`${valueFor(name)}${suffix}`;}
           const range=form.querySelector(`[data-live-slider="${name}"]`);
           if(range){const n=valueFor(name), min=Number(range.min), max=Number(range.max);range.value=String(Math.max(min,Math.min(max,n)));}
         });
@@ -2322,7 +2331,20 @@
         if(form.elements[name]) form.elements[name].value=range.value;
         updateLive();
       }));
-      ['offsetX','offsetY','rotation','scale','opacity'].forEach(name=>form.elements[name]?.addEventListener('input',updateLive));
+      ['offsetX','offsetY','rotation','scale','stretchX','stretchY','opacity'].forEach(name=>form.elements[name]?.addEventListener('input',updateLive));
+      $$('[data-live-zoom]',form).forEach(btn=>btn.addEventListener('click',()=>{
+        const input=form.elements.scale;
+        if(!input) return;
+        const next=Math.max(5,Math.min(800,Number(input.value||100)+Number(btn.dataset.liveZoom||0)));
+        input.value=String(next);
+        updateLive();
+      }));
+      $('[data-live-reset-shape]',form)?.addEventListener('click',()=>{
+        if(form.elements.scale) form.elements.scale.value='100';
+        if(form.elements.stretchX) form.elements.stretchX.value='100';
+        if(form.elements.stretchY) form.elements.stretchY.value='100';
+        updateLive();
+      });
       form.elements.mode?.addEventListener('change',updateLive);
       const fileInput=form.querySelector('[data-cms-image-field="image"] [data-image-file]');
       fileInput?.addEventListener('change',()=>setTimeout(()=>{
@@ -2358,6 +2380,8 @@
             offsetX:form.elements.offsetX?.value,
             offsetY:form.elements.offsetY?.value,
             scale:form.elements.scale?.value,
+            stretchX:form.elements.stretchX?.value,
+            stretchY:form.elements.stretchY?.value,
             rotation:form.elements.rotation?.value,
             opacity:form.elements.opacity?.value
           }, item.defaultMode) || { url };

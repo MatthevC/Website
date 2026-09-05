@@ -341,6 +341,8 @@
       offsetX: num(item.offsetX, 0, -1500, 1500),
       offsetY: num(item.offsetY, 0, -1500, 1500),
       scale: num(item.scale, 100, 5, 800),
+      stretchX: num(item.stretchX, 100, 10, 600),
+      stretchY: num(item.stretchY, 100, 10, 600),
       rotation: num(item.rotation, 0, -3600, 3600),
       opacity: num(item.opacity, mode === 'normal' ? 32 : 18, 1, 100)
     };
@@ -356,6 +358,8 @@
       el.style.removeProperty('--cms-decor-offset-y');
       el.style.removeProperty('--cms-decor-rotation');
       el.style.removeProperty('--cms-decor-scale');
+      el.style.removeProperty('--cms-decor-stretch-x');
+      el.style.removeProperty('--cms-decor-stretch-y');
       el.style.removeProperty('--cms-decor-opacity');
       const fallbackMode = el.dataset.cmsDecorDefaultMode || 'theme';
       const item = normalizeDecorGraphicItem(data[el.dataset.cmsDecorId] || {}, fallbackMode);
@@ -370,6 +374,8 @@
       el.style.setProperty('--cms-decor-offset-y', `${item.offsetY}px`);
       el.style.setProperty('--cms-decor-rotation', `${item.rotation}deg`);
       el.style.setProperty('--cms-decor-scale', `${item.scale / 100}`);
+      el.style.setProperty('--cms-decor-stretch-x', `${item.stretchX / 100}`);
+      el.style.setProperty('--cms-decor-stretch-y', `${item.stretchY / 100}`);
       el.style.setProperty('--cms-decor-opacity', `${item.opacity / 100}`);
       el.appendChild(img);
       el.classList.add('cms-has-decor-graphic');
