@@ -11,7 +11,9 @@
   let layoutDraggedId = null;
   let layoutFreeDrag = null;
   const TOOLBAR_COLLAPSE_KEY = 'matt_cms_toolbar_collapsed';
-  const TOOLBAR_POSITION_KEY = 'matt_cms_toolbar_position_v2';
+  const TOOLBAR_POSITION_KEY = 'matt_cms_toolbar_position_v3';
+  const TOOLBAR_POSITION_OLD_KEY = 'matt_cms_toolbar_position_v2';
+  const TOOLBAR_DOCK_SNAP = 34;
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -28,37 +30,77 @@
     applyToolbarState();
   }
 
+  function normalizeToolbarPosition(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+    const top = Number(raw.top);
+    if (!Number.isFinite(top)) return null;
+    if (raw.mode === 'dock-left' || raw.mode === 'dock-right') return { mode:raw.mode, top };
+    const left = Number(raw.left);
+    if (Number.isFinite(left)) return { mode:'free', left, top };
+    return null;
+  }
+
   function getToolbarPosition() {
     try {
-      const raw = JSON.parse(localStorage.getItem(TOOLBAR_POSITION_KEY) || 'null');
-      if (raw && Number.isFinite(raw.left) && Number.isFinite(raw.top)) return raw;
+      let raw = normalizeToolbarPosition(JSON.parse(localStorage.getItem(TOOLBAR_POSITION_KEY) || 'null'));
+      if (raw) return raw;
+      const old = normalizeToolbarPosition(JSON.parse(localStorage.getItem(TOOLBAR_POSITION_OLD_KEY) || 'null'));
+      if (old) return old;
     } catch (_) {}
     return null;
   }
 
   function saveToolbarPosition(left, top) {
-    try { localStorage.setItem(TOOLBAR_POSITION_KEY, JSON.stringify({ left:Math.round(left), top:Math.round(top) })); }
+    try { localStorage.setItem(TOOLBAR_POSITION_KEY, JSON.stringify({ mode:'free', left:Math.round(left), top:Math.round(top) })); }
+    catch (_) {}
+  }
+
+  function saveToolbarDock(side, top) {
+    const mode = side === 'right' ? 'dock-right' : 'dock-left';
+    try { localStorage.setItem(TOOLBAR_POSITION_KEY, JSON.stringify({ mode, top:Math.round(top) })); }
     catch (_) {}
   }
 
   function resetToolbarPosition() {
-    try { localStorage.removeItem(TOOLBAR_POSITION_KEY); } catch (_) {}
+    try {
+      localStorage.removeItem(TOOLBAR_POSITION_KEY);
+      localStorage.removeItem(TOOLBAR_POSITION_OLD_KEY);
+    } catch (_) {}
     applyToolbarState();
   }
 
   function applyToolbarPosition() {
     if (!toolbar) return;
     const pos = getToolbarPosition();
+    toolbar.classList.remove('cms-docked-left','cms-docked-right');
     toolbar.style.removeProperty('left');
     toolbar.style.removeProperty('top');
     toolbar.style.removeProperty('right');
     toolbar.style.removeProperty('bottom');
     if (!pos) return;
-    const rect = toolbar.getBoundingClientRect();
-    const maxLeft = Math.max(8, window.innerWidth - Math.max(48, rect.width) - 8);
-    const maxTop = Math.max(8, window.innerHeight - Math.max(48, rect.height) - 8);
-    const left = Math.max(8, Math.min(maxLeft, pos.left));
+
+    const maxTop = Math.max(8, window.innerHeight - Math.max(48, toolbar.offsetHeight) - 8);
     const top = Math.max(8, Math.min(maxTop, pos.top));
+
+    if (pos.mode === 'dock-left') {
+      toolbar.classList.add('cms-docked-left');
+      toolbar.style.left = '0px';
+      toolbar.style.right = 'auto';
+      toolbar.style.top = `${top}px`;
+      toolbar.style.bottom = 'auto';
+      return;
+    }
+    if (pos.mode === 'dock-right') {
+      toolbar.classList.add('cms-docked-right');
+      toolbar.style.right = '0px';
+      toolbar.style.left = 'auto';
+      toolbar.style.top = `${top}px`;
+      toolbar.style.bottom = 'auto';
+      return;
+    }
+
+    const maxLeft = Math.max(8, window.innerWidth - Math.max(48, toolbar.offsetWidth) - 8);
+    const left = Math.max(8, Math.min(maxLeft, Number(pos.left) || 8));
     toolbar.style.left = `${left}px`;
     toolbar.style.top = `${top}px`;
     toolbar.style.right = 'auto';
@@ -80,22 +122,46 @@
       const rect = toolbar.getBoundingClientRect();
       const dx = e.clientX - rect.left;
       const dy = e.clientY - rect.top;
+      let dockCandidate = null;
       toolbar.classList.add('cms-toolbar-dragging');
+      toolbar.classList.remove('cms-docked-left','cms-docked-right');
+
       const move = ev => {
-        const maxLeft = Math.max(8, window.innerWidth - toolbar.offsetWidth - 8);
-        const maxTop = Math.max(8, window.innerHeight - toolbar.offsetHeight - 8);
-        const left = Math.max(8, Math.min(maxLeft, ev.clientX - dx));
+        const width = toolbar.offsetWidth;
+        const height = toolbar.offsetHeight;
+        const maxLeft = Math.max(0, window.innerWidth - width);
+        const maxTop = Math.max(8, window.innerHeight - height - 8);
+        const desiredLeft = ev.clientX - dx;
         const top = Math.max(8, Math.min(maxTop, ev.clientY - dy));
-        toolbar.style.left = `${left}px`;
+
+        if (desiredLeft <= TOOLBAR_DOCK_SNAP) {
+          dockCandidate = 'left';
+          toolbar.style.left = '0px';
+        } else if (desiredLeft >= maxLeft - TOOLBAR_DOCK_SNAP) {
+          dockCandidate = 'right';
+          toolbar.style.left = `${maxLeft}px`;
+        } else {
+          dockCandidate = null;
+          toolbar.style.left = `${Math.max(8, Math.min(Math.max(8,maxLeft-8), desiredLeft))}px`;
+        }
         toolbar.style.top = `${top}px`;
         toolbar.style.right = 'auto';
         toolbar.style.bottom = 'auto';
+        toolbar.classList.toggle('cms-dock-preview-left', dockCandidate === 'left');
+        toolbar.classList.toggle('cms-dock-preview-right', dockCandidate === 'right');
       };
+
       const up = () => {
         document.removeEventListener('pointermove', move);
-        toolbar.classList.remove('cms-toolbar-dragging');
+        toolbar.classList.remove('cms-toolbar-dragging','cms-dock-preview-left','cms-dock-preview-right');
         const end = toolbar.getBoundingClientRect();
-        saveToolbarPosition(end.left, end.top);
+        if (dockCandidate) {
+          saveToolbarDock(dockCandidate, end.top);
+          applyToolbarPosition();
+          notify(`Pasek przypięty do ${dockCandidate === 'right' ? 'prawej' : 'lewej'} krawędzi.`);
+        } else {
+          saveToolbarPosition(end.left, end.top);
+        }
       };
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', up, { once:true });
@@ -622,7 +688,7 @@
     toolbar = document.createElement('div');
     toolbar.id = 'cms-admin-toolbar';
     toolbar.innerHTML = `
-      <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek w dowolne miejsce. Dwuklik przywraca położenie domyślne.">⠿</button>
+      <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek. Dosuń do lewej lub prawej krawędzi, aby go przypiąć. Dwuklik przywraca położenie domyślne.">⠿</button>
       <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>

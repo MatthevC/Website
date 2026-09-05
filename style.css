@@ -8275,6 +8275,23 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 #cms-admin-toolbar .cms-toolbar-toggle:hover,#cms-admin-toolbar .cms-toolbar-drag-handle:hover{background:#202126}
 #cms-admin-toolbar .cms-toolbar-drag-handle{cursor:grab;color:#aeb1bb;font-size:21px;touch-action:none}
 #cms-admin-toolbar.cms-toolbar-dragging .cms-toolbar-drag-handle{cursor:grabbing;color:#fff}
+#cms-admin-toolbar.cms-docked-left{
+  left:0!important;right:auto!important;border-left:0;border-radius:0 14px 14px 0
+}
+#cms-admin-toolbar.cms-docked-right{
+  right:0!important;left:auto!important;border-right:0;border-radius:14px 0 0 14px
+}
+#cms-admin-toolbar.cms-docked-right .cms-toolbar-drag-handle{order:999}
+#cms-admin-toolbar.cms-dock-preview-left{
+  box-shadow:0 0 0 2px rgba(239,43,45,.48),0 18px 55px rgba(0,0,0,.45);
+  border-left-color:#ef2b2d
+}
+#cms-admin-toolbar.cms-dock-preview-right{
+  box-shadow:0 0 0 2px rgba(239,43,45,.48),0 18px 55px rgba(0,0,0,.45);
+  border-right-color:#ef2b2d
+}
+#cms-admin-toolbar.cms-docked-left.cms-collapsed{border-radius:0 12px 12px 0}
+#cms-admin-toolbar.cms-docked-right.cms-collapsed{border-radius:12px 0 0 12px}
 #cms-admin-toolbar.cms-collapsed{padding:4px;gap:0;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 #cms-admin-toolbar.cms-collapsed .cms-toolbar-title,
 #cms-admin-toolbar.cms-collapsed > button:not(.cms-toolbar-toggle){display:none !important}
@@ -8383,6 +8400,8 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
 
 @media (max-width:760px){
   #cms-admin-toolbar{left:10px;right:10px;bottom:10px;overflow:auto;justify-content:flex-start}
+  #cms-admin-toolbar.cms-docked-left{left:0!important;right:auto!important;max-width:calc(100vw - 10px)}
+  #cms-admin-toolbar.cms-docked-right{right:0!important;left:auto!important;max-width:calc(100vw - 10px)}
   #cms-admin-toolbar .cms-toolbar-title{display:none}
   .cms-modal-backdrop{padding:8px}.cms-modal{width:100%;max-height:94vh}.cms-modal-head,.cms-modal-body{padding:15px}
   .cms-manager-actions,.cms-manager-item,.cms-discord-category>header{align-items:stretch;flex-direction:column}.cms-manager-item>div:last-child,.cms-discord-category>header>div:last-child{width:100%}
