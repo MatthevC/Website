@@ -3035,7 +3035,7 @@
       <div class="event-publish-top"><span>OPUBLIKOWANO</span>${eventAdminFormatDate(v.publishDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.publishDate)}</div></div>
       <div class="event-title-admin-row"><h1>${window.MattCMS.escape(v.title)}</h1></div>
       ${v.mainImage?`<div class="event-detail-image"><img src="${window.MattCMS.escape(v.mainImage)}" style="object-fit:${window.MattCMS.escape(v.mainImageFit)};object-position:center" alt=""></div>`:''}
-      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div><small>ZAKOŃCZENIE</small><strong>${v.endDate ? `${eventAdminFormatDate(v.endDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.endDate)}</div>` : '<span class="event-ongoing-status"><span class="event-ongoing-infinity">∞</span><span>TRWA</span></span><div class="event-ongoing-note">bez określonej daty zakończenia</div>'}</strong></div></div>
+      <div class="event-dates-box"><div><small>ROZPOCZĘCIE</small><strong>${eventAdminFormatDate(v.date)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.date)}</div></strong></div><div><small>ZAKOŃCZENIE</small>${v.endDate?`<strong>${eventAdminFormatDate(v.endDate)}<div class="event-time"><span>🕒</span> ${eventAdminFormatTime(v.endDate)}</div></strong>`:'<strong class="event-running-value"><span>∞</span> TRWA</strong>'}</div></div>
       <div class="event-detail-description article-text">${window.MattCMS.escape(v.content || '').replace(/\n/g,'<br><br>')}</div>
     </article>`;
   }
@@ -3059,7 +3059,7 @@
           const ended=eventAdminIsEnded(row.end_date);
           const ongoing=!row.end_date;
           return `<article class="cms-manager-item cms-event-manager-item">
-            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ended?'ZAKOŃCZONY':ongoing?'∞ TRWA':'AKTYWNY'}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
+            <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ongoing?'∞ TRWA':(ended?'ZAKOŃCZONY':'AKTYWNY')}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
             <div>${has('events.edit')?`<button type="button" data-event-edit="${esc(row.id)}">EDYTUJ</button>`:''}<button type="button" data-event-view="${esc(row.id)}">PODGLĄD</button>${has('events.delete')?`<button class="danger" type="button" data-event-delete="${esc(row.id)}">USUŃ</button>`:''}</div>
           </article>`;
         }).join('') : '<div class="cms-empty">Nie ma jeszcze żadnych eventów w Supabase.</div>'}</div>
@@ -3110,7 +3110,8 @@
         startDate:start.date, startTime:start.time||'00:00', endDate:end.date, endTime:end.time||'00:00',
         publishDate:publish.date||today, publishTime:publish.time||nowTime,
         image:row?.image_url||'', imageFit:row?.image_fit||'contain',
-        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain', ongoing:Boolean(row?.id && !row?.end_date), endedNow:false
+        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain',
+        ongoing:Boolean(editing && !row?.end_date), endedNow:false
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
@@ -3126,10 +3127,14 @@
               <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.</span></header>
               <div class="cms-event-date-cards">
                 <div class="cms-event-date-card"><b>ROZPOCZĘCIE</b>${fieldHtml({name:'startDate',label:'Data',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina',type:'time'},current.startTime)}</div>
-                <div class="cms-event-date-card" data-event-end-card><b>ZAKOŃCZENIE</b><label class="cms-event-ongoing-toggle"><input type="checkbox" name="ongoing" ${current.ongoing?'checked':''}><span><strong>∞ EVENT TRWA</strong><small>Bez określonej daty zakończenia</small></span></label><div data-event-end-fields>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div></div>
+                <div class="cms-event-date-card" data-event-end-card><b>ZAKOŃCZENIE</b>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div>
                 <div class="cms-event-date-card"><b>PUBLIKACJA</b>${fieldHtml({name:'publishDate',label:'Data',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina',type:'time'},current.publishTime)}</div>
               </div>
-              <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>„∞ EVENT TRWA” i „zakończony teraz” są wzajemnie wykluczające. Przy trwającym evencie data końca nie jest zapisywana.</p></div>
+              <div class="cms-event-status-row">
+                <div class="cms-event-status-choice cms-event-status-ongoing">${fieldHtml({name:'ongoing',label:'∞ EVENT TRWA',type:'checkbox'},current.ongoing)}<small>Bez określonej daty zakończenia. W sekcji „Zakończenie” pojawi się ∞ TRWA.</small></div>
+                <div class="cms-event-status-choice cms-event-status-ended">${fieldHtml({name:'endedNow',label:'✓ OZNACZ EVENT JAKO ZAKOŃCZONY TERAZ',type:'checkbox'},false)}<small>Data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</small></div>
+              </div>
+              <p class="cms-event-status-note">Opcje „∞ EVENT TRWA” i „ZAKOŃCZONY TERAZ” wzajemnie się wykluczają. Jeśli żadna nie jest zaznaczona, podaj normalną datę zakończenia.</p>
             </section>
 
             <section class="cms-event-editor-section">
@@ -3165,8 +3170,9 @@
       };
       const currentPreviewRow=()=>{
         const image=imageFromField('image'); const main=imageFromField('mainImage');
-        let endDate=form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
-        if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+        let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
+        if(form.elements.ongoing?.checked) endDate=null;
+        else if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
         return {
           id:row?.id||'podglad-eventu', title:String(form.elements.title?.value||'NOWY EVENT'), description:String(form.elements.description?.value||''),
           start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value), end_date:endDate,
@@ -3175,23 +3181,22 @@
         };
       };
       const renderPreview=()=>{const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
-      const syncEventDurationState=()=>{
-        const ongoing=Boolean(form.elements.ongoing?.checked);
-        const endFields=$('[data-event-end-fields]',form);
-        const endCard=$('[data-event-end-card]',form);
-        if(form.elements.endDate) form.elements.endDate.disabled=ongoing;
-        if(form.elements.endTime) form.elements.endTime.disabled=ongoing;
-        endFields?.classList.toggle('is-disabled',ongoing);
-        endCard?.classList.toggle('is-ongoing',ongoing);
+      const ongoingInput=form.elements.ongoing;
+      const endedNowInput=form.elements.endedNow;
+      const endDateInput=form.elements.endDate;
+      const endTimeInput=form.elements.endTime;
+      const endCard=$('[data-event-end-card]',form);
+      const syncEventStatus=(source='')=>{
+        if(source==='ongoing' && ongoingInput?.checked && endedNowInput) endedNowInput.checked=false;
+        if(source==='endedNow' && endedNowInput?.checked && ongoingInput) ongoingInput.checked=false;
+        const lockEnd=Boolean(ongoingInput?.checked || endedNowInput?.checked);
+        if(endDateInput) endDateInput.disabled=lockEnd;
+        if(endTimeInput) endTimeInput.disabled=lockEnd;
+        endCard?.classList.toggle('is-disabled',lockEnd);
+        requestAnimationFrame(renderPreview);
       };
-      form.elements.ongoing?.addEventListener('change',()=>{
-        if(form.elements.ongoing.checked && form.elements.endedNow) form.elements.endedNow.checked=false;
-        syncEventDurationState(); renderPreview();
-      });
-      form.elements.endedNow?.addEventListener('change',()=>{
-        if(form.elements.endedNow.checked && form.elements.ongoing) form.elements.ongoing.checked=false;
-        syncEventDurationState(); renderPreview();
-      });
+      ongoingInput?.addEventListener('change',()=>syncEventStatus('ongoing'));
+      endedNowInput?.addEventListener('change',()=>syncEventStatus('endedNow'));
       form.addEventListener('input',renderPreview); form.addEventListener('change',()=>requestAnimationFrame(renderPreview));
       $$('[data-event-preview-mode]',form).forEach(btn=>btn.addEventListener('click',()=>{previewMode=btn.dataset.eventPreviewMode==='detail'?'detail':'card';$$('[data-event-preview-mode]',form).forEach(x=>x.classList.toggle('active',x===btn));renderPreview();}));
       $('[data-back]',form)?.addEventListener('click',draw);
@@ -3210,9 +3215,10 @@
           const mainImageFile=form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
           if(imageFile) image=await uploadEventImage(imageFile,title,'event');
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
-          const ongoing=Boolean(form.elements.ongoing?.checked);
-          if(!ongoing && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ EVENT TRWA”.');
-          let endDate=ongoing ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value); if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          let endDate=eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
+          if(form.elements.ongoing?.checked) endDate=null;
+          else if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          else if(!endDate) throw new Error('Podaj datę zakończenia albo zaznacz „∞ EVENT TRWA”.');
           const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:String(form.elements.mainImageFit?.value||'contain')};
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
@@ -3220,7 +3226,7 @@
           notify(editing?'Event został zapisany.':'Event został dodany.'); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
         }catch(error){notify(`Nie udało się zapisać eventu: ${error.message}`,'error');if(submit){submit.disabled=false;submit.textContent=editing?'ZAPISZ ZMIANY':'DODAJ EVENT';}}
       });
-      syncEventDurationState();
+      syncEventStatus();
       renderPreview();
     };
 
