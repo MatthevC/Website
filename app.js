@@ -15,9 +15,8 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   const target = document.getElementById(targetId);
   const activeIndex = sections.findIndex(section => section.id === targetId);
   links.forEach(item => item.classList.toggle('active', item === link));
-  if (progress && activeIndex >= 0 && sections.length) {
-    progress.style.height = `${((activeIndex + 1) / sections.length) * 100}%`;
-  }
+  // Pasek postępu jest liczony płynnie przez globalny scroll-spy na podstawie
+  // rzeczywistego położenia sekcji. Nie przestawiamy go już skokowo przy kliknięciu.
   link?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   if (target) setTimeout(() => highlightSidebarTarget(target), 260);
@@ -3813,9 +3812,12 @@ document.addEventListener("click", function(e) {
 
 
 
-/* === v2.6.11 — SCROLL-SPY DLA WSZYSTKICH BOCZNYCH NAWIGACJI ===
-   Użytkownik zmienił wymaganie: aktywna pozycja ma teraz śledzić sekcję podczas
-   ręcznego scrollowania. Działa również po portalowaniu nawigacji do <body>. */
+/* === v2.6.12 — PŁYNNY SCROLL-SPY DLA WSZYSTKICH BOCZNYCH NAWIGACJI ===
+   - krótka sekcja nie jest pomijana przy szybkim scrollu: przechodzimy przez
+     wszystkie minięte pozycje po kolei;
+   - aktywny kafelek ma ruchomy, animowany marker zamiast gwałtownego przeskoku;
+   - pionowy pasek postępu jest liczony z realnych pozycji sekcji i środków linków,
+     więc jego wysokość odpowiada faktycznemu układowi nawigacji. */
 (function setupUniversalSidebarScrollSpy(){
   const configs = [
     { nav: '.dixper-toc', link: '[data-dixper-target]', attr: 'dixperTarget', progress: '[data-dixper-progress]' },
@@ -3824,11 +3826,164 @@ document.addEventListener("click", function(e) {
     { nav: '.recommended-toc', link: '[data-recommended-target]', attr: 'recommendedTarget', progress: '[data-recommended-progress]' },
     { nav: '.site-page-toc', link: '[data-site-page-target]', attr: 'sitePageTarget', progress: '[data-site-page-progress]' }
   ];
-  const HEADER_OFFSET = 138;
+
+  const HEADER_OFFSET = 104;
+  const MIN_STEP_TIME = 115; // minimalny czas pokazania miniętej pozycji
+  const states = new WeakMap();
   let raf = 0;
+
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
   function targetId(link, cfg){
     return link?.dataset?.[cfg.attr] || '';
+  }
+
+  function stateFor(nav){
+    let state = states.get(nav);
+    if (!state) {
+      state = { initialized:false, currentIndex:0, targetIndex:0, timer:0, indicator:null, signature:'' };
+      states.set(nav, state);
+    }
+    return state;
+  }
+
+  function ensureIndicator(nav, state){
+    nav.classList.add('matt-sidebar-soft-nav');
+    let indicator = state.indicator;
+    if (!indicator?.isConnected || indicator.parentElement !== nav) {
+      indicator = nav.querySelector(':scope > .matt-sidebar-active-indicator');
+      if (!indicator) {
+        indicator = document.createElement('span');
+        indicator.className = 'matt-sidebar-active-indicator';
+        indicator.setAttribute('aria-hidden', 'true');
+        nav.insertBefore(indicator, nav.firstChild);
+      }
+      state.indicator = indicator;
+    }
+    return indicator;
+  }
+
+  function keepLinkVisible(nav, link){
+    if (!link || nav.scrollHeight <= nav.clientHeight + 2) return;
+    const padding = 14;
+    const top = link.offsetTop;
+    const bottom = top + link.offsetHeight;
+    const viewTop = nav.scrollTop + padding;
+    const viewBottom = nav.scrollTop + nav.clientHeight - padding;
+    if (top < viewTop) nav.scrollTo({ top: Math.max(0, top - padding), behavior:'smooth' });
+    else if (bottom > viewBottom) nav.scrollTo({ top: Math.max(0, bottom - nav.clientHeight + padding), behavior:'smooth' });
+  }
+
+  function paintActive(nav, pairs, index, state, instant = false){
+    index = clamp(index, 0, pairs.length - 1);
+    state.currentIndex = index;
+    const active = pairs[index];
+    pairs.forEach((item, i) => item.link.classList.toggle('active', i === index));
+
+    const indicator = ensureIndicator(nav, state);
+    if (indicator && active?.link) {
+      if (instant) indicator.classList.add('no-transition');
+      indicator.style.transform = `translate3d(0, ${Math.round(active.link.offsetTop)}px, 0)`;
+      indicator.style.height = `${Math.max(32, Math.round(active.link.offsetHeight))}px`;
+      indicator.style.opacity = '1';
+      if (instant) requestAnimationFrame(() => indicator.classList.remove('no-transition'));
+      keepLinkVisible(nav, active.link);
+    }
+  }
+
+  function queueActive(nav, pairs, targetIndex, state){
+    targetIndex = clamp(targetIndex, 0, pairs.length - 1);
+    state.targetIndex = targetIndex;
+
+    if (!state.initialized) {
+      state.initialized = true;
+      const preActive = pairs.findIndex(item => item.link.classList.contains('active'));
+      state.currentIndex = preActive >= 0 ? preActive : targetIndex;
+      // Przy pierwszym pomiarze ustawiamy właściwą sekcję od razu, bez przejazdu
+      // przez całą listę po odświeżeniu strony w połowie dokumentu.
+      state.currentIndex = targetIndex;
+      paintActive(nav, pairs, targetIndex, state, true);
+      return;
+    }
+
+    if (state.currentIndex === state.targetIndex || state.timer) return;
+
+    const step = () => {
+      state.timer = 0;
+      if (!nav.isConnected || !pairs.length) return;
+      if (state.currentIndex === state.targetIndex) return;
+      const direction = state.targetIndex > state.currentIndex ? 1 : -1;
+      const nextIndex = state.currentIndex + direction;
+      paintActive(nav, pairs, nextIndex, state, false);
+      if (state.currentIndex !== state.targetIndex) {
+        state.timer = window.setTimeout(step, MIN_STEP_TIME);
+      }
+    };
+
+    // Krótkie opóźnienie wygładza drganie na granicy dwóch sekcji. Jeśli scroll
+    // przeskoczy o kilka sekcji, każda pozycja zostanie pokazana kolejno.
+    state.timer = window.setTimeout(step, 55);
+  }
+
+  function probeY(){
+    // Linia obserwacji znajduje się niżej niż sam header. Dzięki temu aktywna jest
+    // sekcja, która faktycznie zajmuje istotną część widoku, a nie tylko musnęła górę.
+    return clamp(window.innerHeight * 0.38, HEADER_OFFSET + 72, Math.max(HEADER_OFFSET + 72, window.innerHeight * 0.48));
+  }
+
+  function chooseTargetIndex(metrics, probeAbs){
+    if (!metrics.length) return 0;
+    let index = 0;
+    // Granice odpowiedzialności są w połowie odległości między początkami sekcji.
+    // To daje małym sekcjom własną strefę zamiast natychmiast oddawać aktywność.
+    for (let i = 0; i < metrics.length - 1; i++) {
+      const boundary = (metrics[i].top + metrics[i + 1].top) / 2;
+      if (probeAbs >= boundary) index = i + 1;
+      else break;
+    }
+    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8;
+    return atBottom ? metrics.length - 1 : index;
+  }
+
+  function progressStopPercent(link, track){
+    const trackRect = track.getBoundingClientRect();
+    const linkRect = link.getBoundingClientRect();
+    if (trackRect.height <= 1) return 0;
+    const center = linkRect.top + linkRect.height / 2;
+    return clamp(((center - trackRect.top) / trackRect.height) * 100, 0, 100);
+  }
+
+  function updateProgress(nav, cfg, pairs, metrics, probeAbs){
+    const progress = nav.querySelector(cfg.progress);
+    const track = progress?.parentElement;
+    if (!progress || !track || !metrics.length) return;
+
+    const stops = pairs.map(item => progressStopPercent(item.link, track));
+    let pct = stops[0] ?? 0;
+
+    if (metrics.length === 1) {
+      pct = stops[0] ?? 100;
+    } else if (probeAbs <= metrics[0].top) {
+      pct = stops[0];
+    } else if (probeAbs >= metrics[metrics.length - 1].top) {
+      const last = metrics[metrics.length - 1];
+      const tail = Math.max(1, last.bottom - last.top);
+      const t = clamp((probeAbs - last.top) / tail, 0, 1);
+      // Końcówka dochodzi dokładnie do środka ostatniego linku, nie do losowego 100% tracka.
+      pct = stops[stops.length - 1] * (0.96 + 0.04 * t);
+    } else {
+      for (let i = 0; i < metrics.length - 1; i++) {
+        const a = metrics[i].top;
+        const b = metrics[i + 1].top;
+        if (probeAbs >= a && probeAbs <= b) {
+          const t = clamp((probeAbs - a) / Math.max(1, b - a), 0, 1);
+          pct = stops[i] + (stops[i + 1] - stops[i]) * t;
+          break;
+        }
+      }
+    }
+
+    progress.style.height = `${clamp(pct, 0, 100).toFixed(2)}%`;
   }
 
   function updateNav(nav, cfg){
@@ -3838,27 +3993,25 @@ document.addEventListener("click", function(e) {
       .filter(item => item.id && item.section && item.section.offsetParent !== null);
     if (!pairs.length) return;
 
-    // Wybieramy ostatnią sekcję, której początek minął linię pod nagłówkiem.
-    // Gdy jesteśmy jeszcze przed pierwszą sekcją, aktywna pozostaje pierwsza.
-    let active = pairs[0];
-    for (const item of pairs) {
+    const state = stateFor(nav);
+    const signature = pairs.map(item => item.id).join('|');
+    if (signature !== state.signature) {
+      if (state.timer) clearTimeout(state.timer);
+      state.timer = 0;
+      state.initialized = false;
+      state.signature = signature;
+    }
+
+    const scrollTop = window.scrollY;
+    const metrics = pairs.map(item => {
       const rect = item.section.getBoundingClientRect();
-      if (rect.top <= HEADER_OFFSET) active = item;
-      else break;
-    }
+      return { top: rect.top + scrollTop, bottom: rect.bottom + scrollTop };
+    });
+    const probeAbs = scrollTop + probeY();
+    const targetIndex = chooseTargetIndex(metrics, probeAbs);
 
-    // Na samym dole dokumentu wymuszamy ostatnią sekcję — zapobiega sytuacji,
-    // gdy bardzo krótka ostatnia sekcja nigdy nie przejdzie przez linię offsetu.
-    const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6;
-    if (atBottom) active = pairs[pairs.length - 1];
-
-    links.forEach(link => link.classList.toggle('active', link === active.link));
-    const progress = nav.querySelector(cfg.progress);
-    if (progress) {
-      const idx = pairs.findIndex(item => item.link === active.link);
-      progress.style.height = `${((idx + 1) / pairs.length) * 100}%`;
-    }
-    active.link?.scrollIntoView?.({ block:'nearest', inline:'nearest', behavior:'auto' });
+    queueActive(nav, pairs, targetIndex, state);
+    updateProgress(nav, cfg, pairs, metrics, probeAbs);
   }
 
   function update(){
