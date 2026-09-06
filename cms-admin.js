@@ -2921,7 +2921,7 @@
       const bannerBlock = route === 'home' || !has('page.images.manage') ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
       const rewardSection = route === 'viewer/rewards' && has('page.images.manage') ? `<section class="cms-reward-graphics-section">
         <div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-reward-images>↶ PRZYWRÓĆ WSZYSTKIE IKONY</button></div><p><strong>GRAFIKI NAGRÓD:</strong> tutaj podmieniasz emoji widoczne w lewym górnym rogu każdego kafelka nagrody. Wgraj własny JPG, PNG, WEBP lub GIF z dysku. Oryginalną ikonę możesz przywrócić w dowolnym momencie.</p></div>
-        <div class="cms-image-manager-grid cms-reward-graphics-grid">${rewardItems.length?rewardItems.map((item,index)=>{const saved=window.MattCMS?.normalizeRewardGraphicItem?.(rewardOverrides[item.id]||{})||rewardOverrides[item.id]||{};return `<article class="cms-image-manager-card cms-reward-graphic-card"><div class="cms-image-manager-thumb cms-reward-graphic-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}" style="object-fit:${esc(saved.fit||'cover')};object-position:${esc(saved.position||'center')};transform:scale(${Math.max(50,Math.min(200,Number(saved.scale||100)))/100});transform-origin:center">`:`<div class="cms-reward-default-icon">${esc(item.baseText||'🎁')}</div>`}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / NAGRODA</small><strong>${esc(item.label||`Nagroda ${index+1}`)}</strong><span>${esc(item.cost||'')} ${saved.url?`• własna grafika • ${saved.fit==='contain'?'cała grafika':'wypełnienie'}`:'• domyślna ikona'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-reward-image-edit="${esc(item.id)}">${saved.url?'ZMIEŃ GRAFIKĘ':'DODAJ GRAFIKĘ'}</button><button data-reward-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(rewardOverrides,item.id)?'':'disabled'}>↶ IKONA DOMYŚLNA</button></div></article>`;}).join(''):'<div class="cms-empty">Nie znaleziono kafelków nagród na tej podstronie.</div>'}</div>
+        <div class="cms-image-manager-grid cms-reward-graphics-grid">${rewardItems.length?rewardItems.map((item,index)=>{const saved=window.MattCMS?.normalizeRewardGraphicItem?.(rewardOverrides[item.id]||{})||rewardOverrides[item.id]||{};return `<article class="cms-image-manager-card cms-reward-graphic-card"><div class="cms-image-manager-thumb cms-reward-graphic-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}" style="object-fit:${esc(saved.fit||'cover')};object-position:${esc(saved.position||'center')};transform:scale(${Math.max(50,Math.min(200,Number(saved.scale||100)))/100});transform-origin:center;border-radius:${Math.max(0,Math.min(30,Number(saved.radius??18)))}px">`:`<div class="cms-reward-default-icon">${esc(item.baseText||'🎁')}</div>`}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / NAGRODA</small><strong>${esc(item.label||`Nagroda ${index+1}`)}</strong><span>${esc(item.cost||'')} ${saved.url?`• własna grafika • ${saved.fit==='contain'?'cała grafika':'wypełnienie'}`:'• domyślna ikona'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-reward-image-edit="${esc(item.id)}">${saved.url?'ZMIEŃ GRAFIKĘ':'DODAJ GRAFIKĘ'}</button><button data-reward-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(rewardOverrides,item.id)?'':'disabled'}>↶ IKONA DOMYŚLNA</button></div></article>`;}).join(''):'<div class="cms-empty">Nie znaleziono kafelków nagród na tej podstronie.</div>'}</div>
       </section>` : '';
 
       const imageSection = has('page.images.manage') ? `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
@@ -2969,7 +2969,7 @@
     const editRewardImage = id => {
       const item=currentRewardItems().find(x=>x.id===id);
       if(!item) return draw();
-      const current=window.MattCMS?.normalizeRewardGraphicItem?.(rewardOverrides[id]||{}) || rewardOverrides[id] || {url:'',alt:item.label||'',fit:'cover',position:'center',scale:100};
+      const current=window.MattCMS?.normalizeRewardGraphicItem?.(rewardOverrides[id]||{}) || rewardOverrides[id] || {url:'',alt:item.label||'',fit:'cover',position:'center',scale:100,radius:18};
       const graphicClass=String(item.graphicClass||'').replace(/[^a-zA-Z0-9 _-]/g,'').trim();
       const defaultIcon=String(item.baseText||'🎁');
       const description=String(item.description||'');
@@ -2978,6 +2978,7 @@
       const fitField={name:'fit',label:'Dopasowanie grafiki',type:'select',options:[{value:'cover',label:'Wypełnij całe pole (cover)'},{value:'contain',label:'Pokaż całą grafikę (contain)'},{value:'fill',label:'Rozciągnij grafikę (fill)'}],help:'Cover przycina krawędzie, contain pokazuje cały obraz, fill rozciąga.'};
       const posField={name:'position',label:'Pozycja grafiki',type:'select',options:[{value:'center',label:'Środek'},{value:'top',label:'Góra'},{value:'bottom',label:'Dół'},{value:'left',label:'Lewo'},{value:'right',label:'Prawo'}]};
       const initialScale=Math.max(50,Math.min(200,Number(current.scale||100)));
+      const initialRadius=Math.max(0,Math.min(30,Number(current.radius??18)));
       openModal(`GRAFIKA NAGRODY — ${item.label}`,`<form id="cms-reward-image-form" class="cms-form cms-reward-image-editor-form" data-matt-skip-autosave="1">
         <div class="cms-form-context">Podmieniasz ikonę w kafelku <strong>${esc(item.label)}</strong>${item.cost?` • ${esc(item.cost)}`:''}. Zmiany w podglądzie są natychmiastowe, ale na stronie pojawią się dopiero po kliknięciu <strong>ZAPISZ GRAFIKĘ</strong>.</div>
         <div class="cms-reward-editor-grid">
@@ -2988,6 +2989,7 @@
               ${fieldHtml(fitField,current.fit||'cover')}
               ${fieldHtml(posField,current.position||'center')}
               <label class="cms-field cms-reward-scale-field"><span>Skala grafiki <b data-reward-scale-value>${initialScale}%</b></span><div class="cms-reward-scale-control"><button type="button" data-scale-minus aria-label="Pomniejsz grafikę">−</button><input type="range" name="scale" min="50" max="200" step="5" value="${initialScale}"><button type="button" data-scale-plus aria-label="Powiększ grafikę">+</button></div><small class="cms-field-help">Pomniejsz lub powiększ obraz w zakresie 50–200%. Nie zmienia to rozmiaru kafelka.</small></label>
+              <label class="cms-field cms-reward-radius-field"><span>Rogi grafiki <b data-reward-radius-value>${initialRadius}px</b></span><div class="cms-reward-radius-control"><button type="button" data-radius-square>PROSTE ROGI</button><input type="range" name="radius" min="0" max="30" step="1" value="${initialRadius}"></div><small class="cms-field-help"><strong>0 px</strong> = grafika bez zaokrąglonych rogów. To ustawienie dotyczy tylko tej nagrody.</small></label>
             </div>
           </section>
           <aside class="cms-reward-live-preview">
@@ -3017,14 +3019,17 @@
       const liveGraphic=form.querySelector('[data-reward-live-graphic]');
       const scaleValue=form.querySelector('[data-reward-scale-value]');
       const liveScale=form.querySelector('[data-reward-live-scale]');
+      const radiusValue=form.querySelector('[data-reward-radius-value]');
       const originFor=pos=>pos==='top'?'center top':pos==='bottom'?'center bottom':pos==='left'?'left center':pos==='right'?'right center':'center center';
       const updatePreview=()=>{
         const fit=String(form.elements.fit?.value||'cover');
         const pos=String(form.elements.position?.value||'center');
         const scale=Math.max(50,Math.min(200,Number(form.elements.scale?.value||100)));
+        const radius=Math.max(0,Math.min(30,Number(form.elements.radius?.value??18)));
         const src=String(sourceImg?.src||sourceImg?.getAttribute('src')||'').trim();
         if(scaleValue) scaleValue.textContent=`${scale}%`;
         if(liveScale) liveScale.textContent=`${scale}%`;
+        if(radiusValue) radiusValue.textContent=`${radius}px`;
         if(liveImg){
           if(src){
             if(liveImg.src!==src) liveImg.src=src;
@@ -3044,6 +3049,7 @@
           liveGraphic.style.setProperty('--reward-image-position',pos);
           liveGraphic.style.setProperty('--reward-image-scale',String(scale/100));
           liveGraphic.style.setProperty('--reward-image-origin',originFor(pos));
+          liveGraphic.style.setProperty('--reward-image-radius',`${radius}px`);
         }
       };
       const schedulePreview=()=>requestAnimationFrame(()=>requestAnimationFrame(updatePreview));
@@ -3051,11 +3057,13 @@
       form.elements.position?.addEventListener('change',updatePreview);
       form.elements.alt?.addEventListener('input',updatePreview);
       form.elements.scale?.addEventListener('input',updatePreview);
+      form.elements.radius?.addEventListener('input',updatePreview);
       imageWrap?.querySelector('[data-image-file]')?.addEventListener('change',schedulePreview);
       imageWrap?.querySelector('[data-image-remove]')?.addEventListener('click',schedulePreview);
       imageWrap?.querySelector('[data-image-pick]')?.addEventListener('click',schedulePreview);
       form.querySelector('[data-scale-minus]')?.addEventListener('click',()=>{const el=form.elements.scale;if(!el)return;el.value=String(Math.max(50,Number(el.value||100)-5));updatePreview();});
       form.querySelector('[data-scale-plus]')?.addEventListener('click',()=>{const el=form.elements.scale;if(!el)return;el.value=String(Math.min(200,Number(el.value||100)+5));updatePreview();});
+      form.querySelector('[data-radius-square]')?.addEventListener('click',()=>{const el=form.elements.radius;if(!el)return;el.value='0';updatePreview();});
       if(sourceImg){
         sourceImg.addEventListener('load',updatePreview);
         sourceImg.addEventListener('error',()=>{
@@ -3092,8 +3100,9 @@
             alt:String(form.elements.alt?.value||item.label||'Grafika nagrody').trim(),
             fit:String(form.elements.fit?.value||'cover'),
             position:String(form.elements.position?.value||'center'),
-            scale:Number(form.elements.scale?.value||100)
-          }) || {url,alt:String(form.elements.alt?.value||''),fit:String(form.elements.fit?.value||'cover'),position:String(form.elements.position?.value||'center'),scale:Number(form.elements.scale?.value||100)};
+            scale:Number(form.elements.scale?.value||100),
+            radius:Number(form.elements.radius?.value??18)
+          }) || {url,alt:String(form.elements.alt?.value||''),fit:String(form.elements.fit?.value||'cover'),position:String(form.elements.position?.value||'center'),scale:Number(form.elements.scale?.value||100),radius:Number(form.elements.radius?.value??18)};
           await saveOverrideMap(rewardKey,rewardOverrides,'Grafika nagrody została zapisana.');
         }catch(error){
           notify(error.message,'error');

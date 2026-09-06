@@ -10401,6 +10401,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .reward-graphic.has-custom-reward-image{
   padding:0;
   overflow:hidden;
+  border-radius:var(--reward-image-radius,18px);
 }
 .reward-graphic .reward-custom-image{
   display:block;
@@ -10410,7 +10411,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   object-position:var(--reward-image-position,center);
   transform:scale(var(--reward-image-scale,1));
   transform-origin:var(--reward-image-origin,center center);
-  border-radius:inherit;
+  border-radius:var(--reward-image-radius,18px);
 }
 .cms-reward-graphics-section{margin:0 0 18px}
 .cms-reward-graphic-thumb{display:grid;place-items:center}
@@ -10448,10 +10449,10 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-reward-live-head>div{display:grid;gap:3px}.cms-reward-live-head small{color:#ff3b46;font-size:9px;font-weight:950;letter-spacing:.12em}.cms-reward-live-head strong{font-size:14px}.cms-reward-live-head>span{max-width:180px;color:#747983;font-size:10px;line-height:1.35;text-align:right}
 .cms-reward-preview-card-real{width:100%;min-height:0;margin:0;box-sizing:border-box}
 .cms-reward-preview-card-real .reward-card-top{width:100%}
-.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden;position:relative;display:block}
+.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden;position:relative;display:block;border-radius:var(--reward-image-radius,18px)}
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-img],
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{position:absolute;inset:0;width:100%;height:100%;box-sizing:border-box}
-.cms-reward-preview-card-real .reward-graphic [data-reward-live-img]{display:block;border-radius:inherit;object-fit:var(--reward-image-fit,cover);object-position:var(--reward-image-position,center);transform:scale(var(--reward-image-scale,1));transform-origin:var(--reward-image-origin,center center)}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-img]{display:block;border-radius:var(--reward-image-radius,18px);object-fit:var(--reward-image-fit,cover);object-position:var(--reward-image-position,center);transform:scale(var(--reward-image-scale,1));transform-origin:var(--reward-image-origin,center center)}
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{display:grid;place-items:center}
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-img][hidden],
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-default][hidden]{display:none!important}
@@ -10459,6 +10460,12 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-reward-preview-card-real p{font-size:.93rem;color:#c2c5cc}
 .cms-reward-live-meta{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:12px;padding:9px 11px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:#121318;color:#777c86;font-size:9px}.cms-reward-live-meta strong{text-align:center;color:#fff;font-size:11px}
 .cms-reward-scale-field{grid-column:1/-1}
+.cms-reward-radius-field{grid-column:1/-1}
+.cms-reward-radius-control{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.cms-reward-radius-control input[type=range]{width:100%;accent-color:#ef2b2d}
+.cms-reward-radius-control button{height:38px;padding:0 12px;border:1px solid #393c44;border-radius:8px;background:#17191e;color:#d7d9df;font-size:8px;font-weight:900;letter-spacing:.04em;cursor:pointer;white-space:nowrap}
+.cms-reward-radius-control button:hover{border-color:#ef2b2d;background:#241416;color:#fff}
+
 .cms-reward-scale-control{display:grid;grid-template-columns:38px 1fr 38px;gap:8px;align-items:center}.cms-reward-scale-control input[type=range]{width:100%;accent-color:#ef2b2d}.cms-reward-scale-control button{height:38px;border:1px solid #393c44;border-radius:8px;background:#17191e;color:#fff;font-size:20px;font-weight:900;cursor:pointer}.cms-reward-scale-control button:hover{border-color:#ef2b2d;background:#241416}
 .cms-reward-image-editor-form .cms-image-preview{max-height:245px}
 .cms-reward-image-editor-form .cms-image-preview img{max-height:230px;object-fit:contain}

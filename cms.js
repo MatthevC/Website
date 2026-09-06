@@ -334,12 +334,15 @@
     const position = ['center','top','bottom','left','right'].includes(rawPosition) ? rawPosition : 'center';
     const parsedScale = Number(item.scale);
     const scale = Number.isFinite(parsedScale) ? Math.max(50, Math.min(200, parsedScale)) : 100;
+    const parsedRadius = Number(item.radius);
+    const radius = Number.isFinite(parsedRadius) ? Math.max(0, Math.min(30, parsedRadius)) : 18;
     return {
       url: String(item.url || '').trim(),
       alt: String(item.alt || '').trim(),
       fit,
       position,
-      scale
+      scale,
+      radius
     };
   }
 
@@ -353,6 +356,7 @@
       graphic.style.removeProperty('--reward-image-position');
       graphic.style.removeProperty('--reward-image-scale');
       graphic.style.removeProperty('--reward-image-origin');
+      graphic.style.removeProperty('--reward-image-radius');
       const item = normalizeRewardGraphicItem(data[id] || {});
       if (!item.url) return;
       const img = document.createElement('img');
@@ -366,6 +370,7 @@
       graphic.style.setProperty('--reward-image-position', item.position);
       graphic.style.setProperty('--reward-image-scale', String(item.scale / 100));
       graphic.style.setProperty('--reward-image-origin', item.position === 'top' ? 'center top' : item.position === 'bottom' ? 'center bottom' : item.position === 'left' ? 'left center' : item.position === 'right' ? 'right center' : 'center center');
+      graphic.style.setProperty('--reward-image-radius', `${item.radius}px`);
       graphic.appendChild(img);
       graphic.classList.add('has-custom-reward-image');
     });
