@@ -1,4 +1,10 @@
 (() => {
+  const CMS_MOBILE_PREVIEW = new URLSearchParams(window.location.search).get('mattMobilePreview') === '1';
+  if (CMS_MOBILE_PREVIEW) {
+    document.documentElement.classList.add('matt-mobile-preview-page');
+    return;
+  }
+
   let inlineEditing = false;
   let inlineSnapshot = new Map();
   let toolbar = null;
@@ -764,14 +770,67 @@
     notify(`Pełny projektant: ${candidates.length} elementów (${globalCount} globalnych + ${candidates.length-globalCount} na podstronie).`);
   }
 
+  function closeMobilePreview() {
+    const overlay = document.getElementById('cms-mobile-preview-overlay');
+    if (!overlay) return;
+    overlay.remove();
+    document.documentElement.classList.remove('cms-mobile-preview-open');
+  }
+
+  function mobilePreviewUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('mattMobilePreview', '1');
+    url.hash = window.location.hash || '#/home';
+    return url.toString();
+  }
+
+  function openMobilePreview() {
+    const existing = document.getElementById('cms-mobile-preview-overlay');
+    if (existing) { closeMobilePreview(); return; }
+
+    const overlay = document.createElement('div');
+    overlay.id = 'cms-mobile-preview-overlay';
+    overlay.innerHTML = `
+      <div class="cms-mobile-preview-shell" role="dialog" aria-modal="true" aria-label="Podgląd mobilny strony">
+        <div class="cms-mobile-preview-topbar">
+          <div>
+            <small>PODGLĄD RESPONSYWNY</small>
+            <strong>WERSJA MOBILNA</strong>
+            <span>390 px • możesz normalnie klikać i przechodzić po całej stronie</span>
+          </div>
+          <button type="button" class="cms-mobile-preview-close" aria-label="Zamknij podgląd mobilny" title="Zamknij">×</button>
+        </div>
+        <div class="cms-mobile-preview-device" aria-label="Symulowany ekran telefonu">
+          <div class="cms-mobile-preview-speaker" aria-hidden="true"></div>
+          <iframe title="Mobilny podgląd strony" src="${mobilePreviewUrl()}" loading="eager"></iframe>
+          <div class="cms-mobile-preview-home" aria-hidden="true"></div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+    document.documentElement.classList.add('cms-mobile-preview-open');
+
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay || e.target.closest('.cms-mobile-preview-close')) closeMobilePreview();
+    });
+    const onKey = e => {
+      if (e.key !== 'Escape') return;
+      closeMobilePreview();
+      document.removeEventListener('keydown', onKey);
+    };
+    document.addEventListener('keydown', onKey);
+    overlay.querySelector('iframe')?.focus();
+  }
+
   function ensureToolbar() {
     if (toolbar) return toolbar;
     toolbar = document.createElement('div');
     toolbar.id = 'cms-admin-toolbar';
     toolbar.innerHTML = `
       <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek. Dosuń do lewej lub prawej krawędzi, aby go przypiąć. Dwuklik przywraca położenie domyślne.">⠿</button>
-      <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
       <button type="button" class="cms-toolbar-orientation" data-cms-action="toolbar-orientation" aria-label="Zmień pasek na pionowy" title="Zmień pasek na pionowy">↕</button>
+      <button type="button" class="cms-toolbar-mobile-preview" data-cms-action="mobile-preview" aria-label="Pokaż całą stronę w wersji mobilnej" title="Podgląd całej strony w wersji mobilnej">▯</button>
+      <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
       <button type="button" data-cms-action="content">✎ TREŚĆ</button>
@@ -791,6 +850,7 @@
         setToolbarOrientation(getToolbarOrientation() === 'vertical' ? 'horizontal' : 'vertical');
         return;
       }
+      if (action === 'mobile-preview') { openMobilePreview(); return; }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
       if (action === 'content' && any('page.text.edit','page.callouts.manage')) openContentManager();
       if (action === 'save') saveInlineEdit();
