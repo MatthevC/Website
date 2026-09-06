@@ -2972,13 +2972,17 @@
       const fields=[
         {name:'image',label:`Grafika nagrody — ${item.label}`,type:'image-file'},
         {name:'alt',label:'Opis grafiki (ALT)',help:'Np. „Prezent — nagroda Obecny”. Krótki opis pomaga w dostępności.'},
-        {name:'fit',label:'Dopasowanie grafiki',type:'select',options:[{value:'cover',label:'Wypełnij całe pole (cover)'},{value:'contain',label:'Pokaż całą grafikę (contain)'}],help:'Cover przycina krawędzie, contain pokazuje cały obraz.'}
+        {name:'fit',label:'Dopasowanie grafiki',type:'select',options:[{value:'cover',label:'Wypełnij całe pole (cover)'},{value:'contain',label:'Pokaż całą grafikę (contain)'},{value:'fill',label:'Rozciągnij grafikę (fill)'}],help:'Cover przycina krawędzie, contain pokazuje cały obraz, fill rozciąga.'},
+        {name:'position',label:'Pozycja grafiki',type:'select',options:[{value:'center',label:'Środek'},{value:'top',label:'Góra'},{value:'bottom',label:'Dół'},{value:'left',label:'Lewo'},{value:'right',label:'Prawo'}]},
+        {name:'scale',label:'Skala grafiki (%)',help:'100 = normalny rozmiar. Możesz powiększyć lub pomniejszyć grafikę.'}
       ];
-      openModal(`GRAFIKA NAGRODY — ${item.label}`,`<form id="cms-reward-image-form" class="cms-form"><div class="cms-form-context">Podmieniasz ikonę w kafelku <strong>${esc(item.label)}</strong>${item.cost?` • ${esc(item.cost)}`:''}. Grafika pojawi się dokładnie w miejscu obecnego emoji.</div>${fields.map(f=>fieldHtml(f,f.name==='image'?current.url:(current[f.name] ?? (f.name==='alt'?item.label:'cover')))).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-default ${Object.prototype.hasOwnProperty.call(rewardOverrides,id)?'':'disabled'}>↶ IKONA DOMYŚLNA</button><button class="cms-primary" type="submit">ZAPISZ GRAFIKĘ</button></div></form>`);
+      openModal(`GRAFIKA NAGRODY — ${item.label}`,`<form id="cms-reward-image-form" class="cms-form"><div class="cms-form-context">Podmieniasz ikonę w kafelku <strong>${esc(item.label)}</strong>${item.cost?` • ${esc(item.cost)}`:''}. Poniżej masz podgląd kafelka na żywo.</div><div class="cms-reward-live-preview"><strong>PODGLĄD NAGRODY</strong><div class="cms-reward-preview-card"><div class="cms-reward-preview-image"><img data-reward-live-img src="${esc(current.url||'')}"></div><b>${esc(item.label)}</b><span>${esc(item.cost||'')}</span></div></div>${fields.map(f=>fieldHtml(f,f.name==='image'?current.url:(current[f.name] ?? (f.name==='alt'?item.label:(f.name==='position'?'center':(f.name==='scale'?'100':'cover')))))).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-default ${Object.prototype.hasOwnProperty.call(rewardOverrides,id)?'':'disabled'}>↶ IKONA DOMYŚLNA</button><button class="cms-primary" type="submit">ZAPISZ GRAFIKĘ</button></div></form>`);
       const form=$('#cms-reward-image-form',modal);
       bindImageFileFields(form,fields);
-      const updatePreview=()=>{const img=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img');if(img)img.style.objectFit=String(form.elements.fit?.value||'cover');};
+      const updatePreview=()=>{const img=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img');const live=form.querySelector('[data-reward-live-img]');const fit=String(form.elements.fit?.value||'cover');const pos=String(form.elements.position?.value||'center');const scale=Number(form.elements.scale?.value||100);if(img)img.style.objectFit=fit==='fill'?'fill':fit;if(live){live.style.objectFit=fit==='fill'?'fill':fit;live.style.objectPosition=pos;live.style.transform=`scale(${Math.max(50,Math.min(200,scale))/100})`;}};
       form.elements.fit?.addEventListener('change',updatePreview);
+      form.elements.position?.addEventListener('change',updatePreview);
+      form.elements.scale?.addEventListener('input',updatePreview);
       form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.addEventListener('change',()=>setTimeout(updatePreview,0));
       updatePreview();
       $('[data-back]',form)?.addEventListener('click',draw);
@@ -3007,8 +3011,12 @@
           rewardOverrides[id]=window.MattCMS?.normalizeRewardGraphicItem?.({
             url,
             alt:String(form.elements.alt?.value||item.label||'Grafika nagrody').trim(),
-            fit:String(form.elements.fit?.value||'cover')
-          }) || {url,alt:String(form.elements.alt?.value||''),fit:String(form.elements.fit?.value||'cover')};
+            fit:String(form.elements.fit?.value||'cover'),
+            position:String(form.elements.position?.value||'center'),
+            scale:Number(form.elements.scale?.value||100)
+          }) || {url,alt:String(form.elements.alt?.value||''),fit:String(form.elements.fit?.value||'cover'),
+            position:String(form.elements.position?.value||'center'),
+            scale:Number(form.elements.scale?.value||100)};
           await saveOverrideMap(rewardKey,rewardOverrides,'Grafika nagrody została zapisana.');
         }catch(error){
           notify(error.message,'error');
@@ -3240,7 +3248,9 @@
       const form=$('#cms-page-banner-form',modal);bindImageFileFields(form,fields);
       const updateBannerPreview=()=>{const img=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img');if(img)img.style.objectFit=String(form.elements.fit?.value||'cover');};
       form.elements.fit?.addEventListener('change',updateBannerPreview);form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.addEventListener('change',()=>setTimeout(updateBannerPreview,0));updateBannerPreview();
-      $('[data-back]',form)?.addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||'');const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,`naglowek-${route}`,`pages/${route}`);if(!url)throw new Error('Wybierz grafikę z dysku.');await window.MattCMS.save(bannerKey,{url,alt:String(form.elements.alt?.value||'Grafika podstrony').trim(),fit:String(form.elements.fit?.value||'cover')});notify('Grafika nagłówkowa została zapisana.');await rerender();}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
+      $('[data-back]',form)?.addEventListener('click',draw);form.addEventListener('submit',async e=>{e.preventDefault();const submit=$('button[type="submit"]',form);if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}try{let url=String(form.elements.image?.value||current.url||'');const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];if(file)url=await uploadCmsImage(file,`naglowek-${route}`,`pages/${route}`);if(!url)throw new Error('Wybierz grafikę z dysku.');await window.MattCMS.save(bannerKey,{url,alt:String(form.elements.alt?.value||'Grafika podstrony').trim(),fit:String(form.elements.fit?.value||'cover'),
+            position:String(form.elements.position?.value||'center'),
+            scale:Number(form.elements.scale?.value||100)});notify('Grafika nagłówkowa została zapisana.');await rerender();}catch(error){notify(error.message,'error');if(submit){submit.disabled=false;submit.textContent='ZAPISZ';}}});
     };
 
     draw();
