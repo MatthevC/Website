@@ -3678,12 +3678,11 @@ async function setupRecommendedPage() {
     if (nameTarget) nameTarget.textContent = fallbackName;
 
     try {
-      const response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`, {
-        cache: "no-store"
-      });
+      let response = await fetch(`https://api.ivr.fi/v2/twitch/user/${encodeURIComponent(login)}`, { cache: "no-store" });
+      if (!response.ok) response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`, { cache: "no-store" });
       if (!response.ok) return;
       const data = await response.json();
-      const user = Array.isArray(data) ? data[0] : data;
+      const user = Array.isArray(data) ? data[0] : (Array.isArray(data?.data) ? data.data[0] : data);
       if (!user) return;
 
       const freshName = user.displayName || user.login || fallbackName;

@@ -957,8 +957,10 @@
     if (twitchLogin) {
       m.twitchLogin = twitchLogin;
       m.twitch = `https://www.twitch.tv/${twitchLogin}`;
-      // Avatar jest pobierany na podstawie nicku Twitch. Dzięki temu nie trzeba ręcznie wklejać URL zdjęcia.
-      m.image = `https://unavatar.io/twitch/${encodeURIComponent(twitchLogin)}`;
+      // Jeżeli administrator pobrał bezpośredni avatar Twitch, zachowujemy jego URL.
+      // Unavatar pozostaje jedynie fallbackiem dla starszych wpisów bez zapisanego zdjęcia.
+      const savedImage = String(m.image || '').trim();
+      m.image = savedImage || `https://unavatar.io/twitch/${encodeURIComponent(twitchLogin)}`;
     } else {
       m.twitchLogin = '';
       m.twitch = '';

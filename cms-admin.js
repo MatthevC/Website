@@ -1145,6 +1145,48 @@
     };
   }
 
+  async function fetchTwitchAvatarProfile(rawLogin) {
+    const login = window.MattCMS?.normalizeTwitchLogin?.(rawLogin) || String(rawLogin || '').trim().replace(/^@/, '').toLowerCase();
+    if (!login || !/^[a-z0-9_]{1,25}$/i.test(login)) throw new Error('Wpisz poprawny nick Twitch, np. kitty_lovecraft.');
+
+    const readUser = data => {
+      const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [data]);
+      const user = list.find(Boolean) || null;
+      if (!user) return null;
+      const avatar = String(user.logo || user.profileImageUrl || user.profile_image_url || user.avatar || user.profilePic || user.profile_pic || '').trim();
+      const displayName = String(user.displayName || user.display_name || user.name || user.login || login).trim();
+      const resolvedLogin = String(user.login || login).trim().toLowerCase();
+      return avatar ? { login: resolvedLogin, displayName, avatar } : null;
+    };
+
+    // IVR udostępnia profil Twitch bez konieczności przechowywania tokenu Twitch w kodzie strony.
+    // Obsługujemy oba spotykane warianty endpointu, bo API zmieniało format adresu.
+    const endpoints = [
+      `https://api.ivr.fi/v2/twitch/user/${encodeURIComponent(login)}`,
+      `https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`
+    ];
+    let lastError = null;
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, { cache: 'no-store', headers: { Accept: 'application/json' } });
+        if (!response.ok) { lastError = new Error(`IVR HTTP ${response.status}`); continue; }
+        const profile = readUser(await response.json());
+        if (profile) return profile;
+      } catch (error) { lastError = error; }
+    }
+
+    // Drugi niezależny fallback. DecAPI zwraca bezpośredni URL avatara jako tekst.
+    try {
+      const response = await fetch(`https://decapi.me/twitch/avatar/${encodeURIComponent(login)}`, { cache: 'no-store' });
+      if (response.ok) {
+        const avatar = String(await response.text()).trim();
+        if (/^https?:\/\//i.test(avatar)) return { login, displayName: login, avatar };
+      }
+    } catch (error) { lastError = error; }
+
+    throw new Error(`Nie udało się pobrać profilu @${login}. ${lastError?.message ? `(${lastError.message})` : 'Sprawdź połączenie i spróbuj ponownie.'}`);
+  }
+
   function fieldHtml(field, value) {
     const esc = window.MattCMS?.escape || (v => String(v || ''));
     const val = value ?? '';
@@ -1155,18 +1197,6 @@
       <div class="cms-image-upload-row"><button type="button" data-image-pick>📁 WYBIERZ ZDJĘCIE Z DYSKU</button><span data-image-name>${esc(cmsImageLabel(val))}</span></div>
       <div class="cms-image-preview${val ? '' : ' is-empty'}" data-image-preview><img ${val ? `src="${esc(val)}"` : ''} alt="Podgląd zdjęcia"></div>
       <div class="cms-image-tools"><small>JPG, PNG, WEBP lub GIF • maks. 10 MB. Adres pliku zapisze się automatycznie.</small><button type="button" data-image-remove ${val ? '' : 'hidden'}>USUŃ ZDJĘCIE</button></div>
-    </div>`;
-    if (field.type === 'twitch-avatar') return `<div class="cms-field cms-twitch-login-field" data-twitch-avatar-field>
-      <span>${esc(field.label)}</span>
-      <div class="cms-twitch-input-row">
-        <input type="text" name="${esc(field.name)}" value="${esc(val)}" ${field.placeholder?`placeholder="${esc(field.placeholder)}"`:''} ${field.required?'required':''}>
-        <button type="button" class="cms-twitch-avatar-button" data-fetch-twitch-avatar>↓ POBIERZ AVATAR Z TWITCHA</button>
-      </div>
-      ${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}
-      <div class="cms-twitch-avatar-result is-empty" data-twitch-avatar-result>
-        <span class="cms-twitch-avatar-thumb"><img alt="Podgląd avatara Twitch" data-twitch-avatar-preview></span>
-        <span data-twitch-avatar-status>Wpisz nick Twitch i kliknij „Pobierz avatar z Twitcha”.</span>
-      </div>
     </div>`;
     if (field.type === 'textarea') return `<label class="cms-field"><span>${esc(field.label)}</span><textarea name="${esc(field.name)}" ${field.placeholder?`placeholder="${esc(field.placeholder)}"`:''} ${field.required?'required':''}>${esc(val)}</textarea>${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
     if (field.type === 'range') return `<label class="cms-field cms-range-field"><span>${esc(field.label)} <b data-range-value>${esc(val)}%</b></span><input type="range" name="${esc(field.name)}" min="${field.min||0}" max="${field.max||100}" step="${field.step||1}" value="${esc(val)}">${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
@@ -2541,7 +2571,17 @@
       };
 
       const formEdit = (title, current, fields, onSave, makeDraft) => {
-        openDiscordModal(title, `${liveServerPanel(true)}<form id="cms-preview-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
+        const hasTwitchAvatar = fields.some(field => field.name === 'twitchLogin');
+        const avatarUrl = String(current?.image || '').trim();
+        const avatarTools = hasTwitchAvatar ? `<section class="cms-twitch-avatar-tools" data-twitch-avatar-tools>
+          <div class="cms-twitch-avatar-tools-head"><div><small>AVATAR TWITCH</small><strong>Pobierz aktualne zdjęcie profilowe</strong></div><span>IVR / DecAPI fallback</span></div>
+          <button class="cms-primary cms-twitch-avatar-fetch" type="button" data-fetch-twitch-avatar>↓ POBIERZ AVATAR Z TWITCHA</button>
+          <div class="cms-twitch-avatar-result${avatarUrl?' is-ready':''}" data-twitch-avatar-result>
+            <div class="cms-twitch-avatar-preview"><img ${avatarUrl?`src="${esc(avatarUrl)}"`:''} alt="Podgląd avatara Twitch" data-twitch-avatar-preview></div>
+            <div><strong data-twitch-avatar-title>${avatarUrl?'Avatar zapisany':'Brak pobranego avatara'}</strong><small data-twitch-avatar-status>${avatarUrl?'Możesz pobrać ponownie, aby odświeżyć zdjęcie.':'Wpisz nick powyżej i kliknij przycisk.'}</small></div>
+          </div>
+        </section>` : '';
+        openDiscordModal(title, `${liveServerPanel(true)}<form id="cms-preview-form" class="cms-form">${fields.map(f=>fieldHtml(f,current[f.name])).join('')}${avatarTools}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
         const body=$('#cms-modal-body',modal);
         const form=$('#cms-preview-form',modal);
         const updateLive=()=>{
@@ -2549,6 +2589,64 @@
           const draft=typeof makeDraft==='function'?makeDraft(values):clone(data);
           renderDiscordServerLive(body,draft);
         };
+
+        if (hasTwitchAvatar) {
+          const loginInput = form.elements.twitchLogin;
+          const fetchButton = $('[data-fetch-twitch-avatar]', form);
+          const result = $('[data-twitch-avatar-result]', form);
+          const preview = $('[data-twitch-avatar-preview]', form);
+          const titleEl = $('[data-twitch-avatar-title]', form);
+          const statusEl = $('[data-twitch-avatar-status]', form);
+          let avatarLogin = window.MattCMS?.normalizeTwitchLogin?.(current?.twitchLogin || current?.twitch || '') || '';
+
+          const setAvatarState = (url, login, message) => {
+            current.image = String(url || '');
+            current.imageSource = url ? 'twitch' : '';
+            avatarLogin = login || '';
+            if (preview) {
+              if (url) preview.src = url; else preview.removeAttribute('src');
+            }
+            result?.classList.toggle('is-ready', !!url);
+            if (titleEl) titleEl.textContent = url ? `Avatar @${login}` : 'Brak pobranego avatara';
+            if (statusEl) statusEl.textContent = message || (url ? 'Avatar zostanie zapisany razem z użytkownikiem.' : 'Wpisz nick i pobierz avatar.');
+            updateLive();
+          };
+
+          preview?.addEventListener('error', () => {
+            result?.classList.remove('is-ready');
+            if (statusEl) statusEl.textContent = 'Adres avatara został pobrany, ale przeglądarka nie może wyświetlić obrazu. Spróbuj pobrać ponownie.';
+          });
+
+          loginInput?.addEventListener('input', () => {
+            const nextLogin = window.MattCMS?.normalizeTwitchLogin?.(loginInput.value) || '';
+            if (avatarLogin && nextLogin !== avatarLogin && current.imageSource === 'twitch') {
+              setAvatarState('', '', 'Nick został zmieniony — pobierz avatar dla nowego konta.');
+            }
+          });
+
+          fetchButton?.addEventListener('click', async () => {
+            const login = window.MattCMS?.normalizeTwitchLogin?.(loginInput?.value || '') || '';
+            if (!login) { notify('Wpisz poprawny nick Twitch, np. kitty_lovecraft.', 'error'); return; }
+            const oldText = fetchButton.textContent;
+            fetchButton.disabled = true;
+            fetchButton.textContent = 'POBIERANIE…';
+            if (titleEl) titleEl.textContent = `Szukam @${login}…`;
+            if (statusEl) statusEl.textContent = 'Łączenie z profilem Twitch…';
+            try {
+              const profile = await fetchTwitchAvatarProfile(login);
+              if (loginInput) loginInput.value = profile.login || login;
+              setAvatarState(profile.avatar, profile.login || login, `Pobrano profil ${profile.displayName || '@'+login}. Kliknij ZAPISZ, aby zachować avatar.`);
+              notify(`Pobrano avatar z Twitcha: @${profile.login || login}.`);
+            } catch (error) {
+              setAvatarState('', '', error.message);
+              notify(error.message, 'error');
+            } finally {
+              fetchButton.disabled = false;
+              fetchButton.textContent = oldText;
+            }
+          });
+        }
+
         updateLive();
         form.addEventListener('input',updateLive);
         form.addEventListener('change',updateLive);
@@ -2598,7 +2696,7 @@
           {name:'status',label:'Status / opis'},
           {name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},
           {name:'initial',label:'Litera avatara',help:'Używana tylko wtedy, gdy nie podasz nicku Twitch.'},
-          {name:'twitchLogin',label:'Nick z Twitcha (opcjonalnie)',type:'twitch-avatar',placeholder:'np. wazzzupek',help:'Wpisz sam nick, bez twitch.tv. Kliknij przycisk „POBIERZ AVATAR Z TWITCHA”, aby od razu pobrać i sprawdzić zdjęcie.'}
+          {name:'twitchLogin',label:'Nick z Twitcha (opcjonalnie)',placeholder:'np. wazzzupek',help:'Wpisz sam nick, bez twitch.tv. Avatar zostanie pobrany z Twitcha, a kliknięcie użytkownika otworzy jego kanał w nowej karcie. Po najechaniu pokaże się dymek z adresem kanału.'}
         ];
         const prepareMember=(v,strict=false)=>{
           const next={...cur,...v};
@@ -2608,7 +2706,8 @@
           if(!login){
             next.twitchLogin='';
             next.twitch='';
-            if(/^https:\/\/unavatar\.io\/twitch\//i.test(String(next.image||''))) next.image='';
+            if(next.imageSource==='twitch' || /^https:\/\/unavatar\.io\/twitch\//i.test(String(next.image||''))) next.image='';
+            next.imageSource='';
           }else{
             next.twitchLogin=login;
             next.twitch=`https://www.twitch.tv/${login}`;
@@ -2617,74 +2716,6 @@
         };
         const makeDraft=v=>{const member=prepareMember(v);const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=member;else arr.push(member);return d;};
         formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{const member=prepareMember(v,true);if(mi>=0)data.memberGroups[gi].members[mi]=member;else data.memberGroups[gi].members.push(member);await save('Osoba zapisana.');},makeDraft);
-
-        // Ręczny przycisk pobierania avatara z Twitcha jest renderowany bezpośrednio
-        // razem z polem nicku, dzięki czemu nie może zniknąć przez kolejność renderowania modala.
-        const memberForm=$('#cms-preview-form',modal);
-        const twitchInput=memberForm?.elements?.twitchLogin;
-        const twitchField=twitchInput?.closest('[data-twitch-avatar-field]') || twitchInput?.closest('.cms-field');
-        const fetchButton=twitchField?.querySelector('[data-fetch-twitch-avatar]');
-        const result=twitchField?.querySelector('[data-twitch-avatar-result]');
-        const avatarPreview=twitchField?.querySelector('[data-twitch-avatar-preview]');
-        const avatarStatus=twitchField?.querySelector('[data-twitch-avatar-status]');
-
-        if(twitchInput && twitchField && fetchButton && fetchButton.dataset.bound!=='1'){
-          fetchButton.dataset.bound='1';
-
-          const fetchAvatar=(showToast=false)=>{
-            const raw=String(twitchInput.value||'').trim();
-            const login=window.MattCMS?.normalizeTwitchLogin?.(raw)||'';
-            if(!raw){
-              result?.classList.add('is-empty','is-error');
-              result?.classList.remove('is-ok');
-              if(avatarPreview) avatarPreview.removeAttribute('src');
-              if(avatarStatus) avatarStatus.textContent='Najpierw wpisz nick Twitch.';
-              if(showToast) notify('Najpierw wpisz nick Twitch.','error');
-              return;
-            }
-            if(!login){
-              result?.classList.add('is-empty','is-error');
-              result?.classList.remove('is-ok');
-              if(avatarPreview) avatarPreview.removeAttribute('src');
-              if(avatarStatus) avatarStatus.textContent='Nieprawidłowy nick Twitch.';
-              if(showToast) notify('Nieprawidłowy nick Twitch. Wpisz sam nick, bez twitch.tv.','error');
-              return;
-            }
-
-            twitchInput.value=login;
-            result?.classList.remove('is-empty','is-error','is-ok');
-            if(avatarStatus) avatarStatus.textContent=`Pobieranie avatara @${login}…`;
-            fetchButton.disabled=true;
-
-            const avatarUrl=`https://unavatar.io/twitch/${encodeURIComponent(login)}?v=${Date.now()}`;
-            if(avatarPreview){
-              avatarPreview.onload=()=>{
-                result?.classList.remove('is-empty','is-error');
-                result?.classList.add('is-ok');
-                if(avatarStatus) avatarStatus.textContent=`Avatar @${login} pobrany.`;
-                fetchButton.disabled=false;
-                twitchInput.dispatchEvent(new Event('input',{bubbles:true}));
-                if(showToast) notify('Avatar pobrany z Twitcha.');
-              };
-              avatarPreview.onerror=()=>{
-                result?.classList.add('is-error');
-                result?.classList.remove('is-ok');
-                if(avatarStatus) avatarStatus.textContent=`Nie udało się pobrać avatara @${login}.`;
-                fetchButton.disabled=false;
-                if(showToast) notify('Nie udało się pobrać avatara z Twitcha.','error');
-              };
-              avatarPreview.src=avatarUrl;
-            }
-          };
-
-          fetchButton.addEventListener('click',()=>fetchAvatar(true));
-          twitchInput.addEventListener('input',()=>{
-            result?.classList.remove('is-error','is-ok');
-            if(avatarStatus) avatarStatus.textContent='Kliknij „Pobierz avatar z Twitcha”, aby odświeżyć zdjęcie.';
-          });
-
-          if(window.MattCMS?.normalizeTwitchLogin?.(twitchInput.value||'')) fetchAvatar(false);
-        }
       };
       draw();
     };
