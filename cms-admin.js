@@ -1149,42 +1149,101 @@
     const login = window.MattCMS?.normalizeTwitchLogin?.(rawLogin) || String(rawLogin || '').trim().replace(/^@/, '').toLowerCase();
     if (!login || !/^[a-z0-9_]{1,25}$/i.test(login)) throw new Error('Wpisz poprawny nick Twitch, np. kitty_lovecraft.');
 
+    const errors = [];
+    const rememberError = (source, error) => {
+      const text = error instanceof Error ? error.message : String(error || 'nieznany błąd');
+      errors.push(`${source}: ${text}`);
+    };
+
+    const normalizeAvatarUrl = value => {
+      const url = String(value || '').trim();
+      return /^https?:\/\//i.test(url) ? url : '';
+    };
+
     const readUser = data => {
       const list = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : [data]);
       const user = list.find(Boolean) || null;
       if (!user) return null;
-      const avatar = String(user.logo || user.profileImageUrl || user.profile_image_url || user.avatar || user.profilePic || user.profile_pic || '').trim();
+      const avatar = normalizeAvatarUrl(
+        user.logo || user.profileImageUrl || user.profile_image_url || user.profilePictureUrl ||
+        user.profile_picture_url || user.avatar || user.profilePic || user.profile_pic || ''
+      );
       const displayName = String(user.displayName || user.display_name || user.name || user.login || login).trim();
       const resolvedLogin = String(user.login || login).trim().toLowerCase();
-      return avatar ? { login: resolvedLogin, displayName, avatar } : null;
+      return avatar ? { login: resolvedLogin, displayName, avatar, source: 'IVR' } : null;
     };
 
-    // IVR udostępnia profil Twitch bez konieczności przechowywania tokenu Twitch w kodzie strony.
-    // Obsługujemy oba spotykane warianty endpointu, bo API zmieniało format adresu.
+    // 1) Najpewniejsza ścieżka dla tej strony: istniejąca Edge Function Supabase.
+    // Funkcja wykonuje zapytanie do oficjalnego Twitch Helix po stronie serwera,
+    // więc GitHub Pages nie wpada w ograniczenia CORS z zewnętrznych API.
+    if (window.supabaseClient?.functions?.invoke) {
+      try {
+        const channelUrl = `https://www.twitch.tv/${login}`;
+        const { data, error } = await window.supabaseClient.functions.invoke('twitch-streamer-autofill', {
+          body: { channelUrl }
+        });
+        if (error) {
+          let message = error.message || 'Błąd Edge Function.';
+          try {
+            const context = error.context;
+            if (context && typeof context.json === 'function') {
+              const payload = await context.json();
+              if (payload?.error) message = payload.error;
+            }
+          } catch (_) {}
+          throw new Error(message);
+        }
+        if (data?.ok === false) throw new Error(data.error || 'Twitch API odrzuciło żądanie.');
+        const avatar = normalizeAvatarUrl(data?.profileImageUrl || data?.profile_image_url || data?.avatarUrl || data?.avatar || '');
+        if (avatar) {
+          return {
+            login: String(data?.login || login).trim().toLowerCase(),
+            displayName: String(data?.displayName || data?.login || login).trim(),
+            avatar,
+            source: 'Twitch API / Supabase'
+          };
+        }
+        if (data?.ok) throw new Error('Profil został znaleziony, ale funkcja nie zwróciła adresu avatara.');
+      } catch (error) {
+        rememberError('Supabase/Twitch', error);
+      }
+    }
+
+    // 2) Fallback IVR. Działa bez tokenu, ale w przeglądarce może zostać zablokowany
+    // przez CORS / politykę sieciową, dlatego nie jest już głównym źródłem.
     const endpoints = [
-      `https://api.ivr.fi/v2/twitch/user/${encodeURIComponent(login)}`,
-      `https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`
+      `https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`,
+      `https://api.ivr.fi/v2/twitch/user/${encodeURIComponent(login)}`
     ];
-    let lastError = null;
     for (const endpoint of endpoints) {
       try {
         const response = await fetch(endpoint, { cache: 'no-store', headers: { Accept: 'application/json' } });
-        if (!response.ok) { lastError = new Error(`IVR HTTP ${response.status}`); continue; }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const profile = readUser(await response.json());
         if (profile) return profile;
-      } catch (error) { lastError = error; }
+        throw new Error('Profil bez adresu avatara.');
+      } catch (error) {
+        rememberError('IVR', error);
+      }
     }
 
-    // Drugi niezależny fallback. DecAPI zwraca bezpośredni URL avatara jako tekst.
+    // 3) Ostatni fallback DecAPI. Endpoint zwraca sam URL jako text/plain.
     try {
-      const response = await fetch(`https://decapi.me/twitch/avatar/${encodeURIComponent(login)}`, { cache: 'no-store' });
-      if (response.ok) {
-        const avatar = String(await response.text()).trim();
-        if (/^https?:\/\//i.test(avatar)) return { login, displayName: login, avatar };
-      }
-    } catch (error) { lastError = error; }
+      const response = await fetch(`https://decapi.me/twitch/avatar/${encodeURIComponent(login)}`, {
+        cache: 'no-store',
+        headers: { Accept: 'text/plain,*/*' }
+      });
+      const body = String(await response.text()).trim();
+      if (!response.ok) throw new Error(`HTTP ${response.status}${body ? ` — ${body.slice(0,120)}` : ''}`);
+      const avatar = normalizeAvatarUrl(body);
+      if (avatar) return { login, displayName: login, avatar, source: 'DecAPI' };
+      throw new Error(body || 'Brak adresu avatara w odpowiedzi.');
+    } catch (error) {
+      rememberError('DecAPI', error);
+    }
 
-    throw new Error(`Nie udało się pobrać profilu @${login}. ${lastError?.message ? `(${lastError.message})` : 'Sprawdź połączenie i spróbuj ponownie.'}`);
+    const details = errors.slice(0, 4).join(' | ');
+    throw new Error(`Nie udało się pobrać avatara @${login}.${details ? ` ${details}` : ''}`);
   }
 
   function fieldHtml(field, value) {
@@ -2574,7 +2633,7 @@
         const hasTwitchAvatar = fields.some(field => field.name === 'twitchLogin');
         const avatarUrl = String(current?.image || '').trim();
         const avatarTools = hasTwitchAvatar ? `<section class="cms-twitch-avatar-tools" data-twitch-avatar-tools>
-          <div class="cms-twitch-avatar-tools-head"><div><small>AVATAR TWITCH</small><strong>Pobierz aktualne zdjęcie profilowe</strong></div><span>IVR / DecAPI fallback</span></div>
+          <div class="cms-twitch-avatar-tools-head"><div><small>AVATAR TWITCH</small><strong>Pobierz aktualne zdjęcie profilowe</strong></div><span>Twitch API przez Supabase</span></div>
           <button class="cms-primary cms-twitch-avatar-fetch" type="button" data-fetch-twitch-avatar>↓ POBIERZ AVATAR Z TWITCHA</button>
           <div class="cms-twitch-avatar-result${avatarUrl?' is-ready':''}" data-twitch-avatar-result>
             <div class="cms-twitch-avatar-preview"><img ${avatarUrl?`src="${esc(avatarUrl)}"`:''} alt="Podgląd avatara Twitch" data-twitch-avatar-preview></div>
@@ -2635,7 +2694,7 @@
             try {
               const profile = await fetchTwitchAvatarProfile(login);
               if (loginInput) loginInput.value = profile.login || login;
-              setAvatarState(profile.avatar, profile.login || login, `Pobrano profil ${profile.displayName || '@'+login}. Kliknij ZAPISZ, aby zachować avatar.`);
+              setAvatarState(profile.avatar, profile.login || login, `Pobrano profil ${profile.displayName || '@'+login} przez ${profile.source || 'Twitch API'}. Kliknij ZAPISZ, aby zachować avatar.`);
               notify(`Pobrano avatar z Twitcha: @${profile.login || login}.`);
             } catch (error) {
               setAvatarState('', '', error.message);

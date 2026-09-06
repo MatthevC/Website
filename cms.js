@@ -957,10 +957,12 @@
     if (twitchLogin) {
       m.twitchLogin = twitchLogin;
       m.twitch = `https://www.twitch.tv/${twitchLogin}`;
-      // Jeżeli administrator pobrał bezpośredni avatar Twitch, zachowujemy jego URL.
-      // Unavatar pozostaje jedynie fallbackiem dla starszych wpisów bez zapisanego zdjęcia.
+      // Używamy wyłącznie avatara zapisanego przez panel administratora.
+      // Nie tworzymy już automatycznie URL unavatar.io, bo jego awaria dawała
+      // uszkodzony obraz mimo poprawnego nicku Twitch. Bez zapisanego avatara
+      // renderer pokaże bezpieczny fallback (literę / kolor roli).
       const savedImage = String(m.image || '').trim();
-      m.image = savedImage || `https://unavatar.io/twitch/${encodeURIComponent(twitchLogin)}`;
+      m.image = /^https:\/\/unavatar\.io\/twitch\//i.test(savedImage) ? '' : savedImage;
     } else {
       m.twitchLogin = '';
       m.twitch = '';
