@@ -18,6 +18,7 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
 
   { permission:"events.publish", group_name:"EVENTY", label:"Publikowanie i ukrywanie eventów", description:"Może zmieniać event między wersją publiczną, szkicem, ukrytym i zaplanowanym do publikacji.", sort_order:127 },
   { permission:"events.preview.nonpublic", group_name:"EVENTY", label:"Podgląd niepublicznych eventów", description:"Może podejrzeć szkice, eventy ukryte i zaplanowane przed publikacją.", sort_order:128 },
+  { permission:"events.preview.devices", group_name:"EVENTY", label:"Podgląd mobile / desktop eventów", description:"Może przełączać podgląd edytowanego eventu między widokiem komputerowym i telefonem.", sort_order:128.5 },
   { permission:"events.duplicate", group_name:"EVENTY", label:"Duplikowanie eventów", description:"Może tworzyć kopię istniejącego eventu jako nowy szkic.", sort_order:129 },
   { permission:"events.notes.manage", group_name:"EVENTY", label:"Notatki wewnętrzne eventów", description:"Może dodawać notatki widoczne tylko dla obsługi strony. W eventach używaj razem z „Edycja eventów”.", sort_order:130 },
   { permission:"events.history.view", group_name:"EVENTY", label:"Historia wersji eventów", description:"Może przeglądać poprzednie wersje eventów zapisane w backupach.", sort_order:131 },
@@ -46,12 +47,15 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
   { permission:"cms.preview.mode", group_name:"NARZĘDZIA MODERATORA", label:"Tryb podglądu strony", description:"Może ukryć narzędzia CMS i zobaczyć stronę w widoku zbliżonym do zwykłego użytkownika.", sort_order:618 },
   { permission:"cms.links.check", group_name:"NARZĘDZIA MODERATORA", label:"Testowanie linków", description:"Może uruchamiać kontrolę linków, grafik i odnośników do Twitcha/Discorda.", sort_order:619 },
   { permission:"cms.editlocks.view", group_name:"NARZĘDZIA MODERATORA", label:"Ostrzeżenia o równoczesnej edycji", description:"Otrzymuje ostrzeżenie, gdy ten sam element jest edytowany przez inną osobę.", sort_order:620 },
+  { permission:"cms.forms.autosave", group_name:"NARZĘDZIA MODERATORA", label:"Autozapis formularzy CMS", description:"Automatycznie zapisuje lokalny szkic podczas edycji i pozwala przywrócić niezapisane zmiany po zamknięciu lub odświeżeniu strony.", sort_order:620.5 },
+  { permission:"cms.integrity.check", group_name:"NARZĘDZIA MODERATORA", label:"Test integralności strony", description:"Może sprawdzać eventy, pliki, streamerów, Discord, nawigację i dane CMS pod kątem braków, duplikatów i niespójności.", sort_order:621 },
   { permission:"site.maintenance.manage", group_name:"STRONA I WYGLĄD", label:"Tryb konserwacji strony", description:"Może włączyć lub wyłączyć stronę dla odwiedzających i ustawić komunikat przerwy technicznej.", sort_order:525 },
   { permission:"statistics.view", group_name:"LOGI I BEZPIECZEŃSTWO", label:"Statystyki CMS", description:"Dostęp do statystyk administracyjnych: liczba treści, szkiców, backupów i działań. Bez śledzenia odwiedzających.", sort_order:825 },
   { permission:"accounts.preview_as", group_name:"KONTA I DOSTĘP", label:"Podgląd panelu jako moderator", description:"Może uruchomić bezpieczny podgląd interfejsu z uprawnieniami wybranego moderatora, bez przejmowania jego konta.", sort_order:725 },
   { permission:"accounts.sessions.view", group_name:"KONTA I DOSTĘP", label:"Podgląd aktywności i sesji kont", description:"Może sprawdzić ostatnią aktywność konta oraz informacje o bieżącej sesji własnego konta.", sort_order:726 },
   { permission:"accounts.sessions.revoke", group_name:"KONTA I DOSTĘP", label:"Wymuszenie ponownego logowania", description:"Może oznaczyć konto do wylogowania ze strony przy następnym sprawdzeniu sesji.", sort_order:727 },
-  { permission:"accounts.block", group_name:"KONTA I DOSTĘP", label:"Blokowanie i odblokowanie kont", description:"Może tymczasowo zablokować dostęp użytkownika do strony bez usuwania konta.", sort_order:728 }
+  { permission:"accounts.block", group_name:"KONTA I DOSTĘP", label:"Blokowanie i odblokowanie kont", description:"Może tymczasowo zablokować dostęp użytkownika do strony bez usuwania konta.", sort_order:728 },
+  { permission:"accounts.permissions.copy", group_name:"KONTA I DOSTĘP", label:"Kopiowanie uprawnień moderatora", description:"Może skopiować cały zestaw uprawnień z jednego Moderatora do formularza drugiego Moderatora. Zmiany nadal wymagają kliknięcia ZAPISZ.", sort_order:729 }
 ];
 
 const MATT_PERMISSION_GROUP_ORDER = [
@@ -708,6 +712,10 @@ async function mattOpenAccountManager() {
     }).join("");
 
     const permissionCount = currentRole === "admin" ? catalog.length : currentRole === "moderator" ? selectedPermissions.size : 0;
+    const copyPermissionSources = accounts
+      .filter(source => source.auth_user_id !== account.auth_user_id && String(source.role || '').toLowerCase() === 'moderator')
+      .map(source => `<option value="${mattAccountEscape(source.auth_user_id)}">${mattAccountEscape(source.username || source.email || 'Moderator')} · ${(source.permissions || []).length} upr.</option>`).join('');
+    const canCopyPermissions = !isSelf && canChangePermissions && canAccount("accounts.permissions.copy") && Boolean(copyPermissionSources);
 
     return `<div class="account-editor-head">
         <div>
@@ -742,6 +750,10 @@ async function mattOpenAccountManager() {
           <button type="button" data-clear-all ${currentRole !== 'moderator' || !canChangePermissions ? 'disabled' : ''}>WYCZYŚĆ</button>
         </div>
       </div>
+      ${canCopyPermissions ? `<div class="account-copy-permissions" data-copy-permissions-wrap>
+        <div><small>SZYBKIE USTAWIENIE</small><strong>Skopiuj zestaw uprawnień z innego Moderatora</strong><span>Checkboxy zostaną podmienione w formularzu. Nic nie zapisze się bez kliknięcia „ZAPISZ ROLĘ I UPRAWNIENIA”.</span></div>
+        <div><select data-copy-permissions-source aria-label="Moderator źródłowy"><option value="">Wybierz moderatora…</option>${copyPermissionSources}</select><button type="button" data-copy-permissions>SKOPIUJ UPRAWNIENIA</button></div>
+      </div>` : ''}
       <div class="account-permissions" data-permissions>${permissionSections}</div>
 
       <div class="account-section-heading account-security-heading">
@@ -836,6 +848,10 @@ async function mattOpenAccountManager() {
 
       if (selectAll) selectAll.disabled = role !== "moderator" || !canChangePermissions;
       if (clearAll) clearAll.disabled = role !== "moderator" || !canChangePermissions;
+      const copyButton = body.querySelector('[data-copy-permissions]');
+      const copySelect = body.querySelector('[data-copy-permissions-source]');
+      if (copyButton) copyButton.disabled = role !== "moderator" || !canChangePermissions;
+      if (copySelect) copySelect.disabled = role !== "moderator" || !canChangePermissions;
       applyPermissionFilter();
 
       if (note) {
@@ -876,6 +892,18 @@ async function mattOpenAccountManager() {
     });
 
     permissionSearch?.addEventListener("input", applyPermissionFilter);
+
+    body.querySelector("[data-copy-permissions]")?.addEventListener("click", () => {
+      if (!canChangePermissions || !canAccount("accounts.permissions.copy") || selectedRole() !== "moderator") return;
+      const sourceId = String(body.querySelector("[data-copy-permissions-source]")?.value || '');
+      const source = accounts.find(item => String(item.auth_user_id) === sourceId && String(item.role || '').toLowerCase() === 'moderator');
+      const message = body.querySelector("[data-account-message]");
+      if (!source) { if (message) message.textContent = "Wybierz Moderatora, z którego chcesz skopiować uprawnienia."; return; }
+      const sourcePermissions = new Set(Array.isArray(source.permissions) ? source.permissions : []);
+      body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(cb => { cb.checked = sourcePermissions.has(cb.value); });
+      syncPermissionUi();
+      if (message) message.textContent = `Skopiowano ${(source.permissions || []).length} uprawnień z konta ${source.username || source.email || 'Moderator'}. Kliknij ZAPISZ, aby zatwierdzić.`;
+    });
 
     syncPermissionUi();
 

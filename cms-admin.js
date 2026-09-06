@@ -1190,7 +1190,7 @@
 
     const drawList = () => {
       openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Strzałkami możesz ustawić kolejność wyświetlania. Supabase przechowuje tylko nadpisanie tej sekcji.</p></div>
-        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button>${allowDelete?`<button class="danger" type="button" data-delete="${index}">DO KOSZA</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
+        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button>${has('cms.history.view')&&window.MattSuite?.showCmsArrayItemHistory?`<button type="button" data-history="${index}">HISTORIA</button>`:''}${allowDelete?`<button class="danger" type="button" data-delete="${index}">DO KOSZA</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add]', body)?.addEventListener('click', () => drawForm(-1));
       $('[data-save-order]', body)?.addEventListener('click', saveOrder);
@@ -1198,6 +1198,7 @@
       $$('[data-up]', body).forEach(btn => btn.addEventListener('click', () => moveItem(Number(btn.dataset.up), Number(btn.dataset.up)-1)));
       $$('[data-down]', body).forEach(btn => btn.addEventListener('click', () => moveItem(Number(btn.dataset.down), Number(btn.dataset.down)+1)));
       $$('[data-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.edit))));
+      $$('[data-history]', body).forEach(btn => btn.addEventListener('click', () => { const i=Number(btn.dataset.history); window.MattSuite?.showCmsArrayItemHistory?.(key,i,items[i],label(items[i]) || `${singular} ${i+1}`); }));
       $$('[data-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
         if (!allowDelete) return;
         const index = Number(btn.dataset.delete);
@@ -1227,6 +1228,7 @@
         try { onFormReady(form, { current: clone(current), index, items: clone(items), drawList }); }
         catch (error) { console.error('[MATT CMS] Błąd inicjalizacji formularza:', error); }
       }
+      window.MattSuite?.attachFormAutosave?.(form,`${key}:${index>=0?index:'new'}`,{label:index>=0?`Edycja: ${label(current)||singular}`:`Nowy: ${singular}`});
       $('[data-back]', form).addEventListener('click', async () => {
         if (editLockResource && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(editLockResource);
         drawList();
@@ -1261,6 +1263,7 @@
           if (index >= 0) nextItems[index] = value; else nextItems.push(value);
           await window.MattCMS.save(key, nextItems, backupAlreadyMade ? { backup:false } : {});
           items = nextItems;
+          window.MattSuite?.clearFormAutosave?.(form);
           if (editLockResource && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(editLockResource);
           notify('Zapisano zmiany.');
           await rerender();
@@ -1330,7 +1333,8 @@
         <button data-rule-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button>
         <button data-rule-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button>
         <button data-edit-rule="${index}">EDYTUJ</button>
-        ${has('rules.delete')?`<button class="danger" data-delete-rule="${index}">USUŃ</button>`:''}
+        ${has('cms.history.view')&&window.MattSuite?.showCmsArrayItemHistory?`<button data-history-rule="${index}">HISTORIA</button>`:''}
+        ${has('rules.delete')?`<button class="danger" data-delete-rule="${index}">DO KOSZA</button>`:''}
       </div></article>`).join('') : '<div class="cms-empty">Regulamin nie ma jeszcze żadnych zasad.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add-rule]', body)?.addEventListener('click', () => editRule(-1));
@@ -1339,12 +1343,14 @@
       $$('[data-rule-up]', body).forEach(b => b.addEventListener('click', () => move(Number(b.dataset.ruleUp), Number(b.dataset.ruleUp)-1)));
       $$('[data-rule-down]', body).forEach(b => b.addEventListener('click', () => move(Number(b.dataset.ruleDown), Number(b.dataset.ruleDown)+1)));
       $$('[data-edit-rule]', body).forEach(b => b.addEventListener('click', () => editRule(Number(b.dataset.editRule))));
+      $$('[data-history-rule]', body).forEach(b => b.addEventListener('click', () => { const i=Number(b.dataset.historyRule); window.MattSuite?.showCmsArrayItemHistory?.(key,i,items[i],items[i]?.label||items[i]?.title||`Zasada ${i+1}`); }));
       $$('[data-delete-rule]', body).forEach(b => b.addEventListener('click', async () => {
         if(!has('rules.delete')) return;
-        const i = Number(b.dataset.deleteRule);
-        if (!confirm(`Usunąć zasadę „${items[i]?.label || items[i]?.title}”? Pozostałe punkty zostaną automatycznie przenumerowane.`)) return;
+        const i = Number(b.dataset.deleteRule); const removed=clone(items[i]);
+        if (!confirm(`Przenieść zasadę „${removed?.label || removed?.title}” do kosza na 30 dni?`)) return;
+        if(window.MattSuite?.trashCmsArrayItem) await window.MattSuite.trashCmsArrayItem(key,removed,i,removed?.label||removed?.title||'Zasada');
         items.splice(i, 1);
-        await saveRules('Zasada została usunięta. Numeracja została przeliczona.');
+        await saveRules('Zasada została przeniesiona do kosza. Numeracja została przeliczona.');
       }));
     };
 
@@ -1479,11 +1485,11 @@
       </div><p>Kategoria bez podkategorii działa jak zwykły link. Po dodaniu podkategorii automatycznie staje się rozwijanym menu.</p></div>
       <div class="cms-discord-list">${items.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.label || 'BEZ NAZWY')}</strong><p>${cat.children?.length ? `${cat.children.length} podkategorii` : esc(cat.href || 'Brak linku')}</p></div><div>
         <button data-nav-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-nav-down="${ci}" ${ci===items.length-1?'disabled':''}>↓</button>
-        <button data-edit-nav="${ci}">EDYTUJ</button><button class="danger" data-delete-nav="${ci}">USUŃ</button>
+        <button data-edit-nav="${ci}">EDYTUJ</button>${has('cms.history.view')&&window.MattSuite?.showCmsArrayItemHistory?`<button data-history-nav="${ci}">HISTORIA</button>`:''}<button class="danger" data-delete-nav="${ci}">DO KOSZA</button>
       </div></header>
       <div class="cms-channel-admin-list">${(cat.children||[]).map((child,hi)=>`<article><div><span>↳</span><strong>${esc(child.label || 'PODKATEGORIA')}</strong><small>${esc(child.href || '#')}</small></div><div>
         <button data-sub-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-sub-down="${ci}:${hi}" ${hi===(cat.children||[]).length-1?'disabled':''}>↓</button>
-        <button data-edit-sub="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-sub="${ci}:${hi}">USUŃ</button>
+        <button data-edit-sub="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-sub="${ci}:${hi}">DO KOSZA</button>
       </div></article>`).join('')}<button class="cms-add-subitem" data-add-sub="${ci}">+ DODAJ PODKATEGORIĘ</button></div></section>`).join('')}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add-nav]', body)?.addEventListener('click', () => editCategory(-1));
@@ -1493,17 +1499,20 @@
       $$('[data-nav-up]', body).forEach(b => b.addEventListener('click', () => move(items, Number(b.dataset.navUp), Number(b.dataset.navUp)-1)));
       $$('[data-nav-down]', body).forEach(b => b.addEventListener('click', () => move(items, Number(b.dataset.navDown), Number(b.dataset.navDown)+1)));
       $$('[data-edit-nav]', body).forEach(b => b.addEventListener('click', () => editCategory(Number(b.dataset.editNav))));
+      $$('[data-history-nav]', body).forEach(b => b.addEventListener('click', () => { const i=Number(b.dataset.historyNav); window.MattSuite?.showCmsArrayItemHistory?.('navigation',i,items[i],items[i]?.label||`Kategoria ${i+1}`); }));
       $$('[data-delete-nav]', body).forEach(b => b.addEventListener('click', async () => {
-        const i = Number(b.dataset.deleteNav);
-        if (!confirm(`Usunąć kategorię „${items[i]?.label}” razem z jej podkategoriami?`)) return;
-        items.splice(i,1); await save('Kategoria została usunięta.');
+        const i = Number(b.dataset.deleteNav); const removed=clone(items[i]);
+        if (!confirm(`Przenieść kategorię „${removed?.label}” razem z jej podkategoriami do kosza?`)) return;
+        if(window.MattSuite?.trashCmsArrayItem) await window.MattSuite.trashCmsArrayItem('navigation',removed,i,removed?.label||'Kategoria menu');
+        items.splice(i,1); await save('Kategoria została przeniesiona do kosza.');
       }));
       $$('[data-add-sub]', body).forEach(b => b.addEventListener('click', () => editSub(Number(b.dataset.addSub), -1)));
       $$('[data-edit-sub]', body).forEach(b => b.addEventListener('click', () => { const [ci,hi]=b.dataset.editSub.split(':').map(Number); editSub(ci,hi); }));
       $$('[data-delete-sub]', body).forEach(b => b.addEventListener('click', async () => {
-        const [ci,hi]=b.dataset.deleteSub.split(':').map(Number);
-        if (!confirm(`Usunąć podkategorię „${items[ci]?.children?.[hi]?.label}”?`)) return;
-        items[ci].children.splice(hi,1); await save('Podkategoria została usunięta.');
+        const [ci,hi]=b.dataset.deleteSub.split(':').map(Number); const removed=clone(items[ci]?.children?.[hi]);
+        if (!confirm(`Przenieść podkategorię „${removed?.label}” do kosza?`)) return;
+        if(window.MattSuite?.trashNestedCmsArrayItem) await window.MattSuite.trashNestedCmsArrayItem('navigation',ci,'children',removed,hi,removed?.label||'Podkategoria menu');
+        items[ci].children.splice(hi,1); await save('Podkategoria została przeniesiona do kosza.');
       }));
       $$('[data-sub-up]', body).forEach(b => b.addEventListener('click', () => { const [ci,hi]=b.dataset.subUp.split(':').map(Number); move(items[ci].children, hi, hi-1); }));
       $$('[data-sub-down]', body).forEach(b => b.addEventListener('click', () => { const [ci,hi]=b.dataset.subDown.split(':').map(Number); move(items[ci].children, hi, hi+1); }));
@@ -1819,7 +1828,7 @@
       openModal('KOMENDY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-command-add>+ DODAJ KOMENDĘ</button><button type="button" data-command-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Kolejność zapisuje się automatycznie. Komendy przesuwasz tylko wewnątrz swojej kategorii, a całe kategorie możesz przesuwać osobnymi strzałkami.</p></div>
         <div class="cms-command-order-list">${groups.length ? groups.map((group, groupIndex) => `<section class="cms-command-order-category">
           <header><div><small>KATEGORIA ${String(groupIndex+1).padStart(2,'0')}</small><strong>${esc(group.category)}</strong><span>${group.entries.length} ${group.entries.length === 1 ? 'komenda' : 'komendy'}</span></div><div><button type="button" data-category-up="${esc(group.category)}" ${groupIndex===0?'disabled':''} title="Przesuń kategorię wyżej">↑ KATEGORIA</button><button type="button" data-category-down="${esc(group.category)}" ${groupIndex===groups.length-1?'disabled':''} title="Przesuń kategorię niżej">↓ KATEGORIA</button></div></header>
-          <div class="cms-manager-list">${group.entries.map((entry, localIndex) => `<article class="cms-manager-item cms-command-order-item"><div><small>${String(localIndex+1).padStart(2,'0')}</small><div><strong>${esc(entry.item.command || 'Komenda')}</strong><span>${esc(entry.item.description || '')}</span><em>${esc(roleSummary(entry.item))}</em></div></div><div><button type="button" data-command-up="${entry.index}" ${localIndex===0?'disabled':''} title="Przesuń wyżej w tej kategorii">↑</button><button type="button" data-command-down="${entry.index}" ${localIndex===group.entries.length-1?'disabled':''} title="Przesuń niżej w tej kategorii">↓</button><button type="button" data-command-edit="${entry.index}">EDYTUJ</button>${has('commands.delete')?`<button class="danger" type="button" data-command-delete="${entry.index}">USUŃ</button>`:''}</div></article>`).join('')}</div>
+          <div class="cms-manager-list">${group.entries.map((entry, localIndex) => `<article class="cms-manager-item cms-command-order-item"><div><small>${String(localIndex+1).padStart(2,'0')}</small><div><strong>${esc(entry.item.command || 'Komenda')}</strong><span>${esc(entry.item.description || '')}</span><em>${esc(roleSummary(entry.item))}</em></div></div><div><button type="button" data-command-up="${entry.index}" ${localIndex===0?'disabled':''} title="Przesuń wyżej w tej kategorii">↑</button><button type="button" data-command-down="${entry.index}" ${localIndex===group.entries.length-1?'disabled':''} title="Przesuń niżej w tej kategorii">↓</button><button type="button" data-command-edit="${entry.index}">EDYTUJ</button>${has('cms.history.view')&&window.MattSuite?.showCmsArrayItemHistory?`<button type="button" data-command-history="${entry.index}">HISTORIA</button>`:''}${has('commands.delete')?`<button class="danger" type="button" data-command-delete="${entry.index}">DO KOSZA</button>`:''}</div></article>`).join('')}</div>
         </section>`).join('') : '<div class="cms-empty">Brak komend.</div>'}</div>`);
 
       const body = $('#cms-modal-body', modal);
@@ -1830,17 +1839,19 @@
       $$('[data-category-up]', body).forEach(btn => btn.addEventListener('click', () => moveCategory(btn.dataset.categoryUp, -1)));
       $$('[data-category-down]', body).forEach(btn => btn.addEventListener('click', () => moveCategory(btn.dataset.categoryDown, 1)));
       $$('[data-command-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.commandEdit))));
+      $$('[data-command-history]', body).forEach(btn => btn.addEventListener('click', () => { const i=Number(btn.dataset.commandHistory); window.MattSuite?.showCmsArrayItemHistory?.(key,i,items[i],items[i]?.command||`Komenda ${i+1}`); }));
       $$('[data-command-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
         if(!has('commands.delete')) return;
         const index = Number(btn.dataset.commandDelete);
-        const item = items[index];
-        if (!item || !confirm(`Usunąć komendę ${item.command || ''}?`)) return;
+        const item = clone(items[index]);
+        if (!item || !confirm(`Przenieść komendę ${item.command || ''} do kosza?`)) return;
         const next = clone(items);
+        if(window.MattSuite?.trashCmsArrayItem) await window.MattSuite.trashCmsArrayItem(key,item,index,item.command||'Komenda');
         next.splice(index, 1);
         try {
           await window.MattCMS.save(key, next);
           items = next;
-          notify('Komenda została usunięta.');
+          notify('Komenda została przeniesiona do kosza.');
           await rerender();
         } catch (error) { notify(`Błąd usuwania: ${error.message}`, 'error'); }
       }));
@@ -1892,6 +1903,7 @@
       form.addEventListener('input', renderPreview);
       form.addEventListener('change', renderPreview);
       renderPreview();
+      window.MattSuite?.attachFormAutosave?.(form,`commands:${isEdit?index:'new'}`,{label:isEdit?`Edycja ${current.command||'komendy'}`:'Nowa komenda'});
       $('[data-back]', form)?.addEventListener('click', drawList);
 
       form.addEventListener('submit', async event => {
@@ -1927,6 +1939,7 @@
 
           await window.MattCMS.save(key, next);
           items = next;
+          window.MattSuite?.clearFormAutosave?.(form);
           notify(isEdit ? 'Komenda została zapisana.' : 'Nowa komenda została dodana.');
           await rerender();
         } catch (error) {
@@ -2152,15 +2165,17 @@
   function openTopicsManager() {
     let topics = clone(window.MattCMS?.get('contact_topics', null) || extractTopics());
     const draw = () => {
-      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button><button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button>${has('contact.topics.delete')?`<button class="danger" data-delete-topic="${index}">USUŃ</button>`:''}</div></article>`).join('')}</div>`);
+      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button><button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button>${has('cms.history.view')&&window.MattSuite?.showCmsArrayItemHistory?`<button data-history-topic="${index}">HISTORIA</button>`:''}${has('contact.topics.delete')?`<button class="danger" data-delete-topic="${index}">DO KOSZA</button>`:''}</div></article>`).join('')}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add-topic]', body).addEventListener('click', () => editTopic(-1));
       $('[data-reset-topics]', body).addEventListener('click', () => resetCmsKey('contact_topics', 'tematy formularza'));
       $$('[data-edit-topic]', body).forEach(b=>b.addEventListener('click',()=>editTopic(Number(b.dataset.editTopic))));
+      $$('[data-history-topic]', body).forEach(b=>b.addEventListener('click',()=>{const i=Number(b.dataset.historyTopic);window.MattSuite?.showCmsArrayItemHistory?.('contact_topics',i,topics[i],String(topics[i]||`Temat ${i+1}`));}));
       $$('[data-delete-topic]', body).forEach(b=>b.addEventListener('click',async()=>{
         if(!has('contact.topics.delete')) return;
-        const i=Number(b.dataset.deleteTopic); if(!confirm(`Usunąć temat: ${topics[i]}?`)) return; topics.splice(i,1);
-        try{await window.MattCMS.save('contact_topics',topics); notify('Temat usunięty.'); await rerender();}catch(e){notify(e.message,'error');}
+        const i=Number(b.dataset.deleteTopic); const removed=topics[i]; if(!confirm(`Przenieść temat „${removed}” do kosza?`)) return;
+        if(window.MattSuite?.trashCmsArrayItem) await window.MattSuite.trashCmsArrayItem('contact_topics',removed,i,String(removed||'Temat kontaktu')); topics.splice(i,1);
+        try{await window.MattCMS.save('contact_topics',topics); notify('Temat przeniesiony do kosza.'); await rerender();}catch(e){notify(e.message,'error');}
       }));
     };
     const editTopic = index => {
@@ -2652,7 +2667,7 @@
 
         <section class="cms-bubble-manager-section">
           <header><div><small>02 / KREATOR</small><strong>WŁASNE KOMUNIKATY NA TEJ PODSTRONIE</strong></div><span>${custom.length}</span></header>
-          <div class="cms-manager-list">${custom.length ? custom.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${styleLabel(item.style)}</small><strong>${esc(item.title || 'KOMUNIKAT')}</strong></div><div><button type="button" data-custom-up="${index}" ${index===0?'disabled':''}>↑</button><button type="button" data-custom-down="${index}" ${index===custom.length-1?'disabled':''}>↓</button><button type="button" data-edit-custom="${index}">EDYTUJ</button><button class="danger" type="button" data-delete-custom="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Nie utworzono jeszcze własnych komunikatów. Kliknij „+ DODAJ NOWY KOMUNIKAT”.</div>'}</div>
+          <div class="cms-manager-list">${custom.length ? custom.map((item,index)=>`<article class="cms-manager-item cms-callout-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${styleLabel(item.style)}</small><strong>${esc(item.title || 'KOMUNIKAT')}</strong></div><div><button type="button" data-custom-up="${index}" ${index===0?'disabled':''}>↑</button><button type="button" data-custom-down="${index}" ${index===custom.length-1?'disabled':''}>↓</button><button type="button" data-edit-custom="${index}">EDYTUJ</button><button class="danger" type="button" data-delete-custom="${index}">DO KOSZA</button></div></article>`).join('') : '<div class="cms-empty">Nie utworzono jeszcze własnych komunikatów. Kliknij „+ DODAJ NOWY KOMUNIKAT”.</div>'}</div>
         </section>`);
 
       const body = $('#cms-modal-body', modal);
@@ -2684,9 +2699,10 @@
       $$('[data-custom-down]',body).forEach(btn=>btn.addEventListener('click',()=>moveCustom(Number(btn.dataset.customDown),1)));
       $$('[data-edit-custom]',body).forEach(btn=>btn.addEventListener('click',()=>editCustom(Number(btn.dataset.editCustom))));
       $$('[data-delete-custom]',body).forEach(btn=>btn.addEventListener('click',async()=>{
-        const index=Number(btn.dataset.deleteCustom); if(!customItems[index]) return;
-        if(!confirm(`Usunąć komunikat „${customItems[index].title || 'bez nazwy'}”?`)) return;
-        customItems.splice(index,1); await saveCustom('Komunikat został usunięty.');
+        const index=Number(btn.dataset.deleteCustom); if(!customItems[index]) return; const removed=clone(customItems[index]);
+        if(!confirm(`Przenieść komunikat „${removed.title || 'bez nazwy'}” do kosza?`)) return;
+        if(window.MattSuite?.trashCmsArrayItem) await window.MattSuite.trashCmsArrayItem(customKey,removed,index,removed.title||'Komunikat strony');
+        customItems.splice(index,1); await saveCustom('Komunikat został przeniesiony do kosza.');
       }));
     };
 
@@ -3508,6 +3524,7 @@
               throw workflowError;
             }
           }
+          window.MattSuite?.clearFormAutosave?.(form);
           if (savedRow?.id && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(`event:${savedRow.id}`);
           notify(editing?'Event został zapisany.':'Event został dodany.'); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
         }catch(error){notify(`Nie udało się zapisać eventu: ${error.message}`,'error');if(submit){submit.disabled=false;submit.textContent=editing?'ZAPISZ ZMIANY':'DODAJ EVENT';}}

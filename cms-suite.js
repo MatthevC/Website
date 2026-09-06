@@ -90,6 +90,8 @@
   let linkResults = [];
   let alertCache = [];
   let observerQueued = false;
+  let integrityResults = [];
+  let trashPurgePromise = null;
 
   function toast(message, type='ok') {
     let el = document.getElementById('matt-suite-toast');
@@ -140,8 +142,26 @@
     return trash[0];
   }
 
+  async function purgeExpiredTrash() {
+    if (!isStaff() || !has('cms.trash.view')) return [];
+    if (trashPurgePromise) return trashPurgePromise;
+    trashPurgePromise = (async()=>{
+      const trash = await freshKey(KEYS.trash, []);
+      const list = Array.isArray(trash) ? trash : [];
+      const now = Date.now();
+      const active = list.filter(item => !item?.expiresAt || new Date(item.expiresAt).getTime() > now);
+      if (active.length !== list.length) await saveKey(KEYS.trash, active, { backup:false });
+      return active;
+    })().finally(()=>{trashPurgePromise=null;});
+    return trashPurgePromise;
+  }
+
   async function trashCmsArrayItem(key, item, index, label='Element') {
     return addTrash({ kind:'cms-array', sourceKey:key, label:String(label || 'Element'), payload:clone(item), meta:{ index:Number(index) } });
+  }
+
+  async function trashNestedCmsArrayItem(key, parentIndex, childKey, item, index, label='Element') {
+    return addTrash({ kind:'cms-nested-array', sourceKey:key, label:String(label || 'Element'), payload:clone(item), meta:{ parentIndex:Number(parentIndex), childKey:String(childKey || 'children'), index:Number(index) } });
   }
 
   async function trashDownloadItem(item, context={}) {
@@ -334,6 +354,130 @@
     }
   }
 
+  function formDraftStorageKey(key) {
+    return `matt_cms_form_draft:${location.pathname}:${String(key || 'form')}`;
+  }
+
+  function serializeFormDraft(form) {
+    const data = {};
+    [...form.elements].forEach(el => {
+      if (!el?.name || el.type === 'file' || el.type === 'submit' || el.type === 'button') return;
+      if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; return; }
+      if (el.type === 'checkbox') { data[el.name] = Boolean(el.checked); return; }
+      if (el.tagName === 'SELECT' && el.multiple) { data[el.name] = [...el.selectedOptions].map(o=>o.value); return; }
+      data[el.name] = el.value;
+    });
+    return data;
+  }
+
+  function applyFormDraft(form, values={}) {
+    Object.entries(values || {}).forEach(([name,value]) => {
+      const controls = form.querySelectorAll(`[name="${CSS.escape(name)}"]`);
+      controls.forEach(el => {
+        if (el.type === 'file') return;
+        if (el.type === 'radio') el.checked = String(el.value) === String(value);
+        else if (el.type === 'checkbox') el.checked = Boolean(value);
+        else if (el.tagName === 'SELECT' && el.multiple && Array.isArray(value)) [...el.options].forEach(o=>o.selected=value.includes(o.value));
+        else el.value = value ?? '';
+        el.dispatchEvent(new Event('input',{bubbles:true}));
+        el.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+    });
+  }
+
+  function clearFormAutosave(formOrKey) {
+    const rawKey = typeof formOrKey === 'string' ? formOrKey : formOrKey?.dataset?.mattDraftKey;
+    if (!rawKey) return;
+    try { localStorage.removeItem(formDraftStorageKey(rawKey)); } catch (_) {}
+    const form = typeof formOrKey === 'string' ? null : formOrKey;
+    form?.querySelector('[data-matt-autosave-banner]')?.remove();
+  }
+
+  function attachFormAutosave(form, key, options={}) {
+    if (!form || !key || !has('cms.forms.autosave') || form.dataset.mattAutosaveBound === '1') return;
+    form.dataset.mattAutosaveBound = '1';
+    form.dataset.mattDraftKey = String(key);
+    const storageKey = formDraftStorageKey(key);
+    const maxAge = 30 * 24 * 60 * 60 * 1000;
+    let existing = null;
+    try { existing = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
+    const isFresh = existing?.savedAt && Date.now() - new Date(existing.savedAt).getTime() < maxAge;
+    const banner = document.createElement('div');
+    banner.className = 'matt-autosave-banner';
+    banner.dataset.mattAutosaveBanner = '1';
+    banner.innerHTML = `<div><small>AUTOZAPIS LOKALNY</small><strong data-autosave-title>${isFresh?'Znaleziono niezapisany szkic':'Formularz jest zabezpieczony'}</strong><span data-autosave-state>${isFresh?`Szkic z ${esc(fmt(existing.savedAt))}. Pliki graficzne trzeba wybrać ponownie.`:'Zmiany tekstowe będą zapisywane w tej przeglądarce.'}</span></div><div>${isFresh?'<button type="button" data-autosave-restore>PRZYWRÓĆ</button><button type="button" data-autosave-discard>ODRZUĆ</button>':''}</div>`;
+    const anchor = form.querySelector('.cms-event-form-actions,.cms-form-actions') || form.firstElementChild;
+    anchor?.parentNode?.insertBefore(banner, anchor);
+    banner.querySelector('[data-autosave-restore]')?.addEventListener('click',()=>{
+      applyFormDraft(form, existing.values || {});
+      banner.querySelector('[data-autosave-title]').textContent = 'Przywrócono niezapisany szkic';
+      banner.querySelector('[data-autosave-state]').textContent = 'Sprawdź dane i zapisz formularz. Pliki graficzne nie są przechowywane w autozapisie.';
+      banner.querySelector('[data-autosave-restore]')?.remove();
+      banner.querySelector('[data-autosave-discard]')?.remove();
+      toast('Przywrócono niezapisane zmiany.');
+    });
+    banner.querySelector('[data-autosave-discard]')?.addEventListener('click',()=>{
+      try { localStorage.removeItem(storageKey); } catch (_) {}
+      banner.querySelector('[data-autosave-title]').textContent = 'Stary szkic odrzucony';
+      banner.querySelector('[data-autosave-state]').textContent = 'Nowe zmiany będą dalej automatycznie zabezpieczane.';
+      banner.querySelector('[data-autosave-restore]')?.remove();
+      banner.querySelector('[data-autosave-discard]')?.remove();
+    });
+    let timer = 0;
+    const saveDraft = () => {
+      clearTimeout(timer);
+      timer = setTimeout(()=>{
+        try {
+          const payload = { key:String(key), label:String(options.label || form.id || 'Formularz'), savedAt:new Date().toISOString(), values:serializeFormDraft(form) };
+          localStorage.setItem(storageKey, JSON.stringify(payload));
+          const state = banner.querySelector('[data-autosave-state]');
+          if (state) state.textContent = `Autozapis: ${new Intl.DateTimeFormat('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date())}.`;
+        } catch (_) {}
+      }, 650);
+    };
+    form.addEventListener('input',saveDraft);
+    form.addEventListener('change',saveDraft);
+  }
+
+  function itemIdentity(item, index=0) {
+    if (item == null || typeof item !== 'object') return `value:${String(item)}`;
+    for (const key of ['id','uuid','login','channelUrl','href','url','name','title','label','command']) {
+      if (item[key] != null && String(item[key]).trim()) return `${key}:${String(item[key]).trim().toLowerCase()}`;
+    }
+    return `index:${index}`;
+  }
+
+  async function showCmsArrayItemHistory(key, index, currentItem, label='Element') {
+    if (!has('cms.history.view')) return;
+    const identity = itemIdentity(currentItem,index);
+    const backups=(await listBackupsRaw(35)).slice(0,35);
+    const versions=[]; let lastJson='';
+    for (const backupMeta of backups) {
+      try {
+        const backup=await getBackupRaw(backupMeta.id);
+        const row=(backup.snapshot?.cms_data||[]).find(x=>String(x.key)===String(key));
+        const arr=Array.isArray(row?.data)?row.data:[];
+        let found=arr.find((x,i)=>itemIdentity(x,i)===identity);
+        if(found===undefined && arr[index]!==undefined) found=arr[index];
+        if(found===undefined) continue;
+        const json=JSON.stringify(found); if(json===lastJson) continue; lastJson=json;
+        versions.push({backup,item:clone(found)});
+      } catch (_) {}
+      if (versions.length>=12) break;
+    }
+    openPreviewOverlay(`<div class="matt-history-detail"><div class="matt-center-note"><strong>${esc(label)}</strong><p>Historia pojedynczego elementu z automatycznych i ręcznych backupów.</p></div><div class="matt-history-key-list">${versions.length?versions.map(v=>`<article><div><strong>${esc(label)}</strong><small>#${v.backup.id} · ${esc(fmt(v.backup.created_at))} · ${esc(v.backup.label||'')}</small></div>${canRestoreCmsKey(key)?`<button data-array-version="${v.backup.id}">PRZYWRÓĆ TĘ WERSJĘ</button>`:''}</article>`).join(''):'<div class="matt-center-empty">Brak wcześniejszych wersji tego elementu w zachowanych backupach.</div>'}</div></div>`,`HISTORIA — ${label}`);
+    const overlay=document.getElementById('matt-suite-preview-overlay');
+    $$('[data-array-version]',overlay).forEach(btn=>btn.onclick=async()=>{
+      if(!canRestoreCmsKey(key)) return toast('Brak uprawnienia do przywracania tej sekcji.','error');
+      const version=versions.find(v=>String(v.backup.id)===String(btn.dataset.arrayVersion)); if(!version)return;
+      const arr=await freshKey(key,[]); const next=Array.isArray(arr)?arr:[];
+      let target=next.findIndex((x,i)=>itemIdentity(x,i)===identity); if(target<0) target=Math.min(Math.max(0,index),next.length);
+      if(target<next.length) next[target]=clone(version.item); else next.splice(target,0,clone(version.item));
+      await window.MattCMS.save(key,next,{backup:true,backupLabel:`AUTO: przed przywróceniem elementu ${label}`});
+      toast('Przywrócono poprzednią wersję elementu.'); overlay.classList.remove('active'); if(typeof window.render==='function')await window.render();
+    });
+  }
+
   function ensureCenter() {
     if (centerModal) return centerModal;
     centerModal = document.createElement('div');
@@ -357,6 +501,7 @@
     ['trash','KOSZ','cms.trash.view'],
     ['alerts','ALERTY','cms.notifications.view'],
     ['links','LINKI','cms.links.check'],
+    ['integrity','INTEGRALNOŚĆ','cms.integrity.check'],
     ['stats','STATYSTYKI','statistics.view'],
     ['maintenance','KONSERWACJA','site.maintenance.manage']
   ].filter(([, ,p]) => has(p));
@@ -380,6 +525,7 @@
       if(tab==='trash') await renderTrash(body);
       if(tab==='alerts') await renderAlerts(body);
       if(tab==='links') await renderLinks(body);
+      if(tab==='integrity') await renderIntegrity(body);
       if(tab==='stats') await renderStats(body);
       if(tab==='maintenance') await renderMaintenance(body);
     } catch (error) {
@@ -439,6 +585,7 @@
     if(maintenance?.enabled) alerts.unshift({level:'high',kind:'STRONA',title:'Tryb konserwacji całej strony jest WŁĄCZONY',detail:String(maintenance.message||'Publiczna strona jest wyłączona.')});
     else if(Array.isArray(maintenance?.sections) && maintenance.sections.length) alerts.unshift({level:'warn',kind:'STRONA',title:`Wyłączone sekcje: ${maintenance.sections.length}`,detail:`Dla odwiedzających niedostępne: ${maintenance.sections.join(', ')}.`});
     linkResults.filter(x=>x.ok===false).forEach(x=>alerts.push({level:'warn',kind:'LINK',title:'Niedostępny link',detail:x.url}));
+    integrityResults.filter(x=>x.level==='high'||x.level==='warn').slice(0,12).forEach(x=>alerts.push({level:x.level,kind:'INTEGRALNOŚĆ',title:x.title,detail:x.detail||x.area}));
     alertCache=alerts;
     return alerts;
   }
@@ -481,6 +628,7 @@
       ${has('cms.search')?'<button data-quick="search">⌕ GLOBALNE SZUKANIE</button>':''}
       ${canTrash?'<button data-quick="trash">♲ KOSZ</button>':''}
       ${has('cms.links.check')?'<button data-quick="links">↗ TEST LINKÓW</button>':''}
+      ${has('cms.integrity.check')?'<button data-quick="integrity">✓ TEST INTEGRALNOŚCI</button>':''}
       ${has('cms.preview.mode')?'<button data-preview-mode>◉ PODGLĄD STRONY</button>':''}
     </div>`;
     $('[data-open-alerts]',body)?.addEventListener('click',()=>openCenter('alerts'));
@@ -592,12 +740,12 @@
   }
 
   async function renderTrash(body) {
-    let trash=await freshKey(KEYS.trash,[]);
+    let trash=await purgeExpiredTrash();
     trash=Array.isArray(trash)?trash:[];
     const now=Date.now();
-    const activeTrash=trash.filter(item=>!item?.expiresAt || new Date(item.expiresAt).getTime()>now);
-    if(activeTrash.length!==trash.length){trash=activeTrash;await saveKey(KEYS.trash,trash,{backup:false});}
-    body.innerHTML=`<div class="matt-center-note"><strong>KOSZ — 30 DNI</strong><p>Usuwanie eventów, plików i elementów Discorda przenosi je tutaj. Możesz je przywrócić albo usunąć bezpowrotnie.</p></div><div class="matt-trash-list">${trash.length?trash.map(item=>{const days=Math.max(0,Math.ceil((new Date(item.expiresAt||0).getTime()-now)/(86400000)));return `<article><div><small>${esc(String(item.kind||'ELEMENT').toUpperCase())} · ${esc(fmt(item.deletedAt))}</small><strong>${esc(item.label||'Element')}</strong><span>usunął: ${esc(item.deletedBy?.username||'system')} · pozostało ok. ${days} dni</span></div><div>${has('cms.trash.restore')?`<button data-trash-restore="${esc(item.id)}">PRZYWRÓĆ</button>`:''}${has('cms.trash.delete')?`<button class="danger" data-trash-delete="${esc(item.id)}">USUŃ NA STAŁE</button>`:''}</div></article>`}).join(''):'<div class="matt-center-empty">Kosz jest pusty.</div>'}</div>`;
+    const groups=[['all','WSZYSTKO'],['event','EVENTY'],['download','PLIKI'],['discord','DISCORD'],['cms','TREŚCI CMS']];
+    body.innerHTML=`<div class="matt-center-note"><strong>KOSZ — 30 DNI</strong><p>Usuwane elementy strony trafiają do jednego kosza. Po 30 dniach wpis jest automatycznie usuwany z kosza. Do tego czasu możesz go przywrócić.</p></div><div class="matt-trash-filters">${groups.map(([id,label])=>`<button type="button" class="${id==='all'?'active':''}" data-trash-filter="${id}">${label}</button>`).join('')}</div><div class="matt-trash-list" data-trash-list>${trash.length?trash.map(item=>{const days=Math.max(0,Math.ceil((new Date(item.expiresAt||0).getTime()-now)/(86400000)));const kind=String(item.kind||'element').toLowerCase();const group=kind==='event'?'event':kind==='download'?'download':kind.startsWith('discord')?'discord':'cms';return `<article data-trash-group="${group}"><div><small>${esc(kind.toUpperCase())} · ${esc(fmt(item.deletedAt))}</small><strong>${esc(item.label||'Element')}</strong><span>usunął: ${esc(item.deletedBy?.username||'system')} · pozostało ${days} dni</span></div><div>${has('cms.trash.restore')?`<button data-trash-restore="${esc(item.id)}">PRZYWRÓĆ</button>`:''}${has('cms.trash.delete')?`<button class="danger" data-trash-delete="${esc(item.id)}">USUŃ NA STAŁE</button>`:''}</div></article>`}).join(''):'<div class="matt-center-empty">Kosz jest pusty.</div>'}</div>`;
+    $$('[data-trash-filter]',body).forEach(btn=>btn.onclick=()=>{const f=btn.dataset.trashFilter;$$('[data-trash-filter]',body).forEach(x=>x.classList.toggle('active',x===btn));$$('[data-trash-group]',body).forEach(x=>x.hidden=f!=='all'&&x.dataset.trashGroup!==f);});
     $$('[data-trash-restore]',body).forEach(btn=>btn.onclick=()=>restoreTrashItem(btn.dataset.trashRestore));
     $$('[data-trash-delete]',body).forEach(btn=>btn.onclick=async()=>{
       if(!confirm('Usunąć ten element z kosza bez możliwości przywrócenia?'))return;
@@ -628,6 +776,8 @@
       }
     } else if(item.kind==='cms-array') {
       const arr=await freshKey(item.sourceKey,[]); const next=Array.isArray(arr)?arr:[]; const index=Math.max(0,Math.min(next.length,Number(item.meta?.index??next.length))); next.splice(index,0,item.payload); await window.MattCMS.save(item.sourceKey,next);
+    } else if(item.kind==='cms-nested-array') {
+      const arr=await freshKey(item.sourceKey,[]); const next=Array.isArray(arr)?arr:[]; const parent=next[Number(item.meta?.parentIndex)]; if(!parent) throw new Error('Nie znaleziono elementu nadrzędnego do przywrócenia.'); const childKey=String(item.meta?.childKey||'children'); parent[childKey]=Array.isArray(parent[childKey])?parent[childKey]:[]; const index=Math.max(0,Math.min(parent[childKey].length,Number(item.meta?.index??parent[childKey].length))); parent[childKey].splice(index,0,item.payload); await window.MattCMS.save(item.sourceKey,next);
     } else if(item.kind==='download') {
       const config=clone(window.MattDownloads?.getConfig?.()||{order:[],overrides:{},hidden:[],custom:[],visibility:{},notes:{}}); config.visibility=config.visibility||{};config.notes=config.notes||{};config.hidden=(config.hidden||[]).filter(x=>String(x)!==String(item.meta?.id));
       const data=clone(item.payload||{}); const did=String(item.meta?.id||data.id||uid());
@@ -693,6 +843,49 @@
   }
 
   function renderLinkResultsHtml(){return linkResults.length?linkResults.filter(Boolean).map(r=>`<article class="${r.ok?'ok':'bad'}"><span>${r.ok?'✓':'!'}</span><div><strong>${esc(r.status)}</strong><p>${esc(r.url)}</p></div><time>${r.ms} ms</time></article>`).join(''):'<div class="matt-center-empty">Brak wyników.</div>';}
+
+  async function runIntegrityCheck() {
+    const issues=[];
+    const add=(level,area,title,detail='')=>issues.push({level,area,title,detail});
+    const [events,workflow,discordPreview,discordChannels,streamers,navigation,downloadsConfig] = await Promise.all([
+      fetchEvents().catch(()=>[]), getEventWorkflow(true), freshKey('discord_join_preview',{}), freshKey('discord_channels',[]), freshKey('streamers',[]), freshKey('navigation',[]), freshKey('downloads_config',{})
+    ]);
+    const seenTitles=new Map();
+    events.forEach(row=>{
+      const title=String(row.title||'').trim(); const meta=workflow[String(row.id)]||{};
+      if(!title)add('high','EVENT','Event bez tytułu',`ID: ${row.id}`);
+      if(!String(row.description||'').trim())add('warn','EVENT',`${title||'Event'} nie ma opisu`,`ID: ${row.id}`);
+      if(!row.start_date)add('high','EVENT',`${title||'Event'} nie ma daty rozpoczęcia`,`ID: ${row.id}`);
+      if(!row.image_url)add('high','EVENT',`${title||'Event'} nie ma grafiki`,`ID: ${row.id}`);
+      if(meta.visibility==='scheduled'&&!meta.publishAt&&!row.publish_date)add('high','EVENT',`${title||'Event'} ma status zaplanowany bez daty publikacji`);
+      if(meta.imageMode==='separate'&&!meta.mainImageUrl)add('warn','EVENT',`${title||'Event'} używa dwóch grafik, ale nie ma grafiki głównej`);
+      const key=title.toLowerCase(); if(key){if(seenTitles.has(key))add('warn','EVENT',`Duplikat tytułu: ${title}`,`ID ${seenTitles.get(key)} i ${row.id}`);else seenTitles.set(key,row.id);}
+    });
+    const sarr=Array.isArray(streamers)?streamers:[];
+    sarr.forEach((item,i)=>{const name=item?.displayName||item?.login||`Streamer ${i+1}`;if(!item?.channelUrl)add('high','STREAMER',`${name}: brak linku Twitch`);else if(!/^https:\/\/(?:www\.)?twitch\.tv\/[a-z0-9_]+/i.test(item.channelUrl))add('warn','STREAMER',`${name}: nietypowy link Twitch`,item.channelUrl);if(!item?.clipUrl)add('info','STREAMER',`${name}: brak klipu Twitch`);});
+    const dc=Array.isArray(discordChannels)?discordChannels:[];
+    dc.forEach((cat,ci)=>{if(!String(cat?.title||'').trim())add('warn','DISCORD',`Kategoria ${ci+1} nie ma nazwy`);(cat?.channels||[]).forEach((ch,hi)=>{if(!String(ch?.name||'').trim())add('high','DISCORD',`Kanał ${ci+1}.${hi+1} nie ma nazwy`);});});
+    const dp=discordPreview&&typeof discordPreview==='object'?discordPreview:{};
+    (dp.memberGroups||[]).forEach((group,gi)=>{(group.members||[]).forEach((m,mi)=>{if(!String(m?.name||'').trim())add('warn','DISCORD',`Osoba ${gi+1}.${mi+1} w podglądzie nie ma nicku`);const login=String(m?.twitchLogin||'').trim();if(login&&!/^[a-z0-9_]{1,25}$/i.test(login))add('warn','DISCORD',`${m?.name||'Osoba'}: niepoprawny nick Twitch`,login);});});
+    const nav=Array.isArray(navigation)?navigation:[]; const hrefs=new Map();
+    const inspectNav=(item,path)=>{const label=String(item?.label||'').trim();const href=String(item?.href||'').trim();if(!label)add('warn','NAWIGACJA',`${path}: brak etykiety`);if(!href&&!(item?.children||[]).length)add('warn','NAWIGACJA',`${label||path}: brak adresu`);if(href){if(hrefs.has(href))add('info','NAWIGACJA',`Powtarzający się adres ${href}`,`${hrefs.get(href)} i ${label||path}`);else hrefs.set(href,label||path);}(item?.children||[]).forEach((c,i)=>inspectNav(c,`${path}.${i+1}`));};
+    nav.forEach((item,i)=>inspectNav(item,`Pozycja ${i+1}`));
+    const cfg=downloadsConfig&&typeof downloadsConfig==='object'?downloadsConfig:{}; const custom=Array.isArray(cfg.custom)?cfg.custom:[]; const customIds=new Set();
+    custom.forEach((item,i)=>{const id=String(item?.id||'');if(!String(item?.title||'').trim())add('warn','PLIKI',`Własny plik ${i+1} nie ma nazwy`);if(!String(item?.href||'').trim())add('high','PLIKI',`${item?.title||`Plik ${i+1}`}: brak adresu pliku`);if(id){if(customIds.has(id))add('high','PLIKI',`Duplikat ID pliku: ${id}`);customIds.add(id);}});
+    (cfg.order||[]).forEach(id=>{if(!customIds.has(String(id)) && !(window.MattDownloads?.baseItems||[]).some(x=>String(x.id)===String(id)))add('info','PLIKI',`Kolejność zawiera nieistniejący identyfikator`,String(id));});
+    integrityResults=issues; return issues;
+  }
+
+  function integrityHtml(){
+    if(!integrityResults.length)return '<div class="matt-center-empty"><strong>Brak wykrytych problemów.</strong><p>Struktura danych wygląda spójnie.</p></div>';
+    return `<div class="matt-integrity-list">${integrityResults.map(i=>`<article class="${esc(i.level)}"><span>${i.level==='high'?'!':i.level==='warn'?'△':'i'}</span><div><small>${esc(i.area)}</small><strong>${esc(i.title)}</strong>${i.detail?`<p>${esc(i.detail)}</p>`:''}</div></article>`).join('')}</div>`;
+  }
+
+  async function renderIntegrity(body) {
+    if(!has('cms.integrity.check'))return;
+    body.innerHTML=`<div class="matt-center-note"><strong>TEST INTEGRALNOŚCI STRONY</strong><p>Sprawdza spójność eventów, plików, streamerów, Discorda i nawigacji. Nie zmienia danych. Test linków sieciowych pozostaje w osobnej zakładce LINKI.</p></div><div class="matt-link-actions"><button class="matt-primary" data-run-integrity>URUCHOM TEST INTEGRALNOŚCI</button><span data-integrity-status>${integrityResults.length?`Ostatni wynik: ${integrityResults.length} uwag`:'Test nie był jeszcze uruchamiany.'}</span></div><div data-integrity-results>${integrityResults.length?integrityHtml():'<div class="matt-center-empty">Kliknij „Uruchom test integralności”.</div>'}</div>`;
+    $('[data-run-integrity]',body).onclick=async e=>{const btn=e.currentTarget;const status=$('[data-integrity-status]',body);const out=$('[data-integrity-results]',body);btn.disabled=true;btn.textContent='SPRAWDZANIE…';try{const result=await runIntegrityCheck();status.textContent=result.length?`Wykryto ${result.length} uwag.`:'Nie wykryto problemów.';out.innerHTML=integrityHtml();toast(result.length?`Test zakończony: ${result.length} uwag.`:'Test integralności: wszystko wygląda dobrze.',result.some(x=>x.level==='high')?'error':'ok');}catch(error){status.textContent=`Błąd: ${error.message}`;}finally{btn.disabled=false;btn.textContent='URUCHOM PONOWNIE';}};
+  }
 
   async function renderStats(body) {
     if(!has('statistics.view'))return;
@@ -779,10 +972,15 @@
   }
 
   function injectToolbar() {
-    const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar||toolbar.querySelector('[data-matt-suite-center]'))return;
-    if(!any('cms.dashboard.view','cms.search','cms.history.view','cms.trash.view','cms.notifications.view','cms.links.check','statistics.view','site.maintenance.manage'))return;
-    const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM';btn.addEventListener('click',()=>openCenter('dashboard'));
-    const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
+    const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar)return;
+    if(!toolbar.querySelector('[data-matt-suite-center]') && any('cms.dashboard.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','statistics.view','site.maintenance.manage')) {
+      const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM';btn.addEventListener('click',()=>openCenter('dashboard'));
+      const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
+    }
+    if(has('cms.trash.view') && !toolbar.querySelector('[data-matt-suite-trash]')) {
+      const trash=document.createElement('button');trash.type='button';trash.dataset.mattSuiteTrash='1';trash.innerHTML='♲ KOSZ';trash.title='Centralny kosz — elementy są przechowywane przez 30 dni';trash.addEventListener('click',()=>openCenter('trash'));
+      const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(trash,backups||toolbar.querySelector('[data-cms-action="save"]'));
+    }
     updateToolbarAlertBadge();
   }
 
@@ -806,6 +1004,11 @@
   async function enhanceEventForm() {
     const form=document.getElementById('cms-event-form');if(!form||form.dataset.suite==='1')return;form.dataset.suite='1';const id=lastEventEditId;const workflow=await getEventWorkflow(true);const meta=id?workflow[String(id)]||{}:{};const main=form.querySelector('.cms-event-form-pane');if(main)main.insertAdjacentHTML('beforeend',eventWorkflowSection(meta,!id));
     const actions=form.querySelector('.cms-event-form-actions-right');if(actions&&!actions.querySelector('[data-suite-preview-form]')){const b=document.createElement('button');b.type='button';b.dataset.suitePreviewForm='1';b.textContent='◉ PODGLĄD PRZED ZAPISEM';b.onclick=()=>{const preview=form.querySelector('[data-event-live-preview]')?.innerHTML||'';openPreviewOverlay(preview,'EVENT — PODGLĄD PRZED ZAPISEM');};actions.insertBefore(b,actions.firstChild);}
+    if(has('events.preview.devices')) {
+      const tabs=form.querySelector('.cms-event-preview-tabs');
+      if(tabs&&!form.querySelector('[data-event-device-controls]')){const controls=document.createElement('div');controls.className='matt-event-device-controls';controls.dataset.eventDeviceControls='1';controls.innerHTML='<span>WIDOK:</span><button type="button" class="active" data-event-device="desktop">DESKTOP</button><button type="button" data-event-device="mobile">MOBILE</button>';tabs.insertAdjacentElement('afterend',controls);controls.querySelectorAll('[data-event-device]').forEach(btn=>btn.onclick=()=>{controls.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));form.querySelector('.cms-event-live-panel')?.classList.toggle('matt-preview-mobile',btn.dataset.eventDevice==='mobile');});}
+    }
+    attachFormAutosave(form,`event:${id||'new'}`,{label:id?'Edycja eventu':'Nowy event'});
     const del=form.querySelector('[data-delete-current]');if(del)del.textContent='DO KOSZA';
     if(id)acquireEditLock(`event:${id}`,form.elements.title?.value||'Event').then(ok=>{if(!ok)document.querySelector('.cms-modal-close')?.click();});
   }
@@ -842,15 +1045,28 @@
 
   function trackEventOpenClicks(event){const edit=event.target.closest('[data-event-edit]');if(edit)lastEventEditId=edit.dataset.eventEdit;const add=event.target.closest('[data-event-add]');if(add)lastEventEditId=null;}
 
+  function enhanceGenericAutosave() {
+    if(!has('cms.forms.autosave')) return;
+    document.querySelectorAll('.cms-modal-backdrop.active form.cms-form').forEach(form=>{
+      if(form.dataset.mattAutosaveBound==='1') return;
+      const title=form.closest('.cms-modal-backdrop')?.querySelector('#cms-modal-title')?.textContent?.trim() || form.id || 'Formularz CMS';
+      const key=`generic:${form.id||'form'}:${title}:${location.hash}`;
+      attachFormAutosave(form,key,{label:title});
+      form.addEventListener('submit',()=>setTimeout(()=>{if(!document.contains(form)||!form.closest('.cms-modal-backdrop')?.classList.contains('active'))clearFormAutosave(form);},1800),{once:false});
+    });
+  }
+
   function enhanceDom() {
-    if(observerQueued)return;observerQueued=true;requestAnimationFrame(async()=>{observerQueued=false;injectToolbar();enhanceAccountManager();await enhanceEventManager();await enhanceEventForm();await enhanceDownloadsManager();await enhanceStreamersManager();});
+    if(observerQueued)return;observerQueued=true;requestAnimationFrame(async()=>{observerQueued=false;injectToolbar();enhanceAccountManager();await enhanceEventManager();await enhanceEventForm();await enhanceDownloadsManager();await enhanceStreamersManager();enhanceGenericAutosave();});
   }
 
   function install() {
+    purgeExpiredTrash().catch(()=>{});
     document.addEventListener('click',trackEventOpenClicks,true);
     document.addEventListener('click',interceptDeletes,true);
     new MutationObserver(enhanceDom).observe(document.body,{childList:true,subtree:true});
     window.addEventListener('matt-auth-change',(event)=>setTimeout(()=>{
+      purgeExpiredTrash().catch(()=>{});
       if(event?.detail?.preview===true){enhanceDom();return;}
       if(!applyModeratorPreviewFromStorage())enhanceDom();
     },50));
@@ -860,10 +1076,10 @@
   }
 
   window.MattSuite = {
-    addTrash, trashCmsArrayItem, trashDownloadItem, trashEvent, restoreTrashItem,
-    getEventWorkflow, setEventWorkflow, saveEventWorkflowFromForm, duplicateEvent, showEventHistory,
-    acquireEditLock, releaseEditLock, openCenter, openPreviewOverlay, enableVisitorPreview,
-    buildAlerts, setAccountSecurity
+    addTrash, purgeExpiredTrash, trashCmsArrayItem, trashNestedCmsArrayItem, trashDownloadItem, trashEvent, restoreTrashItem,
+    getEventWorkflow, setEventWorkflow, saveEventWorkflowFromForm, duplicateEvent, showEventHistory, showCmsArrayItemHistory,
+    attachFormAutosave, clearFormAutosave, acquireEditLock, releaseEditLock, openCenter, openPreviewOverlay, enableVisitorPreview,
+    buildAlerts, runIntegrityCheck, setAccountSecurity
   };
 
   install();
