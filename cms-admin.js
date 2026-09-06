@@ -3151,7 +3151,21 @@
   async function fetchEventRows() {
     const { data, error } = await window.supabaseClient.from('events').select('*').order('start_date',{ascending:false});
     if (error) throw new Error(error.message);
-    return Array.isArray(data) ? data : [];
+    let workflow = {};
+    try {
+      workflow = await window.MattCMS?.refreshKey?.('event_workflow') || window.MattCMS?.get?.('event_workflow', {}) || {};
+    } catch (_) {
+      workflow = window.MattCMS?.get?.('event_workflow', {}) || {};
+    }
+    return (Array.isArray(data) ? data : []).map(row => {
+      const meta = workflow?.[String(row?.id)] || {};
+      return {
+        ...row,
+        image_fit: meta.imageFit || row?.image_fit || 'contain',
+        main_image_url: meta.mainImageUrl || row?.main_image_url || row?.image_url || '',
+        main_image_fit: meta.mainImageFit || row?.main_image_fit || 'contain'
+      };
+    });
   }
 
   function eventAdminRowToView(row) {
@@ -3442,15 +3456,21 @@
           if(canSchedule && form.elements.endedNow?.checked) endDate=new Date().toISOString();
           if(canSchedule && !form.elements.ongoing?.checked && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ Event trwa”.');
           const mainImageFit=canImages ? (sharedImages ? String(form.elements.sharedMainImageFit?.value||form.elements.imageFit?.value||'contain') : String(form.elements.mainImageFit?.value||'contain')) : current.mainImageFit;
+          const mediaState={
+            image_fit:canImages?String(form.elements.imageFit?.value||'contain'):current.imageFit,
+            main_image_url:mainImage||image||null,
+            main_image_fit:mainImageFit,
+            image_mode:sharedImages?'shared':'separate'
+          };
+          // Dodatkowe ustawienia grafik są trzymane w event_workflow (cms_data),
+          // a nie w tabeli events. Dzięki temu działa to także z bazą bez kolumn
+          // main_image_url / main_image_fit / image_fit.
           const payload={
             title,description,
             start_date:canSchedule?eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value):(row?.start_date||null),
             end_date:endDate,
             publish_date:canSchedule?eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value):(row?.publish_date||null),
-            image_url:image||null,
-            image_fit:canImages?String(form.elements.imageFit?.value||'contain'):current.imageFit,
-            main_image_url:mainImage||null,
-            main_image_fit:mainImageFit
+            image_url:image||null
           };
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing
@@ -3459,7 +3479,12 @@
           const {data:savedRow,error}=await query; if(error) throw error;
           if (window.MattSuite?.saveEventWorkflowFromForm) {
             try {
-              await window.MattSuite.saveEventWorkflowFromForm(form, savedRow || { ...(row||{}), ...payload }, editing, row || null);
+              await window.MattSuite.saveEventWorkflowFromForm(
+                form,
+                { ...(savedRow || {}), ...(row || {}), ...payload, ...mediaState, id:savedRow?.id || row?.id },
+                editing,
+                row || null
+              );
             } catch (workflowError) {
               if (!editing && savedRow?.id) {
                 try { await window.supabaseClient.from('events').delete().eq('id', savedRow.id); } catch (_) {}

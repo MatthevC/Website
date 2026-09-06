@@ -207,15 +207,27 @@
     if (error) throw error;
     await window.MattCMS.createBackup(`AUTO: przed duplikowaniem eventu — ${row.title || 'event'}`);
     const payload = {
-      title: `${row.title || 'Event'} — KOPIA`, description:row.description, start_date:row.start_date, end_date:row.end_date,
-      publish_date:new Date().toISOString(), image_url:row.image_url, image_fit:row.image_fit,
-      main_image_url:row.main_image_url, main_image_fit:row.main_image_fit
+      title: `${row.title || 'Event'} — KOPIA`,
+      description:row.description,
+      start_date:row.start_date,
+      end_date:row.end_date,
+      publish_date:new Date().toISOString(),
+      image_url:row.image_url
     };
     const { data:newRow, error:insertError } = await window.supabaseClient.from('events').insert(payload).select().single();
     if (insertError) throw insertError;
     const workflow = await getEventWorkflow(true);
     const sourceMeta = workflow[String(id)] || {};
-    await setEventWorkflow(newRow.id,{...sourceMeta,visibility:'draft',publishAt:null,moderatorNote:String(sourceMeta.moderatorNote || '')}, {backup:false});
+    await setEventWorkflow(newRow.id,{
+      ...sourceMeta,
+      visibility:'draft',
+      publishAt:null,
+      moderatorNote:String(sourceMeta.moderatorNote || ''),
+      imageFit:sourceMeta.imageFit || row.image_fit || 'contain',
+      mainImageUrl:sourceMeta.mainImageUrl || row.main_image_url || row.image_url || '',
+      mainImageFit:sourceMeta.mainImageFit || row.main_image_fit || 'contain',
+      imageMode:sourceMeta.imageMode || ((sourceMeta.mainImageUrl || row.main_image_url) && String(sourceMeta.mainImageUrl || row.main_image_url)!==String(row.image_url||'') ? 'separate' : 'shared')
+    }, {backup:false});
     toast('Utworzono kopię eventu jako szkic.');
     return newRow;
   }
@@ -235,7 +247,11 @@
       visibility,
       publishAt,
       autoArchive: canAuto ? Boolean(form.elements.workflowAutoArchive?.checked) : Boolean(existing.autoArchive),
-      moderatorNote: canNotes ? String(form.elements.workflowNote?.value || '').trim() : String(existing.moderatorNote || '')
+      moderatorNote: canNotes ? String(form.elements.workflowNote?.value || '').trim() : String(existing.moderatorNote || ''),
+      imageFit: String(savedRow.image_fit || existing.imageFit || 'contain'),
+      mainImageUrl: String(savedRow.main_image_url || existing.mainImageUrl || savedRow.image_url || ''),
+      mainImageFit: String(savedRow.main_image_fit || existing.mainImageFit || 'contain'),
+      imageMode: String(savedRow.image_mode || existing.imageMode || ((savedRow.main_image_url && String(savedRow.main_image_url)!==String(savedRow.image_url||'')) ? 'separate' : 'shared'))
     };
     await setEventWorkflow(savedRow.id, meta, {backup:false});
   }
@@ -546,12 +562,17 @@
       if(!confirm(`Przywrócić event „${label}” z backupu #${version.backup.id}?`))return;
       await window.MattCMS.createBackup(`AUTO: przed przywróceniem eventu — ${label}`);
       const r=version.row;
-      const payload={title:r.title,description:r.description,start_date:r.start_date,end_date:r.end_date,publish_date:r.publish_date,image_url:r.image_url,image_fit:r.image_fit,main_image_url:r.main_image_url,main_image_fit:r.main_image_fit};
+      const payload={title:r.title,description:r.description,start_date:r.start_date,end_date:r.end_date,publish_date:r.publish_date,image_url:r.image_url};
       const {error}=await window.supabaseClient.from('events').update(payload).eq('id',eventId); if(error)throw error;
       const wfRow=(version.backup.snapshot?.cms_data||[]).find(x=>x.key===KEYS.workflow);
-      const meta=wfRow?.data?.[String(eventId)];
-      if(meta) await setEventWorkflow(eventId,meta,{backup:false});
-      else await removeEventWorkflow(eventId);
+      const backupMeta=wfRow?.data?.[String(eventId)] || {};
+      await setEventWorkflow(eventId,{
+        ...backupMeta,
+        imageFit:backupMeta.imageFit || r.image_fit || 'contain',
+        mainImageUrl:backupMeta.mainImageUrl || r.main_image_url || r.image_url || '',
+        mainImageFit:backupMeta.mainImageFit || r.main_image_fit || 'contain',
+        imageMode:backupMeta.imageMode || ((backupMeta.mainImageUrl || r.main_image_url) && String(backupMeta.mainImageUrl || r.main_image_url)!==String(r.image_url||'') ? 'separate' : 'shared')
+      },{backup:false});
       toast('Przywrócono poprzednią wersję eventu.'); overlay.classList.remove('active'); if(typeof window.render==='function')await window.render();
     });
   }
@@ -575,11 +596,21 @@
     if(!confirm(`Przywrócić „${item.label||'element'}”?`))return;
     if(item.kind==='event') {
       const r=item.payload||{}; const payload={};
-      ['id','title','description','start_date','end_date','publish_date','image_url','image_fit','main_image_url','main_image_fit'].forEach(k=>{if(r[k]!==undefined)payload[k]=r[k];});
+      ['id','title','description','start_date','end_date','publish_date','image_url'].forEach(k=>{if(r[k]!==undefined)payload[k]=r[k];});
       let result=await window.supabaseClient.from('events').insert(payload).select().single();
       if(result.error && payload.id){ delete payload.id; result=await window.supabaseClient.from('events').insert(payload).select().single(); }
       if(result.error)throw result.error;
-      const restoredId=result.data?.id||r.id; if(restoredId&&item.meta?.workflow)await setEventWorkflow(restoredId,item.meta.workflow,{backup:false});
+      const restoredId=result.data?.id||r.id;
+      if(restoredId){
+        const wf=item.meta?.workflow || {};
+        await setEventWorkflow(restoredId,{
+          ...wf,
+          imageFit:wf.imageFit || r.image_fit || 'contain',
+          mainImageUrl:wf.mainImageUrl || r.main_image_url || r.image_url || '',
+          mainImageFit:wf.mainImageFit || r.main_image_fit || 'contain',
+          imageMode:wf.imageMode || ((wf.mainImageUrl || r.main_image_url) && String(wf.mainImageUrl || r.main_image_url)!==String(r.image_url||'') ? 'separate' : 'shared')
+        },{backup:false});
+      }
     } else if(item.kind==='cms-array') {
       const arr=await freshKey(item.sourceKey,[]); const next=Array.isArray(arr)?arr:[]; const index=Math.max(0,Math.min(next.length,Number(item.meta?.index??next.length))); next.splice(index,0,item.payload); await window.MattCMS.save(item.sourceKey,next);
     } else if(item.kind==='download') {
