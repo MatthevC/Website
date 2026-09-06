@@ -3116,14 +3116,20 @@
     catch (_) { return '--:--'; }
   }
 
+  const EVENT_ONGOING_DB_END = '9999-12-31T23:59:59.000Z';
+
+  function eventAdminIsDbOngoingValue(value) {
+    return String(value || '').startsWith('9999-12-31');
+  }
+
   function eventAdminIsEnded(value) {
-    if (!value) return false;
+    if (!value || eventAdminIsDbOngoingValue(value)) return false;
     const d = new Date(value);
     return !Number.isNaN(d.getTime()) && d.getTime() <= Date.now();
   }
 
-  function eventAdminIsOngoing(value) {
-    return !value;
+  function eventAdminIsOngoing(value, explicitOngoing=false) {
+    return explicitOngoing === true || !value || eventAdminIsDbOngoingValue(value);
   }
 
   function eventAdminEndHtml(value) {
@@ -3159,8 +3165,11 @@
     }
     return (Array.isArray(data) ? data : []).map(row => {
       const meta = workflow?.[String(row?.id)] || {};
+      const ongoing = meta.ongoing === true || eventAdminIsDbOngoingValue(row?.end_date);
       return {
         ...row,
+        ongoing,
+        _db_end_date: row?.end_date || null,
         image_fit: meta.imageFit || row?.image_fit || 'contain',
         main_image_url: meta.mainImageUrl || row?.main_image_url || row?.image_url || '',
         main_image_fit: meta.mainImageFit || row?.main_image_fit || 'contain'
@@ -3173,7 +3182,7 @@
       id: row?.id || 'podglad-eventu',
       title: row?.title || 'NOWY EVENT',
       date: row?.start_date || null,
-      endDate: row?.end_date || null,
+      endDate: eventAdminIsOngoing(row?.end_date, row?.ongoing) ? null : (row?.end_date || null),
       image: row?.image_url || '',
       imageFit: row?.image_fit || 'contain',
       mainImage: row?.main_image_url || row?.image_url || '',
@@ -3187,8 +3196,8 @@
   function eventAdminPreviewCard(row) {
     const view = eventAdminRowToView(row);
     if (typeof window.eventCard === 'function') return window.eventCard(view);
-    const ended = eventAdminIsEnded(row?.end_date);
-    const ongoing = eventAdminIsOngoing(row?.end_date);
+    const ongoing = eventAdminIsOngoing(row?.end_date, row?.ongoing);
+    const ended = !ongoing && eventAdminIsEnded(row?.end_date);
     const badge = ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : '');
     return `<article class="event-card${ended?' event-ended':''}">
       <div class="event-cover event-cover-image${ended?' event-cover-ended':''}${ongoing?' event-cover-ongoing':''}">${view.image?`<img src="${window.MattCMS.escape(view.image)}" style="object-fit:${window.MattCMS.escape(view.imageFit)}" alt="">`:''}${badge}</div>
@@ -3227,8 +3236,8 @@
           <p>Eventy nadal wyglądają na stronie dokładnie tak jak wcześniej. Tutaj tylko przeniesiono ich dodawanie, edycję i usuwanie do wspólnego panelu administratora.</p>
         </div>
         <div class="cms-manager-list cms-events-manager-list">${rows.length ? rows.map((row,index)=>{
-          const ended=eventAdminIsEnded(row.end_date);
-          const ongoing=eventAdminIsOngoing(row.end_date);
+          const ongoing=eventAdminIsOngoing(row.end_date,row.ongoing);
+          const ended=!ongoing && eventAdminIsEnded(row.end_date);
           return `<article class="cms-manager-item cms-event-manager-item">
             <div class="cms-event-manager-summary">${row.image_url?`<img src="${esc(row.image_url)}" alt="">`:'<span class="cms-event-no-image">EVENT</span>'}<div><small>${String(index+1).padStart(2,'0')} / ${ended?'ZAKOŃCZONY':ongoing?'∞ W TRAKCIE':'AKTYWNY'}</small><strong>${esc(row.title||'Bez nazwy')}</strong><span>${esc(eventAdminFormatDate(row.start_date))}${row.publish_date?` • publikacja ${esc(eventAdminFormatDate(row.publish_date))}`:''}</span></div></div>
             <div>${has('events.edit')?`<button type="button" data-event-edit="${esc(row.id)}">EDYTUJ</button>`:''}<button type="button" data-event-view="${esc(row.id)}">PODGLĄD</button>${has('events.delete')?`<button class="danger" type="button" data-event-delete="${esc(row.id)}">USUŃ</button>`:''}</div>
@@ -3276,7 +3285,8 @@
       const today=`${now.getFullYear()}-${eventAdminPad(now.getMonth()+1)}-${eventAdminPad(now.getDate())}`;
       const nowTime=`${eventAdminPad(now.getHours())}:${eventAdminPad(now.getMinutes())}`;
       const start=eventAdminSplitDateTime(row?.start_date);
-      const end=eventAdminSplitDateTime(row?.end_date);
+      const rowIsOngoing=eventAdminIsOngoing(row?.end_date,row?.ongoing);
+      const end=eventAdminSplitDateTime(rowIsOngoing ? null : row?.end_date);
       const publish=eventAdminSplitDateTime(row?.publish_date);
       const hasSeparateMainImage=Boolean(
         row?.main_image_url && String(row.main_image_url)!==String(row?.image_url||'')
@@ -3289,7 +3299,7 @@
         mainImage:row?.main_image_url||row?.image_url||'',
         mainImageFit:row?.main_image_fit||'contain',
         imageMode:hasSeparateMainImage?'separate':'shared',
-        ongoing:!row?.end_date, endedNow:false
+        ongoing:rowIsOngoing, endedNow:false
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
@@ -3452,7 +3462,12 @@
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
           if(sharedImages) mainImage=image;
           if(!sharedImages && !mainImage) throw new Error('W trybie dwóch grafik wybierz także grafikę na stronie eventu.');
-          let endDate=canSchedule ? (form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value)) : (row?.end_date ?? null);
+          const ongoingRequested = canSchedule
+            ? Boolean(form.elements.ongoing?.checked)
+            : eventAdminIsOngoing(row?._db_end_date ?? row?.end_date, row?.ongoing);
+          let endDate = canSchedule
+            ? (ongoingRequested ? EVENT_ONGOING_DB_END : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value))
+            : (row?._db_end_date ?? row?.end_date ?? EVENT_ONGOING_DB_END);
           if(canSchedule && form.elements.endedNow?.checked) endDate=new Date().toISOString();
           if(canSchedule && !form.elements.ongoing?.checked && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ Event trwa”.');
           const mainImageFit=canImages ? (sharedImages ? String(form.elements.sharedMainImageFit?.value||form.elements.imageFit?.value||'contain') : String(form.elements.mainImageFit?.value||'contain')) : current.mainImageFit;
@@ -3460,7 +3475,8 @@
             image_fit:canImages?String(form.elements.imageFit?.value||'contain'):current.imageFit,
             main_image_url:mainImage||image||null,
             main_image_fit:mainImageFit,
-            image_mode:sharedImages?'shared':'separate'
+            image_mode:sharedImages?'shared':'separate',
+            ongoing: ongoingRequested && !Boolean(form.elements.endedNow?.checked)
           };
           // Dodatkowe ustawienia grafik są trzymane w event_workflow (cms_data),
           // a nie w tabeli events. Dzięki temu działa to także z bazą bez kolumn

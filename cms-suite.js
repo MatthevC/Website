@@ -151,6 +151,16 @@
     });
   }
 
+  const EVENT_ONGOING_DB_END = '9999-12-31T23:59:59.000Z';
+
+  function isDbOngoingEnd(value) {
+    return String(value || '').startsWith('9999-12-31');
+  }
+
+  function eventEndForDb(value, ongoing=false) {
+    return ongoing || !value ? EVENT_ONGOING_DB_END : value;
+  }
+
   async function getEventWorkflow(refresh=false) {
     const data = refresh ? await freshKey(KEYS.workflow,{}) : clone(window.MattCMS?.get(KEYS.workflow,{}) || {});
     return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
@@ -197,7 +207,7 @@
       return ['OPUBLIKOWANY','public'];
     }
     if (vis === 'archived') return ['ARCHIWUM','archived'];
-    if (meta.autoArchive && row?.end_date && new Date(row.end_date).getTime() <= Date.now()) return ['ARCHIWUM','archived'];
+    if (meta.autoArchive && meta.ongoing !== true && !isDbOngoingEnd(row?.end_date) && row?.end_date && new Date(row.end_date).getTime() <= Date.now()) return ['ARCHIWUM','archived'];
     return ['PUBLICZNY','public'];
   }
 
@@ -206,18 +216,18 @@
     const { data:row, error } = await window.supabaseClient.from('events').select('*').eq('id',id).single();
     if (error) throw error;
     await window.MattCMS.createBackup(`AUTO: przed duplikowaniem eventu — ${row.title || 'event'}`);
+    const workflow = await getEventWorkflow(true);
+    const sourceMeta = workflow[String(id)] || {};
     const payload = {
       title: `${row.title || 'Event'} — KOPIA`,
       description:row.description,
       start_date:row.start_date,
-      end_date:row.end_date,
+      end_date:eventEndForDb(row.end_date, sourceMeta.ongoing === true || isDbOngoingEnd(row.end_date)),
       publish_date:new Date().toISOString(),
       image_url:row.image_url
     };
     const { data:newRow, error:insertError } = await window.supabaseClient.from('events').insert(payload).select().single();
     if (insertError) throw insertError;
-    const workflow = await getEventWorkflow(true);
-    const sourceMeta = workflow[String(id)] || {};
     await setEventWorkflow(newRow.id,{
       ...sourceMeta,
       visibility:'draft',
@@ -239,6 +249,7 @@
     const canNotes = has('events.notes.manage');
     const canAuto = has('events.autoarchive.manage');
     const isNew = !editing;
+    const canSchedule = isNew || has('events.schedule.manage');
     let visibility = canPublish ? String(form.elements.workflowVisibility?.value || 'public') : (isNew ? 'draft' : String(existing.visibility || 'public'));
     if (!['public','draft','hidden','scheduled'].includes(visibility)) visibility = 'public';
     const publishAt = visibility === 'scheduled' ? (savedRow.publish_date || null) : null;
@@ -251,7 +262,10 @@
       imageFit: String(savedRow.image_fit || existing.imageFit || 'contain'),
       mainImageUrl: String(savedRow.main_image_url || existing.mainImageUrl || savedRow.image_url || ''),
       mainImageFit: String(savedRow.main_image_fit || existing.mainImageFit || 'contain'),
-      imageMode: String(savedRow.image_mode || existing.imageMode || ((savedRow.main_image_url && String(savedRow.main_image_url)!==String(savedRow.image_url||'')) ? 'separate' : 'shared'))
+      imageMode: String(savedRow.image_mode || existing.imageMode || ((savedRow.main_image_url && String(savedRow.main_image_url)!==String(savedRow.image_url||'')) ? 'separate' : 'shared')),
+      ongoing: canSchedule
+        ? Boolean(savedRow.ongoing === true || form.elements.ongoing?.checked) && !Boolean(form.elements.endedNow?.checked)
+        : Boolean(existing.ongoing)
     };
     await setEventWorkflow(savedRow.id, meta, {backup:false});
   }
@@ -562,7 +576,7 @@
       if(!confirm(`Przywrócić event „${label}” z backupu #${version.backup.id}?`))return;
       await window.MattCMS.createBackup(`AUTO: przed przywróceniem eventu — ${label}`);
       const r=version.row;
-      const payload={title:r.title,description:r.description,start_date:r.start_date,end_date:r.end_date,publish_date:r.publish_date,image_url:r.image_url};
+      const payload={title:r.title,description:r.description,start_date:r.start_date,end_date:eventEndForDb(r.end_date),publish_date:r.publish_date,image_url:r.image_url};
       const {error}=await window.supabaseClient.from('events').update(payload).eq('id',eventId); if(error)throw error;
       const wfRow=(version.backup.snapshot?.cms_data||[]).find(x=>x.key===KEYS.workflow);
       const backupMeta=wfRow?.data?.[String(eventId)] || {};
@@ -597,6 +611,7 @@
     if(item.kind==='event') {
       const r=item.payload||{}; const payload={};
       ['id','title','description','start_date','end_date','publish_date','image_url'].forEach(k=>{if(r[k]!==undefined)payload[k]=r[k];});
+      payload.end_date = eventEndForDb(payload.end_date, item.meta?.workflow?.ongoing === true);
       let result=await window.supabaseClient.from('events').insert(payload).select().single();
       if(result.error && payload.id){ delete payload.id; result=await window.supabaseClient.from('events').insert(payload).select().single(); }
       if(result.error)throw result.error;

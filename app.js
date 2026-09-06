@@ -315,8 +315,14 @@ function getCommandFilterDefaults() {
   return { viewer: true, vip: true, mod: false };
 }
 
+const EVENT_ONGOING_DB_END = '9999-12-31T23:59:59.000Z';
+
+function isEventDbOngoingEnd(value) {
+  return String(value || '').startsWith('9999-12-31');
+}
+
 function isEventEnded(event) {
-  if (!event || !event.endDate) return false;
+  if (!event || isEventOngoing(event) || !event.endDate) return false;
 
   // Automatyczne zakończenie: data ORAZ godzina zakończenia muszą minąć.
   // Przykład: 29.08.2026 21:00 -> event kończy się dopiero po 21:00.
@@ -329,7 +335,7 @@ function isEventEnded(event) {
 }
 
 function isEventOngoing(event) {
-  return Boolean(event) && !event.endDate;
+  return Boolean(event) && (event.ongoing === true || !event.endDate || isEventDbOngoingEnd(event.endDate));
 }
 
 function eventEndStatusHtml(event) {
@@ -2894,12 +2900,14 @@ async function loadEvents() {
       const publishAt = meta.publishAt || event.publish_date || null;
       const scheduledAt = publishAt ? new Date(publishAt).getTime() : 0;
       const isScheduledReady = visibility !== 'scheduled' || (Number.isFinite(scheduledAt) && scheduledAt > 0 && scheduledAt <= Date.now());
-      const archived = visibility === 'archived' || (meta.autoArchive === true && event.end_date && new Date(event.end_date).getTime() <= Date.now());
+      const ongoing = meta.ongoing === true || isEventDbOngoingEnd(event.end_date);
+      const archived = visibility === 'archived' || (meta.autoArchive === true && !ongoing && event.end_date && new Date(event.end_date).getTime() <= Date.now());
       return {
         id: event.id,
         title: event.title,
         date: event.start_date,
-        endDate: event.end_date,
+        endDate: ongoing ? null : event.end_date,
+        ongoing,
         image: event.image_url,
         imageFit: meta.imageFit || event.image_fit || "contain",
         mainImage: meta.mainImageUrl || event.main_image_url || event.image_url,
