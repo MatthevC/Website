@@ -320,17 +320,26 @@
       id: item.id,
       label: item.label || `Nagroda ${index+1}`,
       cost: String(item.card.querySelector('.reward-cost')?.textContent || '').replace(/\s+/g, ' ').trim(),
+      description: String(item.card.querySelector('p')?.textContent || '').replace(/\s+/g, ' ').trim(),
       baseText: item.graphic.__mattCmsRewardBaseText || String(item.graphic.textContent || '').trim(),
+      graphicClass: [...item.graphic.classList].filter(cls => cls !== 'reward-graphic' && cls !== 'has-custom-reward-image').join(' '),
       route: 'viewer/rewards'
     }));
   }
 
   function normalizeRewardGraphicItem(item = {}) {
-    const fit = String(item.fit || 'cover').toLowerCase() === 'contain' ? 'contain' : 'cover';
+    const rawFit = String(item.fit || 'cover').toLowerCase();
+    const fit = ['cover','contain','fill'].includes(rawFit) ? rawFit : 'cover';
+    const rawPosition = String(item.position || 'center').toLowerCase();
+    const position = ['center','top','bottom','left','right'].includes(rawPosition) ? rawPosition : 'center';
+    const parsedScale = Number(item.scale);
+    const scale = Number.isFinite(parsedScale) ? Math.max(50, Math.min(200, parsedScale)) : 100;
     return {
       url: String(item.url || '').trim(),
       alt: String(item.alt || '').trim(),
-      fit
+      fit,
+      position,
+      scale
     };
   }
 
@@ -341,6 +350,9 @@
       graphic.innerHTML = graphic.__mattCmsRewardBaseHtml || graphic.innerHTML;
       graphic.classList.remove('has-custom-reward-image');
       graphic.style.removeProperty('--reward-image-fit');
+      graphic.style.removeProperty('--reward-image-position');
+      graphic.style.removeProperty('--reward-image-scale');
+      graphic.style.removeProperty('--reward-image-origin');
       const item = normalizeRewardGraphicItem(data[id] || {});
       if (!item.url) return;
       const img = document.createElement('img');
@@ -351,6 +363,9 @@
       img.decoding = 'async';
       graphic.innerHTML = '';
       graphic.style.setProperty('--reward-image-fit', item.fit);
+      graphic.style.setProperty('--reward-image-position', item.position);
+      graphic.style.setProperty('--reward-image-scale', String(item.scale / 100));
+      graphic.style.setProperty('--reward-image-origin', item.position === 'top' ? 'center top' : item.position === 'bottom' ? 'center bottom' : item.position === 'left' ? 'left center' : item.position === 'right' ? 'right center' : 'center center');
       graphic.appendChild(img);
       graphic.classList.add('has-custom-reward-image');
     });

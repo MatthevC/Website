@@ -10407,6 +10407,9 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   width:100%;
   height:100%;
   object-fit:var(--reward-image-fit,cover);
+  object-position:var(--reward-image-position,center);
+  transform:scale(var(--reward-image-scale,1));
+  transform-origin:var(--reward-image-origin,center center);
   border-radius:inherit;
 }
 .cms-reward-graphics-section{margin:0 0 18px}
@@ -10432,15 +10435,30 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 
 
 /* Nagrody - live preview */
-.cms-reward-editor-grid{display:grid;grid-template-columns:minmax(320px,1fr) minmax(260px,340px);gap:24px;align-items:start}
-.cms-reward-live-preview{background:#0d0e12;border:1px solid #2b2d35;border-radius:16px;padding:18px;position:sticky;top:12px}
-.cms-live-title{font-size:12px;font-weight:800;color:#ff3344;letter-spacing:.08em;margin-bottom:14px}
-.cms-reward-preview-card{background:#171920;border:1px solid #333640;border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:260px}
-.cms-reward-preview-image{width:96px;height:96px;border-radius:18px;background:#22252c;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-.cms-reward-preview-image img{width:100%;height:100%;display:block;transform-origin:center}
-.cms-reward-preview-card b{font-size:18px;margin-bottom:8px}
-.cms-reward-preview-card span{color:#ff3344;font-weight:800}
-.cms-reward-preview-card p{color:#8f93a1;font-size:12px}
-.cms-live-device{margin-top:12px;text-align:center;color:#a9adba;font-size:12px}
-.cms-range-field input[type=range]{width:100%;accent-color:#ff3344}
-@media(max-width:900px){.cms-reward-editor-grid{grid-template-columns:1fr}.cms-reward-live-preview{position:relative}}
+.cms-reward-image-editor-form{grid-template-columns:1fr}
+.cms-reward-image-editor-form>.cms-form-context,
+.cms-reward-image-editor-form>.cms-reward-editor-grid,
+.cms-reward-image-editor-form>.cms-form-actions{grid-column:1/-1}
+.cms-reward-editor-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(330px,.9fr);gap:22px;align-items:start;width:100%}
+.cms-reward-editor-settings{min-width:0;display:grid;gap:14px}
+.cms-reward-settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cms-reward-settings-grid>.cms-field:first-child{grid-column:1/-1}
+.cms-reward-live-preview{min-width:0;background:#0d0e12;border:1px solid #2b2d35;border-radius:16px;padding:16px;position:sticky;top:12px;box-shadow:0 18px 40px rgba(0,0,0,.18)}
+.cms-reward-live-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:11px;border-bottom:1px solid rgba(255,255,255,.07)}
+.cms-reward-live-head>div{display:grid;gap:3px}.cms-reward-live-head small{color:#ff3b46;font-size:9px;font-weight:950;letter-spacing:.12em}.cms-reward-live-head strong{font-size:14px}.cms-reward-live-head>span{max-width:180px;color:#747983;font-size:10px;line-height:1.35;text-align:right}
+.cms-reward-preview-card-real{width:100%;min-height:0;margin:0;box-sizing:border-box}
+.cms-reward-preview-card-real .reward-card-top{width:100%}
+.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden}
+.cms-reward-preview-card-real .reward-graphic img{display:block;width:100%;height:100%;border-radius:inherit}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{display:grid;place-items:center;width:100%;height:100%}
+.cms-reward-preview-card-real h3{font-size:1.08rem}
+.cms-reward-preview-card-real p{font-size:.93rem;color:#c2c5cc}
+.cms-reward-live-meta{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:12px;padding:9px 11px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:#121318;color:#777c86;font-size:9px}.cms-reward-live-meta strong{text-align:center;color:#fff;font-size:11px}
+.cms-reward-scale-field{grid-column:1/-1}
+.cms-reward-scale-control{display:grid;grid-template-columns:38px 1fr 38px;gap:8px;align-items:center}.cms-reward-scale-control input[type=range]{width:100%;accent-color:#ef2b2d}.cms-reward-scale-control button{height:38px;border:1px solid #393c44;border-radius:8px;background:#17191e;color:#fff;font-size:20px;font-weight:900;cursor:pointer}.cms-reward-scale-control button:hover{border-color:#ef2b2d;background:#241416}
+.cms-reward-image-editor-form .cms-image-preview{max-height:245px}
+.cms-reward-image-editor-form .cms-image-preview img{max-height:230px;object-fit:contain}
+.cms-reward-image-editor-form .matt-autosave-banner{display:none!important}
+@media(max-width:900px){.cms-reward-editor-grid{grid-template-columns:1fr}.cms-reward-live-preview{position:relative;top:auto}.cms-reward-settings-grid{grid-template-columns:1fr}.cms-reward-settings-grid>.cms-field:first-child,.cms-reward-scale-field{grid-column:1}}
+@media(max-width:560px){.cms-reward-live-head{flex-direction:column}.cms-reward-live-head>span{text-align:left;max-width:none}.cms-reward-live-preview{padding:12px}.cms-reward-preview-card-real{padding:1rem;border-radius:18px}.cms-reward-settings-grid{gap:11px}}
+

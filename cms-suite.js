@@ -1048,6 +1048,7 @@
   function enhanceGenericAutosave() {
     if(!has('cms.forms.autosave')) return;
     document.querySelectorAll('.cms-modal-backdrop.active form.cms-form').forEach(form=>{
+      if(form.dataset.mattSkipAutosave==='1') return;
       if(form.dataset.mattAutosaveBound==='1') return;
       const title=form.closest('.cms-modal-backdrop')?.querySelector('#cms-modal-title')?.textContent?.trim() || form.id || 'Formularz CMS';
       const key=`generic:${form.id||'form'}:${title}:${location.hash}`;
