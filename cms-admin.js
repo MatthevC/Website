@@ -2989,7 +2989,7 @@
               ${fieldHtml(fitField,current.fit||'cover')}
               ${fieldHtml(posField,current.position||'center')}
               <label class="cms-field cms-reward-scale-field"><span>Skala grafiki <b data-reward-scale-value>${initialScale}%</b></span><div class="cms-reward-scale-control"><button type="button" data-scale-minus aria-label="Pomniejsz grafikę">−</button><input type="range" name="scale" min="50" max="200" step="5" value="${initialScale}"><button type="button" data-scale-plus aria-label="Powiększ grafikę">+</button></div><small class="cms-field-help">Pomniejsz lub powiększ obraz w zakresie 50–200%. Nie zmienia to rozmiaru kafelka.</small></label>
-              <label class="cms-field cms-reward-radius-field"><span>Rogi grafiki <b data-reward-radius-value>${initialRadius}px</b></span><div class="cms-reward-radius-control"><button type="button" data-radius-square>PROSTE ROGI</button><input type="range" name="radius" min="0" max="30" step="1" value="${initialRadius}"></div><small class="cms-field-help"><strong>0 px</strong> = grafika bez zaokrąglonych rogów. To ustawienie dotyczy tylko tej nagrody.</small></label>
+              <label class="cms-field cms-reward-radius-field"><span>Rogi grafiki <b data-reward-radius-value>${initialRadius}px</b></span><div class="cms-reward-radius-control"><button type="button" data-radius-square>PROSTE ROGI</button><input type="range" name="radius" min="0" max="30" step="1" value="${initialRadius}"></div><small class="cms-field-help"><strong>0 px</strong> = sama grafika ma proste rogi. Tło pola ikony nadal pozostaje zaokrąglone. To ustawienie dotyczy tylko tej nagrody.</small></label>
             </div>
           </section>
           <aside class="cms-reward-live-preview">

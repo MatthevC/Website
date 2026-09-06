@@ -10399,9 +10399,11 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 
 /* ===== Nagrody — własne grafiki w miejscu ikon ===== */
 .reward-graphic.has-custom-reward-image{
-  padding:0;
+  /* Tło/pole ikony zawsze zachowuje oryginalne zaokrąglenie. */
+  padding:4px;
+  box-sizing:border-box;
   overflow:hidden;
-  border-radius:var(--reward-image-radius,18px);
+  border-radius:18px;
 }
 .reward-graphic .reward-custom-image{
   display:block;
@@ -10411,7 +10413,8 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   object-position:var(--reward-image-position,center);
   transform:scale(var(--reward-image-scale,1));
   transform-origin:var(--reward-image-origin,center center);
-  border-radius:var(--reward-image-radius,18px);
+  /* Zaokrąglenie dotyczy wyłącznie samego obrazka, nie tła ikonki. */
+  border-radius:var(--reward-image-radius,0px);
 }
 .cms-reward-graphics-section{margin:0 0 18px}
 .cms-reward-graphic-thumb{display:grid;place-items:center}
@@ -10449,10 +10452,9 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-reward-live-head>div{display:grid;gap:3px}.cms-reward-live-head small{color:#ff3b46;font-size:9px;font-weight:950;letter-spacing:.12em}.cms-reward-live-head strong{font-size:14px}.cms-reward-live-head>span{max-width:180px;color:#747983;font-size:10px;line-height:1.35;text-align:right}
 .cms-reward-preview-card-real{width:100%;min-height:0;margin:0;box-sizing:border-box}
 .cms-reward-preview-card-real .reward-card-top{width:100%}
-.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden;position:relative;display:block;border-radius:var(--reward-image-radius,18px)}
-.cms-reward-preview-card-real .reward-graphic [data-reward-live-img],
+.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden;position:relative;display:block;border-radius:18px}
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{position:absolute;inset:0;width:100%;height:100%;box-sizing:border-box}
-.cms-reward-preview-card-real .reward-graphic [data-reward-live-img]{display:block;border-radius:var(--reward-image-radius,18px);object-fit:var(--reward-image-fit,cover);object-position:var(--reward-image-position,center);transform:scale(var(--reward-image-scale,1));transform-origin:var(--reward-image-origin,center center)}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-img]{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);box-sizing:border-box;display:block;border-radius:var(--reward-image-radius,0px);object-fit:var(--reward-image-fit,cover);object-position:var(--reward-image-position,center);transform:scale(var(--reward-image-scale,1));transform-origin:var(--reward-image-origin,center center)}
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{display:grid;place-items:center}
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-img][hidden],
 .cms-reward-preview-card-real .reward-graphic [data-reward-live-default][hidden]{display:none!important}
