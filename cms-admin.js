@@ -3363,7 +3363,8 @@
 
   async function openBackupsManager() {
     if (!any('backups.view','github.restore')) return;
-    let activeType = has('backups.view') ? 'automatic' : 'github';
+    const canViewBackups = has('backups.view');
+    let activeType = 'automatic';
 
     const renderBackupItem = (b) => {
       const esc = window.MattCMS.escape;
@@ -3386,22 +3387,14 @@
     };
 
     const draw = async () => {
-      if (activeType === 'github') {
+      if (!canViewBackups) {
         openModal('BACKUPY I PRZYWRACANIE', `
-          <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj przywracania">
-            ${has('backups.view')?'<button type="button" data-backup-tab="automatic">Automatyczne zapisy</button><button type="button" data-backup-tab="manual">Ręczne zapisy</button>':''}
-            ${has('github.restore')?'<button type="button" class="active" data-backup-tab="github">Z GitHuba</button>':''}
+          <div class="cms-backup-github-only">
+            ${has('github.restore') ? `<button class="cms-github-quick" type="button" data-github-restore-page title="Przywróć bieżącą podstronę do wersji z repozytorium">↶ PRZYWRÓĆ Z GITHUBA</button>` : ''}
           </div>
           <div class="cms-backup-note"><strong>WERSJA Z GITHUBA:</strong> przywraca bazową treść bieżącej podstrony z plików znajdujących się w repozytorium. Przed przywróceniem aktualny stan zostanie zabezpieczony przez system backupów.</div>
-          <div class="cms-manager-actions cms-backup-actions">
-            <div class="cms-manager-action-group">
-              <button class="cms-primary" type="button" data-github-restore-page>↶ PRZYWRÓĆ TĘ PODSTRONĘ Z GITHUBA</button>
-            </div>
-            <p>Podstrona: <strong>${window.MattCMS.escape(currentRoute().toUpperCase())}</strong></p>
-          </div>
         `);
         const body = $('#cms-modal-body', modal);
-        $$('[data-backup-tab]', body).forEach(btn => btn.addEventListener('click', async () => { activeType = btn.dataset.backupTab; await draw(); }));
         $('[data-github-restore-page]', body)?.addEventListener('click', () => resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie'));
         return;
       }
@@ -3413,10 +3406,12 @@
         const current = activeType === 'manual' ? manual : automatic;
 
         openModal('BACKUPY I PRZYWRACANIE', `
-          <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj zapisów">
-            <button type="button" class="${activeType === 'automatic' ? 'active' : ''}" data-backup-tab="automatic">Automatyczne zapisy <span>${automatic.length}</span></button>
-            <button type="button" class="${activeType === 'manual' ? 'active' : ''}" data-backup-tab="manual">Ręczne zapisy <span>${manual.length}</span></button>
-            ${has('github.restore')?`<button type="button" data-backup-tab="github">Z GitHuba</button>`:''}
+          <div class="cms-backup-topbar">
+            <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj zapisów">
+              <button type="button" class="${activeType === 'automatic' ? 'active' : ''}" data-backup-tab="automatic">Automatyczne zapisy <span>${automatic.length}</span></button>
+              <button type="button" class="${activeType === 'manual' ? 'active' : ''}" data-backup-tab="manual">Ręczne zapisy <span>${manual.length}</span></button>
+            </div>
+            ${has('github.restore') ? `<button class="cms-github-quick" type="button" data-github-restore-page title="Przywróć bieżącą podstronę do wersji z repozytorium">↶ Z GITHUBA</button>` : ''}
           </div>
 
           ${activeType === 'automatic' ? `
@@ -3438,9 +3433,11 @@
 
         const body = $('#cms-modal-body', modal);
         $$('[data-backup-tab]', body).forEach(btn => btn.addEventListener('click', async () => {
-          activeType = ['automatic','manual','github'].includes(btn.dataset.backupTab) ? btn.dataset.backupTab : 'automatic';
+          activeType = ['automatic','manual'].includes(btn.dataset.backupTab) ? btn.dataset.backupTab : 'automatic';
           await draw();
         }));
+
+        $('[data-github-restore-page]', body)?.addEventListener('click', () => resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie'));
 
         const fileInput = $('[data-backup-file]', body);
         $('[data-create-backup]', body)?.addEventListener('click', async () => {

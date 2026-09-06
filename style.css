@@ -10211,3 +10211,19 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-permission-readonly{display:inline-flex;align-items:center;min-height:24px;padding:5px 8px;border:1px solid #363940;border-radius:999px;background:#17191e;color:#8d919a;font-size:8px;font-weight:900;letter-spacing:.07em;white-space:nowrap}
 .cms-permission-locked{opacity:.72}
 .cms-permission-locked input,.cms-permission-locked select,.cms-permission-locked button{cursor:not-allowed!important}
+
+/* ============================================================
+   v2.5.4 — kompaktowe przywracanie z GitHuba w backupach
+   ============================================================ */
+.cms-backup-topbar{display:flex;align-items:stretch;gap:10px;margin:0 0 16px}
+.cms-backup-topbar .cms-backup-tabs{flex:1;min-width:0;margin:0}
+.cms-github-quick{flex:0 0 auto;min-width:132px;padding:0 15px;border:1px solid #444751;border-radius:10px;background:#17181d;color:#d9dbe0;font:900 10px/1 inherit;letter-spacing:.06em;white-space:nowrap;cursor:pointer;transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease}
+.cms-github-quick:hover{border-color:#ef2b2d;background:#241416;color:#fff;transform:translateY(-1px)}
+.cms-github-quick:active{transform:translateY(0)}
+.cms-backup-github-only{display:flex;justify-content:flex-end;margin:0 0 14px}
+.cms-backup-github-only .cms-github-quick{min-height:40px}
+@media(max-width:760px){
+  .cms-backup-topbar{align-items:stretch;flex-direction:column}
+  .cms-backup-topbar .cms-backup-tabs{width:100%}
+  .cms-github-quick{min-height:40px;align-self:flex-end}
+}
