@@ -10448,9 +10448,13 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .cms-reward-live-head>div{display:grid;gap:3px}.cms-reward-live-head small{color:#ff3b46;font-size:9px;font-weight:950;letter-spacing:.12em}.cms-reward-live-head strong{font-size:14px}.cms-reward-live-head>span{max-width:180px;color:#747983;font-size:10px;line-height:1.35;text-align:right}
 .cms-reward-preview-card-real{width:100%;min-height:0;margin:0;box-sizing:border-box}
 .cms-reward-preview-card-real .reward-card-top{width:100%}
-.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden}
-.cms-reward-preview-card-real .reward-graphic img{display:block;width:100%;height:100%;border-radius:inherit}
-.cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{display:grid;place-items:center;width:100%;height:100%}
+.cms-reward-preview-card-real .reward-graphic{flex:0 0 60px;overflow:hidden;position:relative;display:block}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-img],
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{position:absolute;inset:0;width:100%;height:100%;box-sizing:border-box}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-img]{display:block;border-radius:inherit;object-fit:var(--reward-image-fit,cover);object-position:var(--reward-image-position,center);transform:scale(var(--reward-image-scale,1));transform-origin:var(--reward-image-origin,center center)}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-default]{display:grid;place-items:center}
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-img][hidden],
+.cms-reward-preview-card-real .reward-graphic [data-reward-live-default][hidden]{display:none!important}
 .cms-reward-preview-card-real h3{font-size:1.08rem}
 .cms-reward-preview-card-real p{font-size:.93rem;color:#c2c5cc}
 .cms-reward-live-meta{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-top:12px;padding:9px 11px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:#121318;color:#777c86;font-size:9px}.cms-reward-live-meta strong{text-align:center;color:#fff;font-size:11px}
@@ -10462,3 +10466,6 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 @media(max-width:900px){.cms-reward-editor-grid{grid-template-columns:1fr}.cms-reward-live-preview{position:relative;top:auto}.cms-reward-settings-grid{grid-template-columns:1fr}.cms-reward-settings-grid>.cms-field:first-child,.cms-reward-scale-field{grid-column:1}}
 @media(max-width:560px){.cms-reward-live-head{flex-direction:column}.cms-reward-live-head>span{text-align:left;max-width:none}.cms-reward-live-preview{padding:12px}.cms-reward-preview-card-real{padding:1rem;border-radius:18px}.cms-reward-settings-grid{gap:11px}}
 
+
+/* Reward editor preview hotfix: only one visual layer is ever visible. */
+.cms-reward-live-graphic.has-custom-reward-image{display:block!important}

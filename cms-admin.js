@@ -2996,7 +2996,7 @@
               <div class="reward-card-top">
                 <div class="reward-graphic ${esc(graphicClass)} cms-reward-live-graphic" data-reward-live-graphic>
                   <span data-reward-live-default>${esc(defaultIcon)}</span>
-                  <img data-reward-live-img alt="${esc(current.alt||item.label||'Grafika nagrody')}" hidden>
+                  <img class="reward-custom-image" data-reward-live-img alt="${esc(current.alt||item.label||'Grafika nagrody')}" hidden>
                 </div>
                 <span class="reward-cost">${esc(item.cost||'')}</span>
               </div>
@@ -3030,16 +3030,14 @@
             if(liveImg.src!==src) liveImg.src=src;
             liveImg.hidden=false;
             if(liveDefault) liveDefault.hidden=true;
+            if(liveGraphic) liveGraphic.classList.add('has-custom-reward-image');
           }else{
             liveImg.removeAttribute('src');
             liveImg.hidden=true;
             if(liveDefault) liveDefault.hidden=false;
+            if(liveGraphic) liveGraphic.classList.remove('has-custom-reward-image');
           }
           liveImg.alt=String(form.elements.alt?.value||item.label||'Grafika nagrody');
-          liveImg.style.objectFit=fit;
-          liveImg.style.objectPosition=pos;
-          liveImg.style.transform=`scale(${scale/100})`;
-          liveImg.style.transformOrigin=originFor(pos);
         }
         if(liveGraphic){
           liveGraphic.style.setProperty('--reward-image-fit',fit);
