@@ -1,19 +1,57 @@
 const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 
 // Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Supabase,
-// dzięki czemu panel działa również zanim wykonasz dołączony plik SQL aktualizujący katalog.
+// aby były od razu dostępne w panelu Zarządzaj kontami bez dokładania plików wdrożeniowych do paczki strony.
 const MATT_EXTRA_PERMISSION_CATALOG = [
-  { permission:"events.schedule.manage", group_name:"EVENTY", label:"Terminy i status eventów", description:"Może zmieniać rozpoczęcie, zakończenie, publikację oraz status „w trakcie / zakończ teraz” w istniejących eventach.", sort_order:125 },
-  { permission:"events.images.manage", group_name:"EVENTY", label:"Grafiki eventów", description:"Może zmieniać tryb jednej/dwóch grafik, pliki oraz dopasowanie grafik w istniejących eventach.", sort_order:126 },
+  { permission:"events.schedule.manage", group_name:"EVENTY", label:"Terminy i status eventów", description:"Może zmieniać rozpoczęcie, zakończenie, publikację oraz status „w trakcie / zakończ teraz” w istniejących eventach. Do edycji istniejącego eventu potrzebuje też „Edycja eventów”.", sort_order:125 },
+  { permission:"events.images.manage", group_name:"EVENTY", label:"Grafiki eventów", description:"Może zmieniać tryb jednej/dwóch grafik, pliki oraz dopasowanie grafik w istniejących eventach. Do edycji istniejącego eventu potrzebuje też „Edycja eventów”.", sort_order:126 },
   { permission:"discord.join.messages.manage", group_name:"DISCORD", label:"Wiadomości w podglądzie Discorda", description:"Może dodawać, edytować, usuwać i ustawiać kolejność wiadomości w makiecie czatu Discorda.", sort_order:325 },
   { permission:"discord.join.members.manage", group_name:"DISCORD", label:"Osoby w podglądzie Discorda", description:"Może zarządzać grupami i osobami w podglądzie, w tym nickami i linkami Twitch.", sort_order:326 },
+  { permission:"discord.join.members.bulk", group_name:"DISCORD", label:"Masowe operacje na osobach Discorda", description:"Może zaznaczać wiele osób w podglądzie Discorda i przenosić je między grupami albo wysyłać do kosza. Wymaga także uprawnienia „Osoby w podglądzie Discorda”.", sort_order:326.5 },
   { permission:"discord.channels.delete", group_name:"DISCORD", label:"Usuwanie kanałów i kategorii Discorda", description:"Pozwala usuwać pozycje z sekcji opisu kanałów. Wymaga także dostępu do zarządzania kanałami.", sort_order:327 },
   { permission:"streamers.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie streamerów", description:"Pozwala usuwać streamerów z listy polecanych. Wymaga także dostępu do zarządzania streamerami.", sort_order:425 },
   { permission:"moderation.people.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie osób z moderacji", description:"Pozwala usuwać osoby z sekcji moderacji. Wymaga także dostępu do zarządzania tą sekcją.", sort_order:426 },
   { permission:"moderation.benefits.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie korzyści moderacji", description:"Pozwala usuwać pozycje z listy korzyści moderacji. Wymaga także dostępu do zarządzania korzyściami.", sort_order:427 },
   { permission:"commands.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie komend", description:"Pozwala trwale usuwać komendy z listy. Wymaga także dostępu do zarządzania komendami.", sort_order:428 },
   { permission:"rules.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie zasad regulaminu", description:"Pozwala usuwać pojedyncze zasady regulaminu. Wymaga także dostępu do edycji regulaminu.", sort_order:429 },
-  { permission:"contact.topics.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie tematów kontaktu", description:"Pozwala usuwać tematy z formularza kontaktowego. Wymaga także dostępu do zarządzania tematami.", sort_order:430 }
+  { permission:"contact.topics.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie tematów kontaktu", description:"Pozwala usuwać tematy z formularza kontaktowego. Wymaga także dostępu do zarządzania tematami.", sort_order:430 },
+
+  { permission:"events.publish", group_name:"EVENTY", label:"Publikowanie i ukrywanie eventów", description:"Może zmieniać event między wersją publiczną, szkicem, ukrytym i zaplanowanym do publikacji.", sort_order:127 },
+  { permission:"events.preview.nonpublic", group_name:"EVENTY", label:"Podgląd niepublicznych eventów", description:"Może podejrzeć szkice, eventy ukryte i zaplanowane przed publikacją.", sort_order:128 },
+  { permission:"events.duplicate", group_name:"EVENTY", label:"Duplikowanie eventów", description:"Może tworzyć kopię istniejącego eventu jako nowy szkic.", sort_order:129 },
+  { permission:"events.notes.manage", group_name:"EVENTY", label:"Notatki wewnętrzne eventów", description:"Może dodawać notatki widoczne tylko dla obsługi strony. W eventach używaj razem z „Edycja eventów”.", sort_order:130 },
+  { permission:"events.history.view", group_name:"EVENTY", label:"Historia wersji eventów", description:"Może przeglądać poprzednie wersje eventów zapisane w backupach.", sort_order:131 },
+  { permission:"events.history.restore", group_name:"EVENTY", label:"Przywracanie wersji eventów", description:"Może przywrócić pojedynczy event z wcześniejszego backupu.", sort_order:132 },
+  { permission:"events.bulk.manage", group_name:"EVENTY", label:"Masowe operacje na eventach", description:"Może wykonywać działania na wielu eventach jednocześnie.", sort_order:133 },
+  { permission:"events.autoarchive.manage", group_name:"EVENTY", label:"Automatyczne archiwizowanie", description:"Może ustawić automatyczne przeniesienie eventu do archiwum po zakończeniu. Wymaga też „Edycja eventów”.", sort_order:134 },
+
+  { permission:"downloads.publish", group_name:"PLIKI DO POBRANIA", label:"Widoczność i publikacja plików", description:"Może ustawiać pliki jako publiczne, ukryte, szkice lub zaplanowane.", sort_order:225 },
+  { permission:"downloads.preview.nonpublic", group_name:"PLIKI DO POBRANIA", label:"Podgląd niepublicznych plików", description:"Może widzieć pliki ukryte, szkice i pliki przed zaplanowaną publikacją.", sort_order:226 },
+  { permission:"downloads.notes.manage", group_name:"PLIKI DO POBRANIA", label:"Notatki wewnętrzne plików", description:"Może dodawać prywatne notatki do pozycji w sekcji pobierania. Do zmiany notatki potrzebuje też „Edycja plików”.", sort_order:227 },
+  { permission:"downloads.bulk.manage", group_name:"PLIKI DO POBRANIA", label:"Masowe operacje na plikach", description:"Może zaznaczać i zmieniać wiele plików jednocześnie.", sort_order:228 },
+
+  { permission:"streamers.publish", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Widoczność streamerów", description:"Może publikować, ukrywać i planować publikację polecanych streamerów. Używaj razem z „Zarządzanie streamerami”.", sort_order:431 },
+  { permission:"streamers.preview.nonpublic", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Podgląd niepublicznych streamerów", description:"Może widzieć ukryte i zaplanowane wpisy streamerów.", sort_order:432 },
+  { permission:"streamers.notes.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Notatki wewnętrzne streamerów", description:"Może dodawać notatki dla obsługi do wpisów polecanych streamerów. Używaj razem z „Zarządzanie streamerami”.", sort_order:433 },
+  { permission:"streamers.bulk.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Masowe operacje na streamerach", description:"Może wykonywać operacje na wielu wpisach streamerów jednocześnie. Używaj razem z „Zarządzanie streamerami”.", sort_order:434 },
+
+  { permission:"cms.dashboard.view", group_name:"NARZĘDZIA MODERATORA", label:"Centrum moderatora", description:"Dostęp do panelu ostatnich zmian, szybkich podsumowań i narzędzi administracyjnych.", sort_order:610 },
+  { permission:"cms.search", group_name:"NARZĘDZIA MODERATORA", label:"Globalna wyszukiwarka CMS", description:"Może przeszukiwać eventy i treści zarządzane przez CMS z jednego miejsca.", sort_order:611 },
+  { permission:"cms.notifications.view", group_name:"NARZĘDZIA MODERATORA", label:"Centrum powiadomień", description:"Może przeglądać ostrzeżenia, szkice, zaplanowane publikacje i problemy wymagające uwagi.", sort_order:612 },
+  { permission:"cms.history.view", group_name:"NARZĘDZIA MODERATORA", label:"Historia wersji treści", description:"Może przeglądać wersje treści zapisane w systemie backupów.", sort_order:613 },
+  { permission:"cms.history.restore", group_name:"NARZĘDZIA MODERATORA", label:"Przywracanie pojedynczych sekcji", description:"Może przywracać wybraną sekcję CMS bez odtwarzania całego backupu.", sort_order:614 },
+  { permission:"cms.trash.view", group_name:"NARZĘDZIA MODERATORA", label:"Podgląd kosza", description:"Może przeglądać elementy przeniesione do kosza.", sort_order:615 },
+  { permission:"cms.trash.restore", group_name:"NARZĘDZIA MODERATORA", label:"Przywracanie z kosza", description:"Może przywracać eventy, pliki i elementy Discorda z kosza.", sort_order:616 },
+  { permission:"cms.trash.delete", group_name:"NARZĘDZIA MODERATORA", label:"Trwałe usuwanie z kosza", description:"Może bezpowrotnie usuwać elementy znajdujące się w koszu.", sort_order:617 },
+  { permission:"cms.preview.mode", group_name:"NARZĘDZIA MODERATORA", label:"Tryb podglądu strony", description:"Może ukryć narzędzia CMS i zobaczyć stronę w widoku zbliżonym do zwykłego użytkownika.", sort_order:618 },
+  { permission:"cms.links.check", group_name:"NARZĘDZIA MODERATORA", label:"Testowanie linków", description:"Może uruchamiać kontrolę linków, grafik i odnośników do Twitcha/Discorda.", sort_order:619 },
+  { permission:"cms.editlocks.view", group_name:"NARZĘDZIA MODERATORA", label:"Ostrzeżenia o równoczesnej edycji", description:"Otrzymuje ostrzeżenie, gdy ten sam element jest edytowany przez inną osobę.", sort_order:620 },
+  { permission:"site.maintenance.manage", group_name:"STRONA I WYGLĄD", label:"Tryb konserwacji strony", description:"Może włączyć lub wyłączyć stronę dla odwiedzających i ustawić komunikat przerwy technicznej.", sort_order:525 },
+  { permission:"statistics.view", group_name:"LOGI I BEZPIECZEŃSTWO", label:"Statystyki CMS", description:"Dostęp do statystyk administracyjnych: liczba treści, szkiców, backupów i działań. Bez śledzenia odwiedzających.", sort_order:825 },
+  { permission:"accounts.preview_as", group_name:"KONTA I DOSTĘP", label:"Podgląd panelu jako moderator", description:"Może uruchomić bezpieczny podgląd interfejsu z uprawnieniami wybranego moderatora, bez przejmowania jego konta.", sort_order:725 },
+  { permission:"accounts.sessions.view", group_name:"KONTA I DOSTĘP", label:"Podgląd aktywności i sesji kont", description:"Może sprawdzić ostatnią aktywność konta oraz informacje o bieżącej sesji własnego konta.", sort_order:726 },
+  { permission:"accounts.sessions.revoke", group_name:"KONTA I DOSTĘP", label:"Wymuszenie ponownego logowania", description:"Może oznaczyć konto do wylogowania ze strony przy następnym sprawdzeniu sesji.", sort_order:727 },
+  { permission:"accounts.block", group_name:"KONTA I DOSTĘP", label:"Blokowanie i odblokowanie kont", description:"Może tymczasowo zablokować dostęp użytkownika do strony bez usuwania konta.", sort_order:728 }
 ];
 
 const MATT_PERMISSION_GROUP_ORDER = [
@@ -31,6 +69,8 @@ const MATT_PERMISSION_GROUP_ORDER = [
   ["backups.", "BACKUPY I PRZYWRACANIE", 60],
   ["github.", "BACKUPY I PRZYWRACANIE", 60],
   ["accounts.", "KONTA I DOSTĘP", 70],
+  ["cms.", "NARZĘDZIA MODERATORA", 75],
+  ["statistics.", "LOGI I BEZPIECZEŃSTWO", 80],
   ["audit.", "LOGI I BEZPIECZEŃSTWO", 80]
 ];
 
@@ -44,7 +84,8 @@ function mattPermissionIsCritical(permission) {
   const p = String(permission || "");
   return p.includes(".delete") || [
     "accounts.role.change", "accounts.permissions.change", "accounts.password.reset",
-    "backups.restore", "backups.import", "github.restore"
+    "backups.restore", "backups.import", "github.restore", "cms.history.restore", "cms.trash.delete",
+    "accounts.sessions.revoke", "accounts.block", "site.maintenance.manage"
   ].includes(p);
 }
 
@@ -55,12 +96,41 @@ window.mattHasPermission = function(permission) {
   return Array.isArray(window.currentUserPermissions) && window.currentUserPermissions.includes(permission);
 };
 
+const MATT_EXTRA_PERMISSIONS_KEY = "account_extra_permissions";
+
+async function mattLoadExtraPermissionsMap() {
+  try {
+    const { data, error } = await supabaseClient.from("cms_data").select("data").eq("key", MATT_EXTRA_PERMISSIONS_KEY).maybeSingle();
+    if (error) throw error;
+    return data?.data && typeof data.data === "object" && !Array.isArray(data.data) ? data.data : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+async function mattSaveExtraPermissionsMap(map) {
+  const clean = map && typeof map === "object" && !Array.isArray(map) ? map : {};
+  if (window.MattCMS?.save) return window.MattCMS.save(MATT_EXTRA_PERMISSIONS_KEY, clean, { backup:false });
+  const { error } = await supabaseClient.rpc("matt_cms_save", { p_key:MATT_EXTRA_PERMISSIONS_KEY, p_data:clean });
+  if (error) throw error;
+  return clean;
+}
+
 async function mattLoadAccessState() {
   try {
     const { data, error } = await supabaseClient.rpc("matt_get_my_access");
     if (error) throw error;
     const role = String(data?.role || "user").toLowerCase();
-    const permissions = Array.isArray(data?.permissions) ? data.permissions : [];
+    let permissions = Array.isArray(data?.permissions) ? [...data.permissions] : [];
+    if (role === "moderator") {
+      const [{ data:sessionData }, extraMap] = await Promise.all([
+        supabaseClient.auth.getSession(),
+        mattLoadExtraPermissionsMap()
+      ]);
+      const uid = sessionData?.session?.user?.id || "";
+      const extras = Array.isArray(extraMap?.[uid]) ? extraMap[uid] : [];
+      permissions = [...new Set([...permissions, ...extras])];
+    }
     window.currentUserRole = role;
     window.currentUserPermissions = permissions;
     window.currentUserIsAdmin = role === "admin";
@@ -74,6 +144,43 @@ async function mattLoadAccessState() {
     return { role, permissions: [], isAdmin: role === "admin" };
   }
 }
+
+
+async function mattGetAccountSecurityState() {
+  try {
+    const { data, error } = await supabaseClient.from("cms_data").select("data").eq("key", "account_security").maybeSingle();
+    if (error) throw error;
+    const state = data?.data && typeof data.data === "object" ? data.data : {};
+    return { blocks: state.blocks || {}, revocations: state.revocations || {} };
+  } catch (_) {
+    return { blocks: {}, revocations: {} };
+  }
+}
+
+async function mattEnforceAccountSecurity(session, profile = null) {
+  if (!session?.user?.id) return true;
+  const state = await mattGetAccountSecurityState();
+  const block = state.blocks?.[session.user.id];
+  if (block?.blocked === true) {
+    try { await supabaseClient.auth.signOut(); } catch (_) {}
+    const reason = String(block.reason || "Konto zostało zablokowane przez administrację.");
+    alert(`Dostęp do konta został zablokowany.\n\n${reason}`);
+    location.reload();
+    return false;
+  }
+  const revokedAt = new Date(state.revocations?.[session.user.id] || 0).getTime();
+  const signedInAt = new Date(session.user.last_sign_in_at || session.created_at || 0).getTime();
+  if (revokedAt > 0 && (!signedInAt || revokedAt >= signedInAt)) {
+    try { await supabaseClient.auth.signOut(); } catch (_) {}
+    alert("Sesja została zakończona przez administrację. Zaloguj się ponownie.");
+    location.reload();
+    return false;
+  }
+  return true;
+}
+
+window.mattGetAccountSecurityState = mattGetAccountSecurityState;
+window.mattEnforceAccountSecurity = mattEnforceAccountSecurity;
 
 
 function mattAuditEscape(value = "") {
@@ -219,7 +326,7 @@ async function mattOpenAuditLogs() {
     } catch (error) {
       console.error("Nie udało się wczytać logów:", error);
       if (summary) summary.textContent = "Nie udało się pobrać logów.";
-      if (list) list.innerHTML = `<div class="audit-empty">${mattAuditEscape(error.message || "Błąd odczytu logów")}.<br><br>Uruchom plik <b>CMS_UPDATE_AUDIT_BACKUPS.sql</b> w Supabase.</div>`;
+      if (list) list.innerHTML = `<div class="audit-empty">${mattAuditEscape(error.message || "Błąd odczytu logów")}.<br><br>Sprawdź, czy w Supabase są aktywne funkcje i tabele odpowiedzialne za logi zmian.</div>`;
     } finally {
       if (refresh) refresh.disabled = false;
     }
@@ -231,6 +338,8 @@ async function mattOpenAuditLogs() {
   await load();
 }
 
+
+window.mattOpenAuditLogs = mattOpenAuditLogs;
 
 function mattSetHeaderUser(profile) {
   const open = document.getElementById("openLogin");
@@ -319,6 +428,7 @@ async function mattLoadUserHeader() {
     }
 
     window.currentUserProfile = profile;
+    if (!(await mattEnforceAccountSecurity(session, profile))) return;
     const access = await mattLoadAccessState();
     window.dispatchEvent(new CustomEvent("matt-auth-change", { detail: { isAdmin: access.isAdmin, role: access.role, permissions: access.permissions } }));
     const canViewAudit = window.mattHasPermission?.("audit.view") === true;
@@ -446,17 +556,24 @@ async function mattOpenAccountManager() {
 
   let accounts = [];
   let catalog = [];
+  let dbCatalogPermissions = new Set();
   let selectedId = null;
 
   const load = async () => {
     body.innerHTML = `<div class="account-loading">Ładowanie kont i katalogu uprawnień…</div>`;
-    const [accountsRes, catalogRes] = await Promise.all([
+    const [accountsRes, catalogRes, extraPermissions] = await Promise.all([
       supabaseClient.rpc("matt_admin_list_accounts"),
-      supabaseClient.from("matt_permission_catalog").select("permission,group_name,label,description,sort_order").order("sort_order")
+      supabaseClient.from("matt_permission_catalog").select("permission,group_name,label,description,sort_order").order("sort_order"),
+      mattLoadExtraPermissionsMap()
     ]);
     if (accountsRes.error) throw accountsRes.error;
     if (catalogRes.error) throw catalogRes.error;
-    accounts = accountsRes.data || [];
+    dbCatalogPermissions = new Set((catalogRes.data || []).map(item => item.permission));
+    accounts = (accountsRes.data || []).map(account => {
+      const base = Array.isArray(account.permissions) ? account.permissions : [];
+      const extras = String(account.role || '').toLowerCase() === 'moderator' && Array.isArray(extraPermissions?.[account.auth_user_id]) ? extraPermissions[account.auth_user_id] : [];
+      return { ...account, permissions:[...new Set([...base, ...extras])] };
+    });
     const mergedCatalog = new Map((catalogRes.data || []).map(item => [item.permission, { ...item }]));
     MATT_EXTRA_PERMISSION_CATALOG.forEach(item => {
       const existing = mergedCatalog.get(item.permission);
@@ -725,7 +842,7 @@ async function mattOpenAccountManager() {
         note.innerHTML = role === "admin"
           ? `<strong>Administrator</strong> ma automatycznie wszystkie ${catalog.length} uprawnień. Poniższa lista jest pełnym podglądem zakresu dostępu.`
           : role === "moderator"
-            ? `<strong>Moderator</strong> otrzymuje wyłącznie zaznaczone czynności. Każde niezaznaczone działanie jest blokowane również po stronie Supabase.`
+            ? `<strong>Moderator</strong> otrzymuje wyłącznie zaznaczone czynności. Każde niezaznaczone działanie jest ukrywane i blokowane w panelu strony zgodnie z przydzielonym zakresem.`
             : `<strong>Użytkownik</strong> nie ma dostępu do narzędzi administracyjnych. Lista poniżej pokazuje, jakie możliwości można później nadać po zmianie roli na Moderatora.`;
       }
     };
@@ -827,6 +944,21 @@ async function mattOpenAccountManager() {
       if (message) message.textContent = "Usuwanie użytkownika…";
       try {
         await invokeAccountAction({ action:"delete_user", userId:account.auth_user_id });
+        // Posprzątaj pomocnicze dane tego konta. Błąd czyszczenia nie cofnie poprawnie wykonanego usunięcia konta.
+        try {
+          const extraMap = await mattLoadExtraPermissionsMap();
+          if (extraMap && Object.prototype.hasOwnProperty.call(extraMap, account.auth_user_id)) {
+            delete extraMap[account.auth_user_id];
+            await mattSaveExtraPermissionsMap(extraMap);
+          }
+          const security = await mattGetAccountSecurityState();
+          let changed = false;
+          if (security.blocks?.[account.auth_user_id]) { delete security.blocks[account.auth_user_id]; changed = true; }
+          if (security.revocations?.[account.auth_user_id]) { delete security.revocations[account.auth_user_id]; changed = true; }
+          if (changed && window.MattCMS?.save) await window.MattCMS.save("account_security", security, { backup:false });
+        } catch (cleanupError) {
+          console.warn("Konto usunięto, ale nie udało się posprzątać danych pomocniczych:", cleanupError?.message || cleanupError);
+        }
         selectedId = viewerUserId;
         await load();
       } catch (error) {
@@ -847,12 +979,18 @@ async function mattOpenAccountManager() {
       button.disabled = true;
       if (message) message.textContent = "Zapisywanie…";
       try {
+        const dbPermissions = selectedPermissions.filter(permission => dbCatalogPermissions.has(permission));
+        const extraPermissions = selectedPermissions.filter(permission => !dbCatalogPermissions.has(permission));
         const { error } = await supabaseClient.rpc("matt_admin_set_account_access", {
           p_user_id: account.auth_user_id,
           p_role: role,
-          p_permissions: selectedPermissions
+          p_permissions: dbPermissions
         });
         if (error) throw error;
+        const extraMap = await mattLoadExtraPermissionsMap();
+        if (role === "moderator" && extraPermissions.length) extraMap[account.auth_user_id] = extraPermissions;
+        else delete extraMap[account.auth_user_id];
+        await mattSaveExtraPermissionsMap(extraMap);
         if (message) message.textContent = "Rola i uprawnienia zostały zapisane.";
         selectedId = account.auth_user_id;
         await load();
@@ -1095,7 +1233,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const profile = await mattGetOwnProfile(session);
       if (!profile || !("avatar_url" in profile)) {
-        msg.innerHTML = "Aby korzystać z nowego profilu i avatarów, uruchom najpierw plik <b>CMS_UPDATE_USER_PROFILE.sql</b> w Supabase.";
+        msg.textContent = "Funkcja profilu i avatarów wymaga poprawnej konfiguracji profilu użytkownika w Supabase.";
         return;
       }
       newNick.value = profile.username || "";
@@ -1242,4 +1380,19 @@ document.addEventListener("DOMContentLoaded", () => {
       save.disabled = false;
     }
   };
+});
+
+
+// Okresowe sprawdzanie blokady / wymuszonego ponownego logowania.
+setInterval(async () => {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) await mattEnforceAccountSecurity(session, window.currentUserProfile);
+  } catch (_) {}
+}, 60000);
+window.addEventListener('focus', async () => {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) await mattEnforceAccountSecurity(session, window.currentUserProfile);
+  } catch (_) {}
 });

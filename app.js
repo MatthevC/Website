@@ -2524,12 +2524,14 @@ function downloadIcon(type = 'PLIK') {
 
 function downloadCmsConfig() {
   const raw = window.MattCMS?.get('downloads_config', null);
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { order: [], overrides: {}, hidden: [], custom: [] };
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { order: [], overrides: {}, hidden: [], custom: [], visibility: {}, notes: {} };
   return {
     order: Array.isArray(raw.order) ? raw.order.map(String) : [],
     overrides: raw.overrides && typeof raw.overrides === 'object' && !Array.isArray(raw.overrides) ? raw.overrides : {},
     hidden: Array.isArray(raw.hidden) ? raw.hidden.map(String) : [],
-    custom: Array.isArray(raw.custom) ? raw.custom : []
+    custom: Array.isArray(raw.custom) ? raw.custom : [],
+    visibility: raw.visibility && typeof raw.visibility === 'object' && !Array.isArray(raw.visibility) ? raw.visibility : {},
+    notes: raw.notes && typeof raw.notes === 'object' && !Array.isArray(raw.notes) ? raw.notes : {}
   };
 }
 
@@ -2548,14 +2550,26 @@ function resolvedDownloadItems() {
     if (hidden.has(id)) return;
     items.push({ ...item, id, source: 'cms' });
   });
+  const canPreviewHiddenDownloads = window.currentUserRole === 'admin' || window.mattHasPermission?.('downloads.preview.nonpublic') === true;
+  const publicItems = items.filter(item => {
+    if (canPreviewHiddenDownloads) return true;
+    const meta = config.visibility?.[String(item.id)] || {};
+    const visibility = String(meta.visibility || 'public').toLowerCase();
+    if (visibility === 'hidden' || visibility === 'draft') return false;
+    if (visibility === 'scheduled') {
+      const when = new Date(meta.publishAt || 0).getTime();
+      return Number.isFinite(when) && when > 0 && when <= Date.now();
+    }
+    return true;
+  });
   const order = new Map((config.order || []).map((id, index) => [String(id), index]));
-  items.sort((a, b) => {
+  publicItems.sort((a, b) => {
     const ai = order.has(a.id) ? order.get(a.id) : 100000;
     const bi = order.has(b.id) ? order.get(b.id) : 100000;
     if (ai !== bi) return ai - bi;
     return 0;
   });
-  return items.map((item, index) => ({
+  return publicItems.map((item, index) => ({
     ...item,
     type: String(item.type || downloadTypeFromHref(item.href)).toUpperCase(),
     sizeLabel: String(item.sizeLabel || ''),
@@ -2872,19 +2886,32 @@ async function loadEvents() {
       throw error;
     }
 
-    const events = (data || []).map(event => ({
-      id: event.id,
-      title: event.title,
-      date: event.start_date,
-      endDate: event.end_date,
-      image: event.image_url,
-      imageFit: event.image_fit || "contain",
-      mainImage: event.main_image_url || event.image_url,
-      mainImageFit: event.main_image_fit || "contain",
-      excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
-      content: event.description || "",
-      publishDate: event.publish_date
-    }));
+    const workflow = window.MattCMS?.get('event_workflow', {}) || {};
+    const canPreviewHidden = window.currentUserRole === 'admin' || window.mattHasPermission?.('events.preview.nonpublic') === true;
+    const events = (data || []).map(event => {
+      const meta = workflow?.[String(event.id)] || {};
+      const visibility = String(meta.visibility || 'public').toLowerCase();
+      const publishAt = meta.publishAt || event.publish_date || null;
+      const scheduledAt = publishAt ? new Date(publishAt).getTime() : 0;
+      const isScheduledReady = visibility !== 'scheduled' || (Number.isFinite(scheduledAt) && scheduledAt > 0 && scheduledAt <= Date.now());
+      const archived = visibility === 'archived' || (meta.autoArchive === true && event.end_date && new Date(event.end_date).getTime() <= Date.now());
+      return {
+        id: event.id,
+        title: event.title,
+        date: event.start_date,
+        endDate: event.end_date,
+        image: event.image_url,
+        imageFit: event.image_fit || "contain",
+        mainImage: event.main_image_url || event.image_url,
+        mainImageFit: event.main_image_fit || "contain",
+        excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
+        content: event.description || "",
+        publishDate: event.publish_date,
+        visibility,
+        archived,
+        _publicVisible: canPreviewHidden || (!['draft','hidden'].includes(visibility) && isScheduledReady)
+      };
+    }).filter(event => event._publicVisible);
 
     console.log("[MATT'S WORLD] Pobrano eventów z Supabase:", events.length);
 
@@ -2900,7 +2927,8 @@ async function loadEvents() {
 function eventCard(event) {
   const ended = isEventEnded(event);
   const ongoing = isEventOngoing(event);
-  const statusBadge = ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : '');
+  const archived = event.archived === true;
+  const statusBadge = archived ? '<div class="event-ended-badge event-archive-badge">ARCHIWUM</div>' : (ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : ''));
   const cover = event.image
     ? `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
          <img style="object-fit:${escapeHtml(event.imageFit || "contain")};object-position:center" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}" loading="lazy">
@@ -2912,7 +2940,7 @@ function eventCard(event) {
 
   return `
     <article
-      class="event-card${ended ? " event-ended" : ""}"
+      class="event-card${ended ? " event-ended" : ""}${archived ? " event-archived" : ""}"
       data-collection-item
       data-search="${escapeHtml(`${event.title} ${event.excerpt || ""} ${event.content || ""} ${event.date || ""}`.toLowerCase())}">
       ${cover}
@@ -3062,9 +3090,11 @@ function setupCollectionView({ storageKey, list, searchInput, pageSizeSelect, pa
     const filtered = items.filter(item => {
       const matchesSearch = !normalizedQuery || (item.dataset.search || item.textContent).toLowerCase().includes(normalizedQuery);
       const isEnded = item.classList.contains("event-ended");
+      const isArchived = item.classList.contains("event-archived");
       const matchesStatus = selectedStatus === "all"
-        || (selectedStatus === "active" && !isEnded)
-        || (selectedStatus === "ended" && isEnded);
+        || (selectedStatus === "active" && !isEnded && !isArchived)
+        || (selectedStatus === "ended" && isEnded && !isArchived)
+        || (selectedStatus === "archived" && isArchived);
       return matchesSearch && matchesStatus;
     });
     const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -3412,11 +3442,35 @@ function errorMonkeySceneSvg() {
   `;
 }
 
+function mattMaintenancePage(config = {}) {
+  const message = String(config.message || 'Trwają prace techniczne. Wróć za chwilę.');
+  return `<div class="container content-wrap"><section class="page-panel matt-maintenance-page"><div class="matt-maintenance-icon">⚙</div><span>PRZERWA TECHNICZNA</span><h1>${config.sectionOnly ? 'TA SEKCJA JEST CHWILOWO NIEDOSTĘPNA' : "MATT'S WORLD JEST CHWILOWO NIEDOSTĘPNE"}</h1><p>${escapeHtml(message)}</p><small>Administrator może wyłączyć ten tryb w Centrum moderatora.</small></section></div>`;
+}
+
 async function render() {
   if (window.MattCMS?.ready) await window.MattCMS.ready;
   const raw = location.hash.replace(/^#\/?/, "");
   const [rawPath, rawQuery = ""] = raw.split("?");
   const path = rawPath.replace(/^\/+|\/+$/g, "") || "";
+  const maintenance = window.MattCMS?.get('site_maintenance', null);
+  const staffBypass = window.currentUserRole === 'admin' || window.currentUserRole === 'moderator';
+  const maintenanceSection = (() => {
+    if (!path) return 'home';
+    if (path === 'viewer/downloads') return 'downloads';
+    if (path.startsWith('events')) return 'events';
+    if (path.startsWith('discord')) return 'discord';
+    if (path.startsWith('vip') || path === 'viewer/vip') return 'vip';
+    return path.split('/')[0] || 'home';
+  })();
+  const blockedSections = Array.isArray(maintenance?.sections) ? maintenance.sections : [];
+  const maintenanceActive = maintenance?.enabled === true || blockedSections.includes(maintenanceSection);
+  if (maintenanceActive && !staffBypass) {
+    app.innerHTML = mattMaintenancePage({ ...maintenance, sectionOnly: maintenance?.enabled !== true });
+    document.title = `${SITE_CONFIG.siteName} — Przerwa techniczna`;
+    updateLinks();
+    closeMobileMenu();
+    return;
+  }
   const routeQuery = new URLSearchParams(rawQuery);
   const eventMatch = path.match(/^events\/(.+)$/);
 
@@ -3457,6 +3511,7 @@ async function render() {
               <option value="all">Wszystkie</option>
               <option value="active">Aktywne</option>
               <option value="ended">Zakończone</option>
+              <option value="archived">Archiwum</option>
             </select>
           </label>
 
@@ -3505,7 +3560,7 @@ async function render() {
     const events = await loadEvents();
     const homeEvents = document.getElementById("home-events");
     if (homeEvents) {
-      const visibleEvents = [...events]
+      const visibleEvents = [...events].filter(event => !event.archived)
         .sort((a, b) => {
           const aEnded = isEventEnded(a) ? 1 : 0;
           const bEnded = isEventEnded(b) ? 1 : 0;
@@ -3852,6 +3907,7 @@ window.addEventListener("matt-auth-change", (e) => {
   window.currentUserIsAdmin = e.detail?.isAdmin === true;
   if (e.detail?.role) window.currentUserRole = e.detail.role;
   if (Array.isArray(e.detail?.permissions)) window.currentUserPermissions = e.detail.permissions;
+  setTimeout(() => { if (typeof window.render === 'function') window.render(); }, 0);
 });
 
 

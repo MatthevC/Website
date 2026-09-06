@@ -320,7 +320,7 @@
     });
     if (error) {
       const raw = String(error.message || 'Nieznany błąd');
-      if (/bucket|not found/i.test(raw)) throw new Error('Brakuje bucketu cms-downloads w Supabase. Uruchom przygotowany plik CMS_UPDATE_DOWNLOADS.sql.');
+      if (/bucket|not found/i.test(raw)) throw new Error('Brakuje bucketu cms-downloads w Supabase. Sprawdź konfigurację Storage w Supabase.');
       throw new Error(`Nie udało się wysłać pliku: ${raw}`);
     }
     const publicUrl = window.supabaseClient.storage.from('cms-downloads').getPublicUrl(path).data.publicUrl;
@@ -431,9 +431,16 @@
 
   function canConfig(config) {
     if (!config) return false;
-    if (config.permission === 'downloads.any') return any('downloads.create','downloads.edit','downloads.delete','downloads.reorder');
-    if (config.permission === 'events.any') return any('events.create','events.edit','events.delete');
-    if (config.permission === 'discord.join.any') return any('discord.join.manage','discord.join.messages.manage','discord.join.members.manage');
+    if (config.permission === 'downloads.any') return any(
+      'downloads.create','downloads.edit','downloads.delete','downloads.reorder',
+      'downloads.publish','downloads.notes.manage','downloads.bulk.manage'
+    );
+    if (config.permission === 'events.any') return any(
+      'events.create','events.edit','events.delete','events.publish','events.duplicate',
+      'events.notes.manage','events.history.view','events.history.restore','events.bulk.manage',
+      'events.autoarchive.manage','events.schedule.manage','events.images.manage'
+    );
+    if (config.permission === 'discord.join.any') return any('discord.join.manage','discord.join.messages.manage','discord.join.members.manage','discord.join.members.bulk');
     return has(config.permission);
   }
 
@@ -1183,7 +1190,7 @@
 
     const drawList = () => {
       openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Strzałkami możesz ustawić kolejność wyświetlania. Supabase przechowuje tylko nadpisanie tej sekcji.</p></div>
-        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button>${allowDelete?`<button class="danger" type="button" data-delete="${index}">USUŃ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
+        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button>${allowDelete?`<button class="danger" type="button" data-delete="${index}">DO KOSZA</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add]', body)?.addEventListener('click', () => drawForm(-1));
       $('[data-save-order]', body)?.addEventListener('click', saveOrder);
@@ -1194,9 +1201,13 @@
       $$('[data-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
         if (!allowDelete) return;
         const index = Number(btn.dataset.delete);
-        if (!confirm(`Usunąć: ${label(items[index])}?`)) return;
-        items.splice(index, 1);
-        try { await window.MattCMS.save(key, items); notify('Element usunięty.'); await rerender(); }
+        if (!confirm(`Przenieść do kosza: ${label(items[index])}?`)) return;
+        const removedItem = clone(items[index]);
+        try {
+          if (window.MattSuite?.trashCmsArrayItem) await window.MattSuite.trashCmsArrayItem(key, removedItem, index, label(removedItem));
+          items.splice(index, 1);
+          await window.MattCMS.save(key, items); notify('Element przeniesiony do kosza.'); await rerender();
+        }
         catch (e) { notify(e.message, 'error'); }
       }));
     };
@@ -1206,13 +1217,20 @@
       const preview = typeof livePreview === 'function' ? cmsLivePreviewShell('TAK ELEMENT BĘDZIE WYGLĄDAŁ NA STRONIE') : '';
       openModal(index >= 0 ? `EDYTUJ — ${title}` : `DODAJ — ${title}`, `<form id="cms-item-form" class="cms-form">${preview}${fields.map(f=>fieldHtml(f,current[f.name])).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">ZAPISZ</button></div></form>`);
       const form = $('#cms-item-form', modal);
+      const editLockResource = index >= 0 ? `${key}:${index}` : '';
+      if (editLockResource && window.MattSuite?.acquireEditLock) {
+        window.MattSuite.acquireEditLock(editLockResource, label(current) || singular).then(ok => { if (!ok) drawList(); });
+      }
       bindImageFileFields(form, fields);
       if (typeof livePreview === 'function') bindCmsLivePreview(form, fields, current, value => livePreview(value, { index, items: clone(items) }));
       if (typeof onFormReady === 'function') {
         try { onFormReady(form, { current: clone(current), index, items: clone(items), drawList }); }
         catch (error) { console.error('[MATT CMS] Błąd inicjalizacji formularza:', error); }
       }
-      $('[data-back]', form).addEventListener('click', drawList);
+      $('[data-back]', form).addEventListener('click', async () => {
+        if (editLockResource && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(editLockResource);
+        drawList();
+      });
       form.addEventListener('submit', async e => {
         e.preventDefault();
         const submit = $('button[type="submit"]', form);
@@ -1243,6 +1261,7 @@
           if (index >= 0) nextItems[index] = value; else nextItems.push(value);
           await window.MattCMS.save(key, nextItems, backupAlreadyMade ? { backup:false } : {});
           items = nextItems;
+          if (editLockResource && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(editLockResource);
           notify('Zapisano zmiany.');
           await rerender();
         } catch (error) {
@@ -1651,7 +1670,7 @@
         const games = Array.isArray(value.games) ? value.games : String(value.games||'').split(',').map(x=>x.trim()).filter(Boolean);
         return `<article class="recommended-card cms-live-recommended-card"><div class="recommended-head"><a class="recommended-avatar-link" href="#" tabindex="-1"><span class="recommended-avatar-wrap"><img class="recommended-avatar" src="https://unavatar.io/twitch/${encodeURIComponent(login)}" alt=""></span><span class="recommended-avatar-hover">TWITCH ↗</span></a><div class="recommended-meta"><span class="recommended-index">${String((index>=0?index:0)+1).padStart(2,'0')} / POLECANY TWÓRCA</span><h2>${esc(name)}</h2><p>${esc(value.tagline||'Krótki opis twórcy pojawi się tutaj.')}</p></div><div class="recommended-actions"><span class="recommended-action primary">TWITCH ↗</span><span class="recommended-action">OTWÓRZ KLIP ↗</span></div></div><div class="recommended-body"><div class="recommended-clip-frame cms-live-media-placeholder"><strong>KLIP TWITCH</strong><span>Podgląd odtwarzacza jest wyłączony w edytorze.</span></div><div class="recommended-side"><div class="recommended-note-box"><h3>NAJCZĘŚCIEJ OGRYWANE</h3><div class="recommended-games">${games.length?games.map(game=>`<span class="recommended-game-chip"><strong>${esc(game)}</strong></span>`).join(''):'<span class="cms-live-muted">Dodaj gry, aby zobaczyć je tutaj.</span>'}</div></div></div></div></article>`;
       },
-      beforeSave:value=>{
+      beforeSave:(value,{current})=>{
         const login = window.MattCMS?.twitchLoginFromUrl?.(value.channelUrl) || '';
         if (!login) {
           throw new Error('Nie udało się rozpoznać loginu Twitch z linku do kanału. Wklej pełny link, np. https://www.twitch.tv/matthevc');
@@ -1660,6 +1679,13 @@
         if (!clipSlug) {
           throw new Error('Nie udało się rozpoznać klipu Twitch. Wklej link z clips.twitch.tv albo link typu twitch.tv/nick/clip/...');
         }
+        if (!has('streamers.publish')) {
+          value._visibility = current?._visibility || 'draft';
+          value._publishAt = current?._publishAt || '';
+        }
+        if (!has('streamers.notes.manage')) value._moderatorNote = current?._moderatorNote || '';
+        const visibility = String(value._visibility || 'public');
+        if (visibility === 'scheduled' && !String(value._publishAt || '').trim()) throw new Error('Dla zaplanowanej publikacji podaj datę i godzinę.');
         return { ...value, login, clipSlug };
       },
       fields:[
@@ -1667,7 +1693,14 @@
         {name:'channelUrl',label:'Link do kanału Twitch',type:'url',required:true,placeholder:'https://www.twitch.tv/wazzzupek',help:'Login Twitch zostanie automatycznie odczytany z tego linku.'},
         {name:'clipUrl',label:'Link do klipu Twitch',type:'url',required:true,placeholder:'https://clips.twitch.tv/...',help:'Możesz wkleić go ręcznie albo użyć Automatycznej konfiguracji.'},
         {name:'tagline',label:'Krótki opis',type:'textarea',help:'Automatyczna konfiguracja pobiera publiczny opis kanału Twitch.'},
-        {name:'games',label:'Ostatnio / najczęściej ogrywane gry',type:'csv',help:'Automatyczna konfiguracja ustala je na podstawie aktualnej kategorii kanału i ostatnich klipów.'}
+        {name:'games',label:'Ostatnio / najczęściej ogrywane gry',type:'csv',help:'Automatyczna konfiguracja ustala je na podstawie aktualnej kategorii kanału i ostatnich klipów.'},
+        ...(has('streamers.publish') ? [
+          {name:'_visibility',label:'Widoczność wpisu',type:'select',options:[{value:'public',label:'Publiczny'},{value:'draft',label:'Szkic'},{value:'hidden',label:'Ukryty'},{value:'scheduled',label:'Zaplanowana publikacja'}],help:'Szkic i ukryty nie pojawiają się publicznie. Zaplanowany pojawi się po wskazanej dacie.'},
+          {name:'_publishAt',label:'Publikacja zaplanowana',type:'datetime-local',help:'Wymagane tylko przy statusie „Zaplanowana publikacja”.'}
+        ] : []),
+        ...(has('streamers.notes.manage') ? [
+          {name:'_moderatorNote',label:'Notatka wewnętrzna',type:'textarea',help:'Widoczna tylko w panelu CMS. Nie pojawia się na stronie publicznej.'}
+        ] : [])
       ]
     });
   }
@@ -1911,11 +1944,19 @@
     if (!isAdmin()) return;
     const esc = window.MattCMS?.escape || (v => String(v || ''));
     const baseItems = clone(window.MattDownloads?.baseItems || []);
-    let config = clone(window.MattDownloads?.getConfig?.() || { order: [], overrides: {}, hidden: [], custom: [] });
+    let config = clone(window.MattDownloads?.getConfig?.() || { order: [], overrides: {}, hidden: [], custom: [], visibility: {}, notes: {} });
     config.order = Array.isArray(config.order) ? config.order.map(String) : [];
     config.overrides = config.overrides && typeof config.overrides === 'object' ? config.overrides : {};
     config.hidden = Array.isArray(config.hidden) ? config.hidden.map(String) : [];
     config.custom = Array.isArray(config.custom) ? config.custom : [];
+    config.visibility = config.visibility && typeof config.visibility === 'object' && !Array.isArray(config.visibility) ? config.visibility : {};
+    config.notes = config.notes && typeof config.notes === 'object' && !Array.isArray(config.notes) ? config.notes : {};
+    const canCreate = has('downloads.create');
+    const canEdit = has('downloads.edit');
+    const canDelete = has('downloads.delete');
+    const canReorder = has('downloads.reorder');
+    const canPublish = has('downloads.publish');
+    const canNotes = has('downloads.notes.manage');
 
     const baseMap = new Map(baseItems.map(item => [String(item.id), item]));
     const customMap = () => new Map(config.custom.map(item => [String(item.id), item]));
@@ -1956,16 +1997,17 @@
       const visible = visibleItems();
       const hiddenBase = baseItems.filter(item => hiddenSet().has(String(item.id)));
       openModal('DO POBRANIA — PLIKI', `<div class="cms-manager-actions"><div class="cms-manager-action-group">
-        <button class="cms-primary" type="button" data-add-download>+ DODAJ PLIK</button>
-        <button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>
-        <button type="button" data-reset-downloads>↶ WSZYSTKO Z GITHUBA</button>
+        ${canCreate?'<button class="cms-primary" type="button" data-add-download>+ DODAJ PLIK</button>':''}
+        ${canReorder?'<button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>':''}
+        ${canEdit?'<button type="button" data-reset-downloads>↶ WSZYSTKO Z GITHUBA</button>':''}
       </div><p>Nowe pliki wybierasz z dysku. Możesz też zmienić opis, kategorię, podmienić istniejący plik lub zmienić kolejność wyświetlania.</p></div>
-      <div class="cms-manager-list">${visible.length ? visible.map((item,index)=>`<article class="cms-manager-item cms-download-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${esc(String(item.type || window.MattDownloads?.typeFromHref?.(item.href) || 'PLIK').toUpperCase())} / ${item.source==='github'?'GITHUB':'CMS'}</small><div><strong>${esc(item.title || 'Plik')}</strong><span>${esc([item.sizeLabel,item.category].filter(Boolean).join(' • '))}</span></div></div><div><button type="button" data-download-up="${esc(item.id)}" ${index===0?'disabled':''}>↑</button><button type="button" data-download-down="${esc(item.id)}" ${index===visible.length-1?'disabled':''}>↓</button><button type="button" data-edit-download="${esc(item.id)}">EDYTUJ</button>${item.source==='github'?`<button type="button" data-reset-download="${esc(item.id)}" ${config.overrides[item.id]?'':'disabled'}>↶ GITHUB</button>`:''}<button class="danger" type="button" data-delete-download="${esc(item.id)}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak plików do pobrania. Dodaj pierwszy.</div>'}</div>
-      ${hiddenBase.length?`<section class="cms-download-hidden"><header><strong>UKRYTE PLIKI Z GITHUBA</strong></header><div class="cms-manager-list">${hiddenBase.map(item=>`<article class="cms-manager-item"><div><small>UKRYTY</small><strong>${esc(item.title)}</strong></div><div><button type="button" data-restore-download="${esc(item.id)}">PRZYWRÓĆ</button></div></article>`).join('')}</div></section>`:''}`);
+      <div class="cms-manager-list">${visible.length ? visible.map((item,index)=>`<article class="cms-manager-item cms-download-manager-item"><div><small>${String(index+1).padStart(2,'0')} / ${esc(String(item.type || window.MattDownloads?.typeFromHref?.(item.href) || 'PLIK').toUpperCase())} / ${item.source==='github'?'GITHUB':'CMS'}</small><div><strong>${esc(item.title || 'Plik')}</strong><span>${esc([item.sizeLabel,item.category].filter(Boolean).join(' • '))} · ${esc(String(config.visibility?.[String(item.id)]?.visibility || 'public').toUpperCase())}</span></div></div><div>${canReorder?`<button type="button" data-download-up="${esc(item.id)}" ${index===0?'disabled':''}>↑</button><button type="button" data-download-down="${esc(item.id)}" ${index===visible.length-1?'disabled':''}>↓</button>`:''}${canEdit?`<button type="button" data-edit-download="${esc(item.id)}">EDYTUJ</button>`:''}${item.source==='github'&&canEdit?`<button type="button" data-reset-download="${esc(item.id)}" ${config.overrides[item.id]?'':'disabled'}>↶ GITHUB</button>`:''}${canDelete?`<button class="danger" type="button" data-delete-download="${esc(item.id)}">DO KOSZA</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak plików do pobrania. Dodaj pierwszy.</div>'}</div>
+      ${hiddenBase.length?`<section class="cms-download-hidden"><header><strong>UKRYTE PLIKI Z GITHUBA</strong></header><div class="cms-manager-list">${hiddenBase.map(item=>`<article class="cms-manager-item"><div><small>UKRYTY</small><strong>${esc(item.title)}</strong></div><div>${canDelete?`<button type="button" data-restore-download="${esc(item.id)}">PRZYWRÓĆ</button>`:'<span class="cms-muted">Brak uprawnienia</span>'}</div></article>`).join('')}</div></section>`:''}`);
 
       $('[data-add-download]', modal)?.addEventListener('click', () => edit(null));
       $('[data-save-order]', modal)?.addEventListener('click', () => save('Kolejność plików została zapisana.', false));
       $('[data-reset-downloads]', modal)?.addEventListener('click', async () => {
+        if (!canEdit) return notify('Brak uprawnienia do edycji plików.', 'error');
         if (!confirm('Przywrócić całą sekcję plików do wersji z GitHuba? Własne pliki CMS znikną z listy, ale backup zachowa konfigurację.')) return;
         try { await window.MattCMS.remove('downloads_config'); notify('Przywrócono pliki z GitHuba.'); await rerender(); }
         catch(error){ notify(error.message,'error'); }
@@ -1978,18 +2020,22 @@
         const id=String(btn.dataset.resetDownload); delete config.overrides[id]; config.hidden=config.hidden.filter(x=>String(x)!==id); await save('Przywrócono dane pliku z GitHuba.');
       }));
       $$('[data-delete-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
+        if (!canDelete) return;
         const id=String(btn.dataset.deleteDownload); const base=baseMap.has(id);
         const item=visibleItems().find(x=>String(x.id)===id);
-        if (!confirm(`Usunąć z listy „${item?.title || 'ten plik'}”?`)) return;
+        if (!confirm(`Przenieść „${item?.title || 'ten plik'}” do kosza?`)) return;
+        if (window.MattSuite?.trashDownloadItem) await window.MattSuite.trashDownloadItem(item, { base, config: clone(config) });
         if (base) {
           if (!config.hidden.includes(id)) config.hidden.push(id);
         } else {
           config.custom=config.custom.filter(x=>String(x.id)!==id);
         }
         config.order=config.order.filter(x=>String(x)!==id);
-        await save('Plik został usunięty z listy.');
+        delete config.visibility[id]; delete config.notes[id];
+        await save('Plik został przeniesiony do kosza.');
       }));
       $$('[data-restore-download]', modal).forEach(btn => btn.addEventListener('click', async () => {
+        if (!canDelete) return notify('Brak uprawnienia do przywracania usuniętych plików.', 'error');
         const id=String(btn.dataset.restoreDownload); config.hidden=config.hidden.filter(x=>String(x)!==id); if(!config.order.includes(id))config.order.push(id); await save('Plik został przywrócony.');
       }));
     };
@@ -2007,12 +2053,17 @@
 
     const edit = (id) => {
       id = id ? String(id) : '';
+      if ((id && !canEdit) || (!id && !canCreate)) return;
       const base = id ? baseMap.get(id) : null;
       const custom = id ? customMap().get(id) : null;
       const current = clone(base ? { ...base, ...(config.overrides[id] || {}) } : (custom || {
         id:'', title:'', description:'', category:'', type:'', sizeLabel:'', href:'', storagePath:'', fileName:'', secondaryHref:'', secondaryLabel:''
       }));
       const isNew=!id;
+      const editLockResource = !isNew ? `downloads:${id}` : '';
+      if (editLockResource && window.MattSuite?.acquireEditLock) {
+        window.MattSuite.acquireEditLock(editLockResource, current.title || 'Plik do pobrania').then(ok => { if (!ok) draw(); });
+      }
       openModal(isNew?'DODAJ PLIK DO POBRANIA':'EDYTUJ PLIK DO POBRANIA', `<form id="cms-download-form" class="cms-form">
         ${cmsLivePreviewShell('TAK KARTA PLIKU BĘDZIE WYGLĄDAŁA NA STRONIE')}
         <label class="cms-field"><span>Nazwa wyświetlana</span><input name="title" required maxlength="120" value="${esc(current.title||'')}"></label>
@@ -2026,6 +2077,13 @@
           <label class="cms-field"><span>Dodatkowy przycisk — tekst (opcjonalnie)</span><input name="secondaryLabel" maxlength="40" placeholder="Np. ZOBACZ REGULAMIN" value="${esc(current.secondaryLabel||'')}"></label>
           <label class="cms-field"><span>Dodatkowy przycisk — link (opcjonalnie)</span><input name="secondaryHref" placeholder="#/rules/twitch lub https://..." value="${esc(current.secondaryHref||'')}"></label>
         </div>
+        <section class="cms-workflow-box">
+          <div class="cms-form-grid two">
+            <label class="cms-field"><span>Widoczność</span><select name="visibility" ${canPublish?'':'disabled'}>${[['public','Publiczny'],['draft','Szkic'],['hidden','Ukryty'],['scheduled','Zaplanowany']].map(([v,l])=>`<option value="${v}" ${String(config.visibility?.[id]?.visibility||'public')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+            <label class="cms-field"><span>Publikacja zaplanowana</span><input type="datetime-local" name="workflowPublishAt" value="${esc(config.visibility?.[id]?.publishAt||'')}" ${canPublish?'':'disabled'}></label>
+          </div>
+          <label class="cms-field"><span>Notatka wewnętrzna</span><textarea name="moderatorNote" ${canNotes?'':'disabled'} placeholder="Informacja tylko dla moderatorów i administratora">${esc(config.notes?.[id]||'')}</textarea></label>
+        </section>
         ${current.href?`<div class="cms-download-current"><small>AKTUALNY PLIK</small><a href="${esc(current.href)}" target="_blank" rel="noopener">${esc(current.fileName || current.href)}</a></div>`:''}
         <div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button class="cms-primary" type="submit">${isNew?'DODAJ PLIK':'ZAPISZ ZMIANY'}</button></div>
       </form>`);
@@ -2034,7 +2092,10 @@
       form.addEventListener('input',refreshDownloadPreview);form.addEventListener('change',refreshDownloadPreview);
       input?.addEventListener('change',()=>{const file=input.files?.[0];if(file)label.textContent=`${file.name} • ${cmsPrettyBytes(file.size)}`;refreshDownloadPreview();});
       refreshDownloadPreview();
-      $('[data-back]',form)?.addEventListener('click',draw);
+      $('[data-back]',form)?.addEventListener('click',async()=>{
+        if(editLockResource && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(editLockResource);
+        draw();
+      });
       form.addEventListener('submit',async e=>{
         e.preventDefault(); const submit=$('button[type="submit"]',form); submit.disabled=true; submit.textContent='ZAPISYWANIE…';
         try {
@@ -2056,6 +2117,7 @@
           }
           if(!next.href)throw new Error('Brakuje pliku do pobrania.');
           if(!next.type)next.type=window.MattDownloads?.typeFromHref?.(next.href)||'PLIK';
+          let finalId = id;
           if(base){
             const override={};
             ['title','description','category','type','sizeLabel','href','storagePath','fileName','secondaryHref','secondaryLabel'].forEach(key=>{
@@ -2065,11 +2127,21 @@
             config.hidden=config.hidden.filter(x=>String(x)!==id);
           }else{
             const itemId=id||`download-${slugify(next.title||next.fileName||'plik')}-${Date.now()}`;
-            next.id=itemId; const idx=config.custom.findIndex(x=>String(x.id)===itemId);
+            finalId=itemId; next.id=itemId; const idx=config.custom.findIndex(x=>String(x.id)===itemId);
             if(idx>=0)config.custom[idx]=next;else config.custom.push(next);
             if(!config.order.includes(itemId))config.order.push(itemId);
           }
+          if (canPublish) {
+            const visibility=String(form.elements.visibility?.value||'public');
+            const publishAt=String(form.elements.workflowPublishAt?.value||'');
+            if(visibility==='scheduled'&&!publishAt) throw new Error('Dla zaplanowanej publikacji podaj datę i godzinę.');
+            config.visibility[String(finalId)]={visibility,publishAt};
+          } else if (isNew) {
+            config.visibility[String(finalId)]={visibility:'draft',publishAt:''};
+          }
+          if (canNotes) config.notes[String(finalId)]=String(form.elements.moderatorNote?.value||'').trim();
           await save(isNew?'Plik został dodany.':'Plik został zaktualizowany.',false);
+          if (editLockResource && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(editLockResource);
         }catch(error){notify(error.message,'error');submit.disabled=false;submit.textContent=isNew?'DODAJ PLIK':'ZAPISZ ZMIANY';}
       });
     };
@@ -2108,6 +2180,7 @@
     const canJoinBase = () => has('discord.join.manage');
     const canJoinMessages = () => has('discord.join.messages.manage');
     const canJoinMembers = () => has('discord.join.members.manage');
+    const canJoinMembersBulk = () => canJoinMembers() && has('discord.join.members.bulk');
     const canJoinPreview = () => canJoinBase() || canJoinMessages() || canJoinMembers();
     if (!canJoinPreview()) return;
     const openDiscordModal = (title, html) => {
@@ -2179,7 +2252,7 @@
       const move=(from,to)=>{if(to<0||to>=items.length)return;const [x]=items.splice(from,1);items.splice(to,0,x);draw();};
       const save=async(message)=>{try{await window.MattCMS.save('discord_join_bubbles',items);window.MattCMS.renderDiscordJoinBubbles(items);notify(message);draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
       const draw=()=>{
-        openDiscordModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">USUŃ</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
+        openDiscordModal('DISCORD — KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button data-hub>← PODGLĄD / KOMUNIKATY</button><button class="cms-primary" data-add>+ DODAJ KOMUNIKAT</button><button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button data-reset>↶ Z GITHUBA</button></div><p>Każdy komunikat może mieć własny kolor, ikonę, tekst wyróżniony i przycisk. Pusty link przycisku oznacza główny link Discord z ustawień strony.</p></div><div class="cms-manager-list">${items.length?items.map((x,i)=>`<article class="cms-manager-item"><div><small>${String(i+1).padStart(2,'0')} / ${esc(String(x.style||'red').toUpperCase())}</small><strong>${esc(x.title||'KOMUNIKAT')} ${x.highlight?`<em>${esc(x.highlight)}</em>`:''}</strong></div><div><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button><button data-edit="${i}">EDYTUJ</button><button class="danger" data-delete="${i}">DO KOSZA</button></div></article>`).join(''):'<div class="cms-empty">Brak komunikatów. Dodaj pierwszy.</div>'}</div>`);
         const body=$('#cms-modal-body',modal);
         $('[data-hub]',body).addEventListener('click',drawHub);$('[data-add]',body).addEventListener('click',()=>edit(-1));$('[data-save-order]',body).addEventListener('click',()=>save('Kolejność komunikatów zapisana.'));$('[data-reset]',body).addEventListener('click',()=>resetCmsKey('discord_join_bubbles','komunikaty strony Discord'));
         $$('[data-up]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.up),Number(b.dataset.up)-1)));$$('[data-down]',body).forEach(b=>b.addEventListener('click',()=>move(Number(b.dataset.down),Number(b.dataset.down)+1)));$$('[data-edit]',body).forEach(b=>b.addEventListener('click',()=>edit(Number(b.dataset.edit))));$$('[data-delete]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delete);if(!confirm(`Usunąć komunikat „${items[i]?.title||''}”?`))return;items.splice(i,1);await save('Komunikat usunięty.');}));
@@ -2277,15 +2350,16 @@
           <div class="cms-preview-admin-grid cms-discord-editor-sections">
             <section>
               <header><div><small>01 / STRUKTURA SERWERA</small><strong>KATEGORIE I KANAŁY</strong></div>${canJoinBase()?'<button class="cms-primary" data-add-cat>+ KATEGORIA</button>':'<span class="cms-permission-readonly">TYLKO PODGLĄD</span>'}</header>
-              ${data.categories.length ? data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div>${canJoinBase()?`<button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button>`:''}</div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${ch.vip?'VIP • ':''}${esc(ch.href||'')}</small></div><div>${canJoinBase()?`<button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button>`:''}</div></article>`).join('')}${canJoinBase()?`<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak kategorii. Dodaj pierwszą kategorię.</div>'}
+              ${data.categories.length ? data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div>${canJoinBase()?`<button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">DO KOSZA</button>`:''}</div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${ch.vip?'VIP • ':''}${esc(ch.href||'')}</small></div><div>${canJoinBase()?`<button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">DO KOSZA</button>`:''}</div></article>`).join('')}${canJoinBase()?`<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak kategorii. Dodaj pierwszą kategorię.</div>'}
             </section>
             <section>
               <header><div><small>02 / CZAT</small><strong>WIADOMOŚCI W PODGLĄDZIE</strong></div>${canJoinMessages()?'<button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button>':'<span class="cms-permission-readonly">TYLKO PODGLĄD</span>'}</header>
-              <div class="cms-manager-list">${data.messages.length ? data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div>${canJoinMessages()?`<button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak wiadomości w podglądzie.</div>'}</div>
+              <div class="cms-manager-list">${data.messages.length ? data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div>${canJoinMessages()?`<button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">DO KOSZA</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak wiadomości w podglądzie.</div>'}</div>
             </section>
             <section>
               <header><div><small>03 / SPOŁECZNOŚĆ</small><strong>LISTA OSÓB</strong></div>${canJoinMembers()?'<button class="cms-primary" data-add-group>+ GRUPA</button>':'<span class="cms-permission-readonly">TYLKO PODGLĄD</span>'}</header>
-              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div>${canJoinMembers()?`<button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button>`:''}</div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>{const tm=window.MattCMS?.normalizeDiscordMember?.(m)||m;return `<article><div><span>${esc(tm.initial||String(tm.name||'?').charAt(0))}</span><strong>${esc(tm.name||'osoba')}</strong><small>${esc(tm.status||'')}${tm.twitchLogin?` • Twitch: @${esc(tm.twitchLogin)}`:''}</small></div><div>${canJoinMembers()?`<button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button>`:''}</div></article>`;}).join('')}${canJoinMembers()?`<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
+              ${canJoinMembersBulk() && data.memberGroups.length ? `<div class="matt-bulk-bar cms-discord-members-bulk"><strong>MASOWE OPERACJE NA OSOBACH</strong><select data-member-bulk-target aria-label="Grupa docelowa">${data.memberGroups.map((g,gi)=>`<option value="${gi}">${esc(g.title||`GRUPA ${gi+1}`)}</option>`).join('')}</select><button type="button" data-member-bulk-move>PRZENIEŚ DO GRUPY</button><button type="button" class="danger" data-member-bulk-trash>DO KOSZA</button></div>` : ''}
+              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div>${canJoinMembers()?`<button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">DO KOSZA</button>`:''}</div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>{const tm=window.MattCMS?.normalizeDiscordMember?.(m)||m;return `<article>${canJoinMembersBulk()?`<input class="matt-bulk-check" type="checkbox" data-discord-member-select="${gi}:${mi}" aria-label="Zaznacz ${esc(tm.name||'osobę')}">`:''}<div><span>${esc(tm.initial||String(tm.name||'?').charAt(0))}</span><strong>${esc(tm.name||'osoba')}</strong><small>${esc(tm.status||'')}${tm.twitchLogin?` • Twitch: @${esc(tm.twitchLogin)}`:''}</small></div><div>${canJoinMembers()?`<button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">DO KOSZA</button>`:''}</div></article>`;}).join('')}${canJoinMembers()?`<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
             </section>
           </div>`);
 
@@ -2334,6 +2408,28 @@
         $$('[data-del-member]',body).forEach(b=>b.addEventListener('click',async()=>{const [gi,mi]=b.dataset.delMember.split(':').map(Number);data.memberGroups[gi].members.splice(mi,1);await save('Osoba usunięta.');}));
         $$('[data-member-up]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.memberUp.split(':').map(Number);move(data.memberGroups[gi].members,mi,mi-1);}));
         $$('[data-member-down]',body).forEach(b=>b.addEventListener('click',()=>{const [gi,mi]=b.dataset.memberDown.split(':').map(Number);move(data.memberGroups[gi].members,mi,mi+1);}));
+
+        const selectedMembers=()=>$$('[data-discord-member-select]:checked',body).map(cb=>{const [gi,mi]=cb.dataset.discordMemberSelect.split(':').map(Number);return {gi,mi,member:data.memberGroups[gi]?.members?.[mi]};}).filter(x=>x.member);
+        $('[data-member-bulk-move]',body)?.addEventListener('click',async()=>{
+          if(!canJoinMembersBulk()) return;
+          const selected=selectedMembers(); if(!selected.length) return notify('Zaznacz co najmniej jedną osobę.','error');
+          const target=Number($('[data-member-bulk-target]',body)?.value); if(!data.memberGroups[target]) return notify('Wybierz grupę docelową.','error');
+          const ordered=[...selected].sort((a,b)=>a.gi-b.gi||a.mi-b.mi).map(x=>clone(x.member));
+          [...selected].sort((a,b)=>b.gi-a.gi||b.mi-a.mi).forEach(x=>data.memberGroups[x.gi]?.members?.splice(x.mi,1));
+          data.memberGroups[target].members=Array.isArray(data.memberGroups[target].members)?data.memberGroups[target].members:[];
+          data.memberGroups[target].members.push(...ordered);
+          await save(`Przeniesiono ${ordered.length} osób do grupy „${data.memberGroups[target].title||'UŻYTKOWNICY'}”.`);
+        });
+        $('[data-member-bulk-trash]',body)?.addEventListener('click',async()=>{
+          if(!canJoinMembersBulk()) return;
+          const selected=selectedMembers(); if(!selected.length) return notify('Zaznacz co najmniej jedną osobę.','error');
+          if(!confirm(`Przenieść ${selected.length} zaznaczonych osób do kosza?`)) return;
+          for(const x of [...selected].sort((a,b)=>b.gi-a.gi||b.mi-a.mi)){
+            if(window.MattSuite?.addTrash) await window.MattSuite.addTrash({kind:'discord-preview-member',sourceKey:'discord_join_preview',label:x.member?.name||'Osoba',payload:clone(x.member),meta:{parentIndex:x.gi,index:x.mi}});
+            data.memberGroups[x.gi]?.members?.splice(x.mi,1);
+          }
+          await save(`Przeniesiono ${selected.length} osób do kosza.`);
+        });
       };
 
       const formEdit = (title, current, fields, onSave, makeDraft) => {
@@ -3098,7 +3194,11 @@
   }
 
   function openEventsManager() {
-    if (!isAdmin() || !any('events.create','events.edit','events.delete')) return;
+    if (!isAdmin() || !any(
+      'events.create','events.edit','events.delete','events.publish','events.duplicate',
+      'events.notes.manage','events.history.view','events.history.restore','events.bulk.manage',
+      'events.autoarchive.manage','events.schedule.manage','events.images.manage'
+    )) return;
     const esc = window.MattCMS.escape;
     let rows = [];
 
@@ -3314,7 +3414,10 @@
       const renderPreview=()=>{syncEventStatusFields();syncEventImageMode();const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
       form.addEventListener('input',renderPreview); form.addEventListener('change',()=>requestAnimationFrame(renderPreview));
       $$('[data-event-preview-mode]',form).forEach(btn=>btn.addEventListener('click',()=>{previewMode=btn.dataset.eventPreviewMode==='detail'?'detail':'card';$$('[data-event-preview-mode]',form).forEach(x=>x.classList.toggle('active',x===btn));renderPreview();}));
-      $('[data-back]',form)?.addEventListener('click',draw);
+      $('[data-back]',form)?.addEventListener('click',async()=>{
+        if(row?.id && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(`event:${row.id}`);
+        draw();
+      });
       $('[data-delete-current]',form)?.addEventListener('click',async()=>{
         if(!row?.id || !has('events.delete')) return;
         if(!confirm(`Usunąć event „${row.title||'Bez nazwy'}”?`)) return;
@@ -3350,8 +3453,21 @@
             main_image_fit:mainImageFit
           };
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
-          const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
-          const {error}=await query; if(error) throw error;
+          const query=editing
+            ? window.supabaseClient.from('events').update(payload).eq('id',row.id).select().single()
+            : window.supabaseClient.from('events').insert(payload).select().single();
+          const {data:savedRow,error}=await query; if(error) throw error;
+          if (window.MattSuite?.saveEventWorkflowFromForm) {
+            try {
+              await window.MattSuite.saveEventWorkflowFromForm(form, savedRow || { ...(row||{}), ...payload }, editing, row || null);
+            } catch (workflowError) {
+              if (!editing && savedRow?.id) {
+                try { await window.supabaseClient.from('events').delete().eq('id', savedRow.id); } catch (_) {}
+              }
+              throw workflowError;
+            }
+          }
+          if (savedRow?.id && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(`event:${savedRow.id}`);
           notify(editing?'Event został zapisany.':'Event został dodany.'); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
         }catch(error){notify(`Nie udało się zapisać eventu: ${error.message}`,'error');if(submit){submit.disabled=false;submit.textContent=editing?'ZAPISZ ZMIANY':'DODAJ EVENT';}}
       });
@@ -3491,7 +3607,7 @@
           catch (e) { notify(`Nie udało się usunąć: ${e.message}`, 'error'); }
         }));
       } catch (error) {
-        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać nowych backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Uruchom plik <code>CMS_UPDATE_AUDIT_BACKUPS.sql</code> w Supabase.</div>`);
+        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Sprawdź, czy backend Supabase ma aktywne funkcje i tabele odpowiedzialne za backupy.</div>`);
       }
     };
 

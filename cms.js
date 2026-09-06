@@ -46,6 +46,42 @@
     return cache.has(key) ? cache.get(key) : fallback;
   }
 
+  async function refreshKey(key) {
+    try {
+      const { data, error } = await supabaseClient.from('cms_data').select('key,data').eq('key', key).maybeSingle();
+      if (error) throw error;
+      if (data) cache.set(key, data.data); else cache.delete(key);
+      return data?.data ?? null;
+    } catch (error) {
+      console.warn('[MATT CMS] Nie udało się odświeżyć klucza CMS:', key, error?.message || error);
+      return get(key, null);
+    }
+  }
+
+  async function refreshAll() {
+    try {
+      const { data, error } = await supabaseClient.from('cms_data').select('key,data');
+      if (error) throw error;
+      cache.clear();
+      (data || []).forEach(row => cache.set(row.key, row.data));
+      return true;
+    } catch (error) {
+      console.warn('[MATT CMS] Nie udało się odświeżyć danych CMS:', error?.message || error);
+      return false;
+    }
+  }
+
+  function isPublicStructuredItem(item) {
+    if (!item || typeof item !== 'object') return true;
+    const visibility = String(item._visibility || 'public').toLowerCase();
+    if (visibility === 'draft' || visibility === 'hidden') return false;
+    if (visibility === 'scheduled') {
+      const when = new Date(item._publishAt || 0).getTime();
+      return Number.isFinite(when) && when > 0 && when <= Date.now();
+    }
+    return true;
+  }
+
   function requireLoggedIn() {
     if (!window.currentUserRole || window.currentUserRole === 'guest') throw new Error('Musisz być zalogowany.');
   }
@@ -62,7 +98,7 @@
     if (error) {
       const raw = String(error.message || 'Nieznany błąd');
       if (raw.includes('matt_create_backup_v2') || raw.includes('schema cache') || error.code === 'PGRST202') {
-        throw new Error('Brakuje aktualizacji backupów i logów w Supabase. Uruchom plik CMS_UPDATE_AUDIT_BACKUPS.sql w SQL Editorze, a potem odśwież stronę.');
+        throw new Error('W Supabase brakuje wymaganej funkcji backupów i logów. Sprawdź konfigurację backendu Supabase, a potem odśwież stronę.');
       }
       throw new Error(`Nie udało się utworzyć backupu: ${raw}`);
     }
@@ -726,7 +762,8 @@
     const toc = document.querySelector('.recommended-toc');
     if (!grid || !toc || !Array.isArray(items)) return;
     const clipParent = location.hostname || 'matthevc.github.io';
-    const streamers = items.map(normalizeStreamer);
+    const canPreviewHidden = window.currentUserRole === 'admin' || window.mattHasPermission?.('streamers.preview.nonpublic') === true;
+    const streamers = items.filter(item => canPreviewHidden || isPublicStructuredItem(item)).map(normalizeStreamer);
     grid.innerHTML = streamers.map((s, index) => `
       <article class="recommended-card" id="streamer-${escapeHtml(s.login)}" data-recommended-section data-streamer-login="${escapeHtml(s.login)}" data-streamer-name="${escapeHtml(s.displayName || s.login)}">
         <div class="recommended-head">
@@ -1159,7 +1196,7 @@
   }
 
   window.MattCMS = {
-    ready, get, save, remove, createBackup, createManualBackup, listBackups, getBackup, deleteBackup, restoreBackup, restoreSnapshot,
+    ready, get, refreshKey, refreshAll, save, remove, createBackup, createManualBackup, listBackups, getBackup, deleteBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
     layoutElements, layoutParentKey, layoutElementLabel, layoutElementZone, applyPageLayout,
