@@ -2605,6 +2605,77 @@
         };
         const makeDraft=v=>{const member=prepareMember(v);const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=member;else arr.push(member);return d;};
         formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{const member=prepareMember(v,true);if(mi>=0)data.memberGroups[gi].members[mi]=member;else data.memberGroups[gi].members.push(member);await save('Osoba zapisana.');},makeDraft);
+
+        // Przywrócony ręczny przycisk pobierania avatara z Twitcha.
+        // Automatyczne pobieranie nadal działa po zapisie, ale ten przycisk pozwala
+        // od razu sprawdzić avatar i wymusić jego odświeżenie w podglądzie.
+        const memberForm=$('#cms-preview-form',modal);
+        const twitchInput=memberForm?.elements?.twitchLogin;
+        const twitchField=twitchInput?.closest('.cms-field');
+        if(twitchInput && twitchField && !twitchField.querySelector('[data-fetch-twitch-avatar]')){
+          const tools=document.createElement('div');
+          tools.className='cms-twitch-avatar-tools';
+          tools.innerHTML=`<button type="button" class="cms-twitch-avatar-button" data-fetch-twitch-avatar>↓ POBIERZ AVATAR</button><div class="cms-twitch-avatar-result is-empty" data-twitch-avatar-result><span class="cms-twitch-avatar-thumb"><img alt="" data-twitch-avatar-preview></span><span data-twitch-avatar-status>Wpisz nick Twitch i kliknij „Pobierz avatar”.</span></div>`;
+          twitchField.appendChild(tools);
+
+          const fetchButton=$('[data-fetch-twitch-avatar]',tools);
+          const result=$('[data-twitch-avatar-result]',tools);
+          const avatarPreview=$('[data-twitch-avatar-preview]',tools);
+          const avatarStatus=$('[data-twitch-avatar-status]',tools);
+
+          const fetchAvatar=(showToast=false)=>{
+            const raw=String(twitchInput.value||'').trim();
+            const login=window.MattCMS?.normalizeTwitchLogin?.(raw)||'';
+            if(!raw){
+              result?.classList.add('is-empty','is-error');
+              if(avatarPreview) avatarPreview.removeAttribute('src');
+              if(avatarStatus) avatarStatus.textContent='Najpierw wpisz nick Twitch.';
+              if(showToast) notify('Najpierw wpisz nick Twitch.','error');
+              return;
+            }
+            if(!login){
+              result?.classList.add('is-empty','is-error');
+              if(avatarPreview) avatarPreview.removeAttribute('src');
+              if(avatarStatus) avatarStatus.textContent='Nieprawidłowy nick Twitch.';
+              if(showToast) notify('Nieprawidłowy nick Twitch. Wpisz sam nick, bez twitch.tv.','error');
+              return;
+            }
+
+            twitchInput.value=login;
+            result?.classList.remove('is-empty','is-error','is-ok');
+            if(avatarStatus) avatarStatus.textContent=`Pobieranie avatara @${login}…`;
+            if(fetchButton) fetchButton.disabled=true;
+
+            const avatarUrl=`https://unavatar.io/twitch/${encodeURIComponent(login)}?v=${Date.now()}`;
+            if(avatarPreview){
+              avatarPreview.onload=()=>{
+                result?.classList.remove('is-empty','is-error');
+                result?.classList.add('is-ok');
+                if(avatarStatus) avatarStatus.textContent=`Avatar @${login} pobrany.`;
+                if(fetchButton) fetchButton.disabled=false;
+                twitchInput.dispatchEvent(new Event('input',{bubbles:true}));
+                if(showToast) notify('Avatar pobrany z Twitcha.');
+              };
+              avatarPreview.onerror=()=>{
+                result?.classList.add('is-error');
+                result?.classList.remove('is-ok');
+                if(avatarStatus) avatarStatus.textContent=`Nie udało się pobrać avatara @${login}.`;
+                if(fetchButton) fetchButton.disabled=false;
+                if(showToast) notify('Nie udało się pobrać avatara z Twitcha.','error');
+              };
+              avatarPreview.src=avatarUrl;
+            }
+          };
+
+          fetchButton?.addEventListener('click',()=>fetchAvatar(true));
+          twitchInput.addEventListener('input',()=>{
+            result?.classList.remove('is-error','is-ok');
+            if(avatarStatus) avatarStatus.textContent='Kliknij „Pobierz avatar”, aby odświeżyć zdjęcie.';
+          });
+
+          // Przy edycji istniejącej osoby pokaż aktualny avatar od razu, bez komunikatu.
+          if(window.MattCMS?.normalizeTwitchLogin?.(twitchInput.value||'')) fetchAvatar(false);
+        }
       };
       draw();
     };
