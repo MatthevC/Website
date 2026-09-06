@@ -3142,12 +3142,18 @@
       const start=eventAdminSplitDateTime(row?.start_date);
       const end=eventAdminSplitDateTime(row?.end_date);
       const publish=eventAdminSplitDateTime(row?.publish_date);
+      const hasSeparateMainImage=Boolean(
+        row?.main_image_url && String(row.main_image_url)!==String(row?.image_url||'')
+      );
       const current={
         title:row?.title||'', description:row?.description||'',
         startDate:start.date, startTime:start.time||'00:00', endDate:end.date, endTime:end.time||'00:00',
         publishDate:publish.date||today, publishTime:publish.time||nowTime,
         image:row?.image_url||'', imageFit:row?.image_fit||'contain',
-        mainImage:row?.main_image_url||'', mainImageFit:row?.main_image_fit||'contain', ongoing:!row?.end_date, endedNow:false
+        mainImage:row?.main_image_url||row?.image_url||'',
+        mainImageFit:row?.main_image_fit||'contain',
+        imageMode:hasSeparateMainImage?'separate':'shared',
+        ongoing:!row?.end_date, endedNow:false
       };
       const imageField={name:'image',label:'Grafika na liście eventów',type:'image-file'};
       const mainImageField={name:'mainImage',label:'Grafika główna na stronie eventu (opcjonalnie)',type:'image-file'};
@@ -3162,21 +3168,45 @@
             <section class="cms-event-editor-section">
               <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.</span></header>
               <div class="cms-event-status-options">
-                <div class="cms-event-ongoing-row">${fieldHtml({name:'ongoing',label:'∞ Event trwa — bez określonej daty zakończenia',type:'checkbox'},current.ongoing)}<p>Po zaznaczeniu nie musisz podawać daty końca. Na stronie pojawi się status <strong>∞ W TRAKCIE</strong>.</p></div>
-                <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'Oznacz event jako zakończony teraz',type:'checkbox'},false)}<p>Po zaznaczeniu data zakończenia zostanie ustawiona na bieżący moment przy zapisie.</p></div>
+                <div class="cms-event-ongoing-row">${fieldHtml({name:'ongoing',label:'∞ EVENT TRWA',type:'checkbox'},current.ongoing)}<p>Bez daty zakończenia.</p></div>
+                <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'ZAKOŃCZ EVENT TERAZ',type:'checkbox'},false)}<p>Ustawi bieżący moment.</p></div>
               </div>
               <div class="cms-event-date-cards">
-                <div class="cms-event-date-card"><b>ROZPOCZĘCIE</b>${fieldHtml({name:'startDate',label:'Data',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina',type:'time'},current.startTime)}</div>
-                <div class="cms-event-date-card" data-event-end-card><b>ZAKOŃCZENIE</b><div class="cms-event-end-ongoing-label" data-event-end-ongoing hidden><strong>∞ W TRAKCIE</strong><span>Bez daty końcowej</span></div><div data-event-end-fields>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div></div>
-                <div class="cms-event-date-card"><b>PUBLIKACJA</b>${fieldHtml({name:'publishDate',label:'Data',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina',type:'time'},current.publishTime)}</div>
+                <div class="cms-event-date-card cms-event-date-card--start"><b>ROZPOCZĘCIE</b><div class="cms-event-date-field-stack">${fieldHtml({name:'startDate',label:'Data',type:'date',required:true},current.startDate)}${fieldHtml({name:'startTime',label:'Godzina',type:'time'},current.startTime)}</div></div>
+                <div class="cms-event-date-card cms-event-date-card--end" data-event-end-card><b>ZAKOŃCZENIE</b><div class="cms-event-end-ongoing-label" data-event-end-ongoing hidden><span class="cms-event-ongoing-symbol">∞</span><span><strong>EVENT W TRAKCIE</strong><small>Bez określonej daty zakończenia</small></span></div><div class="cms-event-date-field-stack" data-event-end-fields>${fieldHtml({name:'endDate',label:'Data',type:'date'},current.endDate)}${fieldHtml({name:'endTime',label:'Godzina',type:'time'},current.endTime)}</div></div>
+                <div class="cms-event-date-card cms-event-date-card--publish"><b>PUBLIKACJA</b><div class="cms-event-publish-fields">${fieldHtml({name:'publishDate',label:'Data',type:'date'},current.publishDate)}${fieldHtml({name:'publishTime',label:'Godzina',type:'time'},current.publishTime)}</div></div>
               </div>
             </section>
 
             <section class="cms-event-editor-section">
-              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Osobno możesz ustawić miniaturę listy i dużą grafikę na stronie wydarzenia.</span></header>
+              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Wybierz jedną grafikę dla obu widoków albo dwie osobne grafiki.</span></header>
+              <div class="cms-event-image-mode">
+                <label class="cms-event-image-mode-option">
+                  <input type="radio" name="imageMode" value="shared" ${current.imageMode==='shared'?'checked':''}>
+                  <span><strong>JEDNA GRAFIKA</strong><small>Ten sam plik na karcie listy i na stronie eventu.</small></span>
+                </label>
+                <label class="cms-event-image-mode-option">
+                  <input type="radio" name="imageMode" value="separate" ${current.imageMode==='separate'?'checked':''}>
+                  <span><strong>DWIE RÓŻNE GRAFIKI</strong><small>Osobna miniatura listy i osobna grafika strony eventu.</small></span>
+                </label>
+              </div>
               <div class="cms-event-media-grid">
-                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA NA LIŚCIE</strong><span>Miniatura widoczna w spisie eventów.</span></div>${fieldHtml(imageField,current.image)}${fieldHtml({name:'imageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}</div>
-                <div class="cms-event-media-card"><div class="cms-event-media-title"><strong>GRAFIKA GŁÓWNA</strong><span>Opcjonalna grafika na stronie konkretnego eventu.</span></div>${fieldHtml(mainImageField,current.mainImage)}${fieldHtml({name:'mainImageFit',label:'Dopasowanie',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div>
+                <div class="cms-event-media-card" data-event-list-image-card>
+                  <div class="cms-event-media-title">
+                    <strong data-event-image-title-shared>GRAFIKA WSPÓLNA</strong>
+                    <strong data-event-image-title-separate hidden>GRAFIKA NA LIŚCIE</strong>
+                    <span data-event-image-copy-shared>Jedno zdjęcie zostanie użyte w obu podglądach.</span>
+                    <span data-event-image-copy-separate hidden>Miniatura widoczna w spisie eventów.</span>
+                  </div>
+                  ${fieldHtml(imageField,current.image)}
+                  ${fieldHtml({name:'imageFit',label:'Dopasowanie na liście',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.imageFit)}
+                  <div data-event-shared-main-fit>${fieldHtml({name:'sharedMainImageFit',label:'Dopasowanie na stronie eventu',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}</div>
+                </div>
+                <div class="cms-event-media-card" data-event-main-image-card>
+                  <div class="cms-event-media-title"><strong>GRAFIKA NA STRONIE EVENTU</strong><span>Drugi, niezależny plik wyświetlany po wejściu w event.</span></div>
+                  ${fieldHtml(mainImageField,current.mainImage)}
+                  ${fieldHtml({name:'mainImageFit',label:'Dopasowanie na stronie eventu',type:'select',options:[{value:'contain',label:'Dopasuj całość (contain)'},{value:'cover',label:'Przytnij do ramki (cover)'},{value:'fill',label:'Rozciągnij (fill)'},{value:'scale-down',label:'Zmniejsz bez powiększania'}]},current.mainImageFit)}
+                </div>
               </div>
             </section>
 
@@ -3204,14 +3234,17 @@
         return wrap.querySelector('[data-image-current]')?.value || '';
       };
       const currentPreviewRow=()=>{
-        const image=imageFromField('image'); const main=imageFromField('mainImage');
+        const image=imageFromField('image');
+        const sharedImages=String(form.elements.imageMode?.value||'shared')==='shared';
+        const main=sharedImages ? image : imageFromField('mainImage');
+        const mainFit=sharedImages ? String(form.elements.sharedMainImageFit?.value||form.elements.imageFit?.value||'contain') : String(form.elements.mainImageFit?.value||'contain');
         let endDate=form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
         if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
         return {
           id:row?.id||'podglad-eventu', title:String(form.elements.title?.value||'NOWY EVENT'), description:String(form.elements.description?.value||''),
           start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value), end_date:endDate,
           publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),
-          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:String(form.elements.mainImageFit?.value||'contain')
+          image_url:image, image_fit:String(form.elements.imageFit?.value||'contain'), main_image_url:main, main_image_fit:mainFit
         };
       };
       const syncEventStatusFields=()=>{
@@ -3226,7 +3259,25 @@
         if(form.elements.endDate) form.elements.endDate.disabled=ongoing;
         if(form.elements.endTime) form.elements.endTime.disabled=ongoing;
       };
-      const renderPreview=()=>{syncEventStatusFields();const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
+      const syncEventImageMode=()=>{
+        const shared=String(form.elements.imageMode?.value||'shared')==='shared';
+        const mediaGrid=$('.cms-event-media-grid',form);
+        const mainCard=$('[data-event-main-image-card]',form);
+        const sharedFit=$('[data-event-shared-main-fit]',form);
+        const sharedTitle=$('[data-event-image-title-shared]',form);
+        const separateTitle=$('[data-event-image-title-separate]',form);
+        const sharedCopy=$('[data-event-image-copy-shared]',form);
+        const separateCopy=$('[data-event-image-copy-separate]',form);
+        if(mediaGrid) mediaGrid.classList.toggle('is-shared',shared);
+        if(mainCard) mainCard.hidden=shared;
+        if(sharedFit) sharedFit.hidden=!shared;
+        if(sharedTitle) sharedTitle.hidden=!shared;
+        if(separateTitle) separateTitle.hidden=shared;
+        if(sharedCopy) sharedCopy.hidden=!shared;
+        if(separateCopy) separateCopy.hidden=shared;
+        $$('[name="imageMode"]',form).forEach(input=>input.closest('.cms-event-image-mode-option')?.classList.toggle('is-active',input.checked));
+      };
+      const renderPreview=()=>{syncEventStatusFields();syncEventImageMode();const target=$('[data-event-live-preview]',form);if(!target)return;const previewRow=currentPreviewRow();target.innerHTML=previewMode==='detail'?eventAdminPreviewDetail(previewRow):eventAdminPreviewCard(previewRow);};
       form.addEventListener('input',renderPreview); form.addEventListener('change',()=>requestAnimationFrame(renderPreview));
       $$('[data-event-preview-mode]',form).forEach(btn=>btn.addEventListener('click',()=>{previewMode=btn.dataset.eventPreviewMode==='detail'?'detail':'card';$$('[data-event-preview-mode]',form).forEach(x=>x.classList.toggle('active',x===btn));renderPreview();}));
       $('[data-back]',form)?.addEventListener('click',draw);
@@ -3240,15 +3291,20 @@
         try{
           const title=String(form.elements.title?.value||'').trim(); const description=String(form.elements.description?.value||'').trim();
           if(!title) throw new Error('Podaj nazwę eventu.'); if(!form.elements.startDate?.value) throw new Error('Podaj datę rozpoczęcia eventu.');
-          let image=imageFromField('image'), mainImage=imageFromField('mainImage');
+          const sharedImages=String(form.elements.imageMode?.value||'shared')==='shared';
+          let image=imageFromField('image'), mainImage=sharedImages ? '' : imageFromField('mainImage');
           const imageFile=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
-          const mainImageFile=form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
+          const mainImageFile=sharedImages ? null : form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
           if(imageFile) image=await uploadEventImage(imageFile,title,'event');
+          if(!image) throw new Error('Wybierz grafikę eventu.');
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
+          if(sharedImages) mainImage=image;
+          if(!sharedImages && !mainImage) throw new Error('W trybie dwóch grafik wybierz także grafikę na stronie eventu.');
           let endDate=form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
           if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
           if(!form.elements.ongoing?.checked && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ Event trwa”.');
-          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:String(form.elements.mainImageFit?.value||'contain')};
+          const mainImageFit=sharedImages ? String(form.elements.sharedMainImageFit?.value||form.elements.imageFit?.value||'contain') : String(form.elements.mainImageFit?.value||'contain');
+          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:mainImageFit};
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
           const {error}=await query; if(error) throw error;
