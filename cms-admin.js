@@ -795,8 +795,13 @@
         <div class="cms-mobile-preview-topbar">
           <div>
             <small>PODGLĄD RESPONSYWNY</small>
-            <strong>WERSJA MOBILNA</strong>
-            <span>390 px • możesz normalnie klikać i przechodzić po całej stronie</span>
+            <strong id="cms-preview-title">WERSJA MOBILNA</strong>
+            <span id="cms-preview-info">390 px • możesz normalnie klikać i przechodzić po całej stronie</span>
+            <div class="cms-preview-controls">
+              <button type="button" data-preview-mode="mobile">📱 MOBILE</button>
+              <button type="button" data-preview-mode="desktop">🖥 DESKTOP</button>
+              <label>Szerokość <input id="cms-preview-width" type="number" value="390" min="320" max="1920"> px</label>
+            </div>
           </div>
           <button type="button" class="cms-mobile-preview-close" aria-label="Zamknij podgląd mobilny" title="Zamknij">×</button>
         </div>
@@ -819,7 +824,22 @@
       document.removeEventListener('keydown', onKey);
     };
     document.addEventListener('keydown', onKey);
-    overlay.querySelector('iframe')?.focus();
+    const frame = overlay.querySelector('iframe');
+    const widthInput = overlay.querySelector('#cms-preview-width');
+    const applyPreview = mode => {
+      const device = overlay.querySelector('.cms-mobile-preview-device');
+      const title = overlay.querySelector('#cms-preview-title');
+      const info = overlay.querySelector('#cms-preview-info');
+      const width = Number(widthInput?.value || (mode === 'desktop' ? 1280 : 390));
+      device.style.width = `${Math.min(Math.max(width, 320), 1920)}px`;
+      device.classList.toggle('cms-preview-desktop', mode === 'desktop');
+      title.textContent = mode === 'desktop' ? 'WERSJA KOMPUTEROWA' : 'WERSJA MOBILNA';
+      info.textContent = `${width}px • ustawienia podglądu nie zmieniają wersji publicznej`;
+    };
+    overlay.querySelectorAll('[data-preview-mode]').forEach(btn => btn.addEventListener('click', () => applyPreview(btn.dataset.previewMode)));
+    widthInput?.addEventListener('change', () => applyPreview(overlay.querySelector('[data-preview-mode].active')?.dataset.previewMode || 'mobile'));
+    overlay.querySelector('[data-preview-mode="mobile"]')?.classList.add('active');
+    frame?.focus();
   }
 
   function ensureToolbar() {

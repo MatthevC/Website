@@ -10420,3 +10420,12 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   font-size:2rem;
   background:linear-gradient(135deg,rgba(239,43,45,.12),rgba(255,255,255,.025));
 }
+
+/* CMS responsive preview */
+.cms-preview-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.cms-preview-controls button,.cms-preview-controls input{background:#171717;color:#fff;border:1px solid #333;border-radius:8px;padding:7px 10px}
+.cms-preview-controls button.active{border-color:#ef2b2d;color:#ef2b2d}
+.cms-preview-controls label{font-size:12px;color:#aaa}
+.cms-mobile-preview-device{transition:.25s;width:390px;max-width:90vw}
+.cms-mobile-preview-device.cms-preview-desktop{height:75vh}
+.cms-mobile-preview-device iframe{width:100%}
