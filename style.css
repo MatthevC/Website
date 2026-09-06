@@ -10478,3 +10478,28 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 
 /* Reward editor preview hotfix: only one visual layer is ever visible. */
 .cms-reward-live-graphic.has-custom-reward-image{display:block!important}
+
+/* === DLA WIDZA / NAGRODY — stabilne wyrównanie zawartości kart ===
+   Karty w tym samym wierszu mogą mieć różną ilość tekstu. Grid rozciągał
+   automatyczne rzędy wewnątrz krótszej karty, przez co tytuły i opisy
+   "rozjeżdżały się" pionowo. Zawartość jest teraz zawsze pakowana od góry,
+   a ewentualne wolne miejsce zostaje wyłącznie na dole karty. */
+.rewards-page .reward-card{
+  align-content:start;
+  grid-auto-rows:max-content;
+  height:100%;
+}
+.rewards-page .reward-card-top{
+  min-height:60px;
+}
+.rewards-page .reward-card h3,
+.rewards-page .reward-card p,
+.rewards-page .reward-card .reward-note,
+.rewards-page .reward-card .steam-signature-examples{
+  align-self:start;
+}
+
+/* Na telefonie zachowujemy naturalną wysokość kart. */
+@media(max-width:860px){
+  .rewards-page .reward-card{height:auto;}
+}
