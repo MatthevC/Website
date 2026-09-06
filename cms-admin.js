@@ -1030,13 +1030,16 @@
       if (!node.classList.contains('discord-member') || !currentGroup) return;
       const strong = $('strong', node);
       const role = strong?.classList.contains('role-streamer') ? 'streamer' : strong?.classList.contains('role-mod') ? 'moderator' : strong?.classList.contains('role-vip') ? 'vip' : 'viewer';
+      const twitch = node.matches('a[href]') ? (node.getAttribute('href') || '') : '';
+      const twitchLogin = String(node.dataset.twitchLogin || window.MattCMS?.twitchLoginFromUrl?.(twitch) || '').trim();
       currentGroup.members.push({
         name: strong?.textContent.trim() || '',
         status: $('small', node)?.textContent.trim() || '',
         kind: role,
         image: $('img.member-avatar', node)?.getAttribute('src') || '',
         initial: $('span.member-avatar', node)?.textContent.trim() || '',
-        twitch: node.matches('a[href]') ? (node.getAttribute('href') || '') : ''
+        twitch,
+        twitchLogin
       });
     });
     return {
@@ -2269,7 +2272,7 @@
             </section>
             <section>
               <header><div><small>03 / SPOŁECZNOŚĆ</small><strong>LISTA OSÓB</strong></div><button class="cms-primary" data-add-group>+ GRUPA</button></header>
-              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>`<article><div><span>${esc(m.initial||String(m.name||'?').charAt(0))}</span><strong>${esc(m.name||'osoba')}</strong><small>${esc(m.status||'')}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
+              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>{const tm=window.MattCMS?.normalizeDiscordMember?.(m)||m;return `<article><div><span>${esc(tm.initial||String(tm.name||'?').charAt(0))}</span><strong>${esc(tm.name||'osoba')}</strong><small>${esc(tm.status||'')}${tm.twitchLogin?` • Twitch: @${esc(tm.twitchLogin)}`:''}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`;}).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
             </section>
           </div>`);
 
@@ -2364,10 +2367,32 @@
         formEdit(i>=0?'EDYTUJ GRUPĘ':'DODAJ GRUPĘ',cur,fields,async v=>{v.members=cur.members||[];if(i>=0)data.memberGroups[i]=v;else data.memberGroups.push(v);await save('Grupa zapisana.');},makeDraft);
       };
       const editMember=(gi,mi)=>{
-        const cur=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:'',twitch:''};
-        const fields=[{name:'name',label:'Nick / nazwa',required:true},{name:'status',label:'Status / opis'},{name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},{name:'initial',label:'Litera avatara',help:'Używana, gdy dana osoba nie ma obrazu w wersji bazowej.'},{name:'twitch',label:'Kanał Twitch (opcjonalnie)',placeholder:'https://www.twitch.tv/nazwa',help:'Jeśli podasz adres, kliknięcie tej osoby w podglądzie Discorda otworzy Twitch w nowej karcie.'}];
-        const makeDraft=v=>{const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=v;else arr.push(v);return d;};
-        formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{if(mi>=0)data.memberGroups[gi].members[mi]=v;else data.memberGroups[gi].members.push(v);await save('Osoba zapisana.');},makeDraft);
+        const source=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:'',twitch:'',twitchLogin:''};
+        const cur=window.MattCMS?.normalizeDiscordMember?.(source)||source;
+        const fields=[
+          {name:'name',label:'Nick / nazwa',required:true},
+          {name:'status',label:'Status / opis'},
+          {name:'kind',label:'Typ użytkownika',type:'select',options:[{value:'viewer',label:'Widz'},{value:'vip',label:'VIP'},{value:'moderator',label:'Moderator'},{value:'streamer',label:'Streamer'}]},
+          {name:'initial',label:'Litera avatara',help:'Używana tylko wtedy, gdy nie podasz nicku Twitch.'},
+          {name:'twitchLogin',label:'Nick z Twitcha (opcjonalnie)',placeholder:'np. wazzzupek',help:'Wpisz sam nick, bez twitch.tv. Avatar zostanie pobrany z Twitcha, a kliknięcie użytkownika otworzy jego kanał w nowej karcie. Po najechaniu pokaże się dymek z adresem kanału.'}
+        ];
+        const prepareMember=(v,strict=false)=>{
+          const next={...cur,...v};
+          const rawLogin=String(v.twitchLogin||'').trim();
+          const login=window.MattCMS?.normalizeTwitchLogin?.(rawLogin)||'';
+          if(rawLogin && !login && strict) throw new Error('Nieprawidłowy nick Twitch. Wpisz sam nick, np. wazzzupek.');
+          if(!login){
+            next.twitchLogin='';
+            next.twitch='';
+            if(/^https:\/\/unavatar\.io\/twitch\//i.test(String(next.image||''))) next.image='';
+          }else{
+            next.twitchLogin=login;
+            next.twitch=`https://www.twitch.tv/${login}`;
+          }
+          return window.MattCMS?.normalizeDiscordMember?.(next)||next;
+        };
+        const makeDraft=v=>{const member=prepareMember(v);const d=clone(data);const arr=d.memberGroups[gi].members||[];if(mi>=0)arr[mi]=member;else arr.push(member);return d;};
+        formEdit(mi>=0?'EDYTUJ OSOBĘ':'DODAJ OSOBĘ',cur,fields,async v=>{const member=prepareMember(v,true);if(mi>=0)data.memberGroups[gi].members[mi]=member;else data.memberGroups[gi].members.push(member);await save('Osoba zapisana.');},makeDraft);
       };
       draw();
     };

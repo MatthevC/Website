@@ -662,6 +662,17 @@
     return login.toLowerCase();
   }
 
+  function normalizeTwitchLogin(value = '') {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const fromUrl = twitchLoginFromUrl(raw);
+    if (fromUrl) return fromUrl;
+    const login = raw.replace(/^@/, '').trim().toLowerCase();
+    const reserved = new Set(['directory','downloads','jobs','p','settings','subscriptions','videos','clip','clips','inventory','wallet','search']);
+    if (!login || reserved.has(login) || !/^[a-z0-9_]{1,25}$/.test(login)) return '';
+    return login;
+  }
+
   function twitchClipSlugFromUrl(value) {
     const url = parseTwitchUrl(value);
     if (!url) return '';
@@ -819,18 +830,35 @@
     return 'avatar-gray';
   }
 
+  function normalizeDiscordMember(member = {}) {
+    const m = { ...(member || {}) };
+    const twitchLogin = normalizeTwitchLogin(m.twitchLogin || m.twitchNick || m.twitch || '');
+    if (twitchLogin) {
+      m.twitchLogin = twitchLogin;
+      m.twitch = `https://www.twitch.tv/${twitchLogin}`;
+      // Avatar jest pobierany na podstawie nicku Twitch. Dzięki temu nie trzeba ręcznie wklejać URL zdjęcia.
+      m.image = `https://unavatar.io/twitch/${encodeURIComponent(twitchLogin)}`;
+    } else {
+      m.twitchLogin = '';
+      m.twitch = '';
+    }
+    return m;
+  }
+
   function renderDiscordMember(member = {}, gi = 0, mi = 0) {
-    const m = member || {};
+    const m = normalizeDiscordMember(member);
     const twitch = String(m.twitch || '').trim();
-    const attrs = `class="discord-member${twitch ? ' discord-member-link' : ''}" data-cms-preview-member="${gi}:${mi}"`;
+    const twitchLogin = String(m.twitchLogin || '').trim();
+    const attrs = `class="discord-member${twitch ? ' discord-member-link' : ''}" data-cms-preview-member="${gi}:${mi}"${twitchLogin ? ` data-twitch-login="${escapeHtml(twitchLogin)}"` : ''}`;
     const open = twitch
-      ? `<a ${attrs} href="${escapeHtml(safeHref(twitch))}" target="_blank" rel="noopener" title="Otwórz kanał Twitch: ${escapeHtml(m.name || '')}">`
+      ? `<a ${attrs} href="${escapeHtml(safeHref(twitch))}" target="_blank" rel="noopener noreferrer" aria-label="Otwórz kanał Twitch ${escapeHtml(twitchLogin || m.name || '')} w nowej karcie">`
       : `<div ${attrs}>`;
     const close = twitch ? '</a>' : '</div>';
     const avatar = m.image
-      ? `<img class="member-avatar member-photo" src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name||'')}">`
+      ? `<img class="member-avatar member-photo" src="${escapeHtml(m.image)}" alt="${escapeHtml(m.name||'')}" loading="lazy">`
       : `<span class="member-avatar ${avatarClass(m.kind)}">${escapeHtml(m.initial || String(m.name||'?').charAt(0).toUpperCase())}</span>`;
-    return `${open}${avatar}<div><strong class="${roleClass(m.kind)}">${escapeHtml(m.name || '')}</strong><small>${escapeHtml(m.status || '')}</small></div>${twitch ? '<span class="discord-member-twitch-mark" aria-hidden="true">↗</span>' : ''}${close}`;
+    const twitchUi = twitch ? `<span class="discord-member-twitch-mark" aria-hidden="true">↗</span><span class="discord-member-twitch-tooltip" role="tooltip"><b>TWITCH</b><span>twitch.tv/${escapeHtml(twitchLogin)}</span><small>Otwórz w nowej karcie ↗</small></span>` : '';
+    return `${open}${avatar}<div class="discord-member-copy"><strong class="${roleClass(m.kind)}">${escapeHtml(m.name || '')}</strong><small>${escapeHtml(m.status || '')}</small></div>${twitchUi}${close}`;
   }
 
   function renderDiscordJoinPreview(data) {
@@ -1139,7 +1167,7 @@
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview, renderDiscordMember,
-    twitchLoginFromUrl, twitchClipSlugFromUrl, normalizeStreamer,
+    twitchLoginFromUrl, normalizeTwitchLogin, twitchClipSlugFromUrl, normalizeStreamer, normalizeDiscordMember,
     get loadError() { return loadError; }
   };
 })();
