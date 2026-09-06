@@ -10180,3 +10180,34 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     grid-template-columns:1fr;
   }
 }
+
+/* ===== 2026-09: wygodniejszy zakres uprawnień ===== */
+.account-permission-search{
+  min-width:210px;
+  height:31px;
+  border:1px solid #343740;
+  border-radius:8px;
+  background:#111217;
+  color:#e9eaf0;
+  padding:0 10px;
+  font:800 9px/1 inherit;
+  outline:none;
+}
+.account-permission-search::placeholder{color:#71757f}
+.account-permission-search:focus{border-color:#f13b45;box-shadow:0 0 0 2px rgba(241,59,69,.09)}
+.account-permission-group[hidden],.account-permission[hidden]{display:none!important}
+.account-permission-group-tools{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap}
+.account-permission-group-tools>span{padding:3px 6px;border-radius:999px;background:#1b1d23;color:#989ba4;font-size:8px;font-weight:900}
+.account-permission-group-tools button{border:1px solid #30333b;border-radius:6px;background:#17191f;color:#9296a0;padding:4px 6px;font-size:7px;font-weight:900;letter-spacing:.04em;cursor:pointer}
+.account-permission-group-tools button:hover:not(:disabled){border-color:#ee303a;color:#fff}
+.account-permission-group-tools button:disabled{opacity:.28;cursor:not-allowed}
+.account-permission.is-critical{background:linear-gradient(90deg,rgba(245,40,51,.055),transparent 56%)}
+.account-permission.is-critical>span>strong{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.account-permission-critical{display:inline-flex;align-items:center;min-height:17px;padding:2px 6px;border:1px solid rgba(245,40,51,.42);border-radius:999px;background:rgba(245,40,51,.08);color:#ff5961;font-size:7px;font-style:normal;font-weight:950;letter-spacing:.07em}
+@media(max-width:900px){
+  .account-permission-search{width:100%;min-width:0}
+  .account-permission-tools{width:100%}
+}
+.cms-permission-readonly{display:inline-flex;align-items:center;min-height:24px;padding:5px 8px;border:1px solid #363940;border-radius:999px;background:#17191e;color:#8d919a;font-size:8px;font-weight:900;letter-spacing:.07em;white-space:nowrap}
+.cms-permission-locked{opacity:.72}
+.cms-permission-locked input,.cms-permission-locked select,.cms-permission-locked button{cursor:not-allowed!important}

@@ -1,5 +1,53 @@
 const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 
+// Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Supabase,
+// dzięki czemu panel działa również zanim wykonasz dołączony plik SQL aktualizujący katalog.
+const MATT_EXTRA_PERMISSION_CATALOG = [
+  { permission:"events.schedule.manage", group_name:"EVENTY", label:"Terminy i status eventów", description:"Może zmieniać rozpoczęcie, zakończenie, publikację oraz status „w trakcie / zakończ teraz” w istniejących eventach.", sort_order:125 },
+  { permission:"events.images.manage", group_name:"EVENTY", label:"Grafiki eventów", description:"Może zmieniać tryb jednej/dwóch grafik, pliki oraz dopasowanie grafik w istniejących eventach.", sort_order:126 },
+  { permission:"discord.join.messages.manage", group_name:"DISCORD", label:"Wiadomości w podglądzie Discorda", description:"Może dodawać, edytować, usuwać i ustawiać kolejność wiadomości w makiecie czatu Discorda.", sort_order:325 },
+  { permission:"discord.join.members.manage", group_name:"DISCORD", label:"Osoby w podglądzie Discorda", description:"Może zarządzać grupami i osobami w podglądzie, w tym nickami i linkami Twitch.", sort_order:326 },
+  { permission:"discord.channels.delete", group_name:"DISCORD", label:"Usuwanie kanałów i kategorii Discorda", description:"Pozwala usuwać pozycje z sekcji opisu kanałów. Wymaga także dostępu do zarządzania kanałami.", sort_order:327 },
+  { permission:"streamers.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie streamerów", description:"Pozwala usuwać streamerów z listy polecanych. Wymaga także dostępu do zarządzania streamerami.", sort_order:425 },
+  { permission:"moderation.people.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie osób z moderacji", description:"Pozwala usuwać osoby z sekcji moderacji. Wymaga także dostępu do zarządzania tą sekcją.", sort_order:426 },
+  { permission:"moderation.benefits.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie korzyści moderacji", description:"Pozwala usuwać pozycje z listy korzyści moderacji. Wymaga także dostępu do zarządzania korzyściami.", sort_order:427 },
+  { permission:"commands.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie komend", description:"Pozwala trwale usuwać komendy z listy. Wymaga także dostępu do zarządzania komendami.", sort_order:428 },
+  { permission:"rules.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie zasad regulaminu", description:"Pozwala usuwać pojedyncze zasady regulaminu. Wymaga także dostępu do edycji regulaminu.", sort_order:429 },
+  { permission:"contact.topics.delete", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Usuwanie tematów kontaktu", description:"Pozwala usuwać tematy z formularza kontaktowego. Wymaga także dostępu do zarządzania tematami.", sort_order:430 }
+];
+
+const MATT_PERMISSION_GROUP_ORDER = [
+  ["events.", "EVENTY", 10],
+  ["downloads.", "PLIKI DO POBRANIA", 20],
+  ["discord.", "DISCORD", 30],
+  ["streamers.", "SPOŁECZNOŚĆ I TREŚCI", 40],
+  ["moderation.", "SPOŁECZNOŚĆ I TREŚCI", 40],
+  ["commands.", "SPOŁECZNOŚĆ I TREŚCI", 40],
+  ["rules.", "SPOŁECZNOŚĆ I TREŚCI", 40],
+  ["contact.", "SPOŁECZNOŚĆ I TREŚCI", 40],
+  ["home.", "STRONA I WYGLĄD", 50],
+  ["page.", "STRONA I WYGLĄD", 50],
+  ["site.", "STRONA I WYGLĄD", 50],
+  ["backups.", "BACKUPY I PRZYWRACANIE", 60],
+  ["github.", "BACKUPY I PRZYWRACANIE", 60],
+  ["accounts.", "KONTA I DOSTĘP", 70],
+  ["audit.", "LOGI I BEZPIECZEŃSTWO", 80]
+];
+
+function mattPermissionGroupMeta(permission, fallback = "INNE") {
+  const p = String(permission || "");
+  const found = MATT_PERMISSION_GROUP_ORDER.find(([prefix]) => p.startsWith(prefix));
+  return found ? { name: found[1], order: found[2] } : { name: String(fallback || "INNE").toUpperCase(), order: 90 };
+}
+
+function mattPermissionIsCritical(permission) {
+  const p = String(permission || "");
+  return p.includes(".delete") || [
+    "accounts.role.change", "accounts.permissions.change", "accounts.password.reset",
+    "backups.restore", "backups.import", "github.restore"
+  ].includes(p);
+}
+
 window.currentUserRole = window.currentUserRole || "guest";
 window.currentUserPermissions = window.currentUserPermissions || [];
 window.mattHasPermission = function(permission) {
@@ -409,7 +457,12 @@ async function mattOpenAccountManager() {
     if (accountsRes.error) throw accountsRes.error;
     if (catalogRes.error) throw catalogRes.error;
     accounts = accountsRes.data || [];
-    catalog = catalogRes.data || [];
+    const mergedCatalog = new Map((catalogRes.data || []).map(item => [item.permission, { ...item }]));
+    MATT_EXTRA_PERMISSION_CATALOG.forEach(item => {
+      const existing = mergedCatalog.get(item.permission);
+      mergedCatalog.set(item.permission, existing ? { ...item, ...existing } : { ...item });
+    });
+    catalog = [...mergedCatalog.values()].sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999));
     if (!selectedId && accounts.length) {
       selectedId = accounts.find(a => a.auth_user_id === viewerUserId)?.auth_user_id || accounts[0].auth_user_id;
     }
@@ -419,10 +472,13 @@ async function mattOpenAccountManager() {
   const groupCatalog = () => {
     const groups = new Map();
     catalog.forEach(item => {
-      if (!groups.has(item.group_name)) groups.set(item.group_name, []);
-      groups.get(item.group_name).push(item);
+      const meta = mattPermissionGroupMeta(item.permission, item.group_name);
+      if (!groups.has(meta.name)) groups.set(meta.name, { order: meta.order, items: [] });
+      groups.get(meta.name).items.push(item);
     });
-    return groups;
+    return new Map([...groups.entries()]
+      .sort((a,b) => a[1].order - b[1].order || a[0].localeCompare(b[0], 'pl'))
+      .map(([name, value]) => [name, value.items.sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999))]));
   };
 
   const roleMeta = role => {
@@ -516,15 +572,17 @@ async function mattOpenAccountManager() {
           ? items.filter(item => selectedPermissions.has(item.permission)).length
           : 0;
 
-      return `<section class="account-permission-group">
-        <header><h4>${mattAccountEscape(group)}</h4><span data-group-count>${activeCount}/${items.length}</span></header>
+      return `<section class="account-permission-group" data-permission-group="${mattAccountEscape(group)}">
+        <header><h4>${mattAccountEscape(group)}</h4><div class="account-permission-group-tools"><span data-group-count>${activeCount}/${items.length}</span><button type="button" data-group-select title="Zaznacz całą sekcję">+ WSZYSTKO</button><button type="button" data-group-clear title="Wyczyść całą sekcję">WYCZYŚĆ</button></div></header>
         ${items.map(item => {
           const checked = currentRole === "admin" || (currentRole === "moderator" && selectedPermissions.has(item.permission));
           const disabled = isSelf || currentRole !== "moderator" || !canChangePermissions;
-          return `<label class="account-permission ${disabled ? 'readonly' : ''}">
+          const critical = mattPermissionIsCritical(item.permission);
+          const searchText = [group,item.label,item.description,item.permission].filter(Boolean).join(' ').toLowerCase();
+          return `<label class="account-permission ${disabled ? 'readonly' : ''}${critical ? ' is-critical' : ''}" data-permission-search="${mattAccountEscape(searchText)}">
             <input type="checkbox" value="${mattAccountEscape(item.permission)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
             <span>
-              <strong>${mattAccountEscape(item.label)}</strong>
+              <strong>${mattAccountEscape(item.label)}${critical ? '<em class="account-permission-critical">KRYTYCZNE</em>' : ''}</strong>
               <small>${mattAccountEscape(item.description || '')}</small>
             </span>
           </label>`;
@@ -561,6 +619,7 @@ async function mattOpenAccountManager() {
       <div class="account-section-heading permissions-heading">
         <div><small>UPRAWNIENIA</small><h4>Zakres dostępu</h4></div>
         <div class="account-permission-tools">
+          <input class="account-permission-search" type="search" data-permission-search-input placeholder="Szukaj uprawnienia…" aria-label="Szukaj uprawnienia">
           <span class="account-permission-total" data-permission-total>${permissionCount}/${catalog.length} aktywnych</span>
           <button type="button" data-select-all ${currentRole !== 'moderator' || !canChangePermissions ? 'disabled' : ''}>ZAZNACZ WSZYSTKO</button>
           <button type="button" data-clear-all ${currentRole !== 'moderator' || !canChangePermissions ? 'disabled' : ''}>WYCZYŚĆ</button>
@@ -610,8 +669,22 @@ async function mattOpenAccountManager() {
     const total = body.querySelector("[data-permission-total]");
     const selectAll = body.querySelector("[data-select-all]");
     const clearAll = body.querySelector("[data-clear-all]");
+    const permissionSearch = body.querySelector("[data-permission-search-input]");
 
     const selectedRole = () => roleSelect?.value || String(account.role || "user");
+
+    const applyPermissionFilter = () => {
+      const needle = String(permissionSearch?.value || "").trim().toLowerCase();
+      body.querySelectorAll(".account-permission-group").forEach(group => {
+        let visible = 0;
+        group.querySelectorAll(".account-permission").forEach(item => {
+          const match = !needle || String(item.dataset.permissionSearch || "").includes(needle);
+          item.hidden = !match;
+          if (match) visible += 1;
+        });
+        group.hidden = visible === 0;
+      });
+    };
 
     const syncPermissionUi = () => {
       const role = selectedRole();
@@ -639,10 +712,14 @@ async function mattOpenAccountManager() {
         const groupBoxes = [...group.querySelectorAll('input[type="checkbox"]')];
         const counter = group.querySelector("[data-group-count]");
         if (counter) counter.textContent = `${groupBoxes.filter(cb => cb.checked).length}/${groupBoxes.length}`;
+        group.querySelectorAll('[data-group-select],[data-group-clear]').forEach(btn => {
+          btn.disabled = role !== "moderator" || !canChangePermissions;
+        });
       });
 
       if (selectAll) selectAll.disabled = role !== "moderator" || !canChangePermissions;
       if (clearAll) clearAll.disabled = role !== "moderator" || !canChangePermissions;
+      applyPermissionFilter();
 
       if (note) {
         note.innerHTML = role === "admin"
@@ -667,6 +744,21 @@ async function mattOpenAccountManager() {
       body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(cb => { cb.checked = false; });
       syncPermissionUi();
     });
+
+    body.querySelectorAll(".account-permission-group").forEach(group => {
+      group.querySelector("[data-group-select]")?.addEventListener("click", () => {
+        if (selectedRole() !== "moderator" || !canChangePermissions) return;
+        group.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+        syncPermissionUi();
+      });
+      group.querySelector("[data-group-clear]")?.addEventListener("click", () => {
+        if (selectedRole() !== "moderator" || !canChangePermissions) return;
+        group.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+        syncPermissionUi();
+      });
+    });
+
+    permissionSearch?.addEventListener("input", applyPermissionFilter);
 
     syncPermissionUi();
 

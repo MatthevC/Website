@@ -424,7 +424,7 @@
     if (['viewer/downloads','downloads'].includes(route)) return { label: 'PLIKI DO POBRANIA', action: openDownloadsManager, permission:'downloads.any' };
     if (route === 'contact') return { label: 'TEMATY FORMULARZA', action: openTopicsManager, permission:'contact.topics.manage' };
     if (route === 'discord/channels') return { label: 'KANAŁY I KATEGORIE', action: openDiscordManager, permission:'discord.channels.manage' };
-    if (route === 'discord/join') return { label: 'PODGLĄD / KOMUNIKATY', action: openDiscordJoinManager, permission:'discord.join.manage' };
+    if (route === 'discord/join') return { label: 'PODGLĄD / KOMUNIKATY', action: openDiscordJoinManager, permission:'discord.join.any' };
     if (route.startsWith('rules/') && route !== 'rules/game-picks') return { label: 'ZASADY REGULAMINU', action: openRulesManager, permission:'rules.manage' };
     return null;
   }
@@ -433,6 +433,7 @@
     if (!config) return false;
     if (config.permission === 'downloads.any') return any('downloads.create','downloads.edit','downloads.delete','downloads.reorder');
     if (config.permission === 'events.any') return any('events.create','events.edit','events.delete');
+    if (config.permission === 'discord.join.any') return any('discord.join.manage','discord.join.messages.manage','discord.join.members.manage');
     return has(config.permission);
   }
 
@@ -1159,7 +1160,8 @@
     refresh();
   }
 
-  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady, livePreview }) {
+  function openArrayManager({ key, title, singular, fields, fallback, label, normalizeItem, beforeSave, onFormReady, livePreview, deletePermission = '' }) {
+    const allowDelete = !deletePermission || has(deletePermission);
     let items = clone(window.MattCMS?.get(key, null) || fallback() || []);
     if (typeof normalizeItem === 'function') items = items.map(item => normalizeItem(clone(item)));
     const esc = window.MattCMS.escape;
@@ -1181,7 +1183,7 @@
 
     const drawList = () => {
       openModal(title, `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-add>+ DODAJ ${esc(singular.toUpperCase())}</button><button type="button" data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button><button type="button" data-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Strzałkami możesz ustawić kolejność wyświetlania. Supabase przechowuje tylko nadpisanie tej sekcji.</p></div>
-        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button><button class="danger" type="button" data-delete="${index}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
+        <div class="cms-manager-list">${items.length ? items.map((item,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${esc(label(item) || `${singular} ${index+1}`)}</strong></div><div><button type="button" data-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button><button type="button" data-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button><button type="button" data-edit="${index}">EDYTUJ</button>${allowDelete?`<button class="danger" type="button" data-delete="${index}">USUŃ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak elementów. Dodaj pierwszy.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add]', body)?.addEventListener('click', () => drawForm(-1));
       $('[data-save-order]', body)?.addEventListener('click', saveOrder);
@@ -1190,6 +1192,7 @@
       $$('[data-down]', body).forEach(btn => btn.addEventListener('click', () => moveItem(Number(btn.dataset.down), Number(btn.dataset.down)+1)));
       $$('[data-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.edit))));
       $$('[data-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
+        if (!allowDelete) return;
         const index = Number(btn.dataset.delete);
         if (!confirm(`Usunąć: ${label(items[index])}?`)) return;
         items.splice(index, 1);
@@ -1308,7 +1311,7 @@
         <button data-rule-up="${index}" ${index===0?'disabled':''} title="Przesuń wyżej">↑</button>
         <button data-rule-down="${index}" ${index===items.length-1?'disabled':''} title="Przesuń niżej">↓</button>
         <button data-edit-rule="${index}">EDYTUJ</button>
-        <button class="danger" data-delete-rule="${index}">USUŃ</button>
+        ${has('rules.delete')?`<button class="danger" data-delete-rule="${index}">USUŃ</button>`:''}
       </div></article>`).join('') : '<div class="cms-empty">Regulamin nie ma jeszcze żadnych zasad.</div>'}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add-rule]', body)?.addEventListener('click', () => editRule(-1));
@@ -1318,6 +1321,7 @@
       $$('[data-rule-down]', body).forEach(b => b.addEventListener('click', () => move(Number(b.dataset.ruleDown), Number(b.dataset.ruleDown)+1)));
       $$('[data-edit-rule]', body).forEach(b => b.addEventListener('click', () => editRule(Number(b.dataset.editRule))));
       $$('[data-delete-rule]', body).forEach(b => b.addEventListener('click', async () => {
+        if(!has('rules.delete')) return;
         const i = Number(b.dataset.deleteRule);
         if (!confirm(`Usunąć zasadę „${items[i]?.label || items[i]?.title}”? Pozostałe punkty zostaną automatycznie przenumerowane.`)) return;
         items.splice(i, 1);
@@ -1637,7 +1641,7 @@
     };
 
     openArrayManager({
-      key:'streamers', title:'POLECANI STREAMERZY', singular:'streamera', fallback:extractStreamers,
+      key:'streamers', title:'POLECANI STREAMERZY', singular:'streamera', fallback:extractStreamers, deletePermission:'streamers.delete',
       label:item=>item.displayName || item.login,
       normalizeItem:normalizeStreamer,
       onFormReady:bindTwitchAutofill,
@@ -1671,7 +1675,7 @@
   function openModeratorsManager() {
     const esc = window.MattCMS.escape;
     openArrayManager({
-      key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name,
+      key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name, deletePermission:'moderation.people.delete',
       livePreview:(m,{index})=>`<article class="moderator-card cms-live-moderator-card"><div class="moderator-photo-wrap">${m.image?`<img class="moderator-photo" src="${esc(m.image)}" alt="">`:'<div class="cms-live-photo-placeholder">BRAK ZDJĘCIA</div>'}<div class="moderator-photo-index">${String((index>=0?index:0)+1).padStart(2,'0')}</div></div><div class="moderator-card-body"><div class="moderator-name-row"><h2>${esc(m.name||'NOWA OSOBA')}</h2><span class="moderator-role">${esc(m.role||'ROLA')}</span></div><p>${esc(m.description||'Opis moderatora pojawi się w tym miejscu.')}</p><div class="moderator-links"><span class="moderator-social moderator-twitch"><span>TWITCH</span><strong>${esc(m.name||'nick')}</strong><b>↗</b></span><div class="moderator-social moderator-discord"><span>DISCORD</span><strong>${esc(m.discord||'nick_discord')}</strong></div></div></div></article>`,
       fields:[
         {name:'name',label:'Nick / nazwa',required:true},{name:'role',label:'Rola / stanowisko',required:true},
@@ -1684,7 +1688,7 @@
   function openBenefitsManager() {
     const esc = window.MattCMS.escape;
     openArrayManager({
-      key:'moderator_benefits', title:'MODERACJA / KORZYŚCI', singular:'korzyść', fallback:extractBenefits, label:item=>item.title,
+      key:'moderator_benefits', title:'MODERACJA / KORZYŚCI', singular:'korzyść', fallback:extractBenefits, label:item=>item.title, deletePermission:'moderation.benefits.delete',
       livePreview:(b,{index})=>`<article class="moderator-benefit-card cms-live-benefit-card"><span class="moderator-benefit-number">${String((index>=0?index:0)+1).padStart(2,'0')}</span><div><h3>${esc(b.title||'NOWA KORZYŚĆ')}</h3><p>${esc(b.description||'Opis korzyści pojawi się tutaj.')}</p></div></article>`,
       fields:[{name:'title',label:'Nazwa korzyści',required:true},{name:'description',label:'Opis korzyści',type:'textarea',required:true}]
     });
@@ -1782,7 +1786,7 @@
       openModal('KOMENDY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" type="button" data-command-add>+ DODAJ KOMENDĘ</button><button type="button" data-command-reset>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Kolejność zapisuje się automatycznie. Komendy przesuwasz tylko wewnątrz swojej kategorii, a całe kategorie możesz przesuwać osobnymi strzałkami.</p></div>
         <div class="cms-command-order-list">${groups.length ? groups.map((group, groupIndex) => `<section class="cms-command-order-category">
           <header><div><small>KATEGORIA ${String(groupIndex+1).padStart(2,'0')}</small><strong>${esc(group.category)}</strong><span>${group.entries.length} ${group.entries.length === 1 ? 'komenda' : 'komendy'}</span></div><div><button type="button" data-category-up="${esc(group.category)}" ${groupIndex===0?'disabled':''} title="Przesuń kategorię wyżej">↑ KATEGORIA</button><button type="button" data-category-down="${esc(group.category)}" ${groupIndex===groups.length-1?'disabled':''} title="Przesuń kategorię niżej">↓ KATEGORIA</button></div></header>
-          <div class="cms-manager-list">${group.entries.map((entry, localIndex) => `<article class="cms-manager-item cms-command-order-item"><div><small>${String(localIndex+1).padStart(2,'0')}</small><div><strong>${esc(entry.item.command || 'Komenda')}</strong><span>${esc(entry.item.description || '')}</span><em>${esc(roleSummary(entry.item))}</em></div></div><div><button type="button" data-command-up="${entry.index}" ${localIndex===0?'disabled':''} title="Przesuń wyżej w tej kategorii">↑</button><button type="button" data-command-down="${entry.index}" ${localIndex===group.entries.length-1?'disabled':''} title="Przesuń niżej w tej kategorii">↓</button><button type="button" data-command-edit="${entry.index}">EDYTUJ</button><button class="danger" type="button" data-command-delete="${entry.index}">USUŃ</button></div></article>`).join('')}</div>
+          <div class="cms-manager-list">${group.entries.map((entry, localIndex) => `<article class="cms-manager-item cms-command-order-item"><div><small>${String(localIndex+1).padStart(2,'0')}</small><div><strong>${esc(entry.item.command || 'Komenda')}</strong><span>${esc(entry.item.description || '')}</span><em>${esc(roleSummary(entry.item))}</em></div></div><div><button type="button" data-command-up="${entry.index}" ${localIndex===0?'disabled':''} title="Przesuń wyżej w tej kategorii">↑</button><button type="button" data-command-down="${entry.index}" ${localIndex===group.entries.length-1?'disabled':''} title="Przesuń niżej w tej kategorii">↓</button><button type="button" data-command-edit="${entry.index}">EDYTUJ</button>${has('commands.delete')?`<button class="danger" type="button" data-command-delete="${entry.index}">USUŃ</button>`:''}</div></article>`).join('')}</div>
         </section>`).join('') : '<div class="cms-empty">Brak komend.</div>'}</div>`);
 
       const body = $('#cms-modal-body', modal);
@@ -1794,6 +1798,7 @@
       $$('[data-category-down]', body).forEach(btn => btn.addEventListener('click', () => moveCategory(btn.dataset.categoryDown, 1)));
       $$('[data-command-edit]', body).forEach(btn => btn.addEventListener('click', () => drawForm(Number(btn.dataset.commandEdit))));
       $$('[data-command-delete]', body).forEach(btn => btn.addEventListener('click', async () => {
+        if(!has('commands.delete')) return;
         const index = Number(btn.dataset.commandDelete);
         const item = items[index];
         if (!item || !confirm(`Usunąć komendę ${item.command || ''}?`)) return;
@@ -2075,12 +2080,13 @@
   function openTopicsManager() {
     let topics = clone(window.MattCMS?.get('contact_topics', null) || extractTopics());
     const draw = () => {
-      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button><button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button><button class="danger" data-delete-topic="${index}">USUŃ</button></div></article>`).join('')}</div>`);
+      openModal('WNIOSKI / KONTAKT — TEMATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-add-topic>+ DODAJ TEMAT</button><button data-reset-topics>↶ PRZYWRÓĆ Z GITHUBA</button></div><p>Tematy pojawiają się w polu wyboru formularza kontaktowego.</p></div><div class="cms-manager-list">${topics.map((topic,index)=>`<article class="cms-manager-item"><div><small>${String(index+1).padStart(2,'0')}</small><strong>${window.MattCMS.escape(topic)}</strong></div><div><button data-edit-topic="${index}">EDYTUJ</button>${has('contact.topics.delete')?`<button class="danger" data-delete-topic="${index}">USUŃ</button>`:''}</div></article>`).join('')}</div>`);
       const body = $('#cms-modal-body', modal);
       $('[data-add-topic]', body).addEventListener('click', () => editTopic(-1));
       $('[data-reset-topics]', body).addEventListener('click', () => resetCmsKey('contact_topics', 'tematy formularza'));
       $$('[data-edit-topic]', body).forEach(b=>b.addEventListener('click',()=>editTopic(Number(b.dataset.editTopic))));
       $$('[data-delete-topic]', body).forEach(b=>b.addEventListener('click',async()=>{
+        if(!has('contact.topics.delete')) return;
         const i=Number(b.dataset.deleteTopic); if(!confirm(`Usunąć temat: ${topics[i]}?`)) return; topics.splice(i,1);
         try{await window.MattCMS.save('contact_topics',topics); notify('Temat usunięty.'); await rerender();}catch(e){notify(e.message,'error');}
       }));
@@ -2099,6 +2105,11 @@
 
   function openDiscordJoinManager() {
     const esc = window.MattCMS.escape;
+    const canJoinBase = () => has('discord.join.manage');
+    const canJoinMessages = () => has('discord.join.messages.manage');
+    const canJoinMembers = () => has('discord.join.members.manage');
+    const canJoinPreview = () => canJoinBase() || canJoinMessages() || canJoinMembers();
+    if (!canJoinPreview()) return;
     const openDiscordModal = (title, html) => {
       openModal(title, html);
       $('.cms-modal', modal)?.classList.add('cms-modal-discord');
@@ -2155,14 +2166,15 @@
       <div class="cms-discord-live-stage"><section class="discord-preview-section" data-discord-server-live></section></div>
     </section>`;
     const drawHub = () => {
-      openDiscordModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button><button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button></div><p>Edytujesz tylko zawartość strony „Jak dostać się na Discord”. Zmiany są dostępne wyłącznie dla administratora i zapisują się w CMS.</p></div>
-      <div class="cms-feature-grid"><article class="cms-feature-card"><span>01</span><div><strong>KOMUNIKATY NAD PODGLĄDEM</strong><p>Dodawaj komunikaty podobne do czerwonego „ZACZNIJ OD #konfiguracja-tickets”, zmieniaj ich kolejność, kolor, ikonę, treść i przycisk.</p></div><button data-open-bubbles>EDYTUJ →</button></article><article class="cms-feature-card"><span>02</span><div><strong>PODGLĄD SERWERA</strong><p>Zmieniaj kategorie i kanały w makiecie Discorda, wiadomości na czacie, członków, nagłówki i opis podglądu.</p></div><button data-open-preview>EDYTUJ →</button></article></div>`);
+      openDiscordModal('DISCORD — PODGLĄD I KOMUNIKATY', `<div class="cms-manager-actions"><div class="cms-manager-action-group">${canJoinBase()?'<button class="cms-primary" data-open-bubbles>▰ KOMUNIKATY</button>':''}${canJoinPreview()?'<button class="cms-primary" data-open-preview>◫ PODGLĄD DISCORDA</button>':''}</div><p>Zakres edycji zależy od przydzielonych uprawnień. Wiadomości i lista osób mogą być delegowane niezależnie od pozostałych ustawień podglądu.</p></div>
+      <div class="cms-feature-grid">${canJoinBase()?'<article class="cms-feature-card"><span>01</span><div><strong>KOMUNIKATY NAD PODGLĄDEM</strong><p>Dodawaj komunikaty, zmieniaj ich kolejność, kolor, ikonę, treść i przycisk.</p></div><button data-open-bubbles>EDYTUJ →</button></article>':''}${canJoinPreview()?'<article class="cms-feature-card"><span>02</span><div><strong>PODGLĄD SERWERA</strong><p>Kategorie, wiadomości i osoby są dostępne zgodnie z osobnymi uprawnieniami moderatora.</p></div><button data-open-preview>EDYTUJ →</button></article>':''}</div>`);
       const body=$('#cms-modal-body',modal);
       $$('[data-open-bubbles]',body).forEach(b=>b.addEventListener('click',openBubbles));
       $$('[data-open-preview]',body).forEach(b=>b.addEventListener('click',openPreview));
     };
 
     const openBubbles = () => {
+      if (!canJoinBase()) return drawHub();
       let items = clone(window.MattCMS?.get('discord_join_bubbles', null) || extractDiscordJoinBubbles());
       const move=(from,to)=>{if(to<0||to>=items.length)return;const [x]=items.splice(from,1);items.splice(to,0,x);draw();};
       const save=async(message)=>{try{await window.MattCMS.save('discord_join_bubbles',items);window.MattCMS.renderDiscordJoinBubbles(items);notify(message);draw();}catch(e){notify(`Błąd zapisu: ${e.message}`,'error');}};
@@ -2227,6 +2239,7 @@
     };
 
     const openPreview = () => {
+      if (!canJoinPreview()) return drawHub();
       let data = clone(window.MattCMS?.get('discord_join_preview', null) || extractDiscordJoinPreview());
       data.categories = Array.isArray(data.categories) ? data.categories : [];
       data.messages = Array.isArray(data.messages) ? data.messages : [];
@@ -2253,36 +2266,37 @@
           <div class="cms-manager-actions cms-discord-editor-toolbar">
             <div class="cms-manager-action-group">
               <button data-hub>← PODGLĄD / KOMUNIKATY</button>
-              <button class="cms-primary" data-general>✎ NAGŁÓWEK / USTAWIENIA</button>
-              <button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button>
+              ${canJoinBase()?'<button class="cms-primary" data-general>✎ NAGŁÓWEK / USTAWIENIA</button>':''}
+              ${canJoinBase()?'<button data-import>⇄ POBIERZ KANAŁY Z „OPIS KANAŁÓW”</button>':''}
               <button data-save-order>✓ ZAPISZ KOLEJNOŚĆ</button>
-              <button data-reset>↶ Z GITHUBA</button>
+              ${canJoinBase()?'<button data-reset>↶ Z GITHUBA</button>':''}
             </div>
             <p>Edytor korzysta z tego samego wyglądu co strona. Podgląd poniżej pokazuje aktualny stan kategorii, kanałów, wiadomości i listy osób.</p>
           </div>
           ${liveServerPanel(false)}
           <div class="cms-preview-admin-grid cms-discord-editor-sections">
             <section>
-              <header><div><small>01 / STRUKTURA SERWERA</small><strong>KATEGORIE I KANAŁY</strong></div><button class="cms-primary" data-add-cat>+ KATEGORIA</button></header>
-              ${data.categories.length ? data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div><button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${ch.vip?'VIP • ':''}${esc(ch.href||'')}</small></div><div><button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button></div></article>`).join('')}<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button></div></article>`).join('') : '<div class="cms-empty">Brak kategorii. Dodaj pierwszą kategorię.</div>'}
+              <header><div><small>01 / STRUKTURA SERWERA</small><strong>KATEGORIE I KANAŁY</strong></div>${canJoinBase()?'<button class="cms-primary" data-add-cat>+ KATEGORIA</button>':'<span class="cms-permission-readonly">TYLKO PODGLĄD</span>'}</header>
+              ${data.categories.length ? data.categories.map((c,ci)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(c.title||'KATEGORIA')}</strong><span>${(c.channels||[]).length} kanałów</span></div><div>${canJoinBase()?`<button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===data.categories.length-1?'disabled':''}>↓</button><button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-del-cat="${ci}">USUŃ</button>`:''}</div></div><div class="cms-channel-admin-list">${(c.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon||'#')}</span><strong>${esc(ch.name||'kanał')}</strong><small>${ch.active?'AKTYWNY • ':''}${ch.vip?'VIP • ':''}${esc(ch.href||'')}</small></div><div>${canJoinBase()?`<button data-ch-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-ch-down="${ci}:${hi}" ${hi===(c.channels||[]).length-1?'disabled':''}>↓</button><button data-edit-ch="${ci}:${hi}">EDYTUJ</button><button class="danger" data-del-ch="${ci}:${hi}">USUŃ</button>`:''}</div></article>`).join('')}${canJoinBase()?`<button class="cms-add-subitem" data-add-ch="${ci}">+ DODAJ KANAŁ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak kategorii. Dodaj pierwszą kategorię.</div>'}
             </section>
             <section>
-              <header><div><small>02 / CZAT</small><strong>WIADOMOŚCI W PODGLĄDZIE</strong></div><button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button></header>
-              <div class="cms-manager-list">${data.messages.length ? data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div><button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button></div></article>`).join('') : '<div class="cms-empty">Brak wiadomości w podglądzie.</div>'}</div>
+              <header><div><small>02 / CZAT</small><strong>WIADOMOŚCI W PODGLĄDZIE</strong></div>${canJoinMessages()?'<button class="cms-primary" data-add-msg>+ WIADOMOŚĆ</button>':'<span class="cms-permission-readonly">TYLKO PODGLĄD</span>'}</header>
+              <div class="cms-manager-list">${data.messages.length ? data.messages.map((m,i)=>`<article class="cms-manager-item"><div><small>${esc(m.date||'BEZ DATY')} • ${esc(m.time||'')}</small><strong>${esc(m.author||'Użytkownik')}</strong></div><div>${canJoinMessages()?`<button data-msg-up="${i}" ${i===0?'disabled':''}>↑</button><button data-msg-down="${i}" ${i===data.messages.length-1?'disabled':''}>↓</button><button data-edit-msg="${i}">EDYTUJ</button><button class="danger" data-del-msg="${i}">USUŃ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak wiadomości w podglądzie.</div>'}</div>
             </section>
             <section>
-              <header><div><small>03 / SPOŁECZNOŚĆ</small><strong>LISTA OSÓB</strong></div><button class="cms-primary" data-add-group>+ GRUPA</button></header>
-              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div><button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button></div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>{const tm=window.MattCMS?.normalizeDiscordMember?.(m)||m;return `<article><div><span>${esc(tm.initial||String(tm.name||'?').charAt(0))}</span><strong>${esc(tm.name||'osoba')}</strong><small>${esc(tm.status||'')}${tm.twitchLogin?` • Twitch: @${esc(tm.twitchLogin)}`:''}</small></div><div><button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button></div></article>`;}).join('')}<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button></div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
+              <header><div><small>03 / SPOŁECZNOŚĆ</small><strong>LISTA OSÓB</strong></div>${canJoinMembers()?'<button class="cms-primary" data-add-group>+ GRUPA</button>':'<span class="cms-permission-readonly">TYLKO PODGLĄD</span>'}</header>
+              ${data.memberGroups.length ? data.memberGroups.map((g,gi)=>`<article class="cms-preview-admin-card"><div class="cms-preview-admin-head"><div><small>GRUPA ${String(gi+1).padStart(2,'0')}</small><strong>${esc(g.title||'UŻYTKOWNICY')}</strong><span>${(g.members||[]).length} osób</span></div><div>${canJoinMembers()?`<button data-group-up="${gi}" ${gi===0?'disabled':''}>↑</button><button data-group-down="${gi}" ${gi===data.memberGroups.length-1?'disabled':''}>↓</button><button data-edit-group="${gi}">EDYTUJ</button><button class="danger" data-del-group="${gi}">USUŃ</button>`:''}</div></div><div class="cms-channel-admin-list">${(g.members||[]).map((m,mi)=>{const tm=window.MattCMS?.normalizeDiscordMember?.(m)||m;return `<article><div><span>${esc(tm.initial||String(tm.name||'?').charAt(0))}</span><strong>${esc(tm.name||'osoba')}</strong><small>${esc(tm.status||'')}${tm.twitchLogin?` • Twitch: @${esc(tm.twitchLogin)}`:''}</small></div><div>${canJoinMembers()?`<button data-member-up="${gi}:${mi}" ${mi===0?'disabled':''}>↑</button><button data-member-down="${gi}:${mi}" ${mi===(g.members||[]).length-1?'disabled':''}>↓</button><button data-edit-member="${gi}:${mi}">EDYTUJ</button><button class="danger" data-del-member="${gi}:${mi}">USUŃ</button>`:''}</div></article>`;}).join('')}${canJoinMembers()?`<button class="cms-add-subitem" data-add-member="${gi}">+ DODAJ OSOBĘ</button>`:''}</div></article>`).join('') : '<div class="cms-empty">Brak grup użytkowników.</div>'}
             </section>
           </div>`);
 
         const body = $('#cms-modal-body', modal);
         renderDiscordServerLive(body, data);
         $('[data-hub]',body)?.addEventListener('click',drawHub);
-        $('[data-general]',body)?.addEventListener('click',editGeneral);
-        $('[data-reset]',body)?.addEventListener('click',()=>resetCmsKey('discord_join_preview','podgląd Discorda'));
+        $('[data-general]',body)?.addEventListener('click',()=>{if(canJoinBase())editGeneral();});
+        $('[data-reset]',body)?.addEventListener('click',()=>{if(canJoinBase())resetCmsKey('discord_join_preview','podgląd Discorda');});
         $('[data-save-order]',body)?.addEventListener('click',()=>save('Kolejność elementów podglądu została zapisana.'));
         $('[data-import]',body)?.addEventListener('click',async()=>{
+          if(!canJoinBase()) return;
           const cmsSource=window.MattCMS?.get('discord_channels',null);
           const source=clone(cmsSource||extractDiscordCategories());
           if(!source.length)return notify('Brak kanałów do zaimportowania.','error');
@@ -2291,8 +2305,8 @@
           await save('Kanały podglądu zsynchronizowane.');
         });
 
-        $('[data-add-cat]',body)?.addEventListener('click',()=>editCat(-1));
-        $$('[data-cat-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.categories,Number(b.dataset.catUp),Number(b.dataset.catUp)-1)));
+        $('[data-add-cat]',body)?.addEventListener('click',()=>{if(canJoinBase())editCat(-1);});
+        $$('[data-cat-up]',body).forEach(b=>b.addEventListener('click',()=>{if(canJoinBase())move(data.categories,Number(b.dataset.catUp),Number(b.dataset.catUp)-1);}));
         $$('[data-cat-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.categories,Number(b.dataset.catDown),Number(b.dataset.catDown)+1)));
         $$('[data-edit-cat]',body).forEach(b=>b.addEventListener('click',()=>editCat(Number(b.dataset.editCat))));
         $$('[data-del-cat]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.delCat);if(!confirm(`Usunąć kategorię ${data.categories[i]?.title}?`))return;data.categories.splice(i,1);await save('Kategoria usunięta.');}));
@@ -2303,14 +2317,14 @@
         $$('[data-ch-up]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.chUp.split(':').map(Number);move(data.categories[ci].channels,hi,hi-1);}));
         $$('[data-ch-down]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.chDown.split(':').map(Number);move(data.categories[ci].channels,hi,hi+1);}));
 
-        $('[data-add-msg]',body)?.addEventListener('click',()=>editMsg(-1));
-        $$('[data-msg-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.messages,Number(b.dataset.msgUp),Number(b.dataset.msgUp)-1)));
+        $('[data-add-msg]',body)?.addEventListener('click',()=>{if(canJoinMessages())editMsg(-1);});
+        $$('[data-msg-up]',body).forEach(b=>b.addEventListener('click',()=>{if(canJoinMessages())move(data.messages,Number(b.dataset.msgUp),Number(b.dataset.msgUp)-1);}));
         $$('[data-msg-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.messages,Number(b.dataset.msgDown),Number(b.dataset.msgDown)+1)));
         $$('[data-edit-msg]',body).forEach(b=>b.addEventListener('click',()=>editMsg(Number(b.dataset.editMsg))));
         $$('[data-del-msg]',body).forEach(b=>b.addEventListener('click',async()=>{data.messages.splice(Number(b.dataset.delMsg),1);await save('Wiadomość usunięta.');}));
 
-        $('[data-add-group]',body)?.addEventListener('click',()=>editGroup(-1));
-        $$('[data-group-up]',body).forEach(b=>b.addEventListener('click',()=>move(data.memberGroups,Number(b.dataset.groupUp),Number(b.dataset.groupUp)-1)));
+        $('[data-add-group]',body)?.addEventListener('click',()=>{if(canJoinMembers())editGroup(-1);});
+        $$('[data-group-up]',body).forEach(b=>b.addEventListener('click',()=>{if(canJoinMembers())move(data.memberGroups,Number(b.dataset.groupUp),Number(b.dataset.groupUp)-1);}));
         $$('[data-group-down]',body).forEach(b=>b.addEventListener('click',()=>move(data.memberGroups,Number(b.dataset.groupDown),Number(b.dataset.groupDown)+1)));
         $$('[data-edit-group]',body).forEach(b=>b.addEventListener('click',()=>editGroup(Number(b.dataset.editGroup))));
         $$('[data-del-group]',body).forEach(b=>b.addEventListener('click',async()=>{data.memberGroups.splice(Number(b.dataset.delGroup),1);await save('Grupa usunięta.');}));
@@ -2339,34 +2353,40 @@
       };
 
       const editGeneral=()=>{
+        if(!canJoinBase()) return draw();
         const fields=[{name:'kicker',label:'Mały nagłówek sekcji'},{name:'title',label:'Tytuł sekcji'},{name:'description',label:'Opis sekcji',type:'textarea'},{name:'noteBadge',label:'Etykieta nad podglądem'},{name:'noteTitle',label:'Tytuł informacji nad podglądem'},{name:'noteText',label:'Opis informacji nad podglądem',type:'textarea'},{name:'boostLabel',label:'Tekst celu boostów'},{name:'boostValue',label:'Wartość celu boostów'},{name:'activeChannel',label:'Aktywny kanał w czacie'},{name:'composerText',label:'Tekst w polu wpisywania'}];
         formEdit('PODGLĄD — USTAWIENIA',data,fields,async v=>{Object.assign(data,v);await save('Ustawienia podglądu zapisane.');},v=>({...clone(data),...v}));
       };
       const editCat=i=>{
+        if(!canJoinBase()) return draw();
         const cur=i>=0?data.categories[i]:{title:'NOWA KATEGORIA',channels:[]};
         const fields=[{name:'title',label:'Nazwa kategorii',required:true}];
         const makeDraft=v=>{const d=clone(data);const next={...cur,...v,channels:cur.channels||[]};if(i>=0)d.categories[i]=next;else d.categories.push(next);return d;};
         formEdit(i>=0?'EDYTUJ KATEGORIĘ':'DODAJ KATEGORIĘ',cur,fields,async v=>{v.channels=cur.channels||[];if(i>=0)data.categories[i]=v;else data.categories.push(v);await save('Kategoria zapisana.');},makeDraft);
       };
       const editCh=(ci,hi)=>{
+        if(!canJoinBase()) return draw();
         const cur=hi>=0?data.categories[ci].channels[hi]:{icon:'＃',name:'',href:'#/discord/channels',active:false,vip:false};
         const fields=[{name:'icon',label:'Ikona / emoji'},{name:'name',label:'Nazwa kanału',required:true},{name:'href',label:'Link po kliknięciu'},{name:'active',label:'Oznacz jako aktywny',type:'checkbox'},{name:'vip',label:'Styl VIP',type:'checkbox'}];
         const makeDraft=v=>{const d=clone(data);if(v.active){d.categories.forEach(c=>(c.channels||[]).forEach(ch=>ch.active=false));d.activeChannel=v.name;}const arr=d.categories[ci].channels||[];if(hi>=0)arr[hi]=v;else arr.push(v);return d;};
         formEdit(hi>=0?'EDYTUJ KANAŁ PODGLĄDU':'DODAJ KANAŁ PODGLĄDU',cur,fields,async v=>{if(v.active){data.categories.forEach(c=>(c.channels||[]).forEach(ch=>ch.active=false));data.activeChannel=v.name;}if(hi>=0)data.categories[ci].channels[hi]=v;else data.categories[ci].channels.push(v);await save('Kanał zapisany.');},makeDraft);
       };
       const editMsg=i=>{
+        if(!canJoinMessages()) return draw();
         const cur=i>=0?data.messages[i]:{date:'',avatar:'M',author:'',time:'',text:'',embedTitle:'',embedLinkText:'',embedDescription:'',viewers:'',thumbnail:'pictures/logo/matthevc-monkey.png'};
         const fields=[{name:'date',label:'Data / separator'},{name:'avatar',label:'Litera / znak avatara'},{name:'author',label:'Autor',required:true},{name:'time',label:'Godzina'},{name:'text',label:'Treść wiadomości',type:'textarea',required:true},{name:'embedTitle',label:'Nazwa w embedzie Twitch'},{name:'embedLinkText',label:'Tytuł transmisji / link'},{name:'embedDescription',label:'Opis embedu',type:'textarea'},{name:'viewers',label:'Tekst widzów, np. Viewers 20'}];
         const makeDraft=v=>{const d=clone(data);if(i>=0)d.messages[i]=v;else d.messages.push(v);return d;};
         formEdit(i>=0?'EDYTUJ WIADOMOŚĆ':'DODAJ WIADOMOŚĆ',cur,fields,async v=>{if(i>=0)data.messages[i]=v;else data.messages.push(v);await save('Wiadomość zapisana.');},makeDraft);
       };
       const editGroup=i=>{
+        if(!canJoinMembers()) return draw();
         const cur=i>=0?data.memberGroups[i]:{title:'NOWA GRUPA',members:[]};
         const fields=[{name:'title',label:'Nazwa grupy',required:true}];
         const makeDraft=v=>{const d=clone(data);const next={...cur,...v,members:cur.members||[]};if(i>=0)d.memberGroups[i]=next;else d.memberGroups.push(next);return d;};
         formEdit(i>=0?'EDYTUJ GRUPĘ':'DODAJ GRUPĘ',cur,fields,async v=>{v.members=cur.members||[];if(i>=0)data.memberGroups[i]=v;else data.memberGroups.push(v);await save('Grupa zapisana.');},makeDraft);
       };
       const editMember=(gi,mi)=>{
+        if(!canJoinMembers()) return draw();
         const source=mi>=0?data.memberGroups[gi].members[mi]:{name:'',status:'● online',kind:'viewer',initial:'',image:'',twitch:'',twitchLogin:''};
         const cur=window.MattCMS?.normalizeDiscordMember?.(source)||source;
         const fields=[
@@ -2431,10 +2451,10 @@
       </div><p>Możesz zmieniać nazwę, ikonę, opis i wyróżnienie każdego komunikatu kanału, dodawać nowe kanały oraz całe kategorie.</p></div>
         <div class="cms-discord-list">${categories.map((cat,ci)=>`<section class="cms-discord-category"><header><div><small>${esc(cat.icon || '📁')} KATEGORIA ${String(ci+1).padStart(2,'0')}</small><strong>${esc(cat.title)}</strong><p>${esc(cat.description || '')}</p></div><div>
           <button data-cat-up="${ci}" ${ci===0?'disabled':''}>↑</button><button data-cat-down="${ci}" ${ci===categories.length-1?'disabled':''}>↓</button>
-          <button data-edit-cat="${ci}">EDYTUJ</button><button class="danger" data-delete-cat="${ci}">USUŃ</button>
+          <button data-edit-cat="${ci}">EDYTUJ</button>${has('discord.channels.delete')?`<button class="danger" data-delete-cat="${ci}">USUŃ</button>`:''}
         </div></header><div class="cms-channel-admin-list">${(cat.channels||[]).map((ch,hi)=>`<article><div><span>${esc(ch.icon || '#')}</span><strong>${esc(ch.name)}</strong><small>${esc(ch.description || '')}</small></div><div>
           <button data-channel-up="${ci}:${hi}" ${hi===0?'disabled':''}>↑</button><button data-channel-down="${ci}:${hi}" ${hi===(cat.channels||[]).length-1?'disabled':''}>↓</button>
-          <button data-edit-channel="${ci}:${hi}">EDYTUJ</button><button class="danger" data-delete-channel="${ci}:${hi}">USUŃ</button>
+          <button data-edit-channel="${ci}:${hi}">EDYTUJ</button>${has('discord.channels.delete')?`<button class="danger" data-delete-channel="${ci}:${hi}">USUŃ</button>`:''}
         </div></article>`).join('')}<button class="cms-add-subitem" data-add-channel="${ci}">+ DODAJ KANAŁ / OPIS</button></div></section>`).join('')}</div>`);
       const body=$('#cms-modal-body',modal);
       $('[data-add-category]',body).addEventListener('click',()=>editCategory(-1));
@@ -2443,10 +2463,10 @@
       $$('[data-cat-up]',body).forEach(b=>b.addEventListener('click',()=>move(categories,Number(b.dataset.catUp),Number(b.dataset.catUp)-1)));
       $$('[data-cat-down]',body).forEach(b=>b.addEventListener('click',()=>move(categories,Number(b.dataset.catDown),Number(b.dataset.catDown)+1)));
       $$('[data-edit-cat]',body).forEach(b=>b.addEventListener('click',()=>editCategory(Number(b.dataset.editCat))));
-      $$('[data-delete-cat]',body).forEach(b=>b.addEventListener('click',async()=>{const i=Number(b.dataset.deleteCat);if(!confirm(`Usunąć kategorię ${categories[i].title} razem z kanałami?`))return;categories.splice(i,1);await saveAndRender('Kategoria usunięta.');}));
+      $$('[data-delete-cat]',body).forEach(b=>b.addEventListener('click',async()=>{if(!has('discord.channels.delete'))return;const i=Number(b.dataset.deleteCat);if(!confirm(`Usunąć kategorię ${categories[i].title} razem z kanałami?`))return;categories.splice(i,1);await saveAndRender('Kategoria usunięta.');}));
       $$('[data-add-channel]',body).forEach(b=>b.addEventListener('click',()=>editChannel(Number(b.dataset.addChannel),-1)));
       $$('[data-edit-channel]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.editChannel.split(':').map(Number);editChannel(ci,hi);}));
-      $$('[data-delete-channel]',body).forEach(b=>b.addEventListener('click',async()=>{const [ci,hi]=b.dataset.deleteChannel.split(':').map(Number);if(!confirm(`Usunąć kanał ${categories[ci].channels[hi].name}?`))return;categories[ci].channels.splice(hi,1);await saveAndRender('Kanał usunięty.');}));
+      $$('[data-delete-channel]',body).forEach(b=>b.addEventListener('click',async()=>{if(!has('discord.channels.delete'))return;const [ci,hi]=b.dataset.deleteChannel.split(':').map(Number);if(!confirm(`Usunąć kanał ${categories[ci].channels[hi].name}?`))return;categories[ci].channels.splice(hi,1);await saveAndRender('Kanał usunięty.');}));
       $$('[data-channel-up]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.channelUp.split(':').map(Number);move(categories[ci].channels,hi,hi-1);}));
       $$('[data-channel-down]',body).forEach(b=>b.addEventListener('click',()=>{const [ci,hi]=b.dataset.channelDown.split(':').map(Number);move(categories[ci].channels,hi,hi+1);}));
     };
@@ -3136,6 +3156,8 @@
       const editing=Boolean(row?.id);
       if(editing && !has('events.edit')) return draw();
       if(!editing && !has('events.create')) return draw();
+      const canSchedule = !editing || has('events.schedule.manage');
+      const canImages = !editing || has('events.images.manage');
       const now=new Date();
       const today=`${now.getFullYear()}-${eventAdminPad(now.getMonth()+1)}-${eventAdminPad(now.getDate())}`;
       const nowTime=`${eventAdminPad(now.getHours())}:${eventAdminPad(now.getMinutes())}`;
@@ -3166,7 +3188,7 @@
             </section>
 
             <section class="cms-event-editor-section">
-              <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.</span></header>
+              <header class="cms-event-section-head"><div><small>02 / TERMINY</small><strong>DATY I GODZINY</strong></div><span>${canSchedule?'Ustaw rozpoczęcie, zakończenie i moment publikacji wpisu.':'<b class="cms-permission-readonly">TYLKO PODGLĄD — brak uprawnienia do terminów/statusu</b>'}</span></header>
               <div class="cms-event-status-options">
                 <div class="cms-event-ongoing-row">${fieldHtml({name:'ongoing',label:'∞ EVENT TRWA',type:'checkbox'},current.ongoing)}<p>Bez daty zakończenia.</p></div>
                 <div class="cms-event-ended-row">${fieldHtml({name:'endedNow',label:'ZAKOŃCZ EVENT TERAZ',type:'checkbox'},false)}<p>Ustawi bieżący moment.</p></div>
@@ -3179,7 +3201,7 @@
             </section>
 
             <section class="cms-event-editor-section">
-              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>Wybierz jedną grafikę dla obu widoków albo dwie osobne grafiki.</span></header>
+              <header class="cms-event-section-head"><div><small>03 / GRAFIKI</small><strong>OBRAZY EVENTU</strong></div><span>${canImages?'Wybierz jedną grafikę dla obu widoków albo dwie osobne grafiki.':'<b class="cms-permission-readonly">TYLKO PODGLĄD — brak uprawnienia do grafik eventu</b>'}</span></header>
               <div class="cms-event-image-mode">
                 <label class="cms-event-image-mode-option">
                   <input type="radio" name="imageMode" value="shared" ${current.imageMode==='shared'?'checked':''}>
@@ -3226,6 +3248,16 @@
       </form>`);
       $('.cms-modal',modal)?.classList.add('cms-modal-event');
       const form=$('#cms-event-form',modal); bindImageFileFields(form,[imageField,mainImageField]);
+      if (!canImages) {
+        form.querySelectorAll('.cms-event-image-mode input, .cms-event-media-grid input, .cms-event-media-grid select, .cms-event-media-grid button').forEach(control => { control.disabled = true; });
+        form.querySelectorAll('.cms-event-media-card').forEach(card => card.classList.add('cms-permission-locked'));
+      }
+      if (!canSchedule) {
+        ['ongoing','endedNow','startDate','startTime','endDate','endTime','publishDate','publishTime'].forEach(name => {
+          if (form.elements[name]) form.elements[name].disabled = true;
+        });
+        form.querySelectorAll('.cms-event-status-options,.cms-event-date-cards').forEach(card => card.classList.add('cms-permission-locked'));
+      }
       let previewMode='card';
       const imageFromField = name => {
         const wrap=form.querySelector(`[data-cms-image-field="${name}"]`); if(!wrap) return '';
@@ -3250,17 +3282,19 @@
       const syncEventStatusFields=()=>{
         const ongoing=Boolean(form.elements.ongoing?.checked);
         const endedNow=Boolean(form.elements.endedNow?.checked);
-        if(ongoing && endedNow) form.elements.endedNow.checked=false;
-        if(form.elements.ongoing) form.elements.ongoing.disabled=Boolean(form.elements.endedNow?.checked);
+        if(canSchedule && ongoing && endedNow) form.elements.endedNow.checked=false;
+        if(form.elements.ongoing) form.elements.ongoing.disabled=!canSchedule || Boolean(form.elements.endedNow?.checked);
         const fields=$('[data-event-end-fields]',form);
         const label=$('[data-event-end-ongoing]',form);
         if(fields) fields.hidden=ongoing;
         if(label) label.hidden=!ongoing;
-        if(form.elements.endDate) form.elements.endDate.disabled=ongoing;
-        if(form.elements.endTime) form.elements.endTime.disabled=ongoing;
+        if(form.elements.endDate) form.elements.endDate.disabled=!canSchedule || ongoing;
+        if(form.elements.endTime) form.elements.endTime.disabled=!canSchedule || ongoing;
+        ['endedNow','startDate','startTime','publishDate','publishTime'].forEach(name=>{if(form.elements[name]) form.elements[name].disabled=!canSchedule;});
       };
       const syncEventImageMode=()=>{
         const shared=String(form.elements.imageMode?.value||'shared')==='shared';
+        $$('[name="imageMode"]',form).forEach(input=>{input.disabled=!canImages;});
         const mediaGrid=$('.cms-event-media-grid',form);
         const mainCard=$('[data-event-main-image-card]',form);
         const sharedFit=$('[data-event-shared-main-fit]',form);
@@ -3291,20 +3325,30 @@
         try{
           const title=String(form.elements.title?.value||'').trim(); const description=String(form.elements.description?.value||'').trim();
           if(!title) throw new Error('Podaj nazwę eventu.'); if(!form.elements.startDate?.value) throw new Error('Podaj datę rozpoczęcia eventu.');
-          const sharedImages=String(form.elements.imageMode?.value||'shared')==='shared';
-          let image=imageFromField('image'), mainImage=sharedImages ? '' : imageFromField('mainImage');
-          const imageFile=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
-          const mainImageFile=sharedImages ? null : form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0];
+          const sharedImages=canImages ? String(form.elements.imageMode?.value||'shared')==='shared' : current.imageMode==='shared';
+          let image=canImages ? imageFromField('image') : current.image;
+          let mainImage=canImages ? (sharedImages ? '' : imageFromField('mainImage')) : current.mainImage;
+          const imageFile=canImages ? form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0] : null;
+          const mainImageFile=canImages && !sharedImages ? form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0] : null;
           if(imageFile) image=await uploadEventImage(imageFile,title,'event');
           if(!image) throw new Error('Wybierz grafikę eventu.');
           if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
           if(sharedImages) mainImage=image;
           if(!sharedImages && !mainImage) throw new Error('W trybie dwóch grafik wybierz także grafikę na stronie eventu.');
-          let endDate=form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value);
-          if(form.elements.endedNow?.checked) endDate=new Date().toISOString();
-          if(!form.elements.ongoing?.checked && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ Event trwa”.');
-          const mainImageFit=sharedImages ? String(form.elements.sharedMainImageFit?.value||form.elements.imageFit?.value||'contain') : String(form.elements.mainImageFit?.value||'contain');
-          const payload={title,description,start_date:eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value),end_date:endDate,publish_date:eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value),image_url:image||null,image_fit:String(form.elements.imageFit?.value||'contain'),main_image_url:mainImage||null,main_image_fit:mainImageFit};
+          let endDate=canSchedule ? (form.elements.ongoing?.checked ? null : eventAdminCombineDateTime(form.elements.endDate?.value,form.elements.endTime?.value)) : (row?.end_date ?? null);
+          if(canSchedule && form.elements.endedNow?.checked) endDate=new Date().toISOString();
+          if(canSchedule && !form.elements.ongoing?.checked && !form.elements.endedNow?.checked && !form.elements.endDate?.value) throw new Error('Podaj datę zakończenia albo zaznacz „∞ Event trwa”.');
+          const mainImageFit=canImages ? (sharedImages ? String(form.elements.sharedMainImageFit?.value||form.elements.imageFit?.value||'contain') : String(form.elements.mainImageFit?.value||'contain')) : current.mainImageFit;
+          const payload={
+            title,description,
+            start_date:canSchedule?eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value):(row?.start_date||null),
+            end_date:endDate,
+            publish_date:canSchedule?eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value):(row?.publish_date||null),
+            image_url:image||null,
+            image_fit:canImages?String(form.elements.imageFit?.value||'contain'):current.imageFit,
+            main_image_url:mainImage||null,
+            main_image_fit:mainImageFit
+          };
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing?window.supabaseClient.from('events').update(payload).eq('id',row.id):window.supabaseClient.from('events').insert(payload);
           const {error}=await query; if(error) throw error;
