@@ -292,6 +292,70 @@
       }
     });
   }
+  function rewardGraphicElements(root = document.getElementById('app')) {
+    if (!root) return [];
+    const seen = new Map();
+    return [...root.querySelectorAll('.reward-card[data-reward-card]')].map((card, index) => {
+      const graphic = card.querySelector('.reward-graphic');
+      if (!graphic) return null;
+      const label = String(card.querySelector('h3')?.textContent || `Nagroda ${index+1}`).replace(/\s+/g, ' ').trim();
+      let id = String(card.dataset.rewardGraphicId || graphic.dataset.rewardGraphicId || '').trim();
+      if (!id) {
+        const base = ruleIdPart(label) || `nagroda-${index+1}`;
+        const count = (seen.get(base) || 0) + 1;
+        seen.set(base, count);
+        id = count > 1 ? `${base}-${count}` : base;
+      }
+      card.dataset.rewardGraphicId = id;
+      graphic.dataset.rewardGraphicId = id;
+      if (typeof graphic.__mattCmsRewardBaseHtml !== 'string') graphic.__mattCmsRewardBaseHtml = graphic.innerHTML;
+      if (typeof graphic.__mattCmsRewardBaseText !== 'string') graphic.__mattCmsRewardBaseText = String(graphic.textContent || '').trim();
+      return { card, graphic, id, label };
+    }).filter(Boolean);
+  }
+
+  function rewardGraphicInfo(path) {
+    if (routeKey(path) !== 'viewer/rewards') return [];
+    return rewardGraphicElements().map((item, index) => ({
+      id: item.id,
+      label: item.label || `Nagroda ${index+1}`,
+      cost: String(item.card.querySelector('.reward-cost')?.textContent || '').replace(/\s+/g, ' ').trim(),
+      baseText: item.graphic.__mattCmsRewardBaseText || String(item.graphic.textContent || '').trim(),
+      route: 'viewer/rewards'
+    }));
+  }
+
+  function normalizeRewardGraphicItem(item = {}) {
+    const fit = String(item.fit || 'cover').toLowerCase() === 'contain' ? 'contain' : 'cover';
+    return {
+      url: String(item.url || '').trim(),
+      alt: String(item.alt || '').trim(),
+      fit
+    };
+  }
+
+  function applyRewardGraphics(path) {
+    if (routeKey(path) !== 'viewer/rewards') return;
+    const data = get('reward_graphics:viewer/rewards', {}) || {};
+    rewardGraphicElements().forEach(({ graphic, id, label }) => {
+      graphic.innerHTML = graphic.__mattCmsRewardBaseHtml || graphic.innerHTML;
+      graphic.classList.remove('has-custom-reward-image');
+      graphic.style.removeProperty('--reward-image-fit');
+      const item = normalizeRewardGraphicItem(data[id] || {});
+      if (!item.url) return;
+      const img = document.createElement('img');
+      img.className = 'reward-custom-image';
+      img.src = item.url;
+      img.alt = item.alt || label || 'Grafika nagrody';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      graphic.innerHTML = '';
+      graphic.style.setProperty('--reward-image-fit', item.fit);
+      graphic.appendChild(img);
+      graphic.classList.add('has-custom-reward-image');
+    });
+  }
+
   function pageDecorGraphicElements(root = document.getElementById('app')) {
     if (!root) return [];
 
@@ -1189,6 +1253,7 @@
     applyTextOverrides(path);
     applyPageCallouts(path);
     applyPageImages(path);
+    applyRewardGraphics(path);
     applyPageDecorGraphics(path);
     applyPageBanner(path);
     applyCustomPageCallouts(path);
@@ -1200,7 +1265,7 @@
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
     applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
     layoutElements, layoutParentKey, layoutElementLabel, layoutElementZone, applyPageLayout,
-    pageImageElements, pageImageInfo, applyPageImages, pageDecorGraphicElements, pageDecorGraphicInfo, normalizeDecorGraphicItem, applyPageDecorGraphics, redCalloutElements, calloutInfo, applyPageCallouts,
+    pageImageElements, pageImageInfo, applyPageImages, rewardGraphicElements, rewardGraphicInfo, normalizeRewardGraphicItem, applyRewardGraphics, pageDecorGraphicElements, pageDecorGraphicInfo, normalizeDecorGraphicItem, applyPageDecorGraphics, redCalloutElements, calloutInfo, applyPageCallouts,
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
     extractNavigationFromDom, renderNavigation, renderHeroImage, renderRules,
     renderStreamers, renderModerators, renderBenefits, renderDiscordChannels, renderContactTopics, renderDiscordJoinBubbles, renderDiscordJoinPreview, renderDiscordMember,

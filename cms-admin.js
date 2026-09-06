@@ -2817,16 +2817,20 @@
     const key = `page_images:${route}`;
     const decorKey = `page_decor_graphics:${route}`;
     const bannerKey = `page_banner:${route}`;
+    const rewardKey = `reward_graphics:${route}`;
     let overrides = clone(window.MattCMS?.get(key, {}) || {});
     let decorOverrides = clone(window.MattCMS?.get(decorKey, {}) || {});
+    let rewardOverrides = clone(window.MattCMS?.get(rewardKey, {}) || {});
     const esc = window.MattCMS.escape;
 
     const currentImages = () => window.MattCMS?.pageImageInfo?.(route) || [];
     const currentDecorItems = () => window.MattCMS?.pageDecorGraphicInfo?.(route) || [];
+    const currentRewardItems = () => route === 'viewer/rewards' ? (window.MattCMS?.rewardGraphicInfo?.(route) || []) : [];
 
     const draw = () => {
       const images = currentImages();
       const decorItems = currentDecorItems();
+      const rewardItems = currentRewardItems();
       const banner = clone(window.MattCMS?.get(bannerKey, null) || null);
       const heroOverride = clone(window.MattCMS?.get('home_hero_image', null) || {});
       const heroImg = document.querySelector('.hero-main.hero-main-image > img');
@@ -2834,15 +2838,29 @@
       const heroAlt = heroOverride.alt || heroImg?.getAttribute('alt') || "Witaj w Matt's World";
       const heroBlock = route === 'home' && has('home.hero.manage') ? `<section class="cms-graphics-banner-card"><div><small>GRAFIKA POWITALNA</small><strong>WITAJ W MATT'S WORLD</strong><p>Grafika główna strony została połączona z pozostałymi ustawieniami grafik.</p></div>${heroUrl?`<img src="${esc(heroUrl)}" alt="${esc(heroAlt)}">`:''}<div><button class="cms-primary" data-home-hero-edit>ZMIEŃ GRAFIKĘ POWITALNĄ</button></div></section>` : '';
       const bannerBlock = route === 'home' || !has('page.images.manage') ? '' : `<section class="cms-graphics-banner-card"><div><small>GRAFIKA NAGŁÓWKOWA PODSTRONY</small><strong>${banner?.url ? 'Własna grafika jest aktywna' : 'Brak dodatkowej grafiki nagłówkowej'}</strong><p>Możesz dodać grafikę nawet na podstronie, która w wersji GitHub nie ma żadnego obrazu.</p></div>${banner?.url?`<img src="${esc(banner.url)}" alt="${esc(banner.alt||'Grafika podstrony')}">`:''}<div><button class="cms-primary" data-banner-edit>${banner?.url?'ZMIEŃ':'DODAJ'} GRAFIKĘ</button>${banner?.url?'<button class="danger" data-banner-remove>USUŃ</button>':''}</div></section>`;
+      const rewardSection = route === 'viewer/rewards' && has('page.images.manage') ? `<section class="cms-reward-graphics-section">
+        <div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-reward-images>↶ PRZYWRÓĆ WSZYSTKIE IKONY</button></div><p><strong>GRAFIKI NAGRÓD:</strong> tutaj podmieniasz emoji widoczne w lewym górnym rogu każdego kafelka nagrody. Wgraj własny JPG, PNG, WEBP lub GIF z dysku. Oryginalną ikonę możesz przywrócić w dowolnym momencie.</p></div>
+        <div class="cms-image-manager-grid cms-reward-graphics-grid">${rewardItems.length?rewardItems.map((item,index)=>{const saved=window.MattCMS?.normalizeRewardGraphicItem?.(rewardOverrides[item.id]||{})||rewardOverrides[item.id]||{};return `<article class="cms-image-manager-card cms-reward-graphic-card"><div class="cms-image-manager-thumb cms-reward-graphic-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}" style="object-fit:${saved.fit==='contain'?'contain':'cover'}">`:`<div class="cms-reward-default-icon">${esc(item.baseText||'🎁')}</div>`}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / NAGRODA</small><strong>${esc(item.label||`Nagroda ${index+1}`)}</strong><span>${esc(item.cost||'')} ${saved.url?`• własna grafika • ${saved.fit==='contain'?'cała grafika':'wypełnienie'}`:'• domyślna ikona'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-reward-image-edit="${esc(item.id)}">${saved.url?'ZMIEŃ GRAFIKĘ':'DODAJ GRAFIKĘ'}</button><button data-reward-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(rewardOverrides,item.id)?'':'disabled'}>↶ IKONA DOMYŚLNA</button></div></article>`;}).join(''):'<div class="cms-empty">Nie znaleziono kafelków nagród na tej podstronie.</div>'}</div>
+      </section>` : '';
+
       const imageSection = has('page.images.manage') ? `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-images>↶ WSZYSTKIE OBRAZY Z GITHUBA</button></div><p>Poniżej są istniejące grafiki tej podstrony. Każdą możesz podmienić plikiem z dysku. Dynamiczne avatary, eventy i dane streamerów pozostają w swoich konfiguratorach.</p></div>
         <div class="cms-image-manager-grid">${images.length?images.map((item,index)=>`<article class="cms-image-manager-card"><div class="cms-image-manager-thumb"><img src="${esc(item.src)}" alt="${esc(item.alt||'Podgląd')}"></div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / GRAFIKA</small><strong>${esc(item.label||`Grafika ${index+1}`)}</strong><span>${esc(cmsImageLabel(item.src))}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-image-edit="${esc(item.id)}">ZMIEŃ</button><button data-image-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(overrides,item.id)?'':'disabled'}>↶ Z GITHUBA</button></div></article>`).join(''):'<div class="cms-empty">Ta podstrona nie ma dodatkowych statycznych obrazów.</div>'}</div>` : '';
       const decorSection = has('page.images.manage') ? `<div class="cms-manager-actions"><div class="cms-manager-action-group"><button type="button" data-reset-decor>↶ WSZYSTKIE GRAFIKI KAFELKÓW</button></div><p>Te ustawienia dotyczą grafik dekoracyjnych w kafelkach i dymkach. Możesz wgrać własny obraz, przełączyć tryb „dostosuj kolor do strony”, przesuwać grafikę, obracać ją i powiększać.</p></div>
         <div class="cms-image-manager-grid">${decorItems.length?decorItems.map((item,index)=>{const saved=window.MattCMS?.normalizeDecorGraphicItem?.(decorOverrides[item.id]||{}, item.defaultMode)||decorOverrides[item.id]||{}; return `<article class="cms-image-manager-card"><div class="cms-image-manager-thumb${saved.url?'':' is-empty'}">${saved.url?`<img src="${esc(saved.url)}" alt="${esc(saved.alt||item.label)}">`:'<div class="cms-empty">BRAK</div>'}</div><div class="cms-image-manager-copy"><small>${String(index+1).padStart(2,'0')} / KAFELEK</small><strong>${esc(item.label||`Kafelek ${index+1}`)}</strong><span>${saved.url?`Tryb: ${saved.mode==='normal'?'normalne kolory':'dostosuj kolor do strony'} • obrót ${Number(saved.rotation||0)}° • przesunięcie ${Number(saved.offsetX||0)} / ${Number(saved.offsetY||0)} px`:'Brak własnej grafiki dekoracyjnej'}</span></div><div class="cms-image-manager-actions"><button class="cms-primary" data-decor-edit="${esc(item.id)}">USTAW GRAFIKĘ</button><button data-decor-reset="${esc(item.id)}" ${Object.prototype.hasOwnProperty.call(decorOverrides,item.id)?'':'disabled'}>USUŃ / RESET</button></div></article>`;}).join(''):'<div class="cms-empty">Na tej podstronie nie wykryto kafelków z obsługą dekoracyjnej grafiki.</div>'}</div>` : '';
-      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${heroBlock}${bannerBlock}${imageSection}${decorSection}`);
+      openModal(`GRAFIKI — ${route.toUpperCase()}`, `${heroBlock}${bannerBlock}${rewardSection}${imageSection}${decorSection}`);
       const body=$('#cms-modal-body',modal);
       $('[data-home-hero-edit]',body)?.addEventListener('click',()=>openHomeHeroManager(draw));
       $('[data-reset-images]',body)?.addEventListener('click',()=>resetCmsKey(key,'wszystkie grafiki tej podstrony'));
+      $('[data-reset-reward-images]',body)?.addEventListener('click',()=>resetCmsKey(rewardKey,'wszystkie grafiki nagród'));
       $('[data-reset-decor]',body)?.addEventListener('click',()=>resetCmsKey(decorKey,'wszystkie grafiki dekoracyjne tej podstrony'));
+      $$('[data-reward-image-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editRewardImage(btn.dataset.rewardImageEdit)));
+      $$('[data-reward-image-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
+        const id=btn.dataset.rewardImageReset;
+        if(!Object.prototype.hasOwnProperty.call(rewardOverrides,id)) return;
+        if(!confirm('Przywrócić domyślną ikonę tej nagrody?')) return;
+        delete rewardOverrides[id];
+        await saveOverrideMap(rewardKey,rewardOverrides,'Przywrócono domyślną ikonę nagrody.');
+      }));
       $$('[data-image-edit]',body).forEach(btn=>btn.addEventListener('click',()=>editImage(btn.dataset.imageEdit)));
       $$('[data-image-reset]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const id=btn.dataset.imageReset;
@@ -2864,6 +2882,58 @@
         if(!confirm('Usunąć dodatkową grafikę nagłówkową tej podstrony?')) return;
         try { await window.MattCMS.remove(bannerKey); notify('Grafika nagłówkowa została usunięta.'); await rerender(); }
         catch(e){notify(e.message,'error');}
+      });
+    };
+
+    const editRewardImage = id => {
+      const item=currentRewardItems().find(x=>x.id===id);
+      if(!item) return draw();
+      const current=window.MattCMS?.normalizeRewardGraphicItem?.(rewardOverrides[id]||{}) || rewardOverrides[id] || {url:'',alt:item.label||'',fit:'cover'};
+      const fields=[
+        {name:'image',label:`Grafika nagrody — ${item.label}`,type:'image-file'},
+        {name:'alt',label:'Opis grafiki (ALT)',help:'Np. „Prezent — nagroda Obecny”. Krótki opis pomaga w dostępności.'},
+        {name:'fit',label:'Dopasowanie grafiki',type:'select',options:[{value:'cover',label:'Wypełnij całe pole (cover)'},{value:'contain',label:'Pokaż całą grafikę (contain)'}],help:'Cover przycina krawędzie, contain pokazuje cały obraz.'}
+      ];
+      openModal(`GRAFIKA NAGRODY — ${item.label}`,`<form id="cms-reward-image-form" class="cms-form"><div class="cms-form-context">Podmieniasz ikonę w kafelku <strong>${esc(item.label)}</strong>${item.cost?` • ${esc(item.cost)}`:''}. Grafika pojawi się dokładnie w miejscu obecnego emoji.</div>${fields.map(f=>fieldHtml(f,f.name==='image'?current.url:(current[f.name] ?? (f.name==='alt'?item.label:'cover')))).join('')}<div class="cms-form-actions"><button type="button" data-back>← WRÓĆ</button><button type="button" data-default ${Object.prototype.hasOwnProperty.call(rewardOverrides,id)?'':'disabled'}>↶ IKONA DOMYŚLNA</button><button class="cms-primary" type="submit">ZAPISZ GRAFIKĘ</button></div></form>`);
+      const form=$('#cms-reward-image-form',modal);
+      bindImageFileFields(form,fields);
+      const updatePreview=()=>{const img=form.querySelector('[data-cms-image-field="image"] [data-image-preview] img');if(img)img.style.objectFit=String(form.elements.fit?.value||'cover');};
+      form.elements.fit?.addEventListener('change',updatePreview);
+      form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.addEventListener('change',()=>setTimeout(updatePreview,0));
+      updatePreview();
+      $('[data-back]',form)?.addEventListener('click',draw);
+      $('[data-default]',form)?.addEventListener('click',async()=>{
+        if(!Object.prototype.hasOwnProperty.call(rewardOverrides,id)) return;
+        if(!confirm('Przywrócić domyślną ikonę tej nagrody?')) return;
+        delete rewardOverrides[id];
+        await saveOverrideMap(rewardKey,rewardOverrides,'Przywrócono domyślną ikonę nagrody.');
+      });
+      form.addEventListener('submit',async e=>{
+        e.preventDefault();
+        const submit=$('button[type="submit"]',form);
+        if(submit){submit.disabled=true;submit.textContent='WYSYŁANIE…';}
+        try{
+          let url=String(form.elements.image?.value||'').trim();
+          const file=form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0];
+          if(file) url=await uploadCmsImage(file,item.label||id,'rewards');
+          if(!url){
+            if(Object.prototype.hasOwnProperty.call(rewardOverrides,id)){
+              delete rewardOverrides[id];
+              await saveOverrideMap(rewardKey,rewardOverrides,'Przywrócono domyślną ikonę nagrody.');
+              return;
+            }
+            throw new Error('Wybierz grafikę z dysku.');
+          }
+          rewardOverrides[id]=window.MattCMS?.normalizeRewardGraphicItem?.({
+            url,
+            alt:String(form.elements.alt?.value||item.label||'Grafika nagrody').trim(),
+            fit:String(form.elements.fit?.value||'cover')
+          }) || {url,alt:String(form.elements.alt?.value||''),fit:String(form.elements.fit?.value||'cover')};
+          await saveOverrideMap(rewardKey,rewardOverrides,'Grafika nagrody została zapisana.');
+        }catch(error){
+          notify(error.message,'error');
+          if(submit){submit.disabled=false;submit.textContent='ZAPISZ GRAFIKĘ';}
+        }
       });
     };
 
