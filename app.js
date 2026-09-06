@@ -3543,7 +3543,10 @@ async function render() {
   setupEmotes7tvPage();
   setupGlobalPageNavigation();
   const jumpTarget = routeQuery.get("jump");
-  if (jumpTarget) requestAnimationFrame(() => document.getElementById(jumpTarget)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  const channelFocused = path === "discord/channels" && focusDiscordChannelFromRoute(routeQuery);
+  if (!channelFocused && jumpTarget) {
+    requestAnimationFrame(() => document.getElementById(jumpTarget)?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
   closeMobileMenu();
 }
 
@@ -3643,10 +3646,77 @@ async function setupRecommendedPage() {
   });
 }
 
+function getDiscordPreviewChannelName(link) {
+  if (!link) return '';
+  const textOnly = Array.from(link.childNodes || [])
+    .filter(node => node.nodeType === Node.TEXT_NODE)
+    .map(node => String(node.textContent || '').trim())
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+  return textOnly || String(link.textContent || '').trim();
+}
+
+function addDiscordChannelTargetToPreviewLinks(page) {
+  if (!page) return;
+  page.querySelectorAll('.discord-app-channels .discord-app-channel').forEach(link => {
+    const href = String(link.getAttribute('href') || '').trim();
+    if (!href.startsWith('#/discord/channels')) return;
+
+    const [base, query = ''] = href.split('?');
+    const params = new URLSearchParams(query);
+    const channelName = getDiscordPreviewChannelName(link);
+    if (!channelName) return;
+
+    params.set('channel', channelName);
+    link.setAttribute('href', `${base}?${params.toString()}`);
+  });
+}
+
+function normalizeDiscordChannelTarget(value = '') {
+  return String(value || '')
+    .normalize('NFKC')
+    .replace(/^#\s*/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLocaleLowerCase('pl-PL');
+}
+
+function focusDiscordChannelFromRoute(routeQuery) {
+  const requested = routeQuery?.get('channel');
+  if (!requested) return false;
+
+  const wanted = normalizeDiscordChannelTarget(requested);
+  const rows = Array.from(document.querySelectorAll('.discord-channels-page .discord-channel-row'));
+  const target = rows.find(row => {
+    const name = row.querySelector('.discord-channel-name strong')?.textContent || '';
+    return normalizeDiscordChannelTarget(name) === wanted;
+  });
+
+  if (!target) return false;
+
+  requestAnimationFrame(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.remove('discord-channel-route-highlight');
+    void target.offsetWidth;
+    target.classList.add('discord-channel-route-highlight');
+
+    window.setTimeout(() => {
+      target.classList.remove('discord-channel-route-highlight');
+    }, 3400);
+  });
+
+  return true;
+}
+
 async function setupDiscordJoinPage() {
   const page = document.querySelector('.discord-join-page');
   if (!page || page.dataset.discordReady === '1') return;
   page.dataset.discordReady = '1';
+
+  // Każdy kanał w podglądzie zachowuje dotychczasowe przejście do opisu,
+  // ale przekazuje też nazwę kanału, aby po przejściu podświetlić właściwy wiersz.
+  addDiscordChannelTargetToPreviewLinks(page);
 
   const inviteUrl = SITE_CONFIG.discordUrl;
   [document.getElementById('discord-widget-invite'), document.getElementById('discord-configure-invite')]
