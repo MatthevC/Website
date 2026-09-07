@@ -46,7 +46,7 @@ async function loadAdminDashboard(){
     const [profilesCountRes, moderatorsRes, auditRes] = await Promise.all([
       supabaseClient.from('profiles').select('id',{count:'exact',head:true}),
       supabaseClient.from('profiles').select('id, username, email, role').eq('role','moderator'),
-      supabaseClient.from('audit_logs').select('actor_id, actor_email, action, target_table, entity_type, created_at').order('created_at',{ascending:false}).limit(80)
+      supabaseClient.from('matt_audit_logs').select('id,created_at,actor_user_id,actor_email,actor_username,action,entity_type,entity_id,summary,details').order('created_at',{ascending:false}).limit(80)
     ]);
     if (profilesCountRes.error) throw profilesCountRes.error;
     if (moderatorsRes.error) throw moderatorsRes.error;
@@ -54,7 +54,7 @@ async function loadAdminDashboard(){
     const moderators = moderatorsRes.data || [];
     const logs = auditRes.data || [];
     const todayLogs = logs.filter(item => item?.created_at && new Date(item.created_at) >= sinceToday);
-    const actorsToday = new Set(todayLogs.map(item => item?.actor_email || item?.actor_id).filter(Boolean));
+    const actorsToday = new Set(todayLogs.map(item => item?.actor_email || item?.actor_user_id).filter(Boolean));
 
     set('#dashUsers', String(profilesCountRes.count ?? 0));
     set('#dashModerators', String(moderators.length));
@@ -65,12 +65,12 @@ async function loadAdminDashboard(){
     set('#dashRecentTotal', String(logs.length));
     set('#dashLastUpdate', logs[0]?.created_at ? dashFmt(logs[0].created_at) : 'Brak aktywności');
 
-    if (recentChanges) recentChanges.innerHTML = logs.length ? logs.slice(0,6).map(item => `<article class="activity-item"><div class="activity-icon">↻</div><div class="activity-main"><div class="activity-title">${dashEsc(item?.action || 'Zmiana w systemie')}</div><div class="activity-text">${dashEsc(item?.actor_email || 'Nieznany użytkownik')} wprowadził zmianę w sekcji ${dashEsc(item?.target_table || item?.entity_type || 'sekcja strony')}.</div><div class="activity-meta">${dashEsc(dashFmt(item?.created_at))}</div></div><div class="activity-time">${dashEsc(dashRel(item?.created_at))}</div></article>`).join('') : '<div class="empty-state">Brak nowych działań w logach.</div>';
+    if (recentChanges) recentChanges.innerHTML = logs.length ? logs.slice(0,6).map(item => `<article class="activity-item"><div class="activity-icon">↻</div><div class="activity-main"><div class="activity-title">${dashEsc(item?.summary || item?.summary || item?.action || 'Zmiana w systemie')}</div><div class="activity-text">${dashEsc(item?.actor_username || item?.actor_username || item?.actor_email || 'Nieznany użytkownik')} wprowadził zmianę w sekcji ${dashEsc(item?.entity_type || 'sekcja strony')}.</div><div class="activity-meta">${dashEsc(dashFmt(item?.created_at))}</div></div><div class="activity-time">${dashEsc(dashRel(item?.created_at))}</div></article>`).join('') : '<div class="empty-state">Brak nowych działań w logach.</div>';
 
     const lastLogByModerator = new Map();
     logs.forEach(item => {
       const email = String(item?.actor_email || '').toLowerCase();
-      const actorId = String(item?.actor_id || '');
+      const actorId = String(item?.actor_user_id || '');
       if (email && !lastLogByModerator.has(`mail:${email}`)) lastLogByModerator.set(`mail:${email}`, item.created_at || null);
       if (actorId && !lastLogByModerator.has(`id:${actorId}`)) lastLogByModerator.set(`id:${actorId}`, item.created_at || null);
     });
