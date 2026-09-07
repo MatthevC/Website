@@ -677,22 +677,41 @@ async function mattOpenAccountManager() {
   };
 
   const simplePermissionSets = [
-    {name:"Eventy", permissions:["events.create","events.edit","events.delete","events.schedule.manage","events.images.manage","events.publish"]},
-    {name:"Discord", permissions:["discord.join.messages.manage","discord.join.members.manage","discord.channels.delete"]},
-    {name:"Społeczność i treści", permissions:["streamers.delete","moderation.people.delete","moderation.benefits.delete","commands.delete","rules.delete","contact.topics.delete"]},
-    {name:"Pełna moderacja", permissions:null}
+    {name:"Twitch", permissions:["streamers.delete","commands.delete"], desc:"Moderacja kanału, komendy i obsługa Twitch"},
+    {name:"Discord", permissions:["discord.join.messages.manage","discord.join.members.manage","discord.channels.delete"], desc:"Moderacja serwera Discord"},
+    {name:"Eventy", permissions:["events.create","events.edit","events.delete","events.schedule.manage","events.images.manage","events.publish"], desc:"Tworzenie i zarządzanie wydarzeniami"},
+    {name:"Treści strony", permissions:["rules.delete","contact.topics.delete"], desc:"Zarządzanie materiałami i treścią"},
+    {name:"Społeczność", permissions:["moderation.people.delete","moderation.benefits.delete"], desc:"Obsługa użytkowników i zgłoszeń"},
+    {name:"Pełna administracja", permissions:null, desc:"Pełny dostęp do wszystkich funkcji"}
   ];
+
+  const simpleRoles = {
+    user:{label:"Użytkownik", desc:"Zwykłe konto społeczności", permissions:[]},
+    moderator:{label:"Moderator", desc:"Pilnuje społeczności i pomaga użytkownikom", permissions:["discord.join.messages.manage","discord.join.members.manage","moderation.people.delete"]},
+    admin:{label:"Administrator", desc:"Pełny dostęp administracyjny", permissions:null}
+  };
 
   const renderSimpleAccess = account => {
     const selected = new Set(effectivePermissions(account));
+    const currentRole=String(account.role||"user").toLowerCase();
     return `<div class="account-simple-access">
       <h3>Szybkie nadawanie dostępu</h3>
-      <p>Zaznacz grupę funkcji. W trybie zaawansowanym wszystkie wybrane elementy będą zaznaczone i można je dalej edytować.</p>
+      <p>Najpierw wybierz rolę, następnie dodatkowe moduły. Tryb zaawansowany pozwala później odebrać pojedyncze uprawnienia.</p>
+      <div class="account-simple-roles">
+        ${Object.entries(simpleRoles).map(([key,r])=>`<label class="account-simple-role"><input type="radio" name="simple-role" data-simple-role="${key}" ${currentRole===key?'checked':''}><strong>${r.label}</strong><small>${r.desc}</small></label>`).join('')}
+      </div>
+      <h4>Dodatkowe możliwości</h4>
+      <div class="account-simple-options">
       ${simplePermissionSets.map((set,i)=>{
-        const perms = set.permissions || catalog.map(x=>x.permission);
-        const checked = perms.every(p=>selected.has(p));
-        return `<label class="account-simple-option"><input type="checkbox" data-simple-group="${i}" ${checked?'checked':''} ${!canAccount("accounts.permissions.change")||String(account.role).toLowerCase()==='user'?'disabled':''}><span><strong>${set.name}</strong><small>${perms.length} szczegółowych uprawnień</small></span></label>`;
-      }).join("")}
+        const perms=set.permissions||catalog.map(x=>x.permission);
+        const checked=perms.every(p=>selected.has(p));
+        return `<label class="account-simple-option"><input type="checkbox" data-simple-group="${i}" ${checked?'checked':''}><span><strong>${set.name}</strong><small>${set.desc}<br>${perms.length} szczegółowych uprawnień</small></span></label>`;
+      }).join('')}
+      </div>
+      <div class="account-simple-preview" data-simple-preview>
+        <strong>Podgląd dostępu</strong>
+        <p>Wybierz rolę lub moduły aby zobaczyć możliwości użytkownika.</p>
+      </div>
       <button class="account-primary" type="button" data-simple-save ${!canAccount("accounts.permissions.change")?'disabled':''}>ZAPISZ UPROSZCZONE UPRAWNIENIA</button>
       <p class="account-message" data-account-message></p>
     </div>`;
@@ -825,9 +844,20 @@ async function mattOpenAccountManager() {
 
     if (accountPermissionMode === 'simple') {
       const saveSimple = body.querySelector('[data-simple-save]');
+      const updateSimplePreview=()=>{
+        const role=body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
+        const selected=[...body.querySelectorAll('[data-simple-group]:checked')].map(cb=>simplePermissionSets[Number(cb.dataset.simpleGroup)].name);
+        const box=body.querySelector('[data-simple-preview]');
+        if(box) box.innerHTML=`<strong>Podgląd dostępu</strong><p>Rola: ${simpleRoles[role].label}</p><p>${simpleRoles[role].desc}</p><p>Moduły: ${selected.length?selected.join(', '):'brak dodatkowych modułów'}</p>`;
+      };
+      body.querySelectorAll('[data-simple-role],[data-simple-group]').forEach(x=>x.addEventListener('change',updateSimplePreview));
+      updateSimplePreview();
       saveSimple?.addEventListener('click', async () => {
-        const role = String(account.role || 'moderator').toLowerCase() === 'user' ? 'moderator' : String(account.role || 'moderator').toLowerCase();
+        const role = body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
         const selected = new Set();
+        const rolePermissions=simpleRoles[role].permissions;
+        if(rolePermissions) rolePermissions.forEach(p=>selected.add(p));
+        else if(rolePermissions===null) catalog.forEach(x=>selected.add(x.permission));
         body.querySelectorAll('[data-simple-group]').forEach(cb => {
           if (cb.checked) {
             const set = simplePermissionSets[Number(cb.dataset.simpleGroup)];
