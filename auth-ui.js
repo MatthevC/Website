@@ -376,6 +376,155 @@ async function mattOpenAuditLogs() {
 
 
 
+function mattDashboardEscape(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char] || char));
+}
+
+function mattDashboardFormatDate(value) {
+  if (!value) return "brak daty";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "brak daty";
+  return new Intl.DateTimeFormat("pl-PL", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }).format(date);
+}
+
+function mattDashboardRelativeDate(value) {
+  if (!value) return "brak aktywności";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "brak aktywności";
+  const diff = Date.now() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "przed chwilą";
+  if (minutes < 60) return `${minutes} min temu`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} godz. temu`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} dni temu`;
+  return mattDashboardFormatDate(value);
+}
+
+async function mattHydrateAdminDashboard(modal) {
+  const root = modal?.querySelector('.flash-dashboard-content .admin-dashboard, .flash-dashboard-content.admin-dashboard');
+  if (!root || !window.supabaseClient) return;
+
+  const set = (selector, value) => {
+    const node = root.querySelector(selector);
+    if (node) node.textContent = value;
+  };
+  const recentChanges = root.querySelector('#recentChanges');
+  const inactiveMods = root.querySelector('#inactiveMods');
+
+  if (recentChanges) recentChanges.innerHTML = '<div class="empty-state">Ładowanie aktywności...</div>';
+  if (inactiveMods) inactiveMods.innerHTML = '<div class="empty-state">Sprawdzanie aktywności moderatorów...</div>';
+
+  set('#dashViewerRole', String(window.currentUserRole || 'użytkownik').toUpperCase());
+  set('#dashViewerPermissions', window.currentUserIsAdmin ? 'Pełny dostęp' : String(Array.isArray(window.currentUserPermissions) ? window.currentUserPermissions.length : 0));
+
+  const recentBtn = root.querySelector('[data-dashboard-action="refresh"]');
+  if (recentBtn) recentBtn.disabled = true;
+
+  try {
+    const sinceToday = new Date();
+    sinceToday.setHours(0,0,0,0);
+    const inactiveThreshold = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    const [profilesCountRes, moderatorsRes, auditRes] = await Promise.all([
+      supabaseClient.from('profiles').select('id', { count:'exact', head:true }),
+      supabaseClient.from('profiles').select('id, username, email, role, created_at, updated_at').eq('role', 'moderator'),
+      supabaseClient.from('audit_logs').select('actor_id, actor_email, action, target_table, entity_type, target_id, created_at').order('created_at', { ascending:false }).limit(80)
+    ]);
+
+    if (profilesCountRes.error) throw profilesCountRes.error;
+    if (moderatorsRes.error) throw moderatorsRes.error;
+    if (auditRes.error) throw auditRes.error;
+
+    const moderators = Array.isArray(moderatorsRes.data) ? moderatorsRes.data : [];
+    const logs = Array.isArray(auditRes.data) ? auditRes.data : [];
+    const todayLogs = logs.filter(item => item?.created_at && new Date(item.created_at) >= sinceToday);
+    const actorsToday = new Set(todayLogs.map(item => item?.actor_email || item?.actor_id).filter(Boolean));
+
+    set('#dashUsers', String(profilesCountRes.count ?? 0));
+    set('#dashModerators', String(moderators.length));
+    set('#dashLogsToday', String(todayLogs.length));
+    set('#dashStatusText', 'OK');
+    set('#dashStatusHint', logs.length ? 'Połączono z logami i profilami' : 'Połączono, brak zapisanych zmian');
+    set('#dashActorsToday', String(actorsToday.size));
+    set('#dashRecentTotal', String(logs.length));
+    set('#dashLastUpdate', logs[0]?.created_at ? mattDashboardFormatDate(logs[0].created_at) : 'Brak aktywności');
+
+    if (recentChanges) {
+      recentChanges.innerHTML = logs.length ? logs.slice(0, 6).map(item => {
+        const title = item?.action || 'Zmiana w systemie';
+        const actor = item?.actor_email || 'Nieznany użytkownik';
+        const scope = item?.target_table || item?.entity_type || 'sekcja strony';
+        const when = mattDashboardRelativeDate(item?.created_at);
+        return `<article class="activity-item"><div class="activity-icon">↻</div><div class="activity-main"><div class="activity-title">${mattDashboardEscape(title)}</div><div class="activity-text">${mattDashboardEscape(actor)} wprowadził zmianę w sekcji ${mattDashboardEscape(scope)}.</div><div class="activity-meta">${mattDashboardEscape(mattDashboardFormatDate(item?.created_at))}</div></div><div class="activity-time">${mattDashboardEscape(when)}</div></article>`;
+      }).join('') : '<div class="empty-state">Brak nowych działań w logach.</div>';
+    }
+
+    const lastLogByModerator = new Map();
+    logs.forEach(item => {
+      const email = String(item?.actor_email || '').toLowerCase();
+      const actorId = String(item?.actor_id || '');
+      if (email && !lastLogByModerator.has(`mail:${email}`)) lastLogByModerator.set(`mail:${email}`, item.created_at || null);
+      if (actorId && !lastLogByModerator.has(`id:${actorId}`)) lastLogByModerator.set(`id:${actorId}`, item.created_at || null);
+    });
+
+    const inactive = moderators.filter(mod => {
+      const emailKey = `mail:${String(mod.email || '').toLowerCase()}`;
+      const idKey = `id:${String(mod.id || '')}`;
+      const last = lastLogByModerator.get(emailKey) || lastLogByModerator.get(idKey) || null;
+      return !last || last < inactiveThreshold;
+    });
+
+    set('#inactiveModsCount', inactive.length ? `${inactive.length} do sprawdzenia` : 'Wszyscy aktywni');
+
+    if (inactiveMods) {
+      inactiveMods.innerHTML = inactive.length ? inactive.slice(0, 6).map(mod => {
+        const emailKey = `mail:${String(mod.email || '').toLowerCase()}`;
+        const idKey = `id:${String(mod.id || '')}`;
+        const last = lastLogByModerator.get(emailKey) || lastLogByModerator.get(idKey) || null;
+        const displayName = mod.username || mod.email || 'Moderator';
+        const sub = mod.email || 'Brak adresu e-mail';
+        const timeText = last ? mattDashboardRelativeDate(last) : 'Brak wpisów w logach';
+        const detail = last ? `Ostatnia zarejestrowana aktywność: ${mattDashboardFormatDate(last)}.` : 'W ostatnich 14 dniach nie znaleziono żadnej aktywności w logach.';
+        return `<article class="moderator-item"><div class="moderator-icon">!</div><div class="moderator-main"><div class="moderator-name">${mattDashboardEscape(displayName)}</div><div class="moderator-meta">${mattDashboardEscape(sub)}</div><div class="moderator-text">${mattDashboardEscape(detail)}</div></div><div class="moderator-time">${mattDashboardEscape(timeText)}</div></article>`;
+      }).join('') : '<div class="empty-state">Świetnie, wszyscy moderatorzy mieli aktywność w logach w ostatnich 14 dniach.</div>';
+    }
+  } catch (error) {
+    console.error('Nie udało się odświeżyć dashboardu:', error);
+    set('#dashStatusText', 'BŁĄD');
+    set('#dashStatusHint', 'Nie udało się pobrać danych z Supabase');
+    if (recentChanges) recentChanges.innerHTML = `<div class="empty-state">Nie udało się pobrać aktywności.<br><br>${mattDashboardEscape(error?.message || 'Błąd odczytu danych')}.</div>`;
+    if (inactiveMods) inactiveMods.innerHTML = `<div class="empty-state">Nie udało się sprawdzić aktywności moderatorów.</div>`;
+    set('#inactiveModsCount', 'Brak danych');
+  } finally {
+    if (recentBtn) recentBtn.disabled = false;
+  }
+
+  root.querySelectorAll('[data-dashboard-action]').forEach(btn => {
+    btn.onclick = () => {
+      const action = btn.dataset.dashboardAction;
+      if (action === 'refresh') {
+        mattHydrateAdminDashboard(modal);
+        return;
+      }
+      if (action === 'close') {
+        modal.classList.remove('active');
+        return;
+      }
+      if (action === 'accounts') {
+        modal.classList.remove('active');
+        setTimeout(() => window.mattOpenAccountManager?.(), 120);
+        return;
+      }
+      if (action === 'logs') {
+        modal.classList.remove('active');
+        setTimeout(() => window.mattOpenAuditLogs?.(), 120);
+      }
+    };
+  });
+}
+
 async function mattOpenAdminDashboard() {
   let modal = document.getElementById('adminDashboardModal');
 
@@ -393,9 +542,8 @@ async function mattOpenAdminDashboard() {
 
       if (dashboard) {
         const clone = dashboard.cloneNode(true);
-        clone.querySelector('.dash-header')?.remove();
         clone.classList.add('flash-dashboard-content', 'themed-admin-dashboard');
-        content = `<div class="flash-dashboard-shell">${clone.innerHTML}</div>`;
+        content = `<div class="flash-dashboard-shell">${clone.outerHTML}</div>`;
       } else {
         content = '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
       }
@@ -409,7 +557,7 @@ async function mattOpenAdminDashboard() {
           <div>
             <span>DOSTĘP UPRAWNIONY</span>
             <h2>PANEL ADMINISTRATORA</h2>
-            <p>Centrum zarządzania stroną, użytkownikami, zmianami i wydarzeniami.</p>
+            <p>Statystyki, najnowsze działania i kontrola aktywności moderatorów w jednym miejscu.</p>
           </div>
           <button type="button" class="admin-dashboard-close">×</button>
         </header>
@@ -417,25 +565,12 @@ async function mattOpenAdminDashboard() {
       </div>`;
 
     document.body.appendChild(modal);
-
-    const adminRoot = modal.querySelector('.flash-dashboard-content');
-    if (adminRoot) {
-      adminRoot.querySelectorAll('.admin-tool').forEach(card => {
-        const perm = card.dataset.permission;
-        const allowed = window.currentUserIsAdmin || !perm || window.mattHasPermission?.(perm);
-        if (!allowed) {
-          card.classList.add('disabled-tool');
-          card.innerHTML = `<b>🔒 Brak uprawnień</b><small>Nie masz dostępu do tego narzędzia</small>`;
-          card.removeAttribute('href');
-        }
-      });
-    }
-
     modal.querySelector('.admin-dashboard-close')?.addEventListener('click',()=>modal.classList.remove('active'));
     modal.addEventListener('click',e=>{if(e.target===modal) modal.classList.remove('active');});
   }
 
   modal.classList.add('active');
+  await mattHydrateAdminDashboard(modal);
 }
 
 window.mattOpenAuditLogs = mattOpenAuditLogs;
