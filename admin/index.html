@@ -40,22 +40,19 @@
 </div>
 </section>
 
-<section class="panel event-panel">
-<h2>Dodaj event</h2>
-<form id="eventForm">
-<div class="form-grid">
-<input name="title" placeholder="Nazwa eventu" required>
-<input name="start_date" type="date" required>
-<input name="end_date" type="date">
-<input name="image_url" placeholder="Link grafiki">
+<section class="panel tools-panel">
+<h2>Narzędzia administratora</h2>
+<p class="tools-desc">Dostępne moduły są automatycznie dopasowane do Twoich uprawnień.</p>
+<div class="admin-tools-grid">
+<a data-permission="accounts.manage" href="../#/" class="admin-tool"><b>👥 Konta</b><small>Zarządzanie użytkownikami i rolami</small></a>
+<a data-permission="cms.audit.view" href="../#/" class="admin-tool"><b>📋 Logi zmian</b><small>Historia działań i audyt</small></a>
+<a data-permission="events.edit" href="../#/" class="admin-tool"><b>🎮 Eventy</b><small>Tworzenie i edycja wydarzeń</small></a>
+<a data-permission="cms.edit" href="../#/" class="admin-tool"><b>📝 Treści strony</b><small>Edycja sekcji CMS</small></a>
+<a data-permission="discord.manage" href="../#/" class="admin-tool"><b>💬 Discord</b><small>Zarządzanie podglądem Discorda</small></a>
+<a data-permission="streamers.manage" href="../#/" class="admin-tool"><b>🎥 Streamerzy</b><small>Lista polecanych streamerów</small></a>
+<a data-permission="downloads.manage" href="../#/" class="admin-tool"><b>📁 Pliki</b><small>Centrum pobierania</small></a>
+<a data-permission="site.settings" href="../#/" class="admin-tool"><b>⚙ Ustawienia</b><small>Konfiguracja systemu</small></a>
 </div>
-<textarea name="description" placeholder="Opis"></textarea>
-<div class="buttons">
-<button>OPUBLIKUJ</button>
-<button id="rollbackLast" type="button">COFNIJ ZMIANĘ</button>
-<button onclick="logout()" type="button">WYLOGUJ</button>
-</div>
-</form>
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
