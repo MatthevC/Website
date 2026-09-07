@@ -10584,3 +10584,10 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .account-permission-group.collapsed .account-permission{display:none}
 .account-permission-group.collapsed header{border-radius:10px}
 .account-permission-group.collapsed [data-collapse-group]{color:#ff3d45}
+
+/* Ulepszony pasek podglądu administratora */
+.matt-preview-as-bar.hidden{display:none!important}
+.matt-preview-actions{display:flex;gap:6px;align-items:center}
+.matt-preview-actions button{cursor:pointer}
+.audit-change-card{padding:10px;border-radius:10px;background:rgba(255,255,255,.03)}
+.audit-details-box div{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08)}

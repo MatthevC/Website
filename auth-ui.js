@@ -301,14 +301,17 @@ async function mattOpenAuditLogs() {
       const actor = row.actor_username || row.actor_email || (row.actor_user_id ? `Użytkownik ${String(row.actor_user_id).slice(0,8)}…` : "System");
       const actorExtra = row.actor_username && row.actor_email ? ` · ${row.actor_email}` : "";
       const details = row.details && typeof row.details === "object" ? JSON.stringify(row.details, null, 2) : "";
+      const prettyDetails = row.details && typeof row.details === "object" ? Object.entries(row.details).map(([k,v])=>`<div><b>${mattAuditEscape(k)}:</b> ${mattAuditEscape(typeof v==="object"?JSON.stringify(v):v)}</div>`).join("") : "";
       return `<article class="audit-item">
         <div class="audit-item-top">
           <div><span class="audit-category">${mattAuditEscape(mattAuditCategory(row.action))}</span><strong>${mattAuditEscape(mattAuditActionLabel(row.action))}</strong></div>
           <time>${mattAuditEscape(mattAuditFormatDate(row.created_at))}</time>
         </div>
-        <p class="audit-summary-text">${mattAuditEscape(row.summary || "Brak dodatkowego opisu.")}</p>
-        <div class="audit-meta"><span><b>Kto:</b> ${mattAuditEscape(actor + actorExtra)}</span><span><b>Obiekt:</b> ${mattAuditEscape(row.entity_type || "—")}${row.entity_id ? ` / ${mattAuditEscape(row.entity_id)}` : ""}</span></div>
-        ${details ? `<details class="audit-details"><summary>Pokaż szczegóły zmiany</summary><pre>${mattAuditEscape(details)}</pre></details>` : ""}
+        <div class="audit-change-card">
+          <p class="audit-summary-text">${mattAuditEscape(row.summary || "Brak dodatkowego opisu.")}</p>
+          <div class="audit-meta"><span><b>Wykonał:</b> ${mattAuditEscape(actor + actorExtra)}</span><span><b>Dotyczy:</b> ${mattAuditEscape(row.entity_type || "—")}${row.entity_id ? ` / ${mattAuditEscape(row.entity_id)}` : ""}</span></div>
+        </div>
+        ${details ? `<details class="audit-details"><summary>Pokaż co zmieniono (przed → po)</summary><div class="audit-details-box">${prettyDetails}</div></details>` : ""}
       </article>`;
     }).join("") : '<div class="audit-empty">Brak logów pasujących do filtrów.</div>';
   };
