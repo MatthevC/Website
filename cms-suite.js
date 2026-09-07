@@ -1076,8 +1076,36 @@
     if(document.readyState!=='loading')setTimeout(()=>{applyModeratorPreviewFromStorage();enhanceDom();},100);
   }
 
+
+  // Security helpers: central confirmation and human readable audit helpers
+  async function confirmSecureDelete(label='Element', details='') {
+    const msg = `⚠ POTWIERDZENIE USUNIĘCIA\n\nElement:\n${label}\n\n${details}\n\nElement zostanie przeniesiony do kosza.`;
+    return window.confirm(msg);
+  }
+
+  async function secureTrashDelete({sourceKey, item, index=0, label='Element', details=''}) {
+    const ok = await confirmSecureDelete(label, details);
+    if(!ok) return { cancelled:true };
+    const result = await trashCmsArrayItem(sourceKey, item, index, label);
+    try {
+      window.dispatchEvent(new CustomEvent('matt-audit-change', {
+        detail:{ action:'trash', label:String(label), details:String(details || '') }
+      }));
+    } catch(e){}
+    return { cancelled:false, result };
+  }
+
+  function describeAuditChange(section, action, before, after) {
+    return {
+      title: `${action || 'Zmiana'}: ${section || 'Element'}`,
+      before: before ?? null,
+      after: after ?? null,
+      time: new Date().toISOString()
+    };
+  }
+
   window.MattSuite = {
-    addTrash, purgeExpiredTrash, trashCmsArrayItem, trashNestedCmsArrayItem, trashDownloadItem, trashEvent, restoreTrashItem,
+    addTrash, purgeExpiredTrash, trashCmsArrayItem, confirmSecureDelete, secureTrashDelete, describeAuditChange, trashNestedCmsArrayItem, trashDownloadItem, trashEvent, restoreTrashItem,
     getEventWorkflow, setEventWorkflow, saveEventWorkflowFromForm, duplicateEvent, showEventHistory, showCmsArrayItemHistory,
     attachFormAutosave, clearFormAutosave, acquireEditLock, releaseEditLock, openCenter, openPreviewOverlay, enableVisitorPreview,
     buildAlerts, runIntegrityCheck, setAccountSecurity
