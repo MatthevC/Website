@@ -34,3 +34,8 @@ button{background:#ff3040;color:white;border:0;padding:12px 18px;border-radius:8
 .form-grid{grid-template-columns:1fr}
 .actions{grid-template-columns:1fr}
 }
+
+
+.admin-tool, .actions button{font:inherit;cursor:pointer;text-align:left;color:inherit}
+.admin-tool.disabled,.actions button.disabled{opacity:.45;filter:grayscale(1);cursor:not-allowed}
+.admin-tool.disabled:after{content:"\A🔒 Brak uprawnień";white-space:pre;color:#ff9b9b;font-size:12px}
