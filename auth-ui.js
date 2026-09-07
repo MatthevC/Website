@@ -556,8 +556,8 @@ async function mattOpenAdminDashboard() {
         <header class="admin-dashboard-head">
           <div>
             <span>DOSTĘP UPRAWNIONY</span>
-            <h2>PANEL ADMINISTRATORA</h2>
-            <p>Statystyki, najnowsze działania i kontrola aktywności moderatorów w jednym miejscu.</p>
+            <h2 data-dashboard-title>PANEL ADMINISTRATORA</h2>
+            <p data-dashboard-description>Statystyki, najnowsze działania i kontrola aktywności moderatorów w jednym miejscu.</p>
           </div>
           <button type="button" class="admin-dashboard-close">×</button>
         </header>
@@ -570,6 +570,15 @@ async function mattOpenAdminDashboard() {
   }
 
   modal.classList.add('active');
+
+  const dashTitle = modal.querySelector('[data-dashboard-title]');
+  const dashDesc = modal.querySelector('[data-dashboard-description]');
+  const currentRole = String(window.currentUserRole || 'user').toLowerCase();
+  if (dashTitle) dashTitle.textContent = currentRole === 'admin' ? 'PANEL ADMINISTRATORA' : 'PANEL MODERACJI';
+  if (dashDesc) dashDesc.textContent = currentRole === 'admin'
+    ? 'Statystyki, najnowsze działania i kontrola aktywności moderatorów w jednym miejscu.'
+    : 'Podsumowanie moderacji, aktywności i dostępnych narzędzi zgodnie z nadanymi uprawnieniami.';
+
   await mattHydrateAdminDashboard(modal);
 }
 
