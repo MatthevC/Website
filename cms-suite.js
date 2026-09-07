@@ -945,8 +945,12 @@
       let original=window.mattHasPermission;
       window.mattHasPermission=p=>data.permissions.includes(p);
       let bar=document.getElementById('mattPreviewAsBar');if(!bar){bar=document.createElement('div');bar.id='mattPreviewAsBar';bar.className='matt-preview-as-bar';bar.innerHTML=`<div><strong>PODGLĄD JAKO MODERATOR: ${esc(data.username||'Moderator')}</strong><span>To tylko podgląd interfejsu — nie przejmujesz konta użytkownika.</span></div><div class="matt-preview-actions"><button type="button" class="matt-preview-hide">SCHOWAJ</button><button type="button" class="matt-preview-back">WRÓĆ DO ADMINISTRATORA</button></div>`;document.body.appendChild(bar);bar.querySelector('.matt-preview-back').onclick=()=>{sessionStorage.removeItem('matt_preview_as_moderator');location.reload();};
-      bar.querySelector('.matt-preview-hide').onclick=()=>{bar.classList.add('hidden');sessionStorage.setItem('matt_preview_bar_hidden','1');};
-      if(sessionStorage.getItem('matt_preview_bar_hidden')==='1') bar.classList.add('hidden');}
+      bar.querySelector('.matt-preview-hide').onclick=()=>{
+        bar.classList.toggle('collapsed');
+        sessionStorage.setItem('matt_preview_bar_hidden', bar.classList.contains('collapsed') ? '1' : '0');
+      };
+      bar.querySelector('.matt-preview-hide').textContent='SCHOWAJ / POKAŻ';
+      if(sessionStorage.getItem('matt_preview_bar_hidden')==='1') bar.classList.add('collapsed');}
       window.dispatchEvent(new CustomEvent('matt-auth-change',{detail:{isAdmin:false,role:'moderator',permissions:data.permissions,preview:true}}));
       return true;
     }catch(_){return false;}

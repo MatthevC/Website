@@ -232,6 +232,34 @@ function mattAuditActionLabel(action = "") {
   return labels[action] || String(action || "Zdarzenie");
 }
 
+
+
+function mattAuditPrettyDetails(details = {}) {
+  if (!details || typeof details !== "object") return "";
+  const rows = [];
+  const add = (label, value, cls="") => {
+    rows.push(`<div class="audit-change-row ${cls}"><span>${mattAuditEscape(label)}</span><strong>${mattAuditEscape(value)}</strong></div>`);
+  };
+  Object.entries(details).forEach(([key, value]) => {
+    if (key === "before" || key === "after") return;
+    if (Array.isArray(value)) {
+      add(key, value.length ? value.join(", ") : "brak");
+    } else if (value && typeof value === "object") {
+      add(key, JSON.stringify(value));
+    } else {
+      add(key, String(value));
+    }
+  });
+  const before = details.before || details.old || null;
+  const after = details.after || details.new || null;
+  if (before || after) {
+    rows.push(`<div class="audit-diff-title">PORÓWNANIE ZMIANY</div>`);
+    if (before) add("PRZED", typeof before === "object" ? JSON.stringify(before) : before, "old");
+    if (after) add("PO", typeof after === "object" ? JSON.stringify(after) : after, "new");
+  }
+  return rows.join("");
+}
+
 function mattAuditFormatDate(value) {
   try {
     return new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value));
@@ -301,7 +329,7 @@ async function mattOpenAuditLogs() {
       const actor = row.actor_username || row.actor_email || (row.actor_user_id ? `Użytkownik ${String(row.actor_user_id).slice(0,8)}…` : "System");
       const actorExtra = row.actor_username && row.actor_email ? ` · ${row.actor_email}` : "";
       const details = row.details && typeof row.details === "object" ? JSON.stringify(row.details, null, 2) : "";
-      const prettyDetails = row.details && typeof row.details === "object" ? Object.entries(row.details).map(([k,v])=>`<div><b>${mattAuditEscape(k)}:</b> ${mattAuditEscape(typeof v==="object"?JSON.stringify(v):v)}</div>`).join("") : "";
+      const prettyDetails = row.details && typeof row.details === "object" ? mattAuditPrettyDetails(row.details) : "";
       return `<article class="audit-item">
         <div class="audit-item-top">
           <div><span class="audit-category">${mattAuditEscape(mattAuditCategory(row.action))}</span><strong>${mattAuditEscape(mattAuditActionLabel(row.action))}</strong></div>
