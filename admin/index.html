@@ -8,53 +8,135 @@
 </head>
 <body>
 <main class="admin-dashboard">
-<header class="dash-header">
-<div>
-<div class="dash-label">ADMINISTRACJA</div>
-<h1>Panel administratora</h1>
-<p>Centrum zarządzania stroną, użytkownikami, zmianami i wydarzeniami.</p>
-</div>
-</header>
+  <section class="dashboard-hero">
+    <div class="hero-copy">
+      <div class="dash-label">ADMINISTRACJA</div>
+      <h1>Panel administratora</h1>
+      <p>Podsumowanie tego, co dzieje się na stronie, kto wprowadza zmiany i którzy moderatorzy wymagają uwagi.</p>
+    </div>
+    <div class="hero-meta">
+      <div class="meta-chip">
+        <span>Twoja rola</span>
+        <strong id="dashViewerRole">Ładowanie...</strong>
+      </div>
+      <div class="meta-chip">
+        <span>Aktywne uprawnienia</span>
+        <strong id="dashViewerPermissions">-</strong>
+      </div>
+    </div>
+  </section>
 
-<section class="stats-grid">
-<div class="stat"><span>Użytkownicy</span><strong id="dashUsers">5</strong><small>konta w systemie</small></div>
-<div class="stat"><span>Ostatnie zmiany</span><strong id="dashLogs">0</strong><small>logi audytu</small></div>
-<div class="stat"><span>Status systemu</span><strong class="ok">● OK</strong><small>wszystkie usługi</small></div>
-<div class="stat"><span>Uprawnienia</span><strong>87</strong><small>aktywnych reguł</small></div>
-</section>
+  <section class="stats-grid">
+    <div class="stat stat-users">
+      <span>Użytkownicy</span>
+      <strong id="dashUsers">-</strong>
+      <small>konta w systemie</small>
+    </div>
+    <div class="stat stat-mods">
+      <span>Moderatorzy</span>
+      <strong id="dashModerators">-</strong>
+      <small>osoby z rolą moderatora</small>
+    </div>
+    <div class="stat stat-logs">
+      <span>Zmiany dzisiaj</span>
+      <strong id="dashLogsToday">-</strong>
+      <small>działania zapisane w logach</small>
+    </div>
+    <div class="stat stat-status">
+      <span>Status systemu</span>
+      <strong id="dashStatusText" class="ok">Ładowanie...</strong>
+      <small id="dashStatusHint">Sprawdzanie połączenia z danymi</small>
+    </div>
+  </section>
 
-<section class="dashboard-columns">
-<div class="panel">
-<h2>Ostatnia aktywność</h2>
-<div id="recentChanges" class="activity">Ładowanie...</div>
-</div>
+  <section class="dashboard-columns">
+    <article class="panel panel-activity">
+      <div class="panel-top">
+        <div>
+          <div class="panel-kicker">AKTYWNOŚĆ</div>
+          <h2>Kto ostatnio coś zmienił</h2>
+        </div>
+        <button type="button" class="ghost-btn" data-dashboard-action="refresh">Odśwież</button>
+      </div>
+      <div id="recentChanges" class="activity-list loading-state">Ładowanie danych...</div>
+    </article>
 
-<div class="panel">
-<h2>Centrum narzędzi</h2>
-<div class="actions">
-<button type="button" onclick="window.mattOpenAccountManager?.()">👥<b>Konta</b><small>Zarządzanie użytkownikami</small></button>
-<button type="button" onclick="window.mattOpenAuditLogs?.()">📋<b>Logi</b><small>Historia zmian</small></button>
-<button type="button"><span>🎮</span><b>Eventy</b><small>Moduł wydarzeń</small></button>
-<button type="button"><span>⚙</span><b>CMS</b><small>Edycja strony</small></button>
-</div>
-</div>
-</section>
+    <article class="panel panel-moderators">
+      <div class="panel-top">
+        <div>
+          <div class="panel-kicker">ZESPÓŁ</div>
+          <h2>Moderatorzy nieaktywni</h2>
+        </div>
+        <span class="panel-pill" id="inactiveModsCount">Sprawdzanie...</span>
+      </div>
+      <div id="inactiveMods" class="moderator-list loading-state">Sprawdzanie aktywności moderatorów...</div>
+      <p class="panel-note">Nieaktywność liczona jest na podstawie braku działań w logach z ostatnich 14 dni.</p>
+    </article>
+  </section>
 
-<section class="panel tools-panel">
-<h2>Narzędzia dostępne dla roli</h2>
-<p class="tools-desc">Dashboard pozostaje widoczny dla moderatorów. Narzędzia bez uprawnień są zablokowane.</p>
-<div class="admin-tools-grid">
-<button class="admin-tool" data-permission="accounts.manage"><b>👥 Konta</b><small>Użytkownicy i role</small></button>
-<button class="admin-tool" data-permission="cms.audit.view"><b>📋 Logi zmian</b><small>Audyt działań</small></button>
-<button class="admin-tool" data-permission="events.edit"><b>🎮 Eventy</b><small>Zarządzanie wydarzeniami</small></button>
-<button class="admin-tool" data-permission="cms.edit"><b>📝 Treści strony</b><small>CMS</small></button>
-<button class="admin-tool" data-permission="discord.manage"><b>💬 Discord</b><small>Integracja</small></button>
-<button class="admin-tool" data-permission="streamers.manage"><b>🎥 Streamerzy</b><small>Polecani twórcy</small></button>
-<button class="admin-tool" data-permission="downloads.manage"><b>📁 Pliki</b><small>Centrum plików</small></button>
-<button class="admin-tool" data-permission="site.settings"><b>⚙ Ustawienia</b><small>Konfiguracja</small></button>
-</div>
-</section>
+  <section class="dashboard-columns dashboard-columns-lower">
+    <article class="panel panel-summary">
+      <div class="panel-top">
+        <div>
+          <div class="panel-kicker">PODSUMOWANIE</div>
+          <h2>Co dzieje się teraz</h2>
+        </div>
+      </div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <strong id="dashActorsToday">-</strong>
+          <span>osób wprowadzało dziś zmiany</span>
+        </div>
+        <div class="summary-card">
+          <strong id="dashRecentTotal">-</strong>
+          <span>ostatnich wpisów przeanalizowano</span>
+        </div>
+        <div class="summary-card summary-card-wide">
+          <strong id="dashLastUpdate">Ładowanie...</strong>
+          <span>ostatnio zarejestrowana aktywność w systemie</span>
+        </div>
+      </div>
+    </article>
 
+    <article class="panel panel-actions">
+      <div class="panel-top">
+        <div>
+          <div class="panel-kicker">SZYBKIE DZIAŁANIA</div>
+          <h2>Najważniejsze narzędzia</h2>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <button type="button" class="quick-action" data-dashboard-action="accounts">
+          <span class="quick-action-icon">👥</span>
+          <span class="quick-action-body">
+            <b>Zarządzaj kontami</b>
+            <small>Role, uprawnienia i podgląd użytkowników.</small>
+          </span>
+        </button>
+        <button type="button" class="quick-action" data-dashboard-action="logs">
+          <span class="quick-action-icon">📋</span>
+          <span class="quick-action-body">
+            <b>Otwórz logi zmian</b>
+            <small>Pełna historia działań administracyjnych.</small>
+          </span>
+        </button>
+        <button type="button" class="quick-action quick-action-secondary" data-dashboard-action="refresh">
+          <span class="quick-action-icon">⟳</span>
+          <span class="quick-action-body">
+            <b>Odśwież dane</b>
+            <small>Pobierz ponownie statystyki i ostatnią aktywność.</small>
+          </span>
+        </button>
+        <button type="button" class="quick-action quick-action-secondary" data-dashboard-action="close">
+          <span class="quick-action-icon">✕</span>
+          <span class="quick-action-body">
+            <b>Zamknij panel</b>
+            <small>Wróć do widoku strony bez zmiany konta.</small>
+          </span>
+        </button>
+      </div>
+    </article>
+  </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../supabase.js"></script>
