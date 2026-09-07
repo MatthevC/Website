@@ -473,7 +473,7 @@ async function mattLoadUserHeader() {
     const canManageAccounts = access.isAdmin || window.mattHasPermission?.("accounts.view") === true;
     if (manageAccounts) { manageAccounts.hidden = !canManageAccounts; manageAccounts.onclick = canManageAccounts ? (() => { menu?.classList.remove("show"); mattOpenAccountManager(); }) : null; }
     const canDashboard = access.isAdmin || window.mattHasPermission?.("cms.dashboard.view") === true;
-    if (dashboard) { dashboard.hidden = !canDashboard; dashboard.onclick = canDashboard ? (() => { menu?.classList.remove("show"); window.location.href = "admin/"; }) : null; }
+    if (dashboard) { dashboard.hidden = !canDashboard; dashboard.onclick = canDashboard ? (() => { menu?.classList.remove("show"); mattOpenAdminDashboard(); }) : null; }
     mattSetHeaderUser(profile);
 
     if (profile.must_complete_account === true) {

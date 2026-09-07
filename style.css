@@ -10637,3 +10637,49 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .event-widget{margin-top:20px;}
 .admin-actions{display:flex;gap:10px;margin-top:20px;}
 @media(max-width:800px){.modern-cards,.admin-grid{grid-template-columns:1fr!important}.modern-dashboard{width:calc(100% - 20px)!important;margin:10px auto!important}}
+
+/* Dashboard administratora jako panel flash */
+.admin-dashboard-modal{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.75);
+ z-index:99999;
+ display:none;
+ align-items:center;
+ justify-content:center;
+ padding:30px;
+}
+.admin-dashboard-modal.active{display:flex;}
+.admin-dashboard-window{
+ width:min(1400px,95vw);
+ height:min(850px,90vh);
+ background:#08090c;
+ border:1px solid #252936;
+ border-radius:18px;
+ overflow:hidden;
+ position:relative;
+ box-shadow:0 30px 80px rgba(0,0,0,.7);
+}
+.admin-dashboard-window iframe{
+ width:100%;
+ height:100%;
+ border:0;
+}
+.admin-dashboard-close{
+ position:absolute;
+ right:16px;
+ top:16px;
+ z-index:2;
+ width:42px;
+ height:42px;
+ border-radius:10px;
+ border:1px solid #343844;
+ background:#15171d;
+ color:white;
+ font-size:28px;
+ cursor:pointer;
+}
+@media(max-width:700px){
+ .admin-dashboard-modal{padding:10px;}
+ .admin-dashboard-window{width:100%;height:95vh;border-radius:12px;}
+}
