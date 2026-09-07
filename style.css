@@ -10565,3 +10565,14 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .account-simple-option input{width:18px;height:18px}
 .account-simple-option span{display:flex;flex-direction:column}
 .account-simple-option small{color:#999;margin-top:4px}
+
+.account-advanced-guide{border:1px solid #30333b;background:#14161b;border-radius:12px;padding:14px;margin:0 0 14px;display:grid;gap:8px}
+.account-advanced-guide strong{color:#fff;font-size:12px;letter-spacing:.08em}
+.account-advanced-guide span{color:#9599a3;font-size:12px}
+.account-area-cards{display:flex;flex-wrap:wrap;gap:8px}
+.account-area-cards button{border:1px solid #343740;background:#0c0d11;color:#ddd;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:11px;font-weight:800}
+.account-area-cards button:hover{border-color:#ff3039;color:#fff}
+.account-permission-group header{position:sticky;top:0;z-index:2}
+.account-permission-group.collapsed .account-permission{display:none}
+.account-permission-group.collapsed header{border-radius:10px}
+.account-permission-group.collapsed [data-collapse-group]{color:#ff3d45}

@@ -745,7 +745,7 @@ async function mattOpenAccountManager() {
           : 0;
 
       return `<section class="account-permission-group" data-permission-group="${mattAccountEscape(group)}">
-        <header><h4>${mattAccountEscape(group)}</h4><div class="account-permission-group-tools"><span data-group-count>${activeCount}/${items.length}</span><button type="button" data-group-select title="Zaznacz całą sekcję">+ WSZYSTKO</button><button type="button" data-group-clear title="Wyczyść całą sekcję">WYCZYŚĆ</button></div></header>
+        <header><h4>${mattAccountEscape(group)}</h4><div class="account-permission-group-tools"><span data-group-count>${activeCount}/${items.length}</span><button type="button" data-collapse-group title="Zwiń lub rozwiń">▼</button><button type="button" data-group-select title="Zaznacz całą sekcję">+ WSZYSTKO</button><button type="button" data-group-clear title="Wyczyść całą sekcję">WYCZYŚĆ</button></div></header>
         ${items.map(item => {
           const checked = currentRole === "admin" || (currentRole === "moderator" && selectedPermissions.has(item.permission));
           const disabled = isSelf || currentRole !== "moderator" || !canChangePermissions;
@@ -805,6 +805,13 @@ async function mattOpenAccountManager() {
         <div><small>SZYBKIE USTAWIENIE</small><strong>Skopiuj zestaw uprawnień z innego Moderatora</strong><span>Checkboxy zostaną podmienione w formularzu. Nic nie zapisze się bez kliknięcia „ZAPISZ ROLĘ I UPRAWNIENIA”.</span></div>
         <div><select data-copy-permissions-source aria-label="Moderator źródłowy"><option value="">Wybierz moderatora…</option>${copyPermissionSources}</select><button type="button" data-copy-permissions>SKOPIUJ UPRAWNIENIA</button></div>
       </div>` : ''}
+      <div class="account-advanced-guide">
+        <strong>SZYBKA EDYCJA UPRAWNIEŃ</strong>
+        <span>Każda sekcja odpowiada za inny obszar systemu. Zaznacz całą kategorię albo wybierz pojedyncze akcje.</span>
+        <div class="account-area-cards">
+          ${[...groups.keys()].map(g=>`<button type="button" data-jump-group="${mattAccountEscape(g)}">${mattAccountEscape(g)}</button>`).join('')}
+        </div>
+      </div>
       <div class="account-permissions" data-permissions>${permissionSections}</div>
 
       <div class="account-section-heading account-security-heading">
@@ -840,6 +847,17 @@ async function mattOpenAccountManager() {
     body.querySelectorAll('[data-account-mode]').forEach(btn => btn.addEventListener('click', () => {
       accountPermissionMode = btn.dataset.accountMode;
       draw();
+    }));
+
+    body.querySelectorAll('[data-collapse-group]').forEach(btn => btn.addEventListener('click', () => {
+      const section = btn.closest('.account-permission-group');
+      section?.classList.toggle('collapsed');
+      btn.textContent = section?.classList.contains('collapsed') ? '▶' : '▼';
+    }));
+
+    body.querySelectorAll('[data-jump-group]').forEach(btn => btn.addEventListener('click', () => {
+      const target = body.querySelector(`[data-permission-group="${btn.dataset.jumpGroup}"]`);
+      target?.scrollIntoView({behavior:'smooth',block:'start'});
     }));
 
     if (accountPermissionMode === 'simple') {
