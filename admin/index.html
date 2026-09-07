@@ -1,1 +1,12 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Admin</title><link rel="stylesheet" href="../style.css"></head><body><main class="admin-box"><h2>Dodaj event</h2><form id="eventForm"><input name="title" placeholder="Nazwa eventu" required><input name="start_date" type="date" required><input name="end_date" type="date"><textarea name="description" placeholder="Opis"></textarea><input name="image_url" placeholder="Link grafiki"><button>OPUBLIKUJ</button></form><p id="msg"></p><button onclick="logout()">WYLOGUJ</button></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../supabase.js"></script><script src="auth.js"></script><script src="admin.js"></script></body></html>
+<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Admin</title><link rel="stylesheet" href="../style.css"></head><body><main class="admin-box admin-dashboard">
+<h1>Panel administratora</h1>
+<div class="admin-cards">
+<div><small>Użytkownicy</small><b id="dashUsers">-</b></div>
+<div><small>Ostatnie zmiany</small><b id="dashLogs">-</b></div>
+<div><small>Status systemu</small><b>OK</b></div>
+</div>
+<section class="admin-widget">
+<h2>Ostatnie działania</h2>
+<div id="recentChanges">Ładowanie...</div>
+</section>
+<h2>Dodaj event</h2><form id="eventForm"><input name="title" placeholder="Nazwa eventu" required><input name="start_date" type="date" required><input name="end_date" type="date"><textarea name="description" placeholder="Opis"></textarea><input name="image_url" placeholder="Link grafiki"><button>OPUBLIKUJ</button></form><p id="msg"></p><button id="rollbackLast" type="button">COFNIJ OSTATNIĄ ZMIANĘ</button><button onclick="logout()">WYLOGUJ</button></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../supabase.js"></script><script src="auth.js"></script><script src="admin.js"></script></body></html>
