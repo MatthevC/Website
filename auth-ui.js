@@ -395,7 +395,7 @@ async function mattOpenAdminDashboard() {
         const clone = dashboard.cloneNode(true);
         clone.querySelector('.dash-header')?.remove();
         clone.classList.add('flash-dashboard-content', 'themed-admin-dashboard');
-        content = `<div class="flash-dashboard-shell">${clone.outerHTML}</div>`;
+        content = `<div class="flash-dashboard-shell">${clone.innerHTML}</div>`;
       } else {
         content = '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
       }
@@ -417,6 +417,19 @@ async function mattOpenAdminDashboard() {
       </div>`;
 
     document.body.appendChild(modal);
+
+    const adminRoot = modal.querySelector('.flash-dashboard-content');
+    if (adminRoot) {
+      adminRoot.querySelectorAll('.admin-tool').forEach(card => {
+        const perm = card.dataset.permission;
+        const allowed = window.currentUserIsAdmin || !perm || window.mattHasPermission?.(perm);
+        if (!allowed) {
+          card.classList.add('disabled-tool');
+          card.innerHTML = `<b>🔒 Brak uprawnień</b><small>Nie masz dostępu do tego narzędzia</small>`;
+          card.removeAttribute('href');
+        }
+      });
+    }
 
     modal.querySelector('.admin-dashboard-close')?.addEventListener('click',()=>modal.classList.remove('active'));
     modal.addEventListener('click',e=>{if(e.target===modal) modal.classList.remove('active');});
