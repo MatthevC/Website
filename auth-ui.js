@@ -501,9 +501,35 @@ async function mattHydrateAdminDashboard(modal) {
     if (recentBtn) recentBtn.disabled = false;
   }
 
+  const permissionAliases = {
+    'accounts.manage': ['accounts.manage','profiles.manage','users.manage','admin.users','users'],
+    'logs.view': ['logs.view','audit.view','audit_logs.view','logs','history.view']
+  };
+  const hasDashboardPermission = (needed) => {
+    if (window.currentUserIsAdmin) return true;
+    const perms = Array.isArray(window.currentUserPermissions) ? window.currentUserPermissions.map(String) : [];
+    const allowed = permissionAliases[needed] || [needed];
+    return allowed.some(item => perms.includes(item));
+  };
+  root.querySelectorAll('[data-required-permission]').forEach(btn => {
+    const permission = btn.dataset.requiredPermission;
+    if (!hasDashboardPermission(permission)) {
+      btn.classList.add('locked');
+      const body = btn.querySelector('.quick-action-body');
+      if (body && !body.querySelector('.quick-action-lock')) {
+        const lock = document.createElement('small');
+        lock.className = 'quick-action-lock';
+        lock.textContent = '🔒 Brak dostępu';
+        body.appendChild(lock);
+      }
+      btn.dataset.locked = 'true';
+    }
+  });
+
   root.querySelectorAll('[data-dashboard-action]').forEach(btn => {
     btn.onclick = () => {
       const action = btn.dataset.dashboardAction;
+      if (btn.dataset.locked === 'true') return;
       if (action === 'refresh') {
         mattHydrateAdminDashboard(modal);
         return;
