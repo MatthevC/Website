@@ -10702,3 +10702,68 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
  max-width:none!important;
  min-height:100%;
 }
+
+/* Dashboard administratora jako panel flash */
+.admin-dashboard-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.78);
+  padding:30px;
+}
+.admin-dashboard-modal.active{display:flex;}
+.flash-admin-box{
+  width:min(1400px,95vw);
+  max-height:90vh;
+  overflow:hidden;
+  background:#0d0f14;
+  border:1px solid #2a2a2a;
+  border-radius:22px;
+  box-shadow:0 30px 90px rgba(0,0,0,.65);
+}
+.admin-dashboard-content{
+  max-height:calc(90vh - 110px);
+  overflow:auto;
+  padding:20px 28px 35px;
+}
+.admin-dashboard-content .admin-dashboard{
+  margin:0;
+  padding:0;
+  max-width:none;
+  border:0;
+  box-shadow:none;
+  background:transparent;
+}
+.flash-dashboard-content .dash-header{display:none;}
+.flash-dashboard-content .stats-grid{
+  margin-top:0;
+}
+.admin-dashboard-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  padding:24px 28px;
+  border-bottom:1px solid #252525;
+}
+.admin-dashboard-head span{
+  color:#ef2b2d;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:2px;
+}
+.admin-dashboard-head h2{
+  margin:6px 0;
+}
+.admin-dashboard-close{
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  background:#17191f;
+  border:1px solid #343943;
+  color:white;
+  font-size:24px;
+  cursor:pointer;
+}

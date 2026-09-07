@@ -390,16 +390,24 @@ async function mattOpenAdminDashboard() {
       const html = await response.text();
       const parsed = new DOMParser().parseFromString(html, 'text/html');
       const dashboard = parsed.querySelector('.admin-dashboard');
-      content = dashboard ? dashboard.outerHTML : '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
+
+      if (dashboard) {
+        const clone = dashboard.cloneNode(true);
+        clone.querySelector('.dash-header')?.remove();
+        clone.classList.add('flash-dashboard-content');
+        content = clone.innerHTML;
+      } else {
+        content = '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
+      }
     } catch (e) {
       content = '<div class="admin-load-error">Nie udało się załadować panelu administratora.</div>';
     }
 
     modal.innerHTML = `
-      <div class="admin-dashboard-box" role="dialog" aria-modal="true">
+      <div class="admin-dashboard-box flash-admin-box" role="dialog" aria-modal="true">
         <header class="admin-dashboard-head">
           <div>
-            <span>ADMINISTRACJA</span>
+            <span>DOSTĘP UPRAWNIONY</span>
             <h2>PANEL ADMINISTRATORA</h2>
             <p>Centrum zarządzania stroną, użytkownikami, zmianami i wydarzeniami.</p>
           </div>
