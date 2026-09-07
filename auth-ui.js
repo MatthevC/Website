@@ -374,6 +374,33 @@ async function mattOpenAuditLogs() {
 }
 
 
+
+
+async function mattOpenAdminDashboard() {
+  let modal = document.getElementById('adminDashboardModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'adminDashboardModal';
+    modal.className = 'admin-dashboard-modal';
+    modal.innerHTML = `
+      <div class="admin-dashboard-box" role="dialog" aria-modal="true">
+        <header class="admin-dashboard-head">
+          <div>
+            <span>ADMINISTRACJA</span>
+            <h2>PANEL ADMINISTRATORA</h2>
+            <p>Centrum zarządzania stroną, użytkownikami, zmianami i wydarzeniami.</p>
+          </div>
+          <button type="button" class="admin-dashboard-close">×</button>
+        </header>
+        <iframe src="./admin/" title="Panel administratora"></iframe>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('.admin-dashboard-close')?.addEventListener('click',()=>modal.classList.remove('active'));
+    modal.addEventListener('click',e=>{if(e.target===modal) modal.classList.remove('active');});
+  }
+  modal.classList.add('active');
+}
+
 window.mattOpenAuditLogs = mattOpenAuditLogs;
 
 function mattSetHeaderUser(profile) {
@@ -1238,6 +1265,7 @@ async function mattOpenAccountManager() {
   }
 }
 window.mattOpenAccountManager = mattOpenAccountManager;
+window.mattOpenAdminDashboard = mattOpenAdminDashboard;
 window.mattForceFirstLoginSetup = mattForceFirstLoginSetup;
 
 async function mattUploadProfileAvatar(file, userId, username) {
