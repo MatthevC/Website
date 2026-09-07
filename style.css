@@ -10622,3 +10622,6 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   font-weight:900;
   font-size:11px;
 }
+
+
+.admin-dashboard h1{margin-bottom:20px}.admin-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.admin-cards div,.admin-widget{background:#15171c;border:1px solid #2b2f39;border-radius:12px;padding:16px}.admin-cards small{display:block;color:#999}.admin-cards b{font-size:28px}.audit-mini{padding:10px;border-bottom:1px solid #292d36}@media(max-width:700px){.admin-cards{grid-template-columns:1fr}.admin-box{width:calc(100% - 24px);margin:12px}.admin-dashboard h1{font-size:24px}}
