@@ -430,7 +430,7 @@ async function mattHydrateAdminDashboard(modal) {
     const [profilesCountRes, moderatorsRes, auditRes] = await Promise.all([
       supabaseClient.from('profiles').select('id', { count:'exact', head:true }),
       supabaseClient.from('profiles').select('id, username, email, role').eq('role', 'moderator'),
-      supabaseClient.from('audit_logs').select('actor_id, actor_email, action, target_table, entity_type, target_id, created_at').order('created_at', { ascending:false }).limit(80)
+      supabaseClient.from('matt_audit_logs').select('id,created_at,actor_user_id,actor_email,actor_username,action,entity_type,entity_id,summary,details').order('created_at', { ascending:false }).limit(80)
     ]);
 
     if (profilesCountRes.error) throw profilesCountRes.error;
@@ -440,7 +440,7 @@ async function mattHydrateAdminDashboard(modal) {
     const moderators = Array.isArray(moderatorsRes.data) ? moderatorsRes.data : [];
     const logs = Array.isArray(auditRes.data) ? auditRes.data : [];
     const todayLogs = logs.filter(item => item?.created_at && new Date(item.created_at) >= sinceToday);
-    const actorsToday = new Set(todayLogs.map(item => item?.actor_email || item?.actor_id).filter(Boolean));
+    const actorsToday = new Set(todayLogs.map(item => item?.actor_email || item?.actor_user_id).filter(Boolean));
 
     set('#dashUsers', String(profilesCountRes.count ?? 0));
     set('#dashModerators', String(moderators.length));
@@ -453,9 +453,9 @@ async function mattHydrateAdminDashboard(modal) {
 
     if (recentChanges) {
       recentChanges.innerHTML = logs.length ? logs.slice(0, 6).map(item => {
-        const title = item?.action || 'Zmiana w systemie';
-        const actor = item?.actor_email || 'Nieznany użytkownik';
-        const scope = item?.target_table || item?.entity_type || 'sekcja strony';
+        const title = item?.summary || item?.action || 'Zmiana w systemie';
+        const actor = item?.actor_username || item?.actor_email || 'Nieznany użytkownik';
+        const scope = item?.entity_type || 'sekcja strony';
         const when = mattDashboardRelativeDate(item?.created_at);
         return `<article class="activity-item"><div class="activity-icon">↻</div><div class="activity-main"><div class="activity-title">${mattDashboardEscape(title)}</div><div class="activity-text">${mattDashboardEscape(actor)} wprowadził zmianę w sekcji ${mattDashboardEscape(scope)}.</div><div class="activity-meta">${mattDashboardEscape(mattDashboardFormatDate(item?.created_at))}</div></div><div class="activity-time">${mattDashboardEscape(when)}</div></article>`;
       }).join('') : '<div class="empty-state">Brak nowych działań w logach.</div>';
@@ -464,7 +464,7 @@ async function mattHydrateAdminDashboard(modal) {
     const lastLogByModerator = new Map();
     logs.forEach(item => {
       const email = String(item?.actor_email || '').toLowerCase();
-      const actorId = String(item?.actor_id || '');
+      const actorId = String(item?.actor_user_id || '');
       if (email && !lastLogByModerator.has(`mail:${email}`)) lastLogByModerator.set(`mail:${email}`, item.created_at || null);
       if (actorId && !lastLogByModerator.has(`id:${actorId}`)) lastLogByModerator.set(`id:${actorId}`, item.created_at || null);
     });
