@@ -562,6 +562,7 @@ async function mattOpenAccountManager() {
   let catalog = [];
   let dbCatalogPermissions = new Set();
   let selectedId = null;
+  let accountPermissionMode = 'simple';
 
   const load = async () => {
     body.innerHTML = `<div class="account-loading">Ładowanie kont i katalogu uprawnień…</div>`;
@@ -655,7 +656,7 @@ async function mattOpenAccountManager() {
           </button>`;
         }).join("")}</div>
       </section>
-      <section class="account-edit-panel">${selected ? renderSelected(selected) : `<div class="account-empty"><strong>Wybierz konto</strong><p>Kliknij użytkownika z listy albo utwórz nowe konto tymczasowe.</p></div>`}</section>
+      <section class="account-edit-panel">${selected ? renderAccountEditor(selected) : `<div class="account-empty"><strong>Wybierz konto</strong><p>Kliknij użytkownika z listy albo utwórz nowe konto tymczasowe.</p></div>`}</section>
     </div>`;
 
     body.querySelectorAll("[data-account-id]").forEach(btn => btn.addEventListener("click", () => {
@@ -664,6 +665,37 @@ async function mattOpenAccountManager() {
     }));
     body.querySelector("[data-new-account]")?.addEventListener("click", renderCreate);
     bindSelected(selected);
+  };
+
+
+  const renderAccountEditor = account => {
+    const tabs = `<div class="account-mode-tabs">
+      <button type="button" class="${accountPermissionMode==='simple'?'active':''}" data-account-mode="simple">TRYB UPROSZCZONY</button>
+      <button type="button" class="${accountPermissionMode==='advanced'?'active':''}" data-account-mode="advanced">TRYB ZAAWANSOWANY</button>
+    </div>`;
+    return tabs + (accountPermissionMode === 'simple' ? renderSimpleAccess(account) : renderSelected(account));
+  };
+
+  const simplePermissionSets = [
+    {name:"Eventy", permissions:["events.create","events.edit","events.delete","events.schedule.manage","events.images.manage","events.publish"]},
+    {name:"Discord", permissions:["discord.join.messages.manage","discord.join.members.manage","discord.channels.delete"]},
+    {name:"Społeczność i treści", permissions:["streamers.delete","moderation.people.delete","moderation.benefits.delete","commands.delete","rules.delete","contact.topics.delete"]},
+    {name:"Pełna moderacja", permissions:null}
+  ];
+
+  const renderSimpleAccess = account => {
+    const selected = new Set(effectivePermissions(account));
+    return `<div class="account-simple-access">
+      <h3>Szybkie nadawanie dostępu</h3>
+      <p>Zaznacz grupę funkcji. W trybie zaawansowanym wszystkie wybrane elementy będą zaznaczone i można je dalej edytować.</p>
+      ${simplePermissionSets.map((set,i)=>{
+        const perms = set.permissions || catalog.map(x=>x.permission);
+        const checked = perms.every(p=>selected.has(p));
+        return `<label class="account-simple-option"><input type="checkbox" data-simple-group="${i}" ${checked?'checked':''} ${!canAccount("accounts.permissions.change")||String(account.role).toLowerCase()==='user'?'disabled':''}><span><strong>${set.name}</strong><small>${perms.length} szczegółowych uprawnień</small></span></label>`;
+      }).join("")}
+      <button class="account-primary" type="button" data-simple-save ${!canAccount("accounts.permissions.change")?'disabled':''}>ZAPISZ UPROSZCZONE UPRAWNIENIA</button>
+      <p class="account-message" data-account-message></p>
+    </div>`;
   };
 
   const renderSelected = account => {
@@ -785,6 +817,40 @@ async function mattOpenAccountManager() {
 
   const bindSelected = account => {
     if (!account) return;
+
+    body.querySelectorAll('[data-account-mode]').forEach(btn => btn.addEventListener('click', () => {
+      accountPermissionMode = btn.dataset.accountMode;
+      draw();
+    }));
+
+    if (accountPermissionMode === 'simple') {
+      const saveSimple = body.querySelector('[data-simple-save]');
+      saveSimple?.addEventListener('click', async () => {
+        const role = String(account.role || 'moderator').toLowerCase() === 'user' ? 'moderator' : String(account.role || 'moderator').toLowerCase();
+        const selected = new Set();
+        body.querySelectorAll('[data-simple-group]').forEach(cb => {
+          if (cb.checked) {
+            const set = simplePermissionSets[Number(cb.dataset.simpleGroup)];
+            (set.permissions || catalog.map(x=>x.permission)).forEach(p=>selected.add(p));
+          }
+        });
+        try {
+          saveSimple.disabled = true;
+          const dbPermissions=[...selected].filter(p=>dbCatalogPermissions.has(p));
+          const extraPermissions=[...selected].filter(p=>!dbCatalogPermissions.has(p));
+          const {error}=await supabaseClient.rpc("matt_admin_set_account_access",{p_user_id:account.auth_user_id,p_role:role,p_permissions:dbPermissions});
+          if(error) throw error;
+          const extraMap=await mattLoadExtraPermissionsMap();
+          if(extraPermissions.length) extraMap[account.auth_user_id]=extraPermissions; else delete extraMap[account.auth_user_id];
+          await mattSaveExtraPermissionsMap(extraMap);
+          await load();
+        } catch(error) {
+          body.querySelector('[data-account-message]').textContent=error.message||'Błąd zapisu';
+        } finally { saveSimple.disabled=false; }
+      });
+      return;
+    }
+
     const isSelf = account.auth_user_id === viewerUserId;
     const targetIsAdmin = String(account.role || "user").toLowerCase() === "admin";
     const canChangeRole = !isSelf && canAccount("accounts.role.change") && (viewerIsAdmin || !targetIsAdmin);

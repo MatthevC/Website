@@ -10553,3 +10553,15 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 @media (max-width: 620px) {
   .cms-twitch-avatar-tools-head { align-items: start; flex-direction: column; }
 }
+
+
+.account-mode-tabs{display:flex;gap:8px;margin-bottom:16px}
+.account-mode-tabs button{padding:10px 14px;background:#111;border:1px solid #333;color:#aaa;cursor:pointer;font-weight:700}
+.account-mode-tabs button.active{background:#ef2b2d;color:#fff;border-color:#ef2b2d}
+.account-simple-access{padding:18px;background:#111;border:1px solid #292929;border-radius:8px}
+.account-simple-access h3{margin-top:0}
+.account-simple-access p{color:#aaa}
+.account-simple-option{display:flex;gap:12px;align-items:center;padding:14px;margin:10px 0;background:#181818;border:1px solid #303030;border-radius:6px;cursor:pointer}
+.account-simple-option input{width:18px;height:18px}
+.account-simple-option span{display:flex;flex-direction:column}
+.account-simple-option small{color:#999;margin-top:4px}
