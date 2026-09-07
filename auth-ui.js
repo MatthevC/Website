@@ -437,6 +437,7 @@ async function mattLoadUserHeader() {
   const logout = document.getElementById("logoutBtn");
   const auditLogs = document.getElementById("adminAuditLogsBtn");
   const manageAccounts = document.getElementById("manageAccountsBtn");
+  const dashboard = document.getElementById("adminDashboardBtn");
   if (!open) return;
 
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -449,6 +450,7 @@ async function mattLoadUserHeader() {
     mattSetHeaderUser(null);
     if (auditLogs) auditLogs.hidden = true;
     if (manageAccounts) manageAccounts.hidden = true;
+    if (dashboard) dashboard.hidden = true;
     open.onclick = () => modal?.classList.add("active");
     return;
   }
@@ -470,6 +472,8 @@ async function mattLoadUserHeader() {
     if (auditLogs) { auditLogs.hidden = !canViewAudit; auditLogs.onclick = canViewAudit ? (() => { menu?.classList.remove("show"); mattOpenAuditLogs(); }) : null; }
     const canManageAccounts = access.isAdmin || window.mattHasPermission?.("accounts.view") === true;
     if (manageAccounts) { manageAccounts.hidden = !canManageAccounts; manageAccounts.onclick = canManageAccounts ? (() => { menu?.classList.remove("show"); mattOpenAccountManager(); }) : null; }
+    const canDashboard = access.isAdmin || window.mattHasPermission?.("cms.dashboard.view") === true;
+    if (dashboard) { dashboard.hidden = !canDashboard; dashboard.onclick = canDashboard ? (() => { menu?.classList.remove("show"); window.location.href = "admin/"; }) : null; }
     mattSetHeaderUser(profile);
 
     if (profile.must_complete_account === true) {
