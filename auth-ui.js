@@ -395,7 +395,7 @@ async function mattOpenAdminDashboard() {
         const clone = dashboard.cloneNode(true);
         clone.querySelector('.dash-header')?.remove();
         clone.classList.add('flash-dashboard-content', 'themed-admin-dashboard');
-        content = `<div class="flash-dashboard-shell">${clone.innerHTML}</div>`;
+        content = `<div class="flash-dashboard-shell">${clone.outerHTML}</div>`;
       } else {
         content = '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
       }
