@@ -22,6 +22,16 @@ function dashRel(value){
   return dashFmt(value);
 }
 
+function dashActivityStatus(value){
+  if (!value) return { icon:'🔴', label:'Brak historii aktywności', level:3 };
+  const diff = Date.now() - new Date(value).getTime();
+  const days = diff / 86400000;
+  if (days <= 7) return { icon:'🟢', label:'Aktywny ostatnie 7 dni', level:0 };
+  if (days <= 14) return { icon:'🟡', label:'Brak aktywności ponad tydzień', level:1 };
+  if (days <= 30) return { icon:'🟠', label:'Brak aktywności ponad 2 tygodnie', level:2 };
+  return { icon:'🔴', label:'Brak aktywności ponad miesiąc', level:3 };
+}
+
 async function loadAdminDashboard(){
   const set = (selector, value) => { const node = document.querySelector(selector); if (node) node.textContent = value; };
   const recentChanges = document.getElementById('recentChanges');
@@ -64,19 +74,21 @@ async function loadAdminDashboard(){
       if (email && !lastLogByModerator.has(`mail:${email}`)) lastLogByModerator.set(`mail:${email}`, item.created_at || null);
       if (actorId && !lastLogByModerator.has(`id:${actorId}`)) lastLogByModerator.set(`id:${actorId}`, item.created_at || null);
     });
-    const inactive = moderators.filter(mod => {
+    const moderatorActivity = moderators.map(mod => {
       const emailKey = `mail:${String(mod.email || '').toLowerCase()}`;
       const idKey = `id:${String(mod.id || '')}`;
       const last = lastLogByModerator.get(emailKey) || lastLogByModerator.get(idKey) || null;
-      return !last || last < inactiveThreshold;
-    });
-    set('#inactiveModsCount', inactive.length ? `${inactive.length} do sprawdzenia` : 'Wszyscy aktywni');
-    if (inactiveMods) inactiveMods.innerHTML = inactive.length ? inactive.slice(0,6).map(mod => {
-      const emailKey = `mail:${String(mod.email || '').toLowerCase()}`;
-      const idKey = `id:${String(mod.id || '')}`;
-      const last = lastLogByModerator.get(emailKey) || lastLogByModerator.get(idKey) || null;
-      return `<article class="moderator-item"><div class="moderator-icon">!</div><div class="moderator-main"><div class="moderator-name">${dashEsc(mod.username || mod.email || 'Moderator')}</div><div class="moderator-meta">${dashEsc(mod.email || 'Brak adresu e-mail')}</div><div class="moderator-text">${dashEsc(last ? `Ostatnia aktywność: ${dashFmt(last)}.` : 'W ostatnich 14 dniach nie znaleziono żadnej aktywności w logach.')}</div></div><div class="moderator-time">${dashEsc(last ? dashRel(last) : 'Brak wpisów')}</div></article>`;
-    }).join('') : '<div class="empty-state">Świetnie, wszyscy moderatorzy mieli aktywność w logach w ostatnich 14 dniach.</div>';
+      return { mod, last, status: dashActivityStatus(last) };
+    }).sort((a,b) => a.status.level - b.status.level || (!a.last ? -1 : 1));
+
+    const yellow = moderatorActivity.filter(x=>x.status.level===1).length;
+    const orange = moderatorActivity.filter(x=>x.status.level===2).length;
+    const red = moderatorActivity.filter(x=>x.status.level===3).length;
+    set('#inactiveModsCount', `🔴 ${red}  🟠 ${orange}  🟡 ${yellow}`);
+
+    if (inactiveMods) inactiveMods.innerHTML = moderatorActivity.length ? moderatorActivity.slice(0,6).map(({mod,last,status}) => {
+      return `<article class="moderator-item"><div class="moderator-icon">${status.icon}</div><div class="moderator-main"><div class="moderator-name">${dashEsc(mod.username || mod.email || 'Moderator')}</div><div class="moderator-meta">${dashEsc(status.label)}</div><div class="moderator-text">${dashEsc(last ? `Ostatnia aktywność: ${dashFmt(last)}.` : 'Moderator nie wykonał jeszcze żadnej zapisanej czynności.')}</div></div><div class="moderator-time">${dashEsc(last ? dashRel(last) : 'Brak wpisów')}</div></article>`;
+    }).join('') : '<div class="empty-state">Brak moderatorów.</div>';
   }catch(error){
     console.error('Nie udało się pobrać danych dashboardu:', error);
     set('#dashStatusText', 'BŁĄD');
