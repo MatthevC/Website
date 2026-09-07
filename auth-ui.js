@@ -429,7 +429,7 @@ async function mattHydrateAdminDashboard(modal) {
 
     const [profilesCountRes, moderatorsRes, auditRes] = await Promise.all([
       supabaseClient.from('profiles').select('id', { count:'exact', head:true }),
-      supabaseClient.from('profiles').select('id, username, email, role, created_at, updated_at').eq('role', 'moderator'),
+      supabaseClient.from('profiles').select('id, username, email, role').eq('role', 'moderator'),
       supabaseClient.from('audit_logs').select('actor_id, actor_email, action, target_table, entity_type, target_id, created_at').order('created_at', { ascending:false }).limit(80)
     ]);
 
