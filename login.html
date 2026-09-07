@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>LOGIN - MatthevC</title>
+<link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+<div class="login-page">
+    <div class="login-modal">
+        <h1>LOGIN</h1>
+
+        <input id="nick" placeholder="Nick">
+
+        <input id="pass" type="password" placeholder="Hasło">
+
+        <button id="loginBtn" class="login-submit">
+            ZALOGUJ
+        </button>
+
+        <p id="msg"></p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../supabase.js"></script>
+<script src="login.js"></script>
+
+</body>
+</html>
