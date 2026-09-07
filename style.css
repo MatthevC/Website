@@ -10561,6 +10561,14 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .account-simple-access{padding:18px;background:#111;border:1px solid #292929;border-radius:8px}
 .account-simple-access h3{margin-top:0}
 .account-simple-access p{color:#aaa}
+.account-simple-roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}
+.account-simple-role{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#181818;border:1px solid #303030;border-radius:8px;cursor:pointer;transition:.2s;min-height:80px}
+.account-simple-role:hover{border-color:#555}
+.account-simple-role.active{border-color:#ff3038;background:#211416}
+.account-simple-role input{margin-top:5px;width:18px;height:18px;accent-color:#ff3038}
+.account-simple-role-content{display:flex;flex-direction:column;gap:6px}
+.account-simple-role-content strong{font-size:15px;color:#fff}
+.account-simple-role-content small{color:#999;line-height:1.4}
 .account-simple-option{display:flex;gap:12px;align-items:center;padding:14px;margin:10px 0;background:#181818;border:1px solid #303030;border-radius:6px;cursor:pointer}
 .account-simple-option input{width:18px;height:18px}
 .account-simple-option span{display:flex;flex-direction:column}

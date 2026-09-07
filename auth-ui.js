@@ -698,7 +698,13 @@ async function mattOpenAccountManager() {
       <h3>Szybkie nadawanie dostępu</h3>
       <p>Najpierw wybierz rolę, następnie dodatkowe moduły. Tryb zaawansowany pozwala później odebrać pojedyncze uprawnienia.</p>
       <div class="account-simple-roles">
-        ${Object.entries(simpleRoles).map(([key,r])=>`<label class="account-simple-role"><input type="radio" name="simple-role" data-simple-role="${key}" ${currentRole===key?'checked':''}><strong>${r.label}</strong><small>${r.desc}</small></label>`).join('')}
+        ${Object.entries(simpleRoles).map(([key,r])=>`<label class="account-simple-role ${currentRole===key?'active':''}">
+          <input type="radio" name="simple-role" data-simple-role="${key}" ${currentRole===key?'checked':''}>
+          <div class="account-simple-role-content">
+            <strong>${r.label}</strong>
+            <small>${r.desc}</small>
+          </div>
+        </label>`).join('')}
       </div>
       <h4>Dodatkowe możliwości</h4>
       <div class="account-simple-options">
