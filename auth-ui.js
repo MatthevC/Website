@@ -378,10 +378,23 @@ async function mattOpenAuditLogs() {
 
 async function mattOpenAdminDashboard() {
   let modal = document.getElementById('adminDashboardModal');
+
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'adminDashboardModal';
     modal.className = 'admin-dashboard-modal';
+
+    let content = '';
+    try {
+      const response = await fetch('./admin/index.html');
+      const html = await response.text();
+      const parsed = new DOMParser().parseFromString(html, 'text/html');
+      const dashboard = parsed.querySelector('.admin-dashboard');
+      content = dashboard ? dashboard.outerHTML : '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
+    } catch (e) {
+      content = '<div class="admin-load-error">Nie udało się załadować panelu administratora.</div>';
+    }
+
     modal.innerHTML = `
       <div class="admin-dashboard-box" role="dialog" aria-modal="true">
         <header class="admin-dashboard-head">
@@ -392,12 +405,15 @@ async function mattOpenAdminDashboard() {
           </div>
           <button type="button" class="admin-dashboard-close">×</button>
         </header>
-        <iframe src="./admin/" title="Panel administratora"></iframe>
+        <div class="admin-dashboard-content">${content}</div>
       </div>`;
+
     document.body.appendChild(modal);
+
     modal.querySelector('.admin-dashboard-close')?.addEventListener('click',()=>modal.classList.remove('active'));
     modal.addEventListener('click',e=>{if(e.target===modal) modal.classList.remove('active');});
   }
+
   modal.classList.add('active');
 }
 
