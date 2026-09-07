@@ -1,0 +1,67 @@
+
+.admin-dashboard{
+ max-width:1400px;
+ margin:30px auto;
+ padding:32px;
+ background:#0d0f14;
+ border:1px solid #252936;
+ border-radius:18px;
+ box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.admin-dashboard h1{font-size:34px;margin-bottom:8px}
+.admin-subtitle{color:#9298a8;margin-bottom:28px}
+.dashboard-grid{
+ display:grid;
+ grid-template-columns:repeat(4,1fr);
+ gap:16px;
+ margin-bottom:24px;
+}
+.dashboard-card,.admin-widget,.quick-card{
+ background:#151820;
+ border:1px solid #292e3a;
+ border-radius:14px;
+ padding:22px;
+}
+.dashboard-card small{color:#9298a8;text-transform:uppercase}
+.dashboard-card b{display:block;font-size:34px;margin-top:8px}
+.admin-layout{
+ display:grid;
+ grid-template-columns:2fr 1fr;
+ gap:20px;
+}
+.audit-mini{
+ padding:14px;
+ border-bottom:1px solid #292e3a;
+}
+.quick-actions{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:12px;
+}
+.quick-card{
+ cursor:pointer;
+ text-decoration:none;
+ color:white;
+ transition:.2s;
+}
+.quick-card:hover{border-color:#ff3040;transform:translateY(-2px)}
+.quick-card strong{display:block;font-size:18px;margin-bottom:5px}
+.quick-card span{color:#9298a8}
+.dashboard-event-form input,.dashboard-event-form textarea{
+ width:100%;
+ margin:7px 0;
+ background:#0c0e12;
+ border:1px solid #303542;
+ color:white;
+ padding:12px;
+ border-radius:8px;
+ box-sizing:border-box;
+}
+.dashboard-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:900px){
+ .dashboard-grid,.admin-layout{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+ .admin-dashboard{margin:10px;padding:16px}
+ .dashboard-grid{grid-template-columns:1fr 1fr}
+}
