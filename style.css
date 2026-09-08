@@ -11240,3 +11240,21 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .flash-dashboard-content.admin-dashboard .activity-time,
   .flash-dashboard-content.admin-dashboard .moderator-time{margin-left:56px!important;padding-left:0!important}
 }
+
+/* Account preview actions alignment */
+.account-simple-actions {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:16px;
+}
+.matt-preview-user-btn {
+  margin-bottom:18px !important;
+  margin-right:16px !important;
+}
+.account-editor-actions {
+  margin-top:24px !important;
+  padding-top:16px;
+  gap:14px;
+}

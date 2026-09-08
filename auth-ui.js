@@ -989,8 +989,10 @@ async function mattOpenAccountManager() {
         <strong>Podgląd dostępu</strong>
         <p>Wybierz rolę lub moduły aby zobaczyć możliwości użytkownika.</p>
       </div>
-      <button class="account-secondary" type="button" data-preview-role-view>👁 PODGLĄD STRONY JAKO TA ROLA</button>
-      <button class="account-primary" type="button" data-simple-save ${!canAccount("accounts.permissions.change")?'disabled':''}>ZAPISZ UPROSZCZONE UPRAWNIENIA</button>
+      <div class="account-simple-actions">
+        <button class="account-secondary" type="button" data-preview-role-view>👁 ZOBACZ PANEL JAKO TEN MODERATOR</button>
+        <button class="account-primary" type="button" data-simple-save ${!canAccount("accounts.permissions.change")?'disabled':''}>ZAPISZ UPROSZCZONE UPRAWNIENIA</button>
+      </div>
       <p class="account-message" data-account-message></p>
     </div>`;
   };
