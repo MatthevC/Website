@@ -11346,3 +11346,21 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .matt-role-actions-advanced .matt-preview-role-btn{
     flex:0 0 auto!important;
 }
+
+
+/* Naprawa podgladu moderatora w trybie zaawansowanym */
+.matt-role-actions-advanced .matt-preview-role-btn{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:0 0 auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    height:42px!important;
+}
+.matt-role-actions-advanced{
+    justify-content:flex-end!important;
+    align-items:center!important;
+    gap:14px!important;
+}
