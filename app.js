@@ -1184,7 +1184,8 @@ function dixperPage() {
   const clipsHtml = clips.map((clip, index) => `
     <article class="dixper-clip-card" data-dixper-clip data-clip-slug="${clip.slug}" data-clip-channel="${clip.channel}">
       <div class="dixper-clip-placeholder dixper-clip-preview" data-dixper-clip-slot data-clip-url="${clip.url}">
-        <div class="dixper-clip-static-preview" data-dixper-thumbnail aria-hidden="true">
+        <div class="dixper-clip-static-preview" aria-hidden="true">
+          <img data-dixper-thumbnail src="" alt="Miniatura klipu Twitch" loading="lazy">
           <span class="dixper-clip-static-brand">TWITCH CLIP</span>
         </div>
         <button type="button" class="dixper-clip-preview-cover" data-dixper-play aria-label="Odtwórz klip ${index + 1} od ${clip.channel}">
@@ -1332,7 +1333,7 @@ function setupDixperPage() {
       const data = await response.json();
       const image = String(data?.thumbnail_url || '').trim();
       if (!image) return;
-      thumb.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.18)), url("${image.replace(/"/g, '%22')}")`;
+      thumb.src = image;
       thumb.classList.add('has-thumbnail');
       if (!card.classList.contains('playing')) slot.dataset.originalMarkup = slot.innerHTML;
     } catch (_) {
