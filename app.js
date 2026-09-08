@@ -1185,7 +1185,7 @@ function dixperPage() {
     <article class="dixper-clip-card" data-dixper-clip data-clip-slug="${clip.slug}" data-clip-channel="${clip.channel}">
       <div class="dixper-clip-placeholder dixper-clip-preview" data-dixper-clip-slot data-clip-url="${clip.url}">
         <div class="dixper-clip-static-preview" aria-hidden="true">
-          <iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip.slug)}&parent=${encodeURIComponent(clipParent)}&autoplay=false" title="Podgląd klipu Twitch — ${clip.channel}" loading="lazy" allowfullscreen></iframe>
+          <img data-dixper-thumbnail alt="Miniatura klipu Twitch ${clip.channel}" loading="lazy">
           <span class="dixper-clip-static-brand">TWITCH CLIP</span>
         </div>
         <button type="button" class="dixper-clip-preview-cover" data-dixper-play aria-label="Odtwórz klip ${index + 1} od ${clip.channel}">
