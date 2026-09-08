@@ -1151,7 +1151,26 @@ async function mattOpenAccountManager() {
       body.querySelectorAll('[data-simple-role],[data-simple-group]').forEach(x=>x.addEventListener('change',updateSimplePreview));
       body.querySelector('[data-preview-role-view]')?.addEventListener('click',()=>{
         const role=body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
-        alert('Podgląd roli: '+simpleRoles[role].label+'\n\nWersja podglądu pokazuje dostęp według wybranych modułów.');
+        const permissions=new Set();
+        const rolePermissions=simpleRoles[role]?.permissions;
+        if(rolePermissions===null){
+          catalog.forEach(x=>permissions.add(x.permission));
+        }else{
+          (rolePermissions||[]).forEach(p=>permissions.add(p));
+        }
+        body.querySelectorAll('[data-simple-group]:checked').forEach(cb=>{
+          const set=simplePermissionSets[Number(cb.dataset.simpleGroup)];
+          if(set?.permissions===null){
+            catalog.forEach(x=>permissions.add(x.permission));
+          }else{
+            (set?.permissions||[]).forEach(p=>permissions.add(p));
+          }
+        });
+        sessionStorage.setItem('matt_preview_as_moderator',JSON.stringify({
+          username: account.username || 'Podgląd roli',
+          permissions:[...permissions]
+        }));
+        location.reload();
       });
       updateSimplePreview();
       saveSimple?.addEventListener('click', async () => {
