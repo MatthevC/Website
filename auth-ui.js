@@ -1149,8 +1149,8 @@ async function mattOpenAccountManager() {
         if(box) box.innerHTML=`<strong>Podgląd dostępu</strong><p>Rola: ${simpleRoles[role].label}</p><p>${simpleRoles[role].desc}</p><p>Moduły: ${selected.length?selected.join(', '):'brak dodatkowych modułów'}</p>`;
       };
       body.querySelectorAll('[data-simple-role],[data-simple-group]').forEach(x=>x.addEventListener('change',updateSimplePreview));
-      body.querySelector('[data-preview-role-view]')?.addEventListener('click',()=>{
-        const role=body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
+      body.querySelectorAll('[data-preview-role-view]').forEach(previewBtn=>previewBtn.addEventListener('click',()=>{
+        const role=body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || selectedRole?.() || 'user';
         const permissions=new Set();
         const rolePermissions=simpleRoles[role]?.permissions;
         if(rolePermissions===null){
@@ -1171,7 +1171,7 @@ async function mattOpenAccountManager() {
           permissions:[...permissions]
         }));
         location.reload();
-      });
+      }));
       updateSimplePreview();
       saveSimple?.addEventListener('click', async () => {
         const role = body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';

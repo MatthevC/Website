@@ -11320,3 +11320,29 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     margin-top:18px!important;
     margin-bottom:12px!important;
 }
+
+
+/* Finalny wyglad podgladu moderatora: identyczny w uproszczonym i zaawansowanym */
+.matt-preview-role-btn{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-height:38px!important;
+    width:auto!important;
+    padding:10px 16px!important;
+    border-radius:8px!important;
+    background:#191b21!important;
+    border:1px solid #3c4049!important;
+    color:#cfd2d8!important;
+    font-size:12px!important;
+    font-weight:700!important;
+    line-height:1!important;
+    box-sizing:border-box!important;
+}
+.matt-preview-role-btn:hover{
+    border-color:#ff2633!important;
+    color:#fff!important;
+}
+.matt-role-actions-advanced .matt-preview-role-btn{
+    flex:0 0 auto!important;
+}
