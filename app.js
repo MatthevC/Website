@@ -2,6 +2,21 @@ let tocScrollLock = false;
 let tocUnlockTimer = null;
 let tocScrollListenerReady = false;
 
+// Po kliknięciu w boczną nawigację wybór użytkownika ma pierwszeństwo
+// przed automatycznym scroll-spy. Zostaje aktywny do następnego ręcznego scrolla.
+let tocPinnedByClick = false;
+
+function clearTocPinnedByUser(){
+  tocPinnedByClick = false;
+}
+
+if (!window.__mattTocManualScrollClearReady) {
+  window.__mattTocManualScrollClearReady = true;
+  window.addEventListener('wheel', clearTocPinnedByUser, { passive: true });
+  window.addEventListener('touchstart', clearTocPinnedByUser, { passive: true });
+  window.addEventListener('pointerdown', clearTocPinnedByUser, { passive: true });
+}
+
 function refreshTocScrollLock(duration = 1700) {
   tocScrollLock = true;
   clearTimeout(tocUnlockTimer);
@@ -34,6 +49,7 @@ function highlightSidebarTarget(target) {
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
+  tocPinnedByClick = true;
   refreshTocScrollLock(2200);
   const target = document.getElementById(targetId);
   const activeIndex = sections.findIndex(section => section.id === targetId);
@@ -4292,7 +4308,7 @@ document.addEventListener("click", function(e) {
 
   function update(){
     raf = 0;
-    if (tocScrollLock) return;
+    if (tocScrollLock || tocPinnedByClick) return;
     configs.forEach(cfg => {
       document.querySelectorAll(cfg.nav).forEach(nav => updateNav(nav, cfg));
     });
