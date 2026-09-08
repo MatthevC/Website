@@ -4323,3 +4323,31 @@ render();
 
 async function setupAdminButton(){const b=document.getElementById("admin-login-btn");if(!b)return;const {data}=await supabaseClient.auth.getSession();b.textContent=data.session?"ADMIN":"ZALOGUJ";b.onclick=()=>{if(data.session)location.href="admin/index.html";else location.href="admin/login.html";};}
 setupAdminButton();
+
+
+// Globalny pasek postępu bocznej nawigacji.
+// Wypełnia pionową linię zgodnie z aktualnym miejscem przewijania strony.
+(function setupSidebarReadingProgress(){
+  if (window.__mattSidebarProgress) return;
+  window.__mattSidebarProgress = true;
+
+  function update(){
+    const bars = document.querySelectorAll('[data-site-page-progress]');
+    if (!bars.length) return;
+
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = max > 0 ? Math.min(100, Math.max(0, (window.scrollY / max) * 100)) : 0;
+
+    bars.forEach(bar => {
+      bar.style.height = percent + '%';
+    });
+  }
+
+  window.addEventListener('scroll', update, {passive:true});
+  window.addEventListener('resize', update);
+
+  new MutationObserver(() => setTimeout(update, 50))
+    .observe(document.body, {childList:true, subtree:true});
+
+  setTimeout(update, 300);
+})();
