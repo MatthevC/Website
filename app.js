@@ -2198,13 +2198,14 @@ function setupGlobalPageNavigation() {
   // Dzięki temu nie pojawia się sztuczna pozycja „Początek” odnosząca się do nagłówka H1.
   const isCommandsPage = /(?:^|\/)commands$/.test(currentPath);
   const isVipPage = currentPath === "viewer/vip";
-  const headingSelector = isCommandsPage ? ".command-category-heading h2" : (isVipPage ? "#vip-get-section, #vip-lose-section, #vip-benefits-section" : "h1, h2");
+  const isModeratorBenefitsPage = currentPath === "moderator/benefits";
+  const headingSelector = isCommandsPage ? ".command-category-heading h2" : (isVipPage ? "#vip-get-section, #vip-lose-section, #vip-benefits-section" : (isModeratorBenefitsPage ? ".moderator-recruit-content h2, .moderator-benefits-heading h2, .moderator-benefits-bottom h2" : "h1, h2"));
   let headings = [...panel.querySelectorAll(headingSelector)]
     .filter(heading => !heading.closest(".site-page-toc") && heading.offsetParent !== null);
 
   // Strona VIP nie pokazuje głównego nagłówka jako pozycji "Początek".
   // Pierwsza pozycja nawigacji zaczyna się od pierwszej sekcji informacyjnej.
-  if (isVipPage && headings.length > 0 && headings[0].tagName === "H1") {
+  if ((isVipPage || isModeratorBenefitsPage) && headings.length > 0 && headings[0].tagName === "H1") {
     headings.shift();
   }
   if (headings.length < 2) return;
@@ -2231,7 +2232,7 @@ function setupGlobalPageNavigation() {
     <div class="dixper-toc-track" aria-hidden="true"><span data-site-page-progress></span></div>
     ${headings.map((heading, index) => {
       const raw = heading.textContent.replace(/\s+/g, " ").trim();
-      const label = !isCommandsPage && index === 0 && location.hash.includes("/viewer/vip") ? "JAK ZOSTAĆ VIPEM?" : (!isCommandsPage && index === 0 && currentPath === "moderator/benefits" ? "KORZYŚCI MODERATORA" : (!isCommandsPage && index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw)));
+      const label = !isCommandsPage && index === 0 && location.hash.includes("/viewer/vip") ? "JAK ZOSTAĆ VIPEM?" : (!isCommandsPage && index === 0 && isModeratorBenefitsPage ? raw : (!isCommandsPage && index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw)));
       return `<button type="button" class="dixper-toc-link site-page-toc-link${index === 0 ? " active" : ""}" data-site-page-target="${heading.id}"><span>${String(index + 1).padStart(2, "0")}</span>${label}</button>`;
     }).join("")}`;
 
