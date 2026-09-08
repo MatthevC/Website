@@ -11412,3 +11412,13 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   0%,100% { box-shadow: 0 0 0 1px rgba(255,40,60,.65), 0 0 28px rgba(255,40,60,.18); }
   50% { box-shadow: 0 0 0 2px rgba(255,40,60,.9), 0 0 40px rgba(255,40,60,.28); }
 }
+
+/* Proste podświetlenie aktywnej sekcji na stronach z boczną nawigacją */
+.sidebar-section-active {
+  border: 1px solid rgba(255, 45, 55, .8);
+  border-radius: 18px;
+  background: rgba(255, 45, 55, .035);
+  box-shadow: 0 0 28px rgba(255, 45, 55, .12);
+  padding-left: 1rem;
+  padding-right: 1rem;
+}

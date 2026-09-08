@@ -4036,306 +4036,58 @@ document.addEventListener("click", function(e) {
 
 
 
-/* === v2.6.13 — PŁYNNY SCROLL-SPY + WIRTUALNE STREFY DLA SEKCJI OBOK SIEBIE ===
-   - krótka sekcja nie jest pomijana przy szybkim scrollu: przechodzimy przez
-     wszystkie minięte pozycje po kolei;
-   - aktywny kafelek ma ruchomy, animowany marker zamiast gwałtownego przeskoku;
-   - pionowy pasek postępu jest liczony z realnych pozycji sekcji i środków linków,
-     więc jego wysokość odpowiada faktycznemu układowi nawigacji. */
-(function setupUniversalSidebarScrollSpy(){
+/* === SIMPLE SIDEBAR NAVIGATION ===
+   Prosta obsługa nawigacji bocznej.
+   Kliknięcie ustawia aktywny element natychmiast.
+   Scroll nie nadpisuje wyboru podczas przejścia do sekcji.
+*/
+(function setupSimpleSidebarNavigation(){
   const configs = [
-    { nav: '.dixper-toc', link: '[data-dixper-target]', attr: 'dixperTarget', progress: '[data-dixper-progress]' },
-    { nav: '.bingo-toc', link: '[data-bingo-target]', attr: 'bingoTarget', progress: '[data-bingo-progress]' },
-    { nav: '.emotes7tv-toc', link: '[data-emotes7tv-target]', attr: 'emotes7tvTarget', progress: '[data-emotes7tv-progress]' },
-    { nav: '.recommended-toc', link: '[data-recommended-target]', attr: 'recommendedTarget', progress: '[data-recommended-progress]' },
-    { nav: '.site-page-toc', link: '[data-site-page-target]', attr: 'sitePageTarget', progress: '[data-site-page-progress]' }
+    { nav: '.dixper-toc', link: '[data-dixper-target]' },
+    { nav: '.bingo-toc', link: '[data-bingo-target]' },
+    { nav: '.emotes7tv-toc', link: '[data-emotes7tv-target]' },
+    { nav: '.recommended-toc', link: '[data-recommended-target]' },
+    { nav: '.site-page-toc', link: '[data-site-page-target]' }
   ];
 
-  const HEADER_OFFSET = 104;
-  const MIN_STEP_TIME = 115; // minimalny czas pokazania miniętej pozycji
-  const states = new WeakMap();
-  let raf = 0;
+  configs.forEach(config => {
+    const navs = document.querySelectorAll(config.nav);
 
-  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    navs.forEach(nav => {
+      const links = [...nav.querySelectorAll(config.link)];
+      if (!links.length) return;
 
-  function targetId(link, cfg){
-    return link?.dataset?.[cfg.attr] || '';
-  }
+      links.forEach(link => {
+        if (link.dataset.simpleSidebarBound === '1') return;
+        link.dataset.simpleSidebarBound = '1';
 
-  function stateFor(nav){
-    let state = states.get(nav);
-    if (!state) {
-      state = { initialized:false, currentIndex:0, targetIndex:0, timer:0, indicator:null, signature:'' };
-      states.set(nav, state);
-    }
-    return state;
-  }
+        link.addEventListener('click', event => {
+          event.preventDefault();
 
-  function ensureIndicator(nav, state){
-    nav.classList.add('matt-sidebar-soft-nav');
-    let indicator = state.indicator;
-    if (!indicator?.isConnected || indicator.parentElement !== nav) {
-      indicator = nav.querySelector(':scope > .matt-sidebar-active-indicator');
-      if (!indicator) {
-        indicator = document.createElement('span');
-        indicator.className = 'matt-sidebar-active-indicator';
-        indicator.setAttribute('aria-hidden', 'true');
-        nav.insertBefore(indicator, nav.firstChild);
-      }
-      state.indicator = indicator;
-    }
-    return indicator;
-  }
+          links.forEach(item => item.classList.remove('active'));
+          link.classList.add('active');
 
-  function keepLinkVisible(nav, link){
-    if (!link || nav.scrollHeight <= nav.clientHeight + 2) return;
-    const padding = 14;
-    const top = link.offsetTop;
-    const bottom = top + link.offsetHeight;
-    const viewTop = nav.scrollTop + padding;
-    const viewBottom = nav.scrollTop + nav.clientHeight - padding;
-    if (top < viewTop) nav.scrollTo({ top: Math.max(0, top - padding), behavior:'smooth' });
-    else if (bottom > viewBottom) nav.scrollTo({ top: Math.max(0, bottom - nav.clientHeight + padding), behavior:'smooth' });
-  }
+          const targetId = link.dataset[
+            Object.keys(link.dataset).find(k => k.toLowerCase().endsWith('target'))
+          ];
 
-  function paintActive(nav, pairs, index, state, instant = false){
-    index = clamp(index, 0, pairs.length - 1);
-    state.currentIndex = index;
-    const active = pairs[index];
-    pairs.forEach((item, i) => item.link.classList.toggle('active', i === index));
+          const target = document.getElementById(targetId);
+          if (!target) return;
 
-    const indicator = ensureIndicator(nav, state);
-    if (indicator && active?.link) {
-      if (instant) indicator.classList.add('no-transition');
-      indicator.style.transform = `translate3d(0, ${Math.round(active.link.offsetTop)}px, 0)`;
-      indicator.style.height = `${Math.max(32, Math.round(active.link.offsetHeight))}px`;
-      indicator.style.opacity = '1';
-      if (instant) requestAnimationFrame(() => indicator.classList.remove('no-transition'));
-      keepLinkVisible(nav, active.link);
-    }
-  }
+          document.querySelectorAll('.dixper-clean-section.sidebar-section-active, [data-dixper-section].sidebar-section-active, .site-page-section.sidebar-section-active').forEach(item => {
+            item.classList.remove('sidebar-section-active');
+          });
+          target.classList.add('sidebar-section-active');
 
-  function queueActive(nav, pairs, targetIndex, state){
-    targetIndex = clamp(targetIndex, 0, pairs.length - 1);
-    state.targetIndex = targetIndex;
-
-    if (!state.initialized) {
-      state.initialized = true;
-      const preActive = pairs.findIndex(item => item.link.classList.contains('active'));
-      state.currentIndex = preActive >= 0 ? preActive : targetIndex;
-      // Przy pierwszym pomiarze ustawiamy właściwą sekcję od razu, bez przejazdu
-      // przez całą listę po odświeżeniu strony w połowie dokumentu.
-      state.currentIndex = targetIndex;
-      paintActive(nav, pairs, targetIndex, state, true);
-      return;
-    }
-
-    if (state.currentIndex === state.targetIndex || state.timer) return;
-
-    const step = () => {
-      state.timer = 0;
-      if (!nav.isConnected || !pairs.length) return;
-      if (state.currentIndex === state.targetIndex) return;
-      const direction = state.targetIndex > state.currentIndex ? 1 : -1;
-      const nextIndex = state.currentIndex + direction;
-      paintActive(nav, pairs, nextIndex, state, false);
-      if (state.currentIndex !== state.targetIndex) {
-        state.timer = window.setTimeout(step, MIN_STEP_TIME);
-      }
-    };
-
-    // Krótkie opóźnienie wygładza drganie na granicy dwóch sekcji. Jeśli scroll
-    // przeskoczy o kilka sekcji, każda pozycja zostanie pokazana kolejno.
-    state.timer = window.setTimeout(step, 55);
-  }
-
-  function probeY(){
-    // Linia obserwacji znajduje się niżej niż sam header. Dzięki temu aktywna jest
-    // sekcja, która faktycznie zajmuje istotną część widoku, a nie tylko musnęła górę.
-    return clamp(window.innerHeight * 0.38, HEADER_OFFSET + 72, Math.max(HEADER_OFFSET + 72, window.innerHeight * 0.48));
-  }
-
-  function chooseTargetIndex(metrics, probeAbs, edgeState){
-    if (!metrics.length) return 0;
-    if (edgeState?.atTop) return 0;
-    if (edgeState?.atBottom) return metrics.length - 1;
-    let index = 0;
-    // Używamy efektywnych kotwic. Dla sekcji stojących w jednym rzędzie kotwice
-    // są rozłożone wewnątrz wysokości całego rzędu, więc każda karta dostaje
-    // własny moment aktywacji mimo identycznego położenia Y nagłówków.
-    for (let i = 0; i < metrics.length - 1; i++) {
-      const boundary = (metrics[i].anchor + metrics[i + 1].anchor) / 2;
-      if (probeAbs >= boundary) index = i + 1;
-      else break;
-    }
-    return index;
-  }
-
-  function visualBlockForHeading(heading){
-    if (!heading) return null;
-    const selectors = [
-      '.vip-card','.vip-benefits','.vip-hero','.rules-hero','.notice',
-      'section','article','header','[class*="-card"]','[class*="-section"]','[class*="-hero"]'
-    ];
-    for (const selector of selectors) {
-      const found = heading.closest(selector);
-      if (found && found !== document.body && !found.classList.contains('site-page-toc')) return found;
-    }
-    return heading;
-  }
-
-  function buildEffectiveMetrics(pairs, scrollTop){
-    const raw = pairs.map(item => {
-      const rect = item.section.getBoundingClientRect();
-      const block = visualBlockForHeading(item.section);
-      const blockRect = block?.getBoundingClientRect?.() || rect;
-      return {
-        top: rect.top + scrollTop,
-        bottom: rect.bottom + scrollTop,
-        blockTop: blockRect.top + scrollTop,
-        blockBottom: blockRect.bottom + scrollTop,
-        anchor: rect.top + scrollTop
-      };
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        });
+      });
     });
-
-    // Kolejne nagłówki o praktycznie tej samej wysokości należą zazwyczaj do kart
-    // ustawionych obok siebie. Tworzymy z nich jeden rząd i dzielimy jego wysokość
-    // na tyle wirtualnych stref, ile jest pozycji w nawigacji.
-    const SAME_ROW_TOLERANCE = 72;
-    let i = 0;
-    while (i < raw.length) {
-      let j = i + 1;
-      const baseTop = raw[i].top;
-      while (j < raw.length && Math.abs(raw[j].top - baseTop) <= SAME_ROW_TOLERANCE) j++;
-      const count = j - i;
-      if (count > 1) {
-        const rowTop = Math.min(...raw.slice(i,j).map(m => Math.min(m.top, m.blockTop)));
-        const rowBottom = Math.max(...raw.slice(i,j).map(m => Math.max(m.bottom, m.blockBottom)));
-        const rowHeight = Math.max(140, rowBottom - rowTop);
-        // Margines 20% chroni przed aktywowaniem drugiej karty natychmiast po
-        // wejściu w rząd. Dwie karty dostają więc strefy około 30% i 70% rzędu.
-        const start = rowTop + rowHeight * 0.20;
-        const end = rowTop + rowHeight * 0.80;
-        for (let k = 0; k < count; k++) {
-          const t = count === 1 ? 0.5 : k / (count - 1);
-          raw[i+k].anchor = start + (end - start) * t;
-        }
-      }
-      i = j;
-    }
-
-    // Kotwice muszą być ściśle rosnące. To zabezpiecza nietypowe układy CMS,
-    // w których kilka nagłówków może wizualnie zachodzić na siebie.
-    for (let k = 1; k < raw.length; k++) {
-      raw[k].anchor = Math.max(raw[k].anchor, raw[k-1].anchor + 36);
-    }
-    return raw;
-  }
-
-  function progressStopPercent(link, track){
-    const trackRect = track.getBoundingClientRect();
-    const linkRect = link.getBoundingClientRect();
-    if (trackRect.height <= 1) return 0;
-    const center = linkRect.top + linkRect.height / 2;
-    return clamp(((center - trackRect.top) / trackRect.height) * 100, 0, 100);
-  }
-
-  function updateProgress(nav, cfg, pairs, metrics, probeAbs, edgeState){
-    const progress = nav.querySelector(cfg.progress);
-    const track = progress?.parentElement;
-    if (!progress || !track || !metrics.length) return;
-
-    const stops = pairs.map(item => progressStopPercent(item.link, track));
-    let pct = stops[0] ?? 0;
-
-    if (edgeState?.atTop) {
-      pct = stops[0] ?? 0;
-    } else if (edgeState?.atBottom) {
-      pct = stops[stops.length - 1] ?? 100;
-    } else if (metrics.length === 1) {
-      pct = stops[0] ?? 100;
-    } else if (probeAbs <= metrics[0].anchor) {
-      pct = stops[0];
-    } else if (probeAbs >= metrics[metrics.length - 1].anchor) {
-      pct = stops[stops.length - 1];
-    } else {
-      for (let i = 0; i < metrics.length - 1; i++) {
-        const a = metrics[i].anchor;
-        const b = metrics[i + 1].anchor;
-        if (probeAbs >= a && probeAbs <= b) {
-          const t = clamp((probeAbs - a) / Math.max(1, b - a), 0, 1);
-          pct = stops[i] + (stops[i + 1] - stops[i]) * t;
-          break;
-        }
-      }
-    }
-
-    progress.style.height = `${clamp(pct, 0, 100).toFixed(2)}%`;
-  }
-
-  function updateNav(nav, cfg){
-    const links = [...nav.querySelectorAll(cfg.link)];
-    if (!links.length) return;
-    const pairs = links.map(link => ({ link, id: targetId(link, cfg), section: document.getElementById(targetId(link, cfg)) }))
-      .filter(item => item.id && item.section && item.section.offsetParent !== null);
-    if (!pairs.length) return;
-
-    const state = stateFor(nav);
-    const signature = pairs.map(item => item.id).join('|');
-    if (signature !== state.signature) {
-      if (state.timer) clearTimeout(state.timer);
-      state.timer = 0;
-      state.initialized = false;
-      state.signature = signature;
-    }
-
-    const scrollTop = window.scrollY;
-    const doc = document.documentElement;
-    const edgeState = {
-      atTop: scrollTop <= 6,
-      atBottom: window.innerHeight + scrollTop >= doc.scrollHeight - 10
-    };
-    const metrics = buildEffectiveMetrics(pairs, scrollTop);
-    const probeAbs = scrollTop + probeY();
-    const targetIndex = chooseTargetIndex(metrics, probeAbs, edgeState);
-
-    // Na absolutnych krawędziach dokumentu reguła jest twarda: góra = pierwszy,
-    // dół = ostatni. Nie czekamy wtedy na kolejkę animacji między pozycjami.
-    if (edgeState.atTop || edgeState.atBottom) {
-      if (state.timer) clearTimeout(state.timer);
-      state.timer = 0;
-      state.initialized = true;
-      state.targetIndex = targetIndex;
-      paintActive(nav, pairs, targetIndex, state, false);
-    } else {
-      queueActive(nav, pairs, targetIndex, state);
-    }
-    updateProgress(nav, cfg, pairs, metrics, probeAbs, edgeState);
-  }
-
-  function update(){
-    raf = 0;
-    if (tocScrollLock || tocPinnedByClick) return;
-    configs.forEach(cfg => {
-      // Strony z główną nawigacją sekcji (VIP oraz Moderacja) mają aktywny stan
-      // sterowany kliknięciem. Scroll spy powodował konflikt po animowanym scrollu.
-      if (cfg.nav === '.site-page-toc') return;
-      document.querySelectorAll(cfg.nav).forEach(nav => updateNav(nav, cfg));
-    });
-  }
-
-  function schedule(){
-    if (raf) return;
-    raf = requestAnimationFrame(update);
-  }
-
-  window.addEventListener('scroll', schedule, { passive:true });
-  window.addEventListener('resize', schedule, { passive:true });
-  window.addEventListener('hashchange', () => setTimeout(schedule, 0));
-  new MutationObserver(schedule).observe(document.body, { childList:true, subtree:true });
-  schedule();
+  });
 })();
-
 /* Trwałe boczne nawigacje — wersja odporna na edytor UKŁAD.
    WAŻNE: edytor układu używa CSS `translate` na dowolnych kontenerach.
    Taki transform tworzy nowy containing block i potrafi sprawić, że position:fixed
