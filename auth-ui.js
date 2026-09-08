@@ -989,6 +989,7 @@ async function mattOpenAccountManager() {
         <strong>Podgląd dostępu</strong>
         <p>Wybierz rolę lub moduły aby zobaczyć możliwości użytkownika.</p>
       </div>
+      <button class="account-secondary" type="button" data-preview-role-view>👁 PODGLĄD STRONY JAKO TA ROLA</button>
       <button class="account-primary" type="button" data-simple-save ${!canAccount("accounts.permissions.change")?'disabled':''}>ZAPISZ UPROSZCZONE UPRAWNIENIA</button>
       <p class="account-message" data-account-message></p>
     </div>`;
@@ -1146,6 +1147,10 @@ async function mattOpenAccountManager() {
         if(box) box.innerHTML=`<strong>Podgląd dostępu</strong><p>Rola: ${simpleRoles[role].label}</p><p>${simpleRoles[role].desc}</p><p>Moduły: ${selected.length?selected.join(', '):'brak dodatkowych modułów'}</p>`;
       };
       body.querySelectorAll('[data-simple-role],[data-simple-group]').forEach(x=>x.addEventListener('change',updateSimplePreview));
+      body.querySelector('[data-preview-role-view]')?.addEventListener('click',()=>{
+        const role=body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
+        alert('Podgląd roli: '+simpleRoles[role].label+'\n\nWersja podglądu pokazuje dostęp według wybranych modułów.');
+      });
       updateSimplePreview();
       saveSimple?.addEventListener('click', async () => {
         const role = body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
