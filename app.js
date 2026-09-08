@@ -2231,7 +2231,7 @@ function setupGlobalPageNavigation() {
     <div class="dixper-toc-track" aria-hidden="true"><span data-site-page-progress></span></div>
     ${headings.map((heading, index) => {
       const raw = heading.textContent.replace(/\s+/g, " ").trim();
-      const label = !isCommandsPage && index === 0 && location.hash.includes("/viewer/vip") ? "JAK ZOSTAĆ VIPEM?" : (!isCommandsPage && index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw));
+      const label = !isCommandsPage && index === 0 && location.hash.includes("/viewer/vip") ? "JAK ZOSTAĆ VIPEM?" : (!isCommandsPage && index === 0 && currentPath === "moderator/benefits" ? "KORZYŚCI MODERATORA" : (!isCommandsPage && index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw)));
       return `<button type="button" class="dixper-toc-link site-page-toc-link${index === 0 ? " active" : ""}" data-site-page-target="${heading.id}"><span>${String(index + 1).padStart(2, "0")}</span>${label}</button>`;
     }).join("")}`;
 
