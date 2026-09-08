@@ -4082,9 +4082,14 @@ document.addEventListener("click", function(e) {
           });
           target.classList.add('sidebar-section-active');
 
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+          // Globalny offset dla bocznej nawigacji.
+          // Sekcja zatrzymuje się niżej, aby nagłówek i kontekst były widoczne.
+          const headerOffset = 120;
+          const targetPosition = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+
+          window.scrollTo({
+            top: Math.max(0, targetPosition),
+            behavior: 'smooth'
           });
         });
       });
