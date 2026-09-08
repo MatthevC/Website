@@ -1,4 +1,21 @@
 let tocScrollLock = false;
+let tocUnlockTimer = null;
+let tocScrollListenerReady = false;
+
+function refreshTocScrollLock() {
+  tocScrollLock = true;
+  clearTimeout(tocUnlockTimer);
+  tocUnlockTimer = setTimeout(() => {
+    tocScrollLock = false;
+  }, 900);
+}
+
+if (!tocScrollListenerReady) {
+  tocScrollListenerReady = true;
+  window.addEventListener('scroll', () => {
+    if (tocScrollLock) refreshTocScrollLock();
+  }, { passive: true });
+}
 
 function highlightSidebarTarget(target) {
   if (!target) return;
@@ -12,9 +29,7 @@ function highlightSidebarTarget(target) {
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
-  tocScrollLock = true;
-  clearTimeout(window.__tocScrollUnlock);
-  window.__tocScrollUnlock = setTimeout(() => { tocScrollLock = false; }, 1800);
+  refreshTocScrollLock();
   const target = document.getElementById(targetId);
   const activeIndex = sections.findIndex(section => section.id === targetId);
   links.forEach(item => item.classList.toggle('active', item === link));
