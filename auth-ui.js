@@ -989,8 +989,8 @@ async function mattOpenAccountManager() {
         <strong>Podgląd dostępu</strong>
         <p>Wybierz rolę lub moduły aby zobaczyć możliwości użytkownika.</p>
       </div>
-      <div class="account-simple-actions">
-        <button class="account-secondary" type="button" data-preview-role-view>👁 ZOBACZ PANEL JAKO TEN MODERATOR</button>
+      <div class="matt-role-actions matt-role-actions-simple">
+        <button class="account-secondary matt-preview-role-btn" type="button" data-preview-role-view>👁 ZOBACZ PANEL JAKO TEN MODERATOR</button>
         <button class="account-primary" type="button" data-simple-save ${!canAccount("accounts.permissions.change")?'disabled':''}>ZAPISZ UPROSZCZONE UPRAWNIENIA</button>
       </div>
       <p class="account-message" data-account-message></p>
@@ -1116,7 +1116,7 @@ async function mattOpenAccountManager() {
       <div class="account-editor-actions">
         ${isSelf
           ? `<button class="account-primary protected" type="button" disabled>🔒 WŁASNE KONTO CHRONIONE</button>`
-          : (canChangeRole || canChangePermissions) ? `<button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button>` : `<button class="account-primary protected" type="button" disabled>BRAK UPRAWNIEŃ DO ZMIANY ROLI / UPRAWNIEŃ</button>`}
+          : (canChangeRole || canChangePermissions) ? `<div class="matt-role-actions matt-role-actions-advanced"><button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button></div>` : `<button class="account-primary protected" type="button" disabled>BRAK UPRAWNIEŃ DO ZMIANY ROLI / UPRAWNIEŃ</button>`}
       </div>
       <p class="account-message" data-account-message></p>`;
   };

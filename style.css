@@ -11241,20 +11241,10 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   .flash-dashboard-content.admin-dashboard .moderator-time{margin-left:56px!important;padding-left:0!important}
 }
 
-/* Account preview actions alignment */
-.account-simple-actions {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  flex-wrap:wrap;
-  margin-top:16px;
-}
-.matt-preview-user-btn {
-  margin-bottom:18px !important;
-  margin-right:16px !important;
-}
-.account-editor-actions {
-  margin-top:24px !important;
-  padding-top:16px;
-  gap:14px;
-}
+/* poprawa akcji ról moderatora */
+.matt-role-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;width:100%;}
+.matt-role-actions-simple{margin-top:20px;}
+.matt-role-actions-advanced{margin-top:24px;padding-top:14px;border-top:1px solid #252832;}
+.matt-role-actions .account-secondary{border:1px solid #3c4049!important;border-radius:8px!important;background:#191b21!important;color:#cfd2d8!important;font-weight:800!important;padding:11px 15px!important;cursor:pointer;}
+.matt-role-actions .account-secondary:hover{border-color:#ff2633!important;color:#fff!important;}
+.matt-preview-role-btn{white-space:nowrap;}
