@@ -19,7 +19,20 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   // rzeczywistego położenia sekcji. Nie przestawiamy go już skokowo przy kliknięciu.
   link?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-  if (target) setTimeout(() => highlightSidebarTarget(target), 260);
+  if (target) setTimeout(() => {
+    if (targetId === 'moderator-benefits-section') {
+      const block = target.closest('.moderator-benefits-heading')?.parentElement || target.closest('.moderator-benefits-heading');
+      const grid = document.querySelector('.moderator-benefits-grid');
+      [block, grid].filter(Boolean).forEach(el => {
+        el.classList.remove('sidebar-nav-highlight-group');
+        void el.offsetWidth;
+        el.classList.add('sidebar-nav-highlight-group');
+        setTimeout(() => el.classList.remove('sidebar-nav-highlight-group'), 2400);
+      });
+    } else {
+      highlightSidebarTarget(target);
+    }
+  }, 260);
 }
 
 const app = document.getElementById("app");

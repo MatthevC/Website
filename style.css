@@ -11383,3 +11383,22 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .dixper-clip-static-preview img[data-dixper-thumbnail].has-thumbnail {
   display:block;
 }
+
+
+/* Podświetlenie całej sekcji korzyści moderatora po kliknięciu w nawigację */
+.sidebar-nav-highlight-group {
+  animation: sidebarGroupPulse 2.4s ease;
+  border-radius: 12px;
+}
+
+@keyframes sidebarGroupPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 47, 58, 0);
+  }
+  25% {
+    box-shadow: 0 0 0 2px rgba(255, 47, 58, .65), 0 0 35px rgba(255, 47, 58, .25);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 47, 58, 0);
+  }
+}
