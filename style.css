@@ -11248,3 +11248,41 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .matt-role-actions .account-secondary{border:1px solid #3c4049!important;border-radius:8px!important;background:#191b21!important;color:#cfd2d8!important;font-weight:800!important;padding:11px 15px!important;cursor:pointer;}
 .matt-role-actions .account-secondary:hover{border-color:#ff2633!important;color:#fff!important;}
 .matt-preview-role-btn{white-space:nowrap;}
+
+
+/* Ujednolicenie przycisku podgladu moderatora */
+.matt-preview-user-btn,
+.matt-preview-role-btn{
+    border:1px solid #3c4049!important;
+    border-radius:8px!important;
+    background:#191b21!important;
+    color:#cfd2d8!important;
+    font-family:inherit!important;
+    font-weight:800!important;
+    font-size:12px!important;
+    padding:11px 18px!important;
+    min-height:42px;
+    cursor:pointer;
+    transition:.2s ease;
+}
+.matt-preview-user-btn:hover,
+.matt-preview-role-btn:hover{
+    border-color:#ff2633!important;
+    color:#fff!important;
+    background:#20232b!important;
+}
+
+.matt-role-actions{
+    flex-wrap:wrap;
+    gap:12px!important;
+}
+
+.matt-role-actions-advanced{
+    margin-top:34px!important;
+    padding-top:22px!important;
+    padding-bottom:18px!important;
+}
+
+.matt-role-actions-simple{
+    margin-top:26px!important;
+}
