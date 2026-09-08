@@ -445,6 +445,8 @@ async function mattHydrateAdminDashboard(modal) {
     set('#dashUsers', String(profilesCountRes.count ?? 0));
     set('#dashModerators', String(moderators.length));
     set('#dashLogsToday', String(todayLogs.length));
+    set('#dashLogs7', String(logs.filter(x => x.created_at && new Date(x.created_at) >= new Date(Date.now()-7*86400000)).length));
+    set('#dashLogs30', String(logs.filter(x => x.created_at && new Date(x.created_at) >= new Date(Date.now()-30*86400000)).length));
     set('#dashStatusText', 'OK');
     set('#dashStatusHint', logs.length ? 'Połączono z logami i profilami' : 'Połączono, brak zapisanych zmian');
     set('#dashActorsToday', String(actorsToday.size));
