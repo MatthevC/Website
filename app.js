@@ -2197,9 +2197,16 @@ function setupGlobalPageNavigation() {
   // Na stronie komend w nawigacji pokazujemy wyłącznie sekcje z kategoriami.
   // Dzięki temu nie pojawia się sztuczna pozycja „Początek” odnosząca się do nagłówka H1.
   const isCommandsPage = /(?:^|\/)commands$/.test(currentPath);
+  const isVipPage = currentPath === "viewer/vip";
   const headingSelector = isCommandsPage ? ".command-category-heading h2" : "h1, h2";
-  const headings = [...panel.querySelectorAll(headingSelector)]
+  let headings = [...panel.querySelectorAll(headingSelector)]
     .filter(heading => !heading.closest(".site-page-toc") && heading.offsetParent !== null);
+
+  // Strona VIP nie pokazuje głównego nagłówka jako pozycji "Początek".
+  // Pierwsza pozycja nawigacji zaczyna się od pierwszej sekcji informacyjnej.
+  if (isVipPage && headings.length > 0 && headings[0].tagName === "H1") {
+    headings.shift();
+  }
   if (headings.length < 2) return;
 
   panel.dataset.globalNavReady = "1";
