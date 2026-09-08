@@ -18,7 +18,7 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   // Pasek postępu jest liczony płynnie przez globalny scroll-spy na podstawie
   // rzeczywistego położenia sekcji. Nie przestawiamy go już skokowo przy kliknięciu.
   link?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-  target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
   if (target) setTimeout(() => highlightSidebarTarget(target), 260);
 }
 
@@ -946,7 +946,7 @@ function vipPage() {
         <div class="vip-section-grid">
           <section class="vip-card">
             <div class="vip-card-number">01</div>
-            <h2>JAK ZOSTAĆ VIPEM?</h2>
+            <h2 id="vip-get-section">JAK ZOSTAĆ VIPEM?</h2>
             <p>Aby otrzymać VIP-a, wystarczy że:</p>
             <ul>
               <li>Będziesz często wpadać na transmisje.</li>
@@ -961,7 +961,7 @@ function vipPage() {
 
           <section class="vip-card vip-card-warning">
             <div class="vip-card-number">02</div>
-            <h2>JAK MOGĘ STRACIĆ VIP-A?</h2>
+            <h2 id="vip-lose-section">JAK MOGĘ STRACIĆ VIP-A?</h2>
             <ul>
               <li>Przez 3 tygodnie nie pojawisz się na naszych transmisjach.</li>
               <li>Zaczniesz konfliktować się z innymi osobami.</li>
@@ -980,7 +980,7 @@ function vipPage() {
 
         <section class="vip-benefits">
           <div class="vip-card-number">03</div>
-          <h2>JAKIE MOŻLIWOŚCI MA VIP?</h2>
+          <h2 id="vip-benefits-section">JAKIE MOŻLIWOŚCI MA VIP?</h2>
           <div class="vip-benefit-list">
             <div class="vip-benefit"><span>01</span><p><strong>STREAM ON</strong><br>VIP może wejść sam na kanał STREAM ON, pomijając POCZEKALNIĘ.</p></div>
             <div class="vip-benefit"><span>02</span><p><strong>DODATKOWE KOMENDY</strong><br>VIP otrzymuje dostęp do dodatkowych komend na chacie.</p></div>
@@ -2198,7 +2198,7 @@ function setupGlobalPageNavigation() {
   // Dzięki temu nie pojawia się sztuczna pozycja „Początek” odnosząca się do nagłówka H1.
   const isCommandsPage = /(?:^|\/)commands$/.test(currentPath);
   const isVipPage = currentPath === "viewer/vip";
-  const headingSelector = isCommandsPage ? ".command-category-heading h2" : "h1, h2";
+  const headingSelector = isCommandsPage ? ".command-category-heading h2" : (isVipPage ? "#vip-get-section, #vip-lose-section, #vip-benefits-section" : "h1, h2");
   let headings = [...panel.querySelectorAll(headingSelector)]
     .filter(heading => !heading.closest(".site-page-toc") && heading.offsetParent !== null);
 
