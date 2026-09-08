@@ -12,6 +12,9 @@ function highlightSidebarTarget(target) {
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
+  tocScrollLock = true;
+  clearTimeout(window.__tocScrollUnlock);
+  window.__tocScrollUnlock = setTimeout(() => { tocScrollLock = false; }, 1800);
   const target = document.getElementById(targetId);
   const activeIndex = sections.findIndex(section => section.id === targetId);
   links.forEach(item => item.classList.toggle('active', item === link));
@@ -21,14 +24,13 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
   if (target) setTimeout(() => {
     if (targetId === 'moderator-benefits-section') {
-      const block = target.closest('.moderator-benefits-heading')?.parentElement || target.closest('.moderator-benefits-heading');
-      const grid = document.querySelector('.moderator-benefits-grid');
-      [block, grid].filter(Boolean).forEach(el => {
-        el.classList.remove('sidebar-nav-highlight-group');
-        void el.offsetWidth;
-        el.classList.add('sidebar-nav-highlight-group');
-        setTimeout(() => el.classList.remove('sidebar-nav-highlight-group'), 2400);
-      });
+      const block = document.querySelector('.moderator-benefits-block');
+      if (block) {
+        block.classList.remove('sidebar-nav-highlight-group');
+        void block.offsetWidth;
+        block.classList.add('sidebar-nav-highlight-group');
+        setTimeout(() => block.classList.remove('sidebar-nav-highlight-group'), 2400);
+      }
     } else {
       highlightSidebarTarget(target);
     }
@@ -1074,6 +1076,7 @@ function moderatorBenefitsPage() {
           <a class="moderator-cta moderator-cta-solid" href="#/contact">WYŚLIJ ZGŁOSZENIE →</a>
         </section>
 
+        <section class="moderator-benefits-block">
         <div class="moderator-benefits-heading">
           <div>
             <span class="moderator-section-label">CO OFERUJEMY</span>
@@ -1115,6 +1118,7 @@ function moderatorBenefitsPage() {
             </div>
           </article>
         </div>
+        </section>
 
         <section class="moderator-benefits-bottom">
           <div>
@@ -4268,6 +4272,7 @@ document.addEventListener("click", function(e) {
 
   function update(){
     raf = 0;
+    if (tocScrollLock) return;
     configs.forEach(cfg => {
       document.querySelectorAll(cfg.nav).forEach(nav => updateNav(nav, cfg));
     });
