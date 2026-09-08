@@ -1116,7 +1116,7 @@ async function mattOpenAccountManager() {
       <div class="account-editor-actions">
         ${isSelf
           ? `<button class="account-primary protected" type="button" disabled>🔒 WŁASNE KONTO CHRONIONE</button>`
-          : (canChangeRole || canChangePermissions) ? `<div class="matt-role-actions matt-role-actions-advanced"><button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button></div>` : `<button class="account-primary protected" type="button" disabled>BRAK UPRAWNIEŃ DO ZMIANY ROLI / UPRAWNIEŃ</button>`}
+          : (canChangeRole || canChangePermissions) ? `<div class="matt-role-actions matt-role-actions-advanced"><button class="account-secondary matt-preview-role-btn" type="button" data-preview-role-view>👁 ZOBACZ PANEL JAKO TEN MODERATOR</button><button class="account-primary" type="button" data-save-access>ZAPISZ ROLĘ I UPRAWNIENIA</button></div>` : `<button class="account-primary protected" type="button" disabled>BRAK UPRAWNIEŃ DO ZMIANY ROLI / UPRAWNIEŃ</button>`}
       </div>
       <p class="account-message" data-account-message></p>`;
   };

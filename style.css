@@ -11286,3 +11286,37 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .matt-role-actions-simple{
     margin-top:26px!important;
 }
+
+
+/* Wspólny wygląd przycisku podglądu moderatora w trybie uproszczonym i zaawansowanym */
+.matt-preview-role-btn,
+.matt-preview-user-btn{
+    border:1px solid #3c4049!important;
+    border-radius:8px!important;
+    background:#191b21!important;
+    color:#cfd2d8!important;
+    font-family:inherit!important;
+    font-weight:800!important;
+    font-size:12px!important;
+    padding:11px 18px!important;
+    min-height:42px!important;
+    cursor:pointer!important;
+    transition:.2s ease!important;
+    white-space:nowrap!important;
+}
+
+.matt-preview-role-btn:hover,
+.matt-preview-user-btn:hover{
+    border-color:#ff2633!important;
+    color:#fff!important;
+    background:#20232a!important;
+}
+
+.matt-role-actions-advanced{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:14px!important;
+    margin-top:18px!important;
+    margin-bottom:12px!important;
+}
