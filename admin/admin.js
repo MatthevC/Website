@@ -59,11 +59,22 @@ async function loadAdminDashboard(){
     set('#dashUsers', String(profilesCountRes.count ?? 0));
     set('#dashModerators', String(moderators.length));
     set('#dashLogsToday', String(todayLogs.length));
+    set('#dashLogs7', String(logs.filter(x => x.created_at && new Date(x.created_at) >= new Date(Date.now()-7*86400000)).length));
+    set('#dashLogs30', String(logs.filter(x => x.created_at && new Date(x.created_at) >= new Date(Date.now()-30*86400000)).length));
     set('#dashStatusText', 'OK');
     set('#dashStatusHint', logs.length ? 'Połączono z logami i profilami' : 'Połączono, brak zapisanych zmian');
     set('#dashActorsToday', String(actorsToday.size));
     set('#dashRecentTotal', String(logs.length));
     set('#dashLastUpdate', logs[0]?.created_at ? dashFmt(logs[0].created_at) : 'Brak aktywności');
+
+    const alertBox = document.querySelector('#dashAlerts') || root?.querySelector?.('#dashAlerts');
+    if (alertBox) {
+      const alerts=[];
+      if (moderators.length===0) alerts.push(['yellow','Brak moderatorów w systemie']);
+      if (inactive.length>0) alerts.push(['red', `${inactive.length} moderatorów wymaga uwagi`]);
+      if (!alerts.length) alerts.push(['green','System działa poprawnie']);
+      alertBox.innerHTML=alerts.map(a=>`<div class="alert-card ${a[0]}">${a[1]}</div>`).join('');
+    }
 
     if (recentChanges) recentChanges.innerHTML = logs.length ? logs.slice(0,6).map(item => `<article class="activity-item"><div class="activity-icon">↻</div><div class="activity-main"><div class="activity-title">${dashEsc(item?.summary || item?.summary || item?.action || 'Zmiana w systemie')}</div><div class="activity-text">${dashEsc(item?.actor_username || item?.actor_username || item?.actor_email || 'Nieznany użytkownik')} wprowadził zmianę w sekcji ${dashEsc(item?.entity_type || 'sekcja strony')}.</div><div class="activity-meta">${dashEsc(dashFmt(item?.created_at))}</div></div><div class="activity-time">${dashEsc(dashRel(item?.created_at))}</div></article>`).join('') : '<div class="empty-state">Brak nowych działań w logach.</div>';
 
