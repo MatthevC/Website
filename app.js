@@ -57,7 +57,10 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   // Pasek postępu jest liczony płynnie przez globalny scroll-spy na podstawie
   // rzeczywistego położenia sekcji. Nie przestawiamy go już skokowo przy kliknięciu.
   link?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-  target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  const scrollTarget = targetId === 'moderator-benefits-section'
+    ? document.querySelector('.moderator-benefits-block')
+    : target;
+  scrollTarget?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
   if (target) setTimeout(() => {
     if (targetId === 'moderator-benefits-section') {
       const block = document.querySelector('.moderator-benefits-block');
