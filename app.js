@@ -60,7 +60,17 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   const scrollTarget = targetId === 'moderator-benefits-section'
     ? document.querySelector('.moderator-benefits-block')
     : target;
-  scrollTarget?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+
+  // Własne przewijanie z dużym odstępem od górnego menu.
+  // scrollIntoView(block:center) powodował różne pozycje zależnie od wysokości sekcji.
+  if (scrollTarget) {
+    const headerOffset = 330;
+    const top = scrollTarget.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: 'smooth'
+    });
+  }
   if (target) setTimeout(() => {
     if (targetId === 'moderator-benefits-section') {
       const block = document.querySelector('.moderator-benefits-block');
