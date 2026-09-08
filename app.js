@@ -4017,6 +4017,13 @@ document.addEventListener("click", function(e) {
       if (link.dataset.sidebarClickAssist === '1') return;
       link.dataset.sidebarClickAssist = '1';
       link.addEventListener('click', () => {
+        if (link.matches('[data-site-page-target]')) {
+          const nav = link.closest('.site-page-toc');
+          if (nav) {
+            nav.querySelectorAll('[data-site-page-target]').forEach(item => item.classList.remove('active'));
+            link.classList.add('active');
+          }
+        }
         setTimeout(() => link.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'}), 40);
       });
     });
@@ -4310,6 +4317,9 @@ document.addEventListener("click", function(e) {
     raf = 0;
     if (tocScrollLock || tocPinnedByClick) return;
     configs.forEach(cfg => {
+      // Strony z główną nawigacją sekcji (VIP oraz Moderacja) mają aktywny stan
+      // sterowany kliknięciem. Scroll spy powodował konflikt po animowanym scrollu.
+      if (cfg.nav === '.site-page-toc') return;
       document.querySelectorAll(cfg.nav).forEach(nav => updateNav(nav, cfg));
     });
   }
