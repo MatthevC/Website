@@ -11454,3 +11454,31 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .recommended-toc-link {
   border-radius:16px;
 }
+
+
+/* GLOBAL ACTIVE SECTION HIGHLIGHT v2 */
+.sidebar-section-active,
+.dixper-clean-section.sidebar-section-active,
+[data-dixper-section].sidebar-section-active,
+.site-page-section.sidebar-section-active,
+.recommended-streamer-card.sidebar-section-active,
+.rule-highlight.sidebar-section-active {
+  border: 2px solid rgba(255,45,55,.95) !important;
+  border-radius: 22px !important;
+  background: rgba(255,45,55,.045) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,45,55,.12),
+    0 0 35px rgba(255,45,55,.22) !important;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  overflow: hidden;
+  transition: border-radius .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.sidebar-nav-highlight-group {
+  border-radius: 18px !important;
+}
+
+.sidebar-section-active::before {
+  border-radius: 22px !important;
+}
