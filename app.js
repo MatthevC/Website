@@ -4332,7 +4332,7 @@ setupAdminButton();
   window.__mattSidebarProgress = true;
 
   function update(){
-    const bars = document.querySelectorAll('[data-site-page-progress]');
+    const bars = document.querySelectorAll('[data-site-page-progress], [data-dixper-progress], [data-bingo-progress], [data-emotes7tv-progress], [data-recommended-progress]');
     if (!bars.length) return;
 
     const max = document.documentElement.scrollHeight - window.innerHeight;

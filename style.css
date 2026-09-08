@@ -11422,3 +11422,35 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   padding-left: 1rem;
   padding-right: 1rem;
 }
+
+
+/* Globalna poprawka bocznej nawigacji: zaokrąglone aktywne podświetlenie i czytelniejszy efekt */
+#app .dixper-toc-track,
+#app .recommended-toc-track {
+  width: 4px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,.10);
+}
+
+#app .dixper-toc-track span,
+#app .recommended-toc-track span {
+  display:block;
+  min-height:0;
+  border-radius:999px;
+  transition:height .18s ease;
+}
+
+#app .dixper-toc-link.active,
+#app .site-page-toc-link.active,
+#app .recommended-toc-link.active {
+  border-radius:16px !important;
+  transform:scale(1.03);
+  box-shadow: inset 4px 0 0 var(--red), 0 0 24px rgba(239,43,45,.22) !important;
+}
+
+#app .site-page-toc-link,
+#app .dixper-toc-link,
+#app .recommended-toc-link {
+  border-radius:16px;
+}
