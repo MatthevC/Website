@@ -1320,25 +1320,24 @@ function setupDixperPage() {
   const parent = location.hostname || "matthevc.github.io";
   let activeCard = null;
 
-  async function hydrateClipThumbnail(card) {
+  function hydrateClipThumbnail(card) {
     const slot = card?.querySelector('[data-dixper-clip-slot]');
     const thumb = slot?.querySelector('[data-dixper-thumbnail]');
-    const url = slot?.dataset.clipUrl;
-    if (!slot || !thumb || !url || slot.dataset.thumbnailTried === '1') return;
+    const slug = card?.dataset.clipSlug;
+    if (!slot || !thumb || !slug || slot.dataset.thumbnailTried === '1') return;
     slot.dataset.thumbnailTried = '1';
-    try {
-      const endpoint = `https://clips.twitch.tv/oembed?url=${encodeURIComponent(url)}`;
-      const response = await fetch(endpoint, { mode:'cors', credentials:'omit' });
-      if (!response.ok) return;
-      const data = await response.json();
-      const image = String(data?.thumbnail_url || '').trim();
-      if (!image) return;
-      thumb.src = image;
+
+    // Miniatura Twitch działa bez dodatkowego zapytania API.
+    // Dzięki temu GitHub Pages nie blokuje pobierania przez CORS.
+    const image = `https://clips-media-assets2.twitch.tv/${slug}-preview-480x272.jpg`;
+    thumb.src = image;
+    thumb.onload = () => {
       thumb.classList.add('has-thumbnail');
       if (!card.classList.contains('playing')) slot.dataset.originalMarkup = slot.innerHTML;
-    } catch (_) {
-      // Brak miniatury nie jest błędem strony — pozostaje lekki placeholder bez playera.
-    }
+    };
+    thumb.onerror = () => {
+      thumb.removeAttribute('src');
+    };
   }
 
   function resetCard(card) {
