@@ -4241,6 +4241,69 @@ document.addEventListener("click", function(e) {
   bind();
 })();
 
+
+// Globalny scroll-spy dla wszystkich stron z boczną nawigacją.
+// Aktywny punkt zmienia się natychmiast zgodnie z aktualnie widoczną sekcją.
+(function setupGlobalSidebarScrollSpy(){
+  if (window.__mattGlobalSidebarSpy) return;
+  window.__mattGlobalSidebarSpy = true;
+
+  function init(){
+    const navs = [...document.querySelectorAll('[data-site-page-target], [data-bingo-target], [data-dixper-target], [data-emotes7tv-target], [data-recommended-target], [data-streamer-name-target]')];
+    if (!navs.length) return;
+
+    const groups = new Map();
+
+    navs.forEach(link => {
+      const attr = [...link.attributes].find(a => a.name.endsWith('-target'));
+      if (!attr) return;
+      const targetId = link.getAttribute(attr.name);
+      const prefix = attr.name.replace('-target','');
+      const sectionSelector = `[${prefix}-section]`;
+      const section = document.querySelector(sectionSelector + `[id="${targetId}"]`) || document.getElementById(targetId);
+      if (!section) return;
+
+      if (!groups.has(prefix)) groups.set(prefix, []);
+      groups.get(prefix).push({link, section});
+    });
+
+    groups.forEach(items => {
+      const observer = new IntersectionObserver(entries => {
+        if (window.__mattSidebarClickLock) return;
+
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (!visible) return;
+
+        const current = items.find(i => i.section === visible.target);
+        if (!current) return;
+
+        items.forEach(i => i.link.classList.toggle('active', i === current));
+      },{
+        rootMargin: '-25% 0px -55% 0px',
+        threshold:[0.05,0.2,0.5]
+      });
+
+      items.forEach(i => observer.observe(i.section));
+
+      items.forEach(item => {
+        item.link.addEventListener('click', () => {
+          window.__mattSidebarClickLock = true;
+          setTimeout(() => window.__mattSidebarClickLock = false, 600);
+        });
+      });
+    });
+  }
+
+  const oldRender = window.render;
+  setTimeout(init, 300);
+
+  new MutationObserver(() => setTimeout(init,100))
+    .observe(document.body,{childList:true,subtree:true});
+})();
+
 window.addEventListener("hashchange", render);
 
 // Fallback dla przeglądarek/cache: kliknięcie linku Kontakt zawsze uruchamia router.
