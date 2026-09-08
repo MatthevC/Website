@@ -2167,6 +2167,11 @@ function setupCommandsPage() {
 
     if (!total) html = `<div class="empty command-empty">Nie znaleziono komendy pasującej do wyszukiwania.</div>`;
     results.innerHTML = html;
+    // Po zmianie filtrów przebuduj lewą nawigację, aby dostała tylko aktualnie
+    // widoczne kategorie (np. MODERACJA po zaznaczeniu moderatora).
+    if (typeof setupGlobalPageNavigation === "function") {
+      setupGlobalPageNavigation();
+    }
     if (window.MattCMS?.applyPageDecorGraphics) window.MattCMS.applyPageDecorGraphics(location.hash.replace(/^#\/?/, "") || "home");
   }
 
@@ -2258,11 +2263,28 @@ function setupGlobalPageNavigation() {
   if (document.querySelector(".dixper-page-minimal, .bingo-page-minimal, .recommended-page, .downloads-page, .emotes7tv-page")) return;
 
   const panel = document.querySelector("#app .page-panel");
-  if (!panel || panel.dataset.globalNavReady === "1") return;
+  const isCommandsPage = /(?:^|\/)commands$/.test(currentPath);
+  if (!panel) return;
+
+  // Strona komend jest dynamiczna. Po zmianie filtrów WIDZ/VIP/MOD
+  // lista sekcji może się zmienić, dlatego przebudowujemy jej nawigację.
+  if (panel.dataset.globalNavReady === "1") {
+    if (!isCommandsPage) return;
+    const oldLayout = panel.querySelector(".site-page-nav-layout");
+    const oldAside = panel.querySelector(".site-page-toc");
+    const oldContent = panel.querySelector(".site-page-nav-content");
+    if (oldLayout && oldContent) {
+      const children = [...oldContent.children];
+      children.forEach(child => oldLayout.parentElement?.insertBefore(child, oldLayout));
+      oldLayout.remove();
+    }
+    oldAside?.remove();
+    delete panel.dataset.globalNavReady;
+    panel.classList.remove("with-global-page-nav");
+  }
 
   // Na stronie komend w nawigacji pokazujemy wyłącznie sekcje z kategoriami.
   // Dzięki temu nie pojawia się sztuczna pozycja „Początek” odnosząca się do nagłówka H1.
-  const isCommandsPage = /(?:^|\/)commands$/.test(currentPath);
   const isVipPage = currentPath === "viewer/vip";
   const isModeratorBenefitsPage = currentPath === "moderator/benefits";
   const headingSelector = isCommandsPage ? ".command-category-heading h2" : (isVipPage ? "#vip-get-section, #vip-lose-section, #vip-benefits-section" : (isModeratorBenefitsPage ? ".moderator-recruit-content h2, .moderator-benefits-heading h2, .moderator-benefits-bottom h2" : "h1, h2"));
