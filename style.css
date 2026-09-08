@@ -11482,3 +11482,42 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .sidebar-section-active::before {
   border-radius: 22px !important;
 }
+
+
+/* GLOBAL SECTION ACTIVE HIGHLIGHT FINAL */
+.sidebar-section-active,
+.site-page-section.sidebar-section-active,
+.commands-section.sidebar-section-active,
+.command-category.sidebar-section-active,
+.discord-section.sidebar-section-active,
+.dixper-clean-section.sidebar-section-active,
+.recommended-streamer-card.sidebar-section-active,
+.rule-highlight.sidebar-section-active,
+[data-section].sidebar-section-active,
+[id].sidebar-section-active {
+  border: 3px solid rgba(255,45,55,.95) !important;
+  border-radius: 24px !important;
+  background: rgba(255,45,55,.055) !important;
+  box-shadow:
+    0 0 0 3px rgba(255,45,55,.10),
+    0 0 45px rgba(255,45,55,.28) !important;
+  overflow: hidden !important;
+  transition: border .25s ease, border-radius .25s ease, box-shadow .25s ease !important;
+}
+
+/* Remove square corners from nested highlighted containers */
+.sidebar-section-active > *,
+.sidebar-section-active .command-card,
+.sidebar-section-active .command-item,
+.sidebar-section-active .card {
+  border-color: rgba(255,45,55,.25);
+}
+
+/* active navigation */
+.site-page-toc-link.active,
+.dixper-toc-link.active,
+.recommended-toc-link.active {
+  border-radius: 18px !important;
+  transform: scale(1.05);
+  box-shadow: inset 5px 0 0 #ef2b2d, 0 0 28px rgba(239,43,45,.35) !important;
+}
