@@ -110,7 +110,36 @@ async function loadAdminDashboard(){
   }
 }
 
+
+
+function renderAdminExtraTools(){
+  const n=document.getElementById('globalNotifications');
+  const s=document.getElementById('sessionRegistry');
+  const t=document.getElementById('permissionTester');
+  const r=document.getElementById('roleBackup');
+  if(n){
+    const items=[];
+    const mods=document.querySelector('#inactiveModsCount')?.textContent || '';
+    if(mods.includes('🔴')) items.push('<div class="notification-card red">🔴 Moderatorzy wymagają uwagi</div>');
+    if(!items.length) items.push('<div class="notification-card green">🟢 Brak krytycznych powiadomień</div>');
+    n.innerHTML=items.join('');
+  }
+  if(s){
+    const now=new Date();
+    localStorage.setItem('matt_last_dashboard_session', now.toISOString());
+    s.innerHTML='<div class="notification-card green">🟢 Twoja sesja aktywna<br><small>'+now.toLocaleString('pl-PL')+'</small></div>';
+  }
+  if(t){
+    const count=window.currentUserIsAdmin?'Pełny dostęp administratora':((window.currentUserPermissions||[]).length+' aktywnych uprawnień');
+    t.innerHTML='<div class="notification-card">Sprawdzone konto:<br><b>'+dashEsc(count)+'</b></div>';
+  }
+  if(r){
+    r.innerHTML='<div class="notification-card">💾 Kopia konfiguracji ról<br><small>Gotowe miejsce pod eksport i przywracanie ról.</small></div>';
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   loadAdminDashboard();
+  setTimeout(renderAdminExtraTools, 800);
   document.querySelectorAll('[data-dashboard-action="refresh"]').forEach(btn => btn.addEventListener('click', loadAdminDashboard));
 });

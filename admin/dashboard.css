@@ -80,3 +80,5 @@ body{
 }
 
 .quick-action.locked{filter:grayscale(1);opacity:.55;cursor:not-allowed!important;border-color:#3b3f48!important;background:#101217!important}.quick-action.locked:hover{transform:none;border-color:#3b3f48!important}.quick-action.locked .quick-action-icon{opacity:.5}.quick-action-lock{display:block;margin-top:6px;color:#ffb020;font-size:11px;font-weight:800;letter-spacing:.04em}
+
+.notification-list{display:grid;gap:10px;margin-top:16px}.notification-card{background:#181b22;border:1px solid #303543;border-radius:14px;padding:14px;color:#d9deea}.notification-card.red{border-color:#ff3948}.notification-card.yellow{border-color:#e7b943}.notification-card.green{border-color:#4de08a}.advanced-tools-grid{margin-top:16px}
