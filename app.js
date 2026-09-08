@@ -2214,6 +2214,13 @@ function setupGlobalPageNavigation() {
   panel.classList.add("with-global-page-nav");
 
   headings.forEach((heading, index) => {
+    if (isVipPage) {
+      const vipIds = ["vip-get-section", "vip-lose-section", "vip-benefits-section"];
+      if (vipIds[index]) heading.id = vipIds[index];
+    } else if (isModeratorBenefitsPage) {
+      const moderatorIds = ["moderator-how-to-section", "moderator-benefits-section", "moderator-activity-section"];
+      if (moderatorIds[index]) heading.id = moderatorIds[index];
+    }
     if (!heading.id) heading.id = `page-section-${index + 1}`;
     heading.dataset.pageNavHeading = "1";
   });
