@@ -4084,7 +4084,7 @@ document.addEventListener("click", function(e) {
 
           // Globalny offset dla bocznej nawigacji.
           // Sekcja zatrzymuje się niżej, aby nagłówek i kontekst były widoczne.
-          const headerOffset = 120;
+          const headerOffset = 320;
           const targetPosition = target.getBoundingClientRect().top + window.scrollY - headerOffset;
 
           window.scrollTo({
