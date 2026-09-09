@@ -384,7 +384,7 @@
     </div>`;
     document.body.appendChild(modal);
     $('.cms-modal-close', modal).addEventListener('click', closeModal);
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    modal.addEventListener('click', e => { if (e.target === modal) e.stopPropagation(); });
     return modal;
   }
 
