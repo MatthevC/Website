@@ -67,7 +67,7 @@ function highlightSidebarTarget(target) {
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
 
-  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 4700);
+  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 4200);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {

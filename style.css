@@ -11560,3 +11560,46 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     box-shadow: 0 0 0 rgba(255, 40, 55, 0);
   }
 }
+
+
+/* === GLOBALNE PODŚWIETLENIE RAMKI: STAŁY CZAS I PŁYNNE WYGASZANIE === */
+#app .sidebar-nav-highlight,
+#app .sidebar-nav-highlight-group,
+#app .sidebar-section-active {
+  animation: globalSectionBorderFade 4s ease-out forwards !important;
+}
+
+@keyframes globalSectionBorderFade {
+  0% {
+    border-color: #ff3038 !important;
+    box-shadow:
+      0 0 0 2px rgba(255,48,56,.55),
+      0 0 45px rgba(255,48,56,.70),
+      inset 0 0 34px rgba(255,48,56,.16) !important;
+  }
+
+  25% {
+    border-color: rgba(255,48,56,.85) !important;
+    box-shadow:
+      0 0 0 1px rgba(255,48,56,.35),
+      0 0 28px rgba(255,48,56,.40),
+      inset 0 0 22px rgba(255,48,56,.08) !important;
+  }
+
+  100% {
+    border-color: rgba(255,48,56,0) !important;
+    box-shadow:
+      0 0 0 0 rgba(255,48,56,0),
+      0 0 0 rgba(255,48,56,0),
+      inset 0 0 0 rgba(255,48,56,0) !important;
+  }
+}
+
+/* Kanały Discord mają własną animację, więc dostają ten sam czas. */
+.discord-channel-row.discord-channel-route-highlight {
+  animation: globalSectionBorderFade 4s ease-out forwards !important;
+}
+
+.rule-highlight {
+  animation: globalSectionBorderFade 4s ease-out forwards !important;
+}
