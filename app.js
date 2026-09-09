@@ -67,7 +67,7 @@ function highlightSidebarTarget(target) {
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
 
-  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 6100);
+  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 6500);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
@@ -3898,7 +3898,7 @@ function focusDiscordChannelFromRoute(routeQuery) {
 
     window.setTimeout(() => {
       target.classList.remove('discord-channel-route-highlight');
-    }, 6100);
+    }, 6500);
   });
 
   return true;

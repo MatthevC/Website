@@ -11516,109 +11516,9 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 }
 
 
-/* GLOBALNE PŁYNNE PODŚWIETLENIE SEKCJI */
-.sidebar-nav-highlight,
-.global-highlight,
-.section-highlight {
-  animation: globalHighlightPulseFade 4.5s ease-out forwards !important;
-}
-
-@keyframes globalHighlightPulseFade {
-  0% {
-    opacity: 1;
-    filter: brightness(1.35);
-  }
-  20% {
-    opacity: 1;
-    filter: brightness(1.15);
-  }
-  100% {
-    opacity: 0.15;
-    filter: brightness(1);
-  }
-}
-
-
-
-
-/* GLOBALNY SYSTEM PODŚWIETLENIA: 2 SEKUNDY, TYLKO RAMKA */
-.sidebar-nav-highlight,
-.sidebar-nav-highlight-group,
-.sidebar-section-active,
-.discord-channel-row.discord-channel-route-highlight,
-.rule-highlight,
-.global-highlight,
-.section-highlight {
-    animation: borderOnlySmoothFade 2s cubic-bezier(.4,0,.2,1) forwards !important;
-}
-
-@keyframes borderOnlySmoothFade {
-    0% {
-        border-color: rgba(255, 40, 55, 1) !important;
-        box-shadow:
-            0 0 0 3px rgba(255,40,55,.75),
-            0 0 45px rgba(255,40,55,.75) !important;
-    }
-
-    20% {
-        border-color: rgba(255,40,55,.95) !important;
-        box-shadow:
-            0 0 0 3px rgba(255,40,55,.55),
-            0 0 35px rgba(255,40,55,.55) !important;
-    }
-
-    100% {
-        border-color: rgba(255,40,55,0) !important;
-        box-shadow:
-            0 0 0 0 rgba(255,40,55,0),
-            0 0 0 rgba(255,40,55,0) !important;
-    }
-}
-
-
-/* FINAL GLOBAL SLOW FADE OUT ONLY BORDER */
-.sidebar-nav-highlight,
-.sidebar-nav-highlight-group,
-.sidebar-section-active,
-.discord-channel-row.discord-channel-route-highlight,
-.rule-highlight,
-.global-highlight,
-.section-highlight {
-    animation: ultraSlowBorderFade 5s cubic-bezier(.22,1,.36,1) forwards !important;
-}
-
-@keyframes ultraSlowBorderFade {
-    0% {
-        border-color: rgba(255,40,55,1) !important;
-        box-shadow:
-            0 0 0 3px rgba(255,40,55,.85),
-            0 0 45px rgba(255,40,55,.75) !important;
-    }
-    20% {
-        border-color: rgba(255,40,55,.95) !important;
-        box-shadow:
-            0 0 0 3px rgba(255,40,55,.65),
-            0 0 38px rgba(255,40,55,.60) !important;
-    }
-    55% {
-        border-color: rgba(255,40,55,.45) !important;
-        box-shadow:
-            0 0 0 1px rgba(255,40,55,.25),
-            0 0 15px rgba(255,40,55,.20) !important;
-    }
-    100% {
-        border-color: rgba(255,40,55,0) !important;
-        box-shadow:
-            0 0 0 0 rgba(255,40,55,0),
-            0 0 0 rgba(255,40,55,0) !important;
-    }
-}
-
-
 /* =========================================================
-   FINAL GLOBAL HIGHLIGHT
-   Jednolity fade-out samej ramki i glow.
-   Zawartość elementu pozostaje całkowicie niezmieniona.
+   GLOBALNE PODŚWIETLENIE: TYLKO ANIMOWANA RAMKA
+   Zawartość sekcji nigdy nie zmienia opacity, brightness ani tła.
    ========================================================= */
 
 #app .sidebar-nav-highlight,
@@ -11628,57 +11528,48 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .rule-highlight,
 #app .global-highlight,
 #app .section-highlight {
-  animation: mattGlobalBorderFadeOut 6s linear forwards !important;
-  opacity: 1 !important;
-  filter: none !important;
+  position: relative !important;
+  isolation: isolate;
 }
 
-@keyframes mattGlobalBorderFadeOut {
+/* Sama warstwa ramki. Nie wpływa na tekst, ikony ani zawartość. */
+#app .sidebar-nav-highlight::after,
+#app .sidebar-nav-highlight-group::after,
+#app .sidebar-section-active::after,
+#app .discord-channel-row.discord-channel-route-highlight::after,
+#app .rule-highlight::after,
+#app .global-highlight::after,
+#app .section-highlight::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: 999;
+  pointer-events: none;
+  border: 3px solid rgba(255,48,56,1);
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 2px rgba(255,48,56,.60),
+    0 0 42px rgba(255,48,56,.70);
+  animation: mattBorderOnlyFade 6s linear forwards;
+}
+
+@keyframes mattBorderOnlyFade {
   0% {
-    border-color: rgba(255, 48, 56, 1) !important;
-    box-shadow:
-      0 0 0 3px rgba(255, 48, 56, .78),
-      0 0 46px rgba(255, 48, 56, .72),
-      inset 0 0 30px rgba(255, 48, 56, .10) !important;
+    opacity: 1;
   }
-
-  12% {
-    border-color: rgba(255, 48, 56, .98) !important;
-    box-shadow:
-      0 0 0 3px rgba(255, 48, 56, .70),
-      0 0 42px rgba(255, 48, 56, .66),
-      inset 0 0 27px rgba(255, 48, 56, .09) !important;
+  18% {
+    opacity: 1;
   }
-
-  40% {
-    border-color: rgba(255, 48, 56, .78) !important;
-    box-shadow:
-      0 0 0 2px rgba(255, 48, 56, .48),
-      0 0 31px rgba(255, 48, 56, .45),
-      inset 0 0 20px rgba(255, 48, 56, .06) !important;
+  45% {
+    opacity: .78;
   }
-
   70% {
-    border-color: rgba(255, 48, 56, .42) !important;
-    box-shadow:
-      0 0 0 1px rgba(255, 48, 56, .22),
-      0 0 17px rgba(255, 48, 56, .20),
-      inset 0 0 10px rgba(255, 48, 56, .03) !important;
+    opacity: .48;
   }
-
-  90% {
-    border-color: rgba(255, 48, 56, .12) !important;
-    box-shadow:
-      0 0 0 0 rgba(255, 48, 56, .06),
-      0 0 5px rgba(255, 48, 56, .05),
-      inset 0 0 3px rgba(255, 48, 56, .01) !important;
+  88% {
+    opacity: .20;
   }
-
   100% {
-    border-color: rgba(255, 48, 56, 0) !important;
-    box-shadow:
-      0 0 0 0 rgba(255, 48, 56, 0),
-      0 0 0 rgba(255, 48, 56, 0),
-      inset 0 0 0 rgba(255, 48, 56, 0) !important;
+    opacity: 0;
   }
 }
