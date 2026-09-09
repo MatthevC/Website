@@ -4421,3 +4421,33 @@ setupAdminButton();
 
   setTimeout(update, 300);
 })();
+
+
+/* GLOBAL SECTION HIGHLIGHT FIX
+   Sekcje VIP i MODERACJA korzystają z tej samej ramki co pozostałe elementy.
+*/
+(function setupGlobalSectionHighlight(){
+  function addSectionHighlight(target){
+    if(!target) return;
+    target.classList.remove("rule-highlight");
+    void target.offsetWidth;
+    target.classList.add("rule-highlight");
+    setTimeout(()=>target.classList.remove("rule-highlight"),6000);
+  }
+
+  document.addEventListener("click", function(e){
+    const link = e.target.closest('a[href^="#"]');
+    if(!link) return;
+
+    const id = link.getAttribute("href").replace("#","");
+    if(!id) return;
+
+    setTimeout(()=>{
+      const target = document.getElementById(id);
+      if(!target) return;
+
+      const section = target.closest("section,.vip-card,.moderator-benefits-block,.page-panel");
+      addSectionHighlight(section || target);
+    },50);
+  });
+})();

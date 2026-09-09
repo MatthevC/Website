@@ -11459,3 +11459,10 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   opacity: 1 !important;
   filter: none !important;
 }
+
+
+#app .vip-card.rule-highlight::after,
+#app .vip-card.vip-card-warning.rule-highlight::after,
+#app .moderator-benefits-block.rule-highlight::after {
+  border-radius: inherit;
+}
