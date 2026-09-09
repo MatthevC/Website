@@ -11390,104 +11390,13 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 }
 
 /* =========================================================
-   GLOBALNE PODŚWIETLENIE SEKCJI, JEDEN WSPÓLNY STYL
-   Zastępuje wcześniejsze lokalne warianty podświetlenia.
+   GLOBALNE PODŚWIETLENIE: JEDNA ANIMOWANA RAMKA
+   Tylko ramka zmienia opacity.
    ========================================================= */
+
 :root {
   --section-highlight-red: #ff3038;
-  --section-highlight-red-soft: rgba(255, 48, 56, .10);
-  --section-highlight-glow: rgba(255, 48, 56, .46);
 }
-
-/* Podświetlenie docelowej sekcji po kliknięciu w boczną nawigację. */
-#app .sidebar-nav-highlight,
-#app .sidebar-nav-highlight-group,
-#app .sidebar-section-active {
-  position: relative !important;
-  isolation: isolate;
-  background: transparent !important;
-  box-shadow: none !important;
-  border-color: transparent !important;
-}
-
-#app .sidebar-nav-highlight,
-#app .sidebar-nav-highlight-group {
-  
-
-  
-}
-
-@keyframes globalSectionHighlightPulse {
-  0% {
-    box-shadow:
-      0 0 0 0 rgba(255,48,56,0),
-      0 0 0 rgba(255,48,56,0),
-      inset 0 0 0 rgba(255,48,56,0);
-  }
-  20% {
-    box-shadow:
-      0 0 0 4px rgba(255,48,56,.42),
-      0 0 62px rgba(255,48,56,.56),
-      inset 0 0 42px rgba(255,48,56,.15);
-  }
-  100% {
-    box-shadow:
-      0 0 0 1px rgba(255,48,56,.30),
-      0 0 42px rgba(255,48,56,.46),
-      inset 0 0 34px rgba(255,48,56,.10);
-  }
-}
-
-/* Aktywny punkt w lewej nawigacji, ten sam język wizualny. */
-#app .dixper-toc-link.active,
-#app .site-page-toc-link.active,
-#app .recommended-toc-link.active,
-#app .bingo-toc-link.active,
-#app .emotes7tv-toc-link.active {
-  border: 2px solid rgba(255,48,56,.72) !important;
-  border-radius: 18px !important;
-  background: linear-gradient(90deg, rgba(255,48,56,.26), rgba(255,48,56,.10)) !important;
-  box-shadow:
-    inset 4px 0 0 var(--section-highlight-red),
-    0 0 24px rgba(255,48,56,.26) !important;
-  color: #fff !important;
-  opacity: 1 !important;
-}
-
-#app .dixper-toc-link,
-#app .site-page-toc-link,
-#app .recommended-toc-link,
-#app .bingo-toc-link,
-#app .emotes7tv-toc-link {
-  border-radius: 18px !important;
-}
-
-/* Wewnętrzne kafelki nie rysują drugiej ostrej ramki nad globalnym obrysem. */
-#app .sidebar-section-active > *,
-#app .sidebar-nav-highlight > *,
-#app .sidebar-nav-highlight-group > * {
-  border-radius: inherit;
-
-  
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #app .sidebar-nav-highlight,
-  #app .sidebar-nav-highlight-group {
-    
-  
-  
-}
-}
-
-
-
-
-
-/* =========================================================
-   GLOBALNE PODŚWIETLENIE: TYLKO ANIMOWANA RAMKA
-   Zawartość sekcji nigdy nie zmienia opacity, brightness ani tła.
-   ========================================================= */
 
 #app .sidebar-nav-highlight,
 #app .sidebar-nav-highlight-group,
@@ -11498,10 +11407,13 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .global-highlight,
 #app .section-highlight {
   position: relative !important;
-  isolation: isolate;
+  isolation: isolate !important;
+  opacity: 1 !important;
+  filter: none !important;
+  animation: none !important;
+  background-image: none !important;
 }
 
-/* Sama warstwa ramki. Nie wpływa na tekst, ikony ani zawartość. */
 #app .sidebar-nav-highlight::after,
 #app .sidebar-nav-highlight-group::after,
 #app .sidebar-section-active::after,
@@ -11523,6 +11435,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     0 0 2px rgba(255,48,56,.60),
     0 0 42px rgba(255,48,56,.70);
 
+  opacity: 1;
   animation: mattBorderOnlyFade 5s ease-out forwards !important;
 }
 
@@ -11540,37 +11453,12 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   }
 }
 
-
-
-/* =========================================================
-   FINAL GLOBAL HIGHLIGHT FIX
-   Tylko pseudo-element ::after animuje.
-   Blok sekcji nigdy nie zmienia opacity.
-   ========================================================= */
-
-#app .sidebar-nav-highlight,
-#app .sidebar-nav-highlight-group,
-#app .sidebar-section-active,
-#app .section-highlight,
-#app .global-highlight,
-#app .rule-highlight {
+/* aktywne elementy menu, bez własnego wygaszania */
+#app .dixper-toc-link.active,
+#app .site-page-toc-link.active,
+#app .recommended-toc-link.active,
+#app .bingo-toc-link.active,
+#app .emotes7tv-toc-link.active {
   opacity: 1 !important;
   filter: none !important;
-  animation: none !important;
-}
-
-#app .sidebar-nav-highlight::after,
-#app .sidebar-nav-highlight-group::after,
-#app .sidebar-section-active::after,
-#app .section-highlight::after,
-#app .global-highlight::after,
-#app .rule-highlight::after {
-  opacity: 1;
-  animation: mattBorderOnlyFade 5s ease-out forwards !important;
-}
-
-@keyframes mattBorderOnlyFade {
-  0% { opacity: 1; }
-  20% { opacity: 1; }
-  100% { opacity: 0; }
 }
