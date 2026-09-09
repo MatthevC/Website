@@ -5010,7 +5010,7 @@ body.image-preview-open { overflow: hidden; }
 .discord-configure-copy p { margin:0; color:#aaaab0; line-height:1.65; }
 .discord-configure-copy .discord-configure-highlight { margin-top:.55rem; color:#e5e5e7; font-weight:600; }
 .discord-configure-button { min-width:185px; border:1px solid #ff6466; background:var(--red); color:#fff; }
-.discord-step-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.8rem; }
+.discord-step-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
 .discord-step-grid article { display:grid; grid-template-columns:42px 1fr; gap:.75rem; padding:1rem; border:1px solid rgba(255,255,255,.07); border-radius:18px; background:rgba(255,255,255,.025); }
 .discord-step-grid article>b { width:38px; height:38px; display:grid; place-items:center; border-radius:11px; background:rgba(239,43,45,.09); border:1px solid rgba(239,43,45,.18); color:#ff5c5f; font:800 11px Rajdhani,sans-serif; }
 .discord-step-grid h3 { margin:.05rem 0 .35rem; font:700 19px Rajdhani,sans-serif; }

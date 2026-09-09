@@ -67,6 +67,7 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
     const headerOffset =
       targetId === 'emotes7tv-instruction-section' ? 90 :
       targetId === 'moderator-benefits-section' ? 330 :
+      targetId === 'discord-join-hero' ? 80 :
       330;
     const top = scrollTarget.getBoundingClientRect().top + window.scrollY - headerOffset;
     window.scrollTo({
@@ -2349,7 +2350,7 @@ function discordJoinPage() {
       <div class="page-panel discord-join-panel">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
-        <header class="discord-join-hero">
+        <header class="discord-join-hero sidebar-nav-highlight-target" id="discord-join-hero">
           <div class="discord-join-hero-copy">
             <span class="discord-join-kicker">NASZ DISCORD / DOŁĄCZ DO SPOŁECZNOŚCI</span>
             <h1>WBIJ DO <span>MATT'S WORLD</span></h1>
