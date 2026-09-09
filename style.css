@@ -3509,7 +3509,7 @@ body.image-preview-open { overflow: hidden; }
 .discord-channel-row.discord-channel-route-highlight {
   position: relative;
   z-index: 2;
-  animation: discord-channel-route-highlight 3.2s ease-out;
+  animation: mattBorderOnlyFade 5s linear forwards;
 }
 @keyframes discord-channel-route-highlight {
   0%, 20% {
@@ -8259,7 +8259,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   letter-spacing:1px;
 }
 .rule-highlight {
-  animation: ruleGlow 3s ease;
+  animation: mattBorderOnlyFade 5s linear forwards;
 }
 @keyframes ruleGlow {
   0% { box-shadow:0 0 0 rgba(239,43,45,0); }
@@ -11561,22 +11561,6 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     opacity: 0;
   }
 }
-  18% {
-    opacity: 1;
-  }
-  45% {
-    opacity: .78;
-  }
-  70% {
-    opacity: .48;
-  }
-  88% {
-    opacity: .20;
-  }
-  100% {
-    opacity: 0;
-  }
-}
 
 
 /* FINAL GLOBAL BORDER FADE OVERRIDE */
@@ -11587,5 +11571,17 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .rule-highlight::after,
 #app .global-highlight::after,
 #app .section-highlight::after {
+  animation: mattBorderOnlyFade 5s linear forwards !important;
+}
+
+/* GLOBAL FINAL FADE CONTROL */
+#app .sidebar-nav-highlight::after,
+#app .sidebar-nav-highlight-group::after,
+#app .sidebar-section-active::after,
+#app .discord-channel-route-highlight::after,
+#app .rule-highlight::after,
+#app .global-highlight::after,
+#app .section-highlight::after {
+  opacity: 1;
   animation: mattBorderOnlyFade 5s linear forwards !important;
 }
