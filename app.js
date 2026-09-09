@@ -64,7 +64,10 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
   // Własne przewijanie z dużym odstępem od górnego menu.
   // scrollIntoView(block:center) powodował różne pozycje zależnie od wysokości sekcji.
   if (scrollTarget) {
-    const headerOffset = 330;
+    const headerOffset =
+      targetId === 'emotes7tv-instruction-section' ? 90 :
+      targetId === 'moderator-benefits-section' ? 330 :
+      330;
     const top = scrollTarget.getBoundingClientRect().top + window.scrollY - headerOffset;
     window.scrollTo({
       top: Math.max(0, top),
