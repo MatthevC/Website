@@ -11497,6 +11497,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .sidebar-nav-highlight-group,
 #app .sidebar-section-active,
 #app .discord-channel-row.discord-channel-route-highlight,
+#app .discord-channel-route-highlight,
 #app .rule-highlight,
 #app .global-highlight,
 #app .section-highlight {
@@ -11509,6 +11510,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .sidebar-nav-highlight-group::after,
 #app .sidebar-section-active::after,
 #app .discord-channel-row.discord-channel-route-highlight::after,
+#app .discord-channel-route-highlight::after,
 #app .rule-highlight::after,
 #app .global-highlight::after,
 #app .section-highlight::after {
@@ -11517,43 +11519,28 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   inset: -3px;
   z-index: 999;
   pointer-events: none;
+
   border: 3px solid rgba(255,48,56,1);
   border-radius: inherit;
+
   box-shadow:
-    0 0 0 2px rgba(255,48,56,.60),
+    0 0 2px rgba(255,48,56,.60),
     0 0 42px rgba(255,48,56,.70);
-  animation: mattBorderOnlyFade 5s linear forwards;
+
+  animation: mattBorderOnlyFade 5s ease-out forwards !important;
 }
 
 @keyframes mattBorderOnlyFade {
   0% {
     opacity: 1;
   }
+
+  20% {
+    opacity: 1;
+  }
+
   100% {
     opacity: 0;
   }
 }
 
-
-/* FINAL GLOBAL BORDER FADE OVERRIDE */
-#app .sidebar-nav-highlight::after,
-#app .sidebar-nav-highlight-group::after,
-#app .sidebar-section-active::after,
-#app .discord-channel-row.discord-channel-route-highlight::after,
-#app .rule-highlight::after,
-#app .global-highlight::after,
-#app .section-highlight::after {
-  animation: mattBorderOnlyFade 5s linear forwards !important;
-}
-
-/* GLOBAL FINAL FADE CONTROL */
-#app .sidebar-nav-highlight::after,
-#app .sidebar-nav-highlight-group::after,
-#app .sidebar-section-active::after,
-#app .discord-channel-route-highlight::after,
-#app .rule-highlight::after,
-#app .global-highlight::after,
-#app .section-highlight::after {
-  opacity: 1;
-  animation: mattBorderOnlyFade 5s linear forwards !important;
-}
