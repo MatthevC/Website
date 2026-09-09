@@ -11574,3 +11574,42 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
             0 0 0 rgba(255,40,55,0) !important;
     }
 }
+
+
+/* FINAL GLOBAL SLOW FADE OUT ONLY BORDER */
+.sidebar-nav-highlight,
+.sidebar-nav-highlight-group,
+.sidebar-section-active,
+.discord-channel-row.discord-channel-route-highlight,
+.rule-highlight,
+.global-highlight,
+.section-highlight {
+    animation: ultraSlowBorderFade 5s cubic-bezier(.22,1,.36,1) forwards !important;
+}
+
+@keyframes ultraSlowBorderFade {
+    0% {
+        border-color: rgba(255,40,55,1) !important;
+        box-shadow:
+            0 0 0 3px rgba(255,40,55,.85),
+            0 0 45px rgba(255,40,55,.75) !important;
+    }
+    20% {
+        border-color: rgba(255,40,55,.95) !important;
+        box-shadow:
+            0 0 0 3px rgba(255,40,55,.65),
+            0 0 38px rgba(255,40,55,.60) !important;
+    }
+    55% {
+        border-color: rgba(255,40,55,.45) !important;
+        box-shadow:
+            0 0 0 1px rgba(255,40,55,.25),
+            0 0 15px rgba(255,40,55,.20) !important;
+    }
+    100% {
+        border-color: rgba(255,40,55,0) !important;
+        box-shadow:
+            0 0 0 0 rgba(255,40,55,0),
+            0 0 0 rgba(255,40,55,0) !important;
+    }
+}
