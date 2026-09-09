@@ -11613,3 +11613,72 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
             0 0 0 rgba(255,40,55,0) !important;
     }
 }
+
+
+/* =========================================================
+   FINAL GLOBAL HIGHLIGHT
+   Jednolity fade-out samej ramki i glow.
+   Zawartość elementu pozostaje całkowicie niezmieniona.
+   ========================================================= */
+
+#app .sidebar-nav-highlight,
+#app .sidebar-nav-highlight-group,
+#app .sidebar-section-active,
+#app .discord-channel-row.discord-channel-route-highlight,
+#app .rule-highlight,
+#app .global-highlight,
+#app .section-highlight {
+  animation: mattGlobalBorderFadeOut 6s linear forwards !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+@keyframes mattGlobalBorderFadeOut {
+  0% {
+    border-color: rgba(255, 48, 56, 1) !important;
+    box-shadow:
+      0 0 0 3px rgba(255, 48, 56, .78),
+      0 0 46px rgba(255, 48, 56, .72),
+      inset 0 0 30px rgba(255, 48, 56, .10) !important;
+  }
+
+  12% {
+    border-color: rgba(255, 48, 56, .98) !important;
+    box-shadow:
+      0 0 0 3px rgba(255, 48, 56, .70),
+      0 0 42px rgba(255, 48, 56, .66),
+      inset 0 0 27px rgba(255, 48, 56, .09) !important;
+  }
+
+  40% {
+    border-color: rgba(255, 48, 56, .78) !important;
+    box-shadow:
+      0 0 0 2px rgba(255, 48, 56, .48),
+      0 0 31px rgba(255, 48, 56, .45),
+      inset 0 0 20px rgba(255, 48, 56, .06) !important;
+  }
+
+  70% {
+    border-color: rgba(255, 48, 56, .42) !important;
+    box-shadow:
+      0 0 0 1px rgba(255, 48, 56, .22),
+      0 0 17px rgba(255, 48, 56, .20),
+      inset 0 0 10px rgba(255, 48, 56, .03) !important;
+  }
+
+  90% {
+    border-color: rgba(255, 48, 56, .12) !important;
+    box-shadow:
+      0 0 0 0 rgba(255, 48, 56, .06),
+      0 0 5px rgba(255, 48, 56, .05),
+      inset 0 0 3px rgba(255, 48, 56, .01) !important;
+  }
+
+  100% {
+    border-color: rgba(255, 48, 56, 0) !important;
+    box-shadow:
+      0 0 0 0 rgba(255, 48, 56, 0),
+      0 0 0 rgba(255, 48, 56, 0),
+      inset 0 0 0 rgba(255, 48, 56, 0) !important;
+  }
+}

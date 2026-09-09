@@ -67,7 +67,7 @@ function highlightSidebarTarget(target) {
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
 
-  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 4200);
+  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 6100);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
@@ -3898,7 +3898,7 @@ function focusDiscordChannelFromRoute(routeQuery) {
 
     window.setTimeout(() => {
       target.classList.remove('discord-channel-route-highlight');
-    }, 3400);
+    }, 6100);
   });
 
   return true;
@@ -4139,10 +4139,13 @@ document.addEventListener("click", function(e) {
           const target = document.getElementById(targetId);
           if (!target) return;
 
+          // Podświetlenie sekcji jest tymczasowe.
+          // Nie zostawiamy trwałej klasy, która po zakończeniu animacji
+          // powodowała nagły powrót czerwonej ramki.
           document.querySelectorAll('.sidebar-section-active').forEach(item => {
             item.classList.remove('sidebar-section-active');
           });
-          target.classList.add('sidebar-section-active');
+          highlightSidebarTarget(target);
 
           // Globalny offset dla bocznej nawigacji.
           // Sekcja zatrzymuje się niżej, aby nagłówek i kontekst były widoczne.
