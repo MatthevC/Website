@@ -39,9 +39,15 @@ if (!tocScrollListenerReady) {
 
 function highlightSidebarTarget(target) {
   if (!target) return;
-  const visual = target.matches?.('section, article, .notice, .vip-hero, header, [class*="hero"]')
+
+  // Discord: podświetlamy cały kafelek startowy, razem z panelem serwera.
+  // Nie szukamy mniejszego elementu wewnątrz hero.
+  const visual = target.id === 'discord-join-hero'
     ? target
-    : target.closest?.('section, article, .notice, .vip-hero, header, [class*="hero"]') || target.parentElement || target;
+    : (target.matches?.('section, article, .notice, .vip-hero, header, [class*="hero"]')
+      ? target
+      : target.closest?.('section, article, .notice, .vip-hero, header, [class*="hero"]') || target.parentElement || target);
+
   visual.classList.remove('sidebar-nav-highlight');
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
