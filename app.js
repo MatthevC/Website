@@ -48,6 +48,10 @@ function highlightSidebarTarget(target) {
       ? target
       : target.closest?.('section, article, .notice, .vip-hero, header, [class*="hero"]') || target.parentElement || target);
 
+  // Discord join: wymuszamy zaznaczenie całego kafelka, a nie wewnętrznej treści.
+  if (target.id === 'discord-join-hero') {
+    visual.classList.add('discord-full-highlight');
+  }
   visual.classList.remove('sidebar-nav-highlight');
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
