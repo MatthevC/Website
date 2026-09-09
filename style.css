@@ -11435,14 +11435,14 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   outline: none !important;
   
 
-  animation: sidebarHighlightFade 3.8s ease-out forwards;
+  
 }
 
 #app .sidebar-nav-highlight,
 #app .sidebar-nav-highlight-group {
   
 
-  animation: sidebarHighlightFade 3.8s ease-out forwards;
+  
 }
 
 @keyframes globalSectionHighlightPulse {
@@ -11496,7 +11496,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .sidebar-nav-highlight-group > * {
   border-radius: inherit;
 
-  animation: sidebarHighlightFade 3.8s ease-out forwards;
+  
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -11504,7 +11504,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   #app .sidebar-nav-highlight-group {
     
   
-  animation: sidebarHighlightFade 3.8s ease-out forwards;
+  
 }
 }
 
@@ -11513,4 +11513,27 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   0% { opacity: 1; }
   72% { opacity: 1; }
   100% { opacity: .18; }
+}
+
+
+/* GLOBALNE PŁYNNE PODŚWIETLENIE SEKCJI */
+.sidebar-nav-highlight,
+.global-highlight,
+.section-highlight {
+  animation: globalHighlightPulseFade 4.5s ease-out forwards !important;
+}
+
+@keyframes globalHighlightPulseFade {
+  0% {
+    opacity: 1;
+    filter: brightness(1.35);
+  }
+  20% {
+    opacity: 1;
+    filter: brightness(1.15);
+  }
+  100% {
+    opacity: 0.15;
+    filter: brightness(1);
+  }
 }
