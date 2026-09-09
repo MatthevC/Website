@@ -2361,7 +2361,8 @@ function discordJoinPage() {
       <div class="page-panel discord-join-panel">
         <a class="back-link" href="#/">← WRÓĆ NA START</a>
 
-        <header class="discord-join-hero sidebar-nav-highlight-target" id="discord-join-hero">
+        <div class="discord-join-highlight-wrapper sidebar-nav-highlight-target" id="discord-join-hero">
+        <header class="discord-join-hero">
           <div class="discord-join-hero-copy">
             <span class="discord-join-kicker">NASZ DISCORD / DOŁĄCZ DO SPOŁECZNOŚCI</span>
             <h1>WBIJ DO <span>MATT'S WORLD</span></h1>
@@ -2390,6 +2391,7 @@ function discordJoinPage() {
             </div>
           </div>
         </header>
+        </div>
 
 <section class="discord-join-steps" id="discord-steps">
           <div class="discord-section-title">
