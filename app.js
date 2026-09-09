@@ -67,7 +67,7 @@ function highlightSidebarTarget(target) {
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
 
-  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 5500);
+  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 6000);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
@@ -104,7 +104,7 @@ function activateSidebarLink(links, link, sections, targetId, progress) {
         block.classList.remove('sidebar-nav-highlight-group');
         void block.offsetWidth;
         block.classList.add('sidebar-nav-highlight-group');
-        setTimeout(() => block.classList.remove('sidebar-nav-highlight-group'), 2400);
+        setTimeout(() => block.classList.remove('sidebar-nav-highlight-group'), 6000);
       }
     } else {
       highlightSidebarTarget(target);
@@ -4061,7 +4061,7 @@ document.addEventListener("click", function(e) {
   target.classList.remove("rule-highlight");
   void target.offsetWidth;
   target.classList.add("rule-highlight");
-  setTimeout(()=>target.classList.remove("rule-highlight"), 5500);
+  setTimeout(()=>target.classList.remove("rule-highlight"), 6000);
 });
 
 

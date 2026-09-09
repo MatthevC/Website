@@ -3507,30 +3507,11 @@ body.image-preview-open { overflow: hidden; }
 }
 .discord-channel-row { scroll-margin-top: 120px; }
 .discord-channel-row.discord-channel-route-highlight {
-  position: relative;
+  position: relative !important;
   z-index: 2;
-  animation: mattBorderOnlyFade 5s linear forwards;
+  isolation:isolate;
 }
-@keyframes discord-channel-route-highlight {
-  0%, 20% {
-    transform: translateY(-2px) scale(1.012);
-    border-color: #ff3038;
-    background: linear-gradient(135deg, rgba(255,35,48,.30), rgba(191,36,45,.14));
-    box-shadow: 0 0 0 1px rgba(255,48,56,.48), 0 0 28px rgba(255,35,48,.30);
-  }
-  55% {
-    transform: translateY(0) scale(1.004);
-    border-color: rgba(255,48,56,.72);
-    background: linear-gradient(135deg, rgba(255,35,48,.18), rgba(191,36,45,.08));
-    box-shadow: 0 0 0 1px rgba(255,48,56,.24), 0 0 18px rgba(255,35,48,.16);
-  }
-  100% {
-    transform: none;
-    border-color: rgba(255,48,56,.16);
-    background: linear-gradient(135deg, rgba(255,35,48,0), rgba(191,36,45,0));
-    box-shadow: none;
-  }
-}
+
 @media (prefers-reduced-motion: reduce) {
   .discord-channel-row.discord-channel-route-highlight {
     animation: none;
@@ -11422,20 +11403,11 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .sidebar-nav-highlight,
 #app .sidebar-nav-highlight-group,
 #app .sidebar-section-active {
-  position: relative;
-  z-index: 1;
-  border: 3px solid var(--section-highlight-red) !important;
-  border-radius: 28px !important;
-  background-color: var(--section-highlight-red-soft) !important;
-  box-shadow:
-    0 0 0 1px rgba(255,48,56,.30),
-    0 0 42px var(--section-highlight-glow),
-    inset 0 0 34px rgba(255,48,56,.10) !important;
-  overflow: hidden !important;
-  outline: none !important;
-  
-
-  
+  position: relative !important;
+  isolation: isolate;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 
 #app .sidebar-nav-highlight,
