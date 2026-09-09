@@ -2312,6 +2312,11 @@ function setupGlobalPageNavigation() {
   panel.classList.add("with-global-page-nav");
 
   headings.forEach((heading, index) => {
+    if (isDiscordJoinPage && index === 0) {
+      // Pierwszy element Discorda jest specjalny: nawigacja ma wskazywać
+      // cały wrapper hero, a nie sam nagłówek H1.
+      heading.dataset.pageNavTarget = "discord-join-hero";
+    }
     if (isVipPage) {
       const vipIds = ["vip-get-section", "vip-lose-section", "vip-benefits-section"];
       if (vipIds[index]) heading.id = vipIds[index];
@@ -2338,7 +2343,8 @@ function setupGlobalPageNavigation() {
     ${headings.map((heading, index) => {
       const raw = heading.textContent.replace(/\s+/g, " ").trim();
       const label = !isCommandsPage && index === 0 && location.hash.includes("/viewer/vip") ? "JAK ZOSTAĆ VIPEM?" : (!isCommandsPage && index === 0 && isModeratorBenefitsPage ? raw : (!isCommandsPage && index === 0 && isDiscordJoinPage ? "Wstęp" : (!isCommandsPage && index === 0 ? "Początek" : (raw.length > 34 ? `${raw.slice(0, 32)}…` : raw))));
-      return `<button type="button" class="dixper-toc-link site-page-toc-link${index === 0 ? " active" : ""}" data-site-page-target="${heading.id}"><span>${String(index + 1).padStart(2, "0")}</span>${label}</button>`;
+      const navTarget = heading.dataset.pageNavTarget || heading.id;
+      return `<button type="button" class="dixper-toc-link site-page-toc-link${index === 0 ? " active" : ""}" data-site-page-target="${navTarget}"><span>${String(index + 1).padStart(2, "0")}</span>${label}</button>`;
     }).join("")}`;
 
   const layout = document.createElement("div");
