@@ -9211,26 +9211,6 @@ html.matt-mobile-preview-page .event-actions .delete-event-btn{display:none!impo
   background: linear-gradient(180deg, var(--red), #ff5b5d) !important;
 }
 
-/* Krótkie podświetlenie docelowej sekcji po kliknięciu pozycji bocznego menu. */
-.sidebar-nav-highlight {
-  animation: sidebarNavGlow 2.4s ease;
-}
-
-@keyframes sidebarNavGlow {
-  0% {
-    box-shadow: 0 0 0 rgba(239,43,45,0);
-  }
-  18% {
-    box-shadow: 0 0 0 1px rgba(239,43,45,.75), 0 0 36px rgba(239,43,45,.34);
-  }
-  55% {
-    box-shadow: 0 0 0 1px rgba(239,43,45,.42), 0 0 22px rgba(239,43,45,.17);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(239,43,45,0);
-  }
-}
-
 @media (max-width:760px){
   #cms-layout-designer{left:8px;right:8px;bottom:8px;width:auto;max-height:74vh}
   .cms-layout-reset-zones{grid-template-columns:1fr}
@@ -11385,144 +11365,6 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 }
 
 
-/* Podświetlenie całej sekcji korzyści moderatora po kliknięciu w nawigację */
-.sidebar-nav-highlight-group {
-  animation: sidebarGroupPulse 2.4s ease;
-  border-radius: 12px;
-}
-
-@keyframes sidebarGroupPulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 47, 58, 0);
-  }
-  25% {
-    box-shadow: 0 0 0 2px rgba(255, 47, 58, .65), 0 0 35px rgba(255, 47, 58, .25);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 47, 58, 0);
-  }
-}
-
-.sidebar-nav-highlight-group {
-  animation: sidebarHighlightPulse 2.4s ease;
-  border-radius: 8px;
-  box-shadow: 0 0 0 1px rgba(255,40,60,.65), 0 0 28px rgba(255,40,60,.18);
-}
-@keyframes sidebarHighlightPulse {
-  0%,100% { box-shadow: 0 0 0 1px rgba(255,40,60,.65), 0 0 28px rgba(255,40,60,.18); }
-  50% { box-shadow: 0 0 0 2px rgba(255,40,60,.9), 0 0 40px rgba(255,40,60,.28); }
-}
-
-/* Proste podświetlenie aktywnej sekcji na stronach z boczną nawigacją */
-.sidebar-section-active {
-  border: 1px solid rgba(255, 45, 55, .8);
-  border-radius: 18px;
-  background: rgba(255, 45, 55, .035);
-  box-shadow: 0 0 28px rgba(255, 45, 55, .12);
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-
-/* Globalna poprawka bocznej nawigacji: zaokrąglone aktywne podświetlenie i czytelniejszy efekt */
-#app .dixper-toc-track,
-#app .recommended-toc-track {
-  width: 4px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: rgba(255,255,255,.10);
-}
-
-#app .dixper-toc-track span,
-#app .recommended-toc-track span {
-  display:block;
-  min-height:0;
-  border-radius:999px;
-  transition:height .18s ease;
-}
-
-#app .dixper-toc-link.active,
-#app .site-page-toc-link.active,
-#app .recommended-toc-link.active {
-  border-radius:16px !important;
-  transform:scale(1.03);
-  box-shadow: inset 4px 0 0 var(--red), 0 0 24px rgba(239,43,45,.22) !important;
-}
-
-#app .site-page-toc-link,
-#app .dixper-toc-link,
-#app .recommended-toc-link {
-  border-radius:16px;
-}
-
-
-/* GLOBAL ACTIVE SECTION HIGHLIGHT v2 */
-.sidebar-section-active,
-.dixper-clean-section.sidebar-section-active,
-[data-dixper-section].sidebar-section-active,
-.site-page-section.sidebar-section-active,
-.recommended-streamer-card.sidebar-section-active,
-.rule-highlight.sidebar-section-active {
-  border: 2px solid rgba(255,45,55,.95) !important;
-  border-radius: 22px !important;
-  background: rgba(255,45,55,.045) !important;
-  box-shadow:
-    0 0 0 2px rgba(255,45,55,.12),
-    0 0 35px rgba(255,45,55,.22) !important;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  overflow: hidden;
-  transition: border-radius .25s ease, box-shadow .25s ease, transform .25s ease;
-}
-
-.sidebar-nav-highlight-group {
-  border-radius: 18px !important;
-}
-
-.sidebar-section-active::before {
-  border-radius: 22px !important;
-}
-
-
-/* GLOBAL SECTION ACTIVE HIGHLIGHT FINAL */
-.sidebar-section-active,
-.site-page-section.sidebar-section-active,
-.commands-section.sidebar-section-active,
-.command-category.sidebar-section-active,
-.discord-section.sidebar-section-active,
-.dixper-clean-section.sidebar-section-active,
-.recommended-streamer-card.sidebar-section-active,
-.rule-highlight.sidebar-section-active,
-[data-section].sidebar-section-active,
-[id].sidebar-section-active {
-  border: 3px solid rgba(255,45,55,.95) !important;
-  border-radius: 24px !important;
-  background: rgba(255,45,55,.055) !important;
-  box-shadow:
-    0 0 0 3px rgba(255,45,55,.10),
-    0 0 45px rgba(255,45,55,.28) !important;
-  overflow: hidden !important;
-  transition: border .25s ease, border-radius .25s ease, box-shadow .25s ease !important;
-}
-
-/* Remove square corners from nested highlighted containers */
-.sidebar-section-active > *,
-.sidebar-section-active .command-card,
-.sidebar-section-active .command-item,
-.sidebar-section-active .card {
-  border-color: rgba(255,45,55,.25);
-}
-
-/* active navigation */
-.site-page-toc-link.active,
-.dixper-toc-link.active,
-.recommended-toc-link.active {
-  border-radius: 18px !important;
-  transform: scale(1.05);
-  box-shadow: inset 5px 0 0 #ef2b2d, 0 0 28px rgba(239,43,45,.35) !important;
-}
-
-
 /* DIXPER KLIPY, taki sam model jak polecani streamerzy */
 .dixper-clips-minimal {
   display: grid;
@@ -11566,91 +11408,99 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   }
 }
 
-/* Discord join: pełne podświetlenie całego kafelka WBIJ DO MATT'S WORLD */
-.discord-join-hero.sidebar-nav-highlight {
+/* =========================================================
+   GLOBALNE PODŚWIETLENIE SEKCJI, JEDEN WSPÓLNY STYL
+   Zastępuje wcześniejsze lokalne warianty podświetlenia.
+   ========================================================= */
+:root {
+  --section-highlight-red: #ff3038;
+  --section-highlight-red-soft: rgba(255, 48, 56, .10);
+  --section-highlight-glow: rgba(255, 48, 56, .46);
+}
+
+/* Podświetlenie docelowej sekcji po kliknięciu w boczną nawigację. */
+#app .sidebar-nav-highlight,
+#app .sidebar-nav-highlight-group,
+#app .sidebar-section-active {
   position: relative;
-  border-radius: 28px;
-  animation: discordHeroHighlight 2.4s ease;
-}
-
-@keyframes discordHeroHighlight {
-  0% {
-    box-shadow: 0 0 0 rgba(239,43,45,0);
-  }
-  18% {
-    box-shadow: 0 0 0 2px rgba(239,43,45,.9), 0 0 45px rgba(239,43,45,.38);
-  }
-  55% {
-    box-shadow: 0 0 0 2px rgba(239,43,45,.55), 0 0 28px rgba(239,43,45,.22);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(239,43,45,0);
-  }
-}
-
-
-/* Discord join: zaznaczenie całego kafelka startowego po kliknięciu Początek */
-.discord-join-hero.sidebar-nav-highlight {
+  z-index: 1;
+  border: 3px solid var(--section-highlight-red) !important;
   border-radius: 28px !important;
-  box-shadow: 0 0 0 3px rgba(239,43,45,.95), 0 0 55px rgba(239,43,45,.45) !important;
-}
-
-
-.discord-join-hero.discord-full-highlight {
-  border-color: rgba(255,52,56,.95)!important;
-  border-radius: 26px!important;
+  background-color: var(--section-highlight-red-soft) !important;
   box-shadow:
-    0 0 0 3px rgba(255,52,56,.35),
-    0 0 45px rgba(239,43,45,.45),
-    inset 0 0 35px rgba(239,43,45,.12)!important;
-  animation: discordFullHighlight 2.8s ease;
+    0 0 0 1px rgba(255,48,56,.30),
+    0 0 42px var(--section-highlight-glow),
+    inset 0 0 34px rgba(255,48,56,.10) !important;
+  overflow: hidden !important;
+  outline: none !important;
+  transition:
+    border-color .22s ease,
+    border-radius .22s ease,
+    box-shadow .22s ease,
+    background-color .22s ease !important;
 }
 
-@keyframes discordFullHighlight {
+#app .sidebar-nav-highlight,
+#app .sidebar-nav-highlight-group {
+  animation: globalSectionHighlightPulse 2.6s ease both;
+}
+
+@keyframes globalSectionHighlightPulse {
   0% {
-    box-shadow:0 0 0 0 rgba(239,43,45,0);
-  }
-  25% {
     box-shadow:
-      0 0 0 4px rgba(255,52,56,.5),
-      0 0 55px rgba(239,43,45,.5),
-      inset 0 0 40px rgba(239,43,45,.18);
+      0 0 0 0 rgba(255,48,56,0),
+      0 0 0 rgba(255,48,56,0),
+      inset 0 0 0 rgba(255,48,56,0);
+  }
+  20% {
+    box-shadow:
+      0 0 0 4px rgba(255,48,56,.42),
+      0 0 62px rgba(255,48,56,.56),
+      inset 0 0 42px rgba(255,48,56,.15);
   }
   100% {
     box-shadow:
-      0 0 0 3px rgba(255,52,56,.35),
-      0 0 45px rgba(239,43,45,.45),
-      inset 0 0 35px rgba(239,43,45,.12);
+      0 0 0 1px rgba(255,48,56,.30),
+      0 0 42px rgba(255,48,56,.46),
+      inset 0 0 34px rgba(255,48,56,.10);
   }
 }
 
-
-/* Discord join: pełny kafelek Wstęp razem z panelem serwera */
-.discord-join-highlight-wrapper.sidebar-nav-highlight {
-  border-radius: 28px !important;
+/* Aktywny punkt w lewej nawigacji, ten sam język wizualny. */
+#app .dixper-toc-link.active,
+#app .site-page-toc-link.active,
+#app .recommended-toc-link.active,
+#app .bingo-toc-link.active,
+#app .emotes7tv-toc-link.active {
+  border: 2px solid rgba(255,48,56,.72) !important;
+  border-radius: 18px !important;
+  background: linear-gradient(90deg, rgba(255,48,56,.26), rgba(255,48,56,.10)) !important;
   box-shadow:
-    0 0 0 3px rgba(255,52,56,.95),
-    0 0 55px rgba(239,43,45,.45),
-    inset 0 0 35px rgba(239,43,45,.12) !important;
-  animation: discordWholeCardHighlight 2.8s ease;
+    inset 4px 0 0 var(--section-highlight-red),
+    0 0 24px rgba(255,48,56,.26) !important;
+  color: #fff !important;
+  opacity: 1 !important;
 }
 
-.discord-join-highlight-wrapper {
-  transition: .25s ease;
+#app .dixper-toc-link,
+#app .site-page-toc-link,
+#app .recommended-toc-link,
+#app .bingo-toc-link,
+#app .emotes7tv-toc-link {
+  border-radius: 18px !important;
 }
 
-@keyframes discordWholeCardHighlight {
-  0% {
-    box-shadow: 0 0 0 0 rgba(239,43,45,0);
-  }
-  25% {
-    box-shadow:
-      0 0 0 5px rgba(255,52,56,.5),
-      0 0 65px rgba(239,43,45,.55);
-  }
-  100% {
-    box-shadow:
-      0 0 0 3px rgba(255,52,56,.95),
-      0 0 55px rgba(239,43,45,.45);
+/* Wewnętrzne kafelki nie rysują drugiej ostrej ramki nad globalnym obrysem. */
+#app .sidebar-section-active > *,
+#app .sidebar-nav-highlight > *,
+#app .sidebar-nav-highlight-group > * {
+  border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .sidebar-nav-highlight,
+  #app .sidebar-nav-highlight-group {
+    animation: none !important;
   }
 }
+

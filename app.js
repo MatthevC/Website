@@ -40,22 +40,13 @@ if (!tocScrollListenerReady) {
 function highlightSidebarTarget(target) {
   if (!target) return;
 
-  // Discord: podświetlamy cały kafelek startowy, razem z panelem serwera.
-  // Nie szukamy mniejszego elementu wewnątrz hero.
-  const visual = target.id === 'discord-join-hero'
-    ? target
-    : (target.matches?.('section, article, .notice, .vip-hero, header, [class*="hero"]')
-      ? target
-      : target.closest?.('section, article, .notice, .vip-hero, header, [class*="hero"]') || target.parentElement || target);
-
-  // Discord join: wymuszamy zaznaczenie całego kafelka, a nie wewnętrznej treści.
-  if (target.id === 'discord-join-hero') {
-    visual.classList.add('discord-full-highlight');
-  }
+  // Jeden globalny model podświetlenia dla wszystkich sekcji.
+  // Dla Wstępu Discorda targetem jest już zewnętrzny wrapper całego kafelka.
+  const visual = target;
   visual.classList.remove('sidebar-nav-highlight');
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
-  setTimeout(() => visual.classList.remove('sidebar-nav-highlight'), 2400);
+  setTimeout(() => visual.classList.remove('sidebar-nav-highlight'), 2600);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
@@ -4127,7 +4118,7 @@ document.addEventListener("click", function(e) {
           const target = document.getElementById(targetId);
           if (!target) return;
 
-          document.querySelectorAll('.dixper-clean-section.sidebar-section-active, [data-dixper-section].sidebar-section-active, .site-page-section.sidebar-section-active').forEach(item => {
+          document.querySelectorAll('.sidebar-section-active').forEach(item => {
             item.classList.remove('sidebar-section-active');
           });
           target.classList.add('sidebar-section-active');
