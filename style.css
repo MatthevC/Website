@@ -11481,11 +11481,7 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 }
 
 
-@keyframes sidebarHighlightFade {
-  0% { opacity: 1; }
-  72% { opacity: 1; }
-  100% { opacity: .18; }
-}
+
 
 
 /* =========================================================
@@ -11544,3 +11540,37 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   }
 }
 
+
+
+/* =========================================================
+   FINAL GLOBAL HIGHLIGHT FIX
+   Tylko pseudo-element ::after animuje.
+   Blok sekcji nigdy nie zmienia opacity.
+   ========================================================= */
+
+#app .sidebar-nav-highlight,
+#app .sidebar-nav-highlight-group,
+#app .sidebar-section-active,
+#app .section-highlight,
+#app .global-highlight,
+#app .rule-highlight {
+  opacity: 1 !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+#app .sidebar-nav-highlight::after,
+#app .sidebar-nav-highlight-group::after,
+#app .sidebar-section-active::after,
+#app .section-highlight::after,
+#app .global-highlight::after,
+#app .rule-highlight::after {
+  opacity: 1;
+  animation: mattBorderOnlyFade 5s ease-out forwards !important;
+}
+
+@keyframes mattBorderOnlyFade {
+  0% { opacity: 1; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
