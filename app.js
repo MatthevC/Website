@@ -40,13 +40,36 @@ if (!tocScrollListenerReady) {
 function highlightSidebarTarget(target) {
   if (!target) return;
 
-  // Jeden globalny model podświetlenia dla wszystkich sekcji.
-  // Dla Wstępu Discorda targetem jest już zewnętrzny wrapper całego kafelka.
-  const visual = target;
+  // Globalne zaznaczanie całych sekcji.
+  // Nie podświetlamy samych nagłówków, tylko ich pełny blok zawartości.
+  let visual = target;
+
+  const headingOnly = target.matches('h1, h2, h3, h4, [data-section-title]');
+  if (headingOnly) {
+    visual =
+      target.closest(
+        '.section-block, .content-section, .discord-section, .info-card, .feature-block, .step-card, article, section, .block'
+      ) || target.parentElement || target;
+  }
+
+  // Jeżeli targetem jest mały element tekstowy, szukamy większego kontenera.
+  while (
+    visual &&
+    visual.parentElement &&
+    visual.getBoundingClientRect().height < 80
+  ) {
+    const parent = visual.parentElement;
+    if (parent.id === 'app' || parent.classList.contains('main-content')) break;
+    visual = parent;
+  }
+
   visual.classList.remove('sidebar-nav-highlight');
   void visual.offsetWidth;
   visual.classList.add('sidebar-nav-highlight');
-  setTimeout(() => visual.classList.remove('sidebar-nav-highlight'), 2600);
+
+  setTimeout(() => {
+    visual.classList.remove('sidebar-nav-highlight');
+  }, 2600);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
