@@ -11433,16 +11433,16 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     inset 0 0 34px rgba(255,48,56,.10) !important;
   overflow: hidden !important;
   outline: none !important;
-  transition:
-    border-color .22s ease,
-    border-radius .22s ease,
-    box-shadow .22s ease,
-    background-color .22s ease !important;
+  
+
+  animation: sidebarHighlightFade 3.8s ease-out forwards;
 }
 
 #app .sidebar-nav-highlight,
 #app .sidebar-nav-highlight-group {
-  animation: globalSectionHighlightPulse 2.6s ease both;
+  
+
+  animation: sidebarHighlightFade 3.8s ease-out forwards;
 }
 
 @keyframes globalSectionHighlightPulse {
@@ -11495,12 +11495,22 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .sidebar-nav-highlight > *,
 #app .sidebar-nav-highlight-group > * {
   border-radius: inherit;
+
+  animation: sidebarHighlightFade 3.8s ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
   #app .sidebar-nav-highlight,
   #app .sidebar-nav-highlight-group {
-    animation: none !important;
-  }
+    
+  
+  animation: sidebarHighlightFade 3.8s ease-out forwards;
+}
 }
 
+
+@keyframes sidebarHighlightFade {
+  0% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: .18; }
+}
