@@ -11466,3 +11466,20 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .moderator-benefits-block.rule-highlight::after {
   border-radius: inherit;
 }
+
+
+/* =========================================================
+   FIX: GLOBALNA RAMKA NIE MOŻE BYĆ CIĘTA PRZEZ OVERFLOW
+   Dotyczy elementów aktywowanych przez system highlight.
+   ========================================================= */
+
+#app .sidebar-nav-highlight,
+#app .sidebar-nav-highlight-group,
+#app .rule-highlight,
+#app .global-highlight,
+#app .section-highlight,
+#app .vip-card.sidebar-nav-highlight,
+#app .vip-card.rule-highlight,
+#app .moderator-benefits-block.rule-highlight {
+  overflow: visible !important;
+}
