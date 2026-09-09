@@ -11550,13 +11550,17 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   box-shadow:
     0 0 0 2px rgba(255,48,56,.60),
     0 0 42px rgba(255,48,56,.70);
-  animation: mattBorderOnlyFade 6s linear forwards;
+  animation: mattBorderOnlyFade 5s linear forwards;
 }
 
 @keyframes mattBorderOnlyFade {
   0% {
     opacity: 1;
   }
+  100% {
+    opacity: 0;
+  }
+}
   18% {
     opacity: 1;
   }
@@ -11572,4 +11576,16 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
   100% {
     opacity: 0;
   }
+}
+
+
+/* FINAL GLOBAL BORDER FADE OVERRIDE */
+#app .sidebar-nav-highlight::after,
+#app .sidebar-nav-highlight-group::after,
+#app .sidebar-section-active::after,
+#app .discord-channel-row.discord-channel-route-highlight::after,
+#app .rule-highlight::after,
+#app .global-highlight::after,
+#app .section-highlight::after {
+  animation: mattBorderOnlyFade 5s linear forwards !important;
 }
