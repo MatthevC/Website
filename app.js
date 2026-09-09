@@ -1248,23 +1248,18 @@ function dixperPage() {
 
   const clipParent = location.hostname || "matthevc.github.io";
   const clipsHtml = clips.map((clip, index) => `
-    <article class="dixper-clip-card" data-dixper-clip data-clip-slug="${clip.slug}" data-clip-channel="${clip.channel}">
-      <div class="dixper-clip-placeholder dixper-clip-preview" data-dixper-clip-slot data-clip-url="${clip.url}">
-        <div class="dixper-clip-static-preview" aria-hidden="true">
-          <img data-dixper-thumbnail alt="Miniatura klipu Twitch ${clip.channel}" loading="lazy">
-          <span class="dixper-clip-static-brand">TWITCH CLIP</span>
-        </div>
-        <button type="button" class="dixper-clip-preview-cover" data-dixper-play aria-label="Odtwórz klip ${index + 1} od ${clip.channel}">
-          <span class="dixper-preview-play">▶</span>
-          <span class="dixper-preview-copy">
-            <small>PRZYKŁAD ${String(index + 1).padStart(2, "0")}</small>
-            <strong>Dixper w praktyce</strong>
-            <em>Źródło: ${clip.channel}</em>
-          </span>
-        </button>
+    <article class="dixper-clip-card">
+      <div class="recommended-clip-frame dixper-recommended-clip">
+        <iframe
+          src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(clip.slug)}&parent=${encodeURIComponent(location.hostname || "matthevc.github.io")}&autoplay=false"
+          title="Dixper w praktyce — ${clip.channel}"
+          loading="lazy"
+          allow="autoplay; fullscreen"
+          allowfullscreen>
+        </iframe>
       </div>
       <div class="dixper-clip-meta">
-        <span>Kliknij miniaturę, aby uruchomić tylko ten klip.</span>
+        <span>PRZYKŁAD ${String(index + 1).padStart(2, "0")} · Źródło: ${clip.channel}</span>
         <a href="${clip.url}" target="_blank" rel="noopener">OTWÓRZ ORYGINAŁ ↗</a>
       </div>
     </article>
