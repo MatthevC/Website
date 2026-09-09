@@ -63,11 +63,29 @@ function highlightSidebarTarget(target) {
     visual = parent;
   }
 
-  visual.classList.remove('sidebar-nav-highlight');
-  void visual.offsetWidth;
-  visual.classList.add('sidebar-nav-highlight');
+  // Jedna globalna ramka dla wszystkich typów sekcji.
+  // Używamy tych samych klas, aby VIP, moderator, Discord i zwykłe sekcje
+  // zachowywały się identycznie.
+  visual.classList.remove(
+    'sidebar-nav-highlight',
+    'rule-highlight',
+    'section-highlight',
+    'global-highlight'
+  );
 
-  setTimeout(() => { visual.classList.remove('sidebar-nav-highlight'); }, 6000);
+  void visual.offsetWidth;
+
+  visual.classList.add(
+    'sidebar-nav-highlight',
+    'rule-highlight'
+  );
+
+  setTimeout(() => {
+    visual.classList.remove(
+      'sidebar-nav-highlight',
+      'rule-highlight'
+    );
+  }, 6000);
 }
 
 function activateSidebarLink(links, link, sections, targetId, progress) {
