@@ -836,7 +836,8 @@
       'R.E.P.O.': 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/3241660/library_600x900_2x.jpg',
       'Among Us': 'https://static-cdn.jtvnw.net/ttv-boxart/Among%20Us-144x192.jpg',
       'Mortal Kombat X': 'https://static-cdn.jtvnw.net/ttv-boxart/Mortal%20Kombat%20X-144x192.jpg',
-      'Mortal Kombat 11': 'https://static-cdn.jtvnw.net/ttv-boxart/Mortal%20Kombat%2011-144x192.jpg'
+      'Mortal Kombat 11': 'https://static-cdn.jtvnw.net/ttv-boxart/Mortal%20Kombat%2011-144x192.jpg',
+      'Demonologist': 'https://static-cdn.jtvnw.net/ttv-boxart/Demonologist-144x192.jpg'
     };
     return map[name] || `https://static-cdn.jtvnw.net/ttv-boxart/${encodeURIComponent(name)}-144x192.jpg`;
   }
