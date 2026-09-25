@@ -872,7 +872,7 @@
       }
       if (action === 'mobile-preview') { openMobilePreview(); return; }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
-      if (action === 'content' && any('page.text.edit','page.callouts.manage')) openContentManager();
+      if (action === 'content' && isAdmin()) openContentManager();
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
       if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
@@ -927,7 +927,7 @@
     openModal('TREŚĆ', `<div class="cms-site-settings-grid">
       ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-text><strong>✎ EDYTUJ TEKSTY</strong><span>Włącz bezpośrednią edycję napisów, nagłówków i opisów widocznych na bieżącej podstronie.</span></button>':''}
       ${has('page.callouts.manage')?`<button class="cms-site-setting-card" type="button" data-content-callouts><strong>▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}</strong><span>Dodawaj, edytuj, usuwaj i konfiguruj komunikaty oraz dymki na bieżącej podstronie.</span></button>`:''}
-      ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>':''}
+      '<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>'
     </div>`);
     const body = $('#cms-modal-body', modal);
     $('[data-content-text]', body)?.addEventListener('click', () => {
