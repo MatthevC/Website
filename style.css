@@ -11483,3 +11483,6 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 #app .moderator-benefits-block.rule-highlight {
   overflow: visible !important;
 }
+
+/* Nagrody: szeroka karta tylko gdy jest dokładnie piąta i ostatnia */
+.reward-grid .reward-card:nth-child(5):last-child { grid-column: 1 / -1; }
