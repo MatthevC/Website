@@ -944,13 +944,20 @@
     openModal('NAGRODY', `<div id="cmsRewardsManager"></div>`);
     const root=document.getElementById('cmsRewardsManager');
     const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    const defaultRewards = [
+      {id:'default-obecny',title:'Obecny',cost:'10 COINS',category:'ogolne',icon:'🎁',description:'Nagroda, która pokazuje, że jesteś aktualnie na transmisji.'},
+      {id:'default-wiadomosc',title:'Wyróżnij moją wiadomość',cost:'100 COINS',category:'ogolne',icon:'💬',description:'Podkreśla Twoją wiadomość na chacie.'},
+      {id:'default-skip',title:'Skip piosenki',cost:'1,5K COINS',category:'ogolne',icon:'⏭️',description:'Pomija aktualnie odtwarzany utwór.'},
+      {id:'default-banicja',title:'Banicja',cost:'10K COINS',category:'ogolne',icon:'🔨',description:'Nakładasz 24h t/o na wybraną osobę.'}
+    ];
     async function load(){
       const {data,error}=await client.from('rewards').select('*').order('sort_order');
       if(error){root.innerHTML='<p>Błąd ładowania nagród</p>';return;}
-      root.innerHTML=`<button class="cms-primary" id="addReward">+ DODAJ NAGRODĘ</button><div class="cms-manager-list">${(data||[]).map(r=>`<article class="cms-manager-item"><div><strong>${esc(r.title)}</strong><p>${esc(r.cost||'')}</p></div><div><button data-edit="${r.id}">EDYTUJ</button><button class="danger" data-del="${r.id}">USUŃ</button></div></article>`).join('')||'Brak nagród'}</div><div id="rewardForm"></div>`;
+      const rewards=[...defaultRewards,...(data||[])];
+      root.innerHTML=`<button class="cms-primary" id="addReward">+ DODAJ NAGRODĘ</button><div class="cms-manager-list">${rewards.map(r=>`<article class="cms-manager-item"><div><strong>${esc(r.title)}</strong><p>${esc(r.cost||'')}</p></div><div>${String(r.id).startsWith('default-')?'DOMYŚLNA':'<button data-edit="'+r.id+'">EDYTUJ</button><button class="danger" data-del="'+r.id+'">USUŃ</button>'}</div></article>`).join('')}</div><div id="rewardForm"></div>`;
       root.querySelector('#addReward').onclick=()=>form({});
       root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{await client.from('rewards').delete().eq('id',b.dataset.del);load();});
-      root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form((data||[]).find(x=>x.id===b.dataset.edit)));
+      root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form(rewards.find(x=>x.id===b.dataset.edit)));
     }
     function form(r){
       document.getElementById('rewardForm').innerHTML=`<h3>${r.id?'EDYCJA':'NOWA'} NAGRODA</h3><input id="rTitle" placeholder="Nazwa" value="${esc(r.title)}"><input id="rCost" placeholder="Koszt" value="${esc(r.cost)}"><input id="rCat" placeholder="Kategoria" value="${esc(r.category||'ogolne')}"><input id="rFamily" placeholder="Rodzina" value="${esc(r.family)}"><input id="rIcon" placeholder="Ikona" value="${esc(r.icon)}"><textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea><button class="cms-primary" id="saveReward">ZAPISZ</button>`;
