@@ -927,6 +927,7 @@
     openModal('TREŚĆ', `<div class="cms-site-settings-grid">
       ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-text><strong>✎ EDYTUJ TEKSTY</strong><span>Włącz bezpośrednią edycję napisów, nagłówków i opisów widocznych na bieżącej podstronie.</span></button>':''}
       ${has('page.callouts.manage')?`<button class="cms-site-setting-card" type="button" data-content-callouts><strong>▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}</strong><span>Dodawaj, edytuj, usuwaj i konfiguruj komunikaty oraz dymki na bieżącej podstronie.</span></button>`:''}
+      ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>':''}
     </div>`);
     const body = $('#cms-modal-body', modal);
     $('[data-content-text]', body)?.addEventListener('click', () => {
@@ -934,6 +935,28 @@
       setTimeout(startInlineEdit, 0);
     });
     $('[data-content-callouts]', body)?.addEventListener('click', openPageCalloutsManager);
+    $('[data-content-rewards]', body)?.addEventListener('click', openRewardsManager);
+  }
+
+  function openRewardsManager(){
+    const client = window.supabaseClient;
+    if(!client){ alert('Brak połączenia z Supabase'); return; }
+    openModal('NAGRODY', `<div id="cmsRewardsManager"></div>`);
+    const root=document.getElementById('cmsRewardsManager');
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    async function load(){
+      const {data,error}=await client.from('rewards').select('*').order('sort_order');
+      if(error){root.innerHTML='<p>Błąd ładowania nagród</p>';return;}
+      root.innerHTML=`<button class="cms-primary" id="addReward">+ DODAJ NAGRODĘ</button><div class="cms-manager-list">${(data||[]).map(r=>`<article class="cms-manager-item"><div><strong>${esc(r.title)}</strong><p>${esc(r.cost||'')}</p></div><div><button data-edit="${r.id}">EDYTUJ</button><button class="danger" data-del="${r.id}">USUŃ</button></div></article>`).join('')||'Brak nagród'}</div><div id="rewardForm"></div>`;
+      root.querySelector('#addReward').onclick=()=>form({});
+      root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{await client.from('rewards').delete().eq('id',b.dataset.del);load();});
+      root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form((data||[]).find(x=>x.id===b.dataset.edit)));
+    }
+    function form(r){
+      document.getElementById('rewardForm').innerHTML=`<h3>${r.id?'EDYCJA':'NOWA'} NAGRODA</h3><input id="rTitle" placeholder="Nazwa" value="${esc(r.title)}"><input id="rCost" placeholder="Koszt" value="${esc(r.cost)}"><input id="rCat" placeholder="Kategoria" value="${esc(r.category||'ogolne')}"><input id="rFamily" placeholder="Rodzina" value="${esc(r.family)}"><input id="rIcon" placeholder="Ikona" value="${esc(r.icon)}"><textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea><button class="cms-primary" id="saveReward">ZAPISZ</button>`;
+      document.getElementById('saveReward').onclick=async()=>{const obj={title:rTitle.value,description:rDesc.value,cost:rCost.value,category:rCat.value,family:rFamily.value||null,icon:rIcon.value,active:true}; if(r.id) await client.from('rewards').update(obj).eq('id',r.id); else await client.from('rewards').insert(obj); load();};
+    }
+    load();
   }
 
   function startInlineEdit() {
