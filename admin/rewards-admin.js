@@ -59,9 +59,8 @@
     const missing=defaults.filter(x=>!existing.has(x.title));
 
     if(missing.length){
-      const inserted = await client.from('rewards').upsert(
-        missing.map((x,i)=>({...x,active:true,sort_order:i})),
-        { onConflict:'title' }
+      const inserted = await client.from('rewards').insert(
+        missing.map((x,i)=>({...x,active:true,sort_order:i}))
       );
       if (inserted.error) {
         console.error('[REWARDS MIGRATION]', inserted.error);
