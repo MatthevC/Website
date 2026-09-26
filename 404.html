@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Strona błędu 404 dla społeczności MATT'S WORLD.">
+  <title>MatthevC — 404</title>
+  <link rel="stylesheet" href="style.css?v=98">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/Website/#/" data-root-link="#/">
+        <span class="brand-logo-wrap"><img class="brand-logo" src="pictures/logo/matthevc-monkey.png" alt="MatthevC" width="54" height="54"></span>
+        <span class="brand-text">MatthevC</span>
+      </a>
+      <nav class="main-nav" aria-label="Nawigacja strony błędu">
+        <a href="/Website/#/" data-root-link="#/">START</a>
+        <a href="/Website/#/?jump=home-sections" data-root-link="#/?jump=home-sections">NAJWAŻNIEJSZE SEKCJE</a>
+        <a href="/Website/#/viewer/commands" data-root-link="#/viewer/commands">DLA WIDZA</a>
+        <a href="/Website/#/contact" data-root-link="#/contact">KONTAKT</a>
+      </nav>
+      <a class="header-cta" href="https://www.twitch.tv/MatthevC" target="_blank" rel="noopener"><img class="header-twitch-icon" src="pictures/social/twitch-mark.png" alt="" aria-hidden="true"><span>TWITCH.TV</span></a>
+    </div>
+  </header>
+
+  <main class="content-wrap">
+    <div class="container error-page-wrap">
+      <section class="error-panel" aria-labelledby="error-page-title">
+        <div class="error-layout">
+          <div class="error-copy">
+            <div class="error-kicker">STRONA BŁĘDU / MATT'S WORLD</div>
+            <div class="error-code">404</div>
+            <h1 id="error-page-title">UPS... COŚ POSZŁO <span>NIE TAK</span></h1>
+            <div class="error-divider" aria-hidden="true"></div>
+            <p>Wygląda na to, że ta podstrona zniknęła, nigdy nie istniała albo jest chwilowo w remoncie. Pjoter dalej próbuje ogarnąć, co się tu wydarzyło zanim przyjdzie Janusz oraz Pan Wiesio.</p>
+            <div class="error-actions">
+              <a class="error-btn primary" href="/Website/#/" data-root-link="#/">
+                <span class="error-btn-icon" aria-hidden="true">⌂</span>
+                <span>WRÓĆ NA START</span>
+              </a>
+              <a class="error-btn secondary" href="/Website/#/?jump=home-sections" data-root-link="#/?jump=home-sections">
+                <span class="error-btn-icon" aria-hidden="true">▦</span>
+                <span>NAJWAŻNIEJSZE SEKCJE</span>
+              </a>
+            </div>
+            <div class="error-path">Nie znaleziono: <code id="error-path-value">ładowanie…</code></div>
+          </div>
+          <div class="error-visual" aria-hidden="true">
+            <div class="error-visual-frame">
+              <img class="error-monkey-render" src="pictures/error/404-monkey-render.png" alt="">
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var path = window.location.pathname || '/';
+      var parts = path.split('/').filter(Boolean);
+      var repoRoot = parts.length ? '/' + parts[0] + '/' : '/';
+      var normalized = path.indexOf(repoRoot) === 0 ? path.slice(repoRoot.length - 1) || '/' : path;
+
+      document.querySelectorAll('[data-root-link]').forEach(function (link) {
+        link.href = repoRoot + link.getAttribute('data-root-link');
+      });
+
+      var target = document.getElementById('error-path-value');
+      if (target) target.textContent = normalized + (window.location.hash || '');
+    })();
+  </script>
+</body>
+</html>
