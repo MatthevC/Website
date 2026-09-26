@@ -60,7 +60,7 @@
     // Później Supabase jest źródłem prawdy: usunięta nagroda nie wróci.
     if(db.length===0){
       const inserted = await client.from('rewards').insert(
-        defaults.map((x,i)=>({...x,active:true,sort_order:i}))
+        defaults.map((x,i)=>({...x,is_default:true,active:true,sort_order:i}))
       );
       if (inserted.error) {
         console.error('[REWARDS SEED]', inserted.error);
@@ -99,6 +99,10 @@
     root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form(rows[b.dataset.edit]));
     root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
       const r=rows[b.dataset.del];
+      if(r.is_default){
+        alert('To jest domyślna nagroda systemowa. Możesz ją edytować, ale nie można jej usunąć.');
+        return;
+      }
       if(confirm('Usunąć nagrodę?')){
         await client.from('rewards').delete().eq('id',r.id);
         load();
