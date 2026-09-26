@@ -7,7 +7,22 @@
     {title:"Obecny",cost:"10 COINS",category:"ogolne",description:"Nagroda, która pokazuje, że jesteś aktualnie na transmisji.",icon:"🎁"},
     {title:"Wyróżnij moją wiadomość",cost:"100 COINS",category:"ogolne",description:"Podkreśla Twoją wiadomość na chacie.",icon:"💬"},
     {title:"Skip piosenki",cost:"1,5K COINS",category:"ogolne",description:"Pomija aktualnie odtwarzany utwór.",icon:"⏭️"},
-    {title:"Banicja",cost:"10K COINS",category:"ogolne",description:"Nakładasz 24h t/o na wybraną osobę.",icon:"🔨"}
+    {title:"Banicja",cost:"10K COINS",category:"ogolne",description:"Nakładasz 24h t/o na wybraną osobę.",icon:"🔨"},
+    {title:"BINGO — RANDOM",cost:"1K COINS",category:"dixper_bingo",description:"Losowe wydarzenie w Stream Bounty.",icon:"🎰"},
+    {title:"BINGO — VOTE",cost:"8K COINS",category:"dixper_bingo",description:"Głosowanie społeczności na wydarzenie.",icon:"🎰"},
+    {title:"BINGO ALL",cost:"8K COINS",category:"dixper_bingo",description:"Losowe wydarzenie dla społeczności.",icon:"🎰"},
+    {title:"Dixper — Basic Crate",cost:"1,5K COINS",category:"dixper_bingo",description:"Podstawowa skrzynka Dixper.",icon:"📦"},
+    {title:"Dixper — Rarity Crate",cost:"3K COINS",category:"dixper_bingo",description:"Skrzynka Rarity Dixper.",icon:"📦"},
+    {title:"Dixper — Skill Crate",cost:"4K COINS",category:"dixper_bingo",description:"Skrzynka Skill Dixper.",icon:"🧰"},
+    {title:"Random perk — surv",cost:"5K COINS",category:"dbd",description:"Losowy build na survivora w DBD.",icon:"🎯"},
+    {title:"Random perk — killer",cost:"6K COINS",category:"dbd",description:"Losowy build na killera w DBD.",icon:"🔪"},
+    {title:"Przetestuj build",cost:"10K COINS",category:"dbd",description:"Matt gra wybranym buildem.",icon:"🧪"},
+    {title:"1 vs 1",cost:"15K COINS",category:"uniwersalne",description:"Nagroda uniwersalna do gier.",icon:"⚔️"},
+    {title:"Wybierz w co gramy",cost:"50K COINS",category:"uniwersalne",description:"Wybór gry na transmisję.",icon:"🎮"},
+    {title:"Podpis profilu Steam",cost:"15K COINS",category:"premium",description:"Personalizowany podpis Steam.",icon:"✍️"},
+    {title:"SPAM like / serduszek",cost:"20K COINS",category:"premium",description:"Dostajesz spam reakcji.",icon:"❤️"},
+    {title:"Ban na słowo",cost:"25K COINS",category:"premium",description:"Bon za użycie słowa.",icon:"🚫"},
+    {title:"SUBIK",cost:"80K COINS",category:"premium",description:"Subskrypcja kanału.",icon:"⭐"}
   ];
 
   const categories = {
