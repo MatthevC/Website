@@ -12,7 +12,8 @@
   const grid=document.querySelector('.rewards-page .reward-grid');
   if(!grid||!window.supabaseClient)return;
   try{
-   const {data,error}=await window.supabaseClient.from('rewards').select('*').eq('active',true).order('sort_order',{ascending:true});
+   let {data,error}=await window.supabaseClient.from('rewards').select('*').eq('active',true).order('sort_order',{ascending:true});
+   // Jeżeli baza jest pusta, nie czyścimy strony. Pozostawiamy dane statyczne z GitHuba.
    if(!error && Array.isArray(data)) renderRewards(data);
   }catch(e){console.error(e)}
  }
