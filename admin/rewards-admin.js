@@ -38,16 +38,30 @@
   let rows=[];
 
   async function load(){
-    const {data,error}=await client.from('rewards').select('*').order('sort_order',{ascending:true});
-    if(error) console.error(error);
+    let data = [];
+    let error = null;
+    try {
+      let res = await client.from('rewards').select('*').order('sort_order',{ascending:true});
+      data = res.data || [];
+      error = res.error;
+      if (error && String(error.message||'').includes('sort_order')) {
+        res = await client.from('rewards').select('*');
+        data = res.data || [];
+        error = res.error;
+      }
+    } catch(e) {
+      error = e;
+    }
+    if(error) console.error('[REWARDS ADMIN]', error);
 
     const db=data||[];
     const existing=new Set(db.map(x=>x.title));
     const missing=defaults.filter(x=>!existing.has(x.title));
 
     if(missing.length){
-      await client.from('rewards').insert(missing.map((x,i)=>({...x,active:true,sort_order:i})));
-      const refreshed=await client.from('rewards').select('*').order('sort_order');
+      const inserted = await client.from('rewards').insert(missing.map((x,i)=>({...x,active:true,sort_order:i})));
+      if (inserted.error) console.error('[REWARDS MIGRATION]', inserted.error);
+      const refreshed=await client.from('rewards').select('*');
       rows=refreshed.data||[];
     } else {
       rows=db;
