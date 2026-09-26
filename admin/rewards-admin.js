@@ -112,23 +112,72 @@
 
   function form(r){
     document.getElementById('rewardForm').innerHTML=`
-    <div class="reward-form">
-      <h3>${r.id?'EDYCJA NAGRODY':'NOWA NAGRODA'}</h3>
-      <input id="rwTitle" placeholder="Nazwa" value="${esc(r.title)}">
-      <input id="rwCost" placeholder="Koszt" value="${esc(r.cost)}">
-      <select id="rwCat">
-        ${Object.entries(categories).map(([k,v])=>`<option value="${k}" ${k===r.category?'selected':''}>${v}</option>`).join('')}
-      </select>
-      <div class="reward-upload-box">
-        <label>GRAFIKA PNG/JPG</label>
-        <input type="file" id="rwImage" accept="image/png,image/jpeg,image/webp">
-        <div id="rwPreview" class="reward-image-preview">${r.image?`<img src="${esc(r.image)}">`:esc(r.icon||"🎁")}</div>
+    <div class="reward-form modern">
+      <div class="reward-form-title">
+        <h3>${r.id?'EDYCJA NAGRODY':'NOWA NAGRODA'}</h3>
+        <span>Dodaj grafikę, ustaw kategorię i opisz nagrodę</span>
       </div>
-      <input id="rwIcon" placeholder="Ikona awaryjna" value="${esc(r.icon)}">
-      <textarea id="rwDesc" placeholder="Opis">${esc(r.description)}</textarea>
-      <button id="rwSave">ZAPISZ</button>
-      <button id="rwCancel">ANULUJ</button>
+
+      <div class="reward-grid">
+        <label>Nazwa nagrody
+          <input id="rwTitle" placeholder="np. Wybierz grę" value="${esc(r.title)}">
+        </label>
+
+        <label>Koszt
+          <input id="rwCost" placeholder="np. 5000 COINS" value="${esc(r.cost)}">
+        </label>
+
+        <label>Kategoria
+          <select id="rwCat">
+            ${Object.entries(categories).map(([k,v])=>`<option value="${k}" ${k===r.category?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </label>
+
+        <label>Ikona awaryjna
+          <input id="rwIcon" placeholder="🎁" value="${esc(r.icon)}">
+        </label>
+      </div>
+
+      <label class="full">Opis nagrody
+        <textarea id="rwDesc" placeholder="Opis dla widza">${esc(r.description)}</textarea>
+      </label>
+
+      <div class="reward-upload-box">
+        <strong>Grafika nagrody</strong>
+        <p>PNG, JPG lub WEBP</p>
+        <input type="file" id="rwImage" accept="image/png,image/jpeg,image/webp">
+        <div id="rwPreview" class="reward-image-preview">
+          ${r.image?`<img src="${esc(r.image)}">`:esc(r.icon||"🎁")}
+        </div>
+      </div>
+
+      <div class="reward-form-actions">
+        <button id="rwSave">💾 ZAPISZ</button>
+        <button id="rwCancel">ANULUJ</button>
+      </div>
     </div>`;
+
+    if(!document.getElementById('rewardModernStyle')){
+      const style=document.createElement('style');
+      style.id='rewardModernStyle';
+      style.textContent=`
+      .reward-form.modern{margin-top:25px;padding:25px;border:1px solid #333;border-radius:18px;background:#15151b}
+      .reward-form-title h3{margin:0 0 8px;font-size:22px}
+      .reward-form-title span{color:#aaa}
+      .reward-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:20px}
+      .reward-form label{display:flex;flex-direction:column;gap:8px;color:#ddd;font-size:14px}
+      .reward-form input,.reward-form select,.reward-form textarea{background:#0e0e12;border:1px solid #444;color:#fff;padding:12px;border-radius:10px}
+      .reward-form textarea{min-height:120px;resize:vertical;margin-top:16px}
+      .reward-upload-box{margin-top:20px;padding:18px;border:1px dashed #555;border-radius:14px}
+      .reward-upload-box p{color:#999}
+      .reward-image-preview{margin-top:15px;width:90px;height:90px;border-radius:18px;background:#222;display:flex;align-items:center;justify-content:center;font-size:42px;overflow:hidden}
+      .reward-image-preview img{width:100%;height:100%;object-fit:cover}
+      .reward-form-actions{display:flex;gap:12px;margin-top:20px}
+      .reward-form-actions button{padding:12px 20px;border-radius:10px;border:0;background:#ef2938;color:#fff;cursor:pointer}
+      @media(max-width:700px){.reward-grid{grid-template-columns:1fr}}
+      `;
+      document.head.appendChild(style);
+    }
 
     const imgInput=document.getElementById('rwImage');
     imgInput?.addEventListener('change',()=>{
@@ -159,16 +208,18 @@
         description:rwDesc.value,
         active:true
       };
-      let result;
-      if(r.id) result = await client.from('rewards').update(obj).eq('id',r.id);
-      else result = await client.from('rewards').insert(obj);
+
+      let result=r.id
+        ? await client.from('rewards').update(obj).eq('id',r.id)
+        : await client.from('rewards').insert(obj);
+
       if(result.error){
-        console.error('[REWARDS SAVE]', result.error);
-        alert('Błąd zapisu nagrody: ' + result.error.message);
+        alert('Błąd zapisu nagrody: '+result.error.message);
         return;
       }
       load();
     };
+
     document.getElementById('rwCancel').onclick=render;
   }
 
