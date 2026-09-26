@@ -55,19 +55,17 @@
     if(error) console.error('[REWARDS ADMIN]', error);
 
     const db=data||[];
-    const existing=new Set(db.map(x=>x.title));
-    const missing=defaults.filter(x=>!existing.has(x.title));
 
-    if(missing.length){
+    // Jednorazowe utworzenie bazy nagród.
+    // Później Supabase jest źródłem prawdy: usunięta nagroda nie wróci.
+    if(db.length===0){
       const inserted = await client.from('rewards').insert(
-        missing.map((x,i)=>({...x,active:true,sort_order:i}))
+        defaults.map((x,i)=>({...x,active:true,sort_order:i}))
       );
       if (inserted.error) {
-        console.error('[REWARDS MIGRATION]', inserted.error);
-        alert('Nie udało się zapisać nagród. Sprawdź RLS Supabase.');
+        console.error('[REWARDS SEED]', inserted.error);
       }
-      const refreshed=await client.from('rewards').select('*');
-      if(refreshed.error) console.error('[REWARDS LOAD]', refreshed.error);
+      const refreshed=await client.from('rewards').select('*').order('sort_order',{ascending:true});
       rows=refreshed.data||[];
     } else {
       rows=db;
