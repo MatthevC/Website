@@ -59,9 +59,16 @@
     const missing=defaults.filter(x=>!existing.has(x.title));
 
     if(missing.length){
-      const inserted = await client.from('rewards').insert(missing.map((x,i)=>({...x,active:true,sort_order:i})));
-      if (inserted.error) console.error('[REWARDS MIGRATION]', inserted.error);
+      const inserted = await client.from('rewards').upsert(
+        missing.map((x,i)=>({...x,active:true,sort_order:i})),
+        { onConflict:'title' }
+      );
+      if (inserted.error) {
+        console.error('[REWARDS MIGRATION]', inserted.error);
+        alert('Nie udało się zapisać nagród. Sprawdź RLS Supabase.');
+      }
       const refreshed=await client.from('rewards').select('*');
+      if(refreshed.error) console.error('[REWARDS LOAD]', refreshed.error);
       rows=refreshed.data||[];
     } else {
       rows=db;
@@ -126,8 +133,14 @@
         description:rwDesc.value,
         active:true
       };
-      if(r.id) await client.from('rewards').update(obj).eq('id',r.id);
-      else await client.from('rewards').insert(obj);
+      let result;
+      if(r.id) result = await client.from('rewards').update(obj).eq('id',r.id);
+      else result = await client.from('rewards').insert(obj);
+      if(result.error){
+        console.error('[REWARDS SAVE]', result.error);
+        alert('Błąd zapisu nagrody: ' + result.error.message);
+        return;
+      }
       load();
     };
     document.getElementById('rwCancel').onclick=render;
