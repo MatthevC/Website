@@ -1,58 +1,74 @@
-
 (() => {
   const client = window.supabaseClient;
-  if (!client) return;
-
   const root = document.getElementById('rewardsAdminApp');
-  if (!root) return;
+  if (!client || !root) return;
 
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const defaults = [
+    {title:"Obecny",cost:"10 COINS",category:"ogolne",description:"Nagroda, która pokazuje, że jesteś aktualnie na transmisji.",icon:"🎁"},
+    {title:"Wyróżnij moją wiadomość",cost:"100 COINS",category:"ogolne",description:"Podkreśla Twoją wiadomość na chacie.",icon:"💬"},
+    {title:"Skip piosenki",cost:"1,5K COINS",category:"ogolne",description:"Pomija aktualnie odtwarzany utwór.",icon:"⏭️"},
+    {title:"Banicja",cost:"10K COINS",category:"ogolne",description:"Nakładasz 24h t/o na wybraną osobę.",icon:"🔨"}
+  ];
 
-  async function load() {
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+
+  let rows=[];
+
+  async function load(){
     const {data,error}=await client.from('rewards').select('*').order('sort_order');
-    if(error){root.innerHTML='<p>Błąd ładowania nagród</p>'; return;}
-    root.innerHTML=`
-      <button id="rewardAdd">+ Dodaj nagrodę</button>
-      <div>${data.map(r=>`
-        <article class="panel" style="margin-top:10px">
-          <b>${esc(r.title)}</b> ${esc(r.cost||'')}
-          <p>${esc(r.description||'')}</p>
-          <button data-edit="${r.id}">Edytuj</button>
-          <button data-del="${r.id}">Usuń</button>
-        </article>`).join('') || 'Brak nagród'}
-      </div>
-      <div id="rewardForm"></div>`;
-    document.getElementById('rewardAdd').onclick=()=>form();
-    root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
-      await client.from('rewards').delete().eq('id',b.dataset.del); load();
-    });
-    root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form(data.find(x=>x.id===b.dataset.edit)));
+    rows = [...defaults.map(x=>({...x,localDefault:true})), ...(data||[])];
+    render();
   }
 
-  function form(r={}) {
+  function render(){
+    root.innerHTML = `
+      <button class="reward-add-main" id="rewardAdd">＋ DODAJ NAGRODĘ</button>
+      <div class="reward-admin-list">
+      ${rows.map((r,i)=>`
+        <article class="reward-admin-item">
+          <div>
+            <b>${esc(r.title)}</b>
+            <span>${esc(r.cost||'')}</span>
+            <small>${esc(r.category||'ogolne')}</small>
+          </div>
+          <div>
+            <button data-edit="${i}">✏️ EDYTUJ</button>
+            ${r.localDefault?'':'<button data-del="'+i+'">🗑 USUŃ</button>'}
+          </div>
+        </article>`).join('')}
+      </div>
+      <div id="rewardForm"></div>`;
+
+    rewardAdd.onclick=()=>form({});
+    root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form(rows[b.dataset.edit]));
+    root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
+      const r=rows[b.dataset.del];
+      await client.from('rewards').delete().eq('id',r.id);
+      load();
+    });
+  }
+
+  function form(r){
     document.getElementById('rewardForm').innerHTML=`
-      <h3>${r.id?'Edytuj':'Dodaj'} nagrodę</h3>
+      <div class="reward-form">
+      <h3>${r.id?'Edytuj nagrodę':'Nowa nagroda'}</h3>
       <input id="rwTitle" placeholder="Nazwa" value="${esc(r.title)}">
       <input id="rwCost" placeholder="Koszt" value="${esc(r.cost)}">
-      <input id="rwCat" placeholder="Kategoria" value="${esc(r.category||'ogolne')}">
-      <input id="rwFamily" placeholder="Rodzina" value="${esc(r.family)}">
+      <select id="rwCat">
+        ${['ogolne','dixper_bingo','dbd','uniwersalne','premium'].map(c=>`<option ${c===r.category?'selected':''}>${c}</option>`).join('')}
+      </select>
       <input id="rwIcon" placeholder="Ikona" value="${esc(r.icon)}">
       <textarea id="rwDesc" placeholder="Opis">${esc(r.description)}</textarea>
-      <button id="rwSave">Zapisz</button>`;
-    document.getElementById('rwSave').onclick=async()=>{
-      const obj={
-        title:rwTitle.value,
-        description:rwDesc.value,
-        cost:rwCost.value,
-        category:rwCat.value,
-        family:rwFamily.value||null,
-        icon:rwIcon.value,
-        active:true
-      };
+      <button id="rwSave">ZAPISZ</button>
+      </div>`;
+
+    rwSave.onclick=async()=>{
+      const obj={title:rwTitle.value,cost:rwCost.value,category:rwCat.value,icon:rwIcon.value,description:rwDesc.value,active:true};
       if(r.id) await client.from('rewards').update(obj).eq('id',r.id);
       else await client.from('rewards').insert(obj);
       load();
     };
   }
+
   load();
 })();
