@@ -119,18 +119,43 @@
       <select id="rwCat">
         ${Object.entries(categories).map(([k,v])=>`<option value="${k}" ${k===r.category?'selected':''}>${v}</option>`).join('')}
       </select>
-      <input id="rwIcon" placeholder="Ikona" value="${esc(r.icon)}">
+      <div class="reward-upload-box">
+        <label>GRAFIKA PNG/JPG</label>
+        <input type="file" id="rwImage" accept="image/png,image/jpeg,image/webp">
+        <div id="rwPreview" class="reward-image-preview">${r.image?`<img src="${esc(r.image)}">`:esc(r.icon||"🎁")}</div>
+      </div>
+      <input id="rwIcon" placeholder="Ikona awaryjna" value="${esc(r.icon)}">
       <textarea id="rwDesc" placeholder="Opis">${esc(r.description)}</textarea>
       <button id="rwSave">ZAPISZ</button>
       <button id="rwCancel">ANULUJ</button>
     </div>`;
 
+    const imgInput=document.getElementById('rwImage');
+    imgInput?.addEventListener('change',()=>{
+      const file=imgInput.files[0];
+      if(file) document.getElementById('rwPreview').innerHTML=`<img src="${URL.createObjectURL(file)}">`;
+    });
+
     document.getElementById('rwSave').onclick=async()=>{
+      let image=r.image||"";
+      const file=imgInput?.files?.[0];
+
+      if(file){
+        const name=`reward-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g,"")}`;
+        const upload=await client.storage.from("rewards").upload(name,file,{upsert:true});
+        if(upload.error){
+          alert("Błąd grafiki: "+upload.error.message);
+          return;
+        }
+        image=client.storage.from("rewards").getPublicUrl(name).data.publicUrl;
+      }
+
       const obj={
         title:rwTitle.value,
         cost:rwCost.value,
         category:rwCat.value,
         icon:rwIcon.value,
+        image:image,
         description:rwDesc.value,
         active:true
       };
