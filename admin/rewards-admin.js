@@ -139,9 +139,9 @@
         <h3>Grafika nagrody</h3>
         <input type="file" id="rwImage" accept="image/png,image/jpeg,image/webp,image/gif">
         <div class="zoom-controls">
-          <label>Zoom (%) <input type="number" id="rwZoom" value="100"></label>
-          <label>Przesunięcie X <input type="number" id="rwX" value="0"></label>
-          <label>Przesunięcie Y <input type="number" id="rwY" value="0"></label>
+          <label>Przybliżenie (%) <input type="range" id="rwZoom" min="50" max="250" value="100"><input type="number" value="100" id="rwZoomNumber"></label>
+          <label>Przesunięcie X (px) <input type="number" id="rwX" value="0"></label>
+          <label>Przesunięcie Y (px) <input type="number" id="rwY" value="0"></label>
         </div>
         <button id="rwRemoveImage" type="button">USUŃ GRAFIKĘ</button>
       </div>
@@ -156,8 +156,15 @@
       const st=document.createElement('style');
       st.id='rewardEditorStyle';
       st.textContent=`
-      .reward-editor-page{display:flex;flex-direction:column;gap:22px}
-      .reward-preview-box,.reward-image-editor{background:#121217;border:1px solid #34343c;border-radius:16px;padding:20px}
+      .reward-editor-page{display:flex;flex-direction:column;gap:24px;padding:4px 0}
+      .reward-preview-box,.reward-image-editor{background:#15151b;border:1px solid #34343c;border-radius:18px;padding:24px}
+      .reward-editor-page .reward-grid{background:#101015;border:1px solid #2f3038;border-radius:18px;padding:22px}
+      .reward-editor-page .reward-grid label{font-size:13px;font-weight:700}
+      .reward-editor-page .reward-image-editor{display:flex;flex-direction:column;gap:16px}
+      .reward-editor-page .reward-actions{border-top:1px solid #303038;padding-top:20px;position:sticky;bottom:0;background:#101015}
+      .reward-editor-page input,.reward-editor-page select,.reward-editor-page textarea{font-size:15px}
+      .reward-editor-page .reward-preview-box img{transition:.2s}
+
       .reward-preview-box small{color:#ff3344}.reward-preview-box h3{margin:8px 0 20px}
       .reward-card-preview{position:relative;padding:20px;background:#18181d;border:1px solid #52242b;border-radius:14px;min-height:120px}
       #rwLiveImage img{width:70px;height:70px;object-fit:cover;border-radius:15px}
@@ -167,6 +174,9 @@
       .reward-editor-page input,.reward-editor-page select,.reward-editor-page textarea{background:#08090c;color:#fff;border:1px solid #333;border-radius:10px;padding:13px}
       .reward-editor-page textarea{min-height:130px}
       .zoom-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:15px 0}
+      .zoom-controls input[type=range]{accent-color:#ff3344;height:8px}
+      .reward-card-preview{overflow:hidden}
+
       .reward-actions{display:flex;justify-content:flex-end;gap:12px}
       .reward-actions button,.reward-image-editor button{padding:12px 20px;border-radius:10px;border:1px solid #555;background:#17171d;color:#fff}
       #rwSave{background:#f22;color:white;border:0}
@@ -185,6 +195,8 @@
       if(img){img.style.transform=`translate(${rwX.value}px,${rwY.value}px) scale(${rwZoom.value/100})`;}
     };
     document.querySelectorAll('#rwTitle,#rwCost,#rwDesc,#rwZoom,#rwX,#rwY').forEach(e=>e.oninput=updatePreview);
+    rwZoom.oninput=()=>{rwZoomNumber.value=rwZoom.value;updatePreview()};
+    rwZoomNumber.oninput=()=>{rwZoom.value=rwZoomNumber.value;updatePreview()};
     rwImage.onchange=()=>{const f=rwImage.files[0];if(f){image=URL.createObjectURL(f);rwLiveImage.innerHTML=`<img src="${image}">`;removed=false;updatePreview();}};
     rwRemoveImage.onclick=()=>{image="";removed=true;rwLiveImage.innerHTML=rwIcon.value||"🎁";};
 
