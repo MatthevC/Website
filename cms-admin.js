@@ -990,14 +990,17 @@
       root.innerHTML=`
       <button class="cms-secondary reward-back-button" id="backRewards">← COFNIJ</button>
       <div class="cms-form-card reward-editor reward-full-editor">
-        <h3>${oldTitle}</h3>
+        <div class="reward-editor-header">
+          <small>PANEL ADMINISTRATORA</small>
+          <h2>${oldTitle}</h2>
+        </div>
         <div class="reward-preview-card">
-          <div class="reward-preview-icon">${esc(r.icon||'🎁')}</div>
+          <div class="reward-preview-icon" id="previewRewardIcon">${esc(r.icon||'🎁')}</div>
           <div><strong id="previewRewardTitle">${esc(r.title||'Nowa nagroda')}</strong><span id="previewRewardCost">${esc(r.cost||'0 COINS')}</span></div>
         </div>
         <div class="cms-form-grid">
-          <label>Nazwa<input id="rTitle" placeholder="Nazwa" value="${esc(r.title)}"></label>
-          <label>Koszt<input id="rCost" placeholder="Koszt" value="${esc(r.cost)}"></label>
+          <label>Nazwa nagrody<input id="rTitle" placeholder="np. Skip piosenki" value="${esc(r.title)}"></label>
+          <label>Koszt COINS<input id="rCost" placeholder="np. 500" value="${esc(r.cost)}"></label>
           <label>Kategoria<select id="rCat">
             <option value="ogolne">Ogólne</option>
             <option value="bingo">Bingo / Stream Bounty</option>
@@ -1008,8 +1011,14 @@
           </select></label>
           <label>Rodzina<input id="rFamily" placeholder="Rodzina" value="${esc(r.family)}"></label>
         </div>
-        <label>Opis<textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea></label>
-        <label>Ikona / emoji<input id="rIcon" placeholder="🎁" value="${esc(r.icon)}"></label>
+        <label>Opis nagrody<textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea></label>
+        <div class="reward-image-box">
+          <h3>IKONA NAGRODY</h3>
+          <p>Możesz użyć emoji albo własnej grafiki.</p>
+          <label>Emoji<input id="rIcon" placeholder="🎁" value="${esc(r.icon)}"></label>
+          <label>Grafika PNG/JPG/WEBP<input id="rImage" type="file" accept="image/*"></label>
+          <img id="rewardImagePreview" class="reward-image-preview" style="display:none">
+        </div>
         <button class="cms-primary" id="saveReward">ZAPISZ NAGRODĘ</button>
       </div>`;
       const cat=root.querySelector('#rCat');
