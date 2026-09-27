@@ -111,6 +111,12 @@
   }
 
   function form(r){
+    const modal=document.querySelector('.cms-modal');
+    const modalTitle=document.getElementById('cms-modal-title');
+    if(modal){
+      modal.classList.add('reward-full-editor');
+    }
+    if(modalTitle) modalTitle.textContent = r.id ? 'EDYTUJ NAGRODĘ' : 'DODAJ NAGRODĘ';
     document.getElementById('rewardForm').innerHTML=`
     <div class="reward-editor-page">
       <div class="reward-preview-box">
@@ -156,7 +162,19 @@
       const st=document.createElement('style');
       st.id='rewardEditorStyle';
       st.textContent=`
-      .reward-editor-page{display:flex;flex-direction:column;gap:24px;padding:4px 0}
+      .cms-modal.reward-full-editor{
+        width:min(1200px,96vw)!important;
+        max-height:95vh!important;
+      }
+      .cms-modal.reward-full-editor .cms-modal-body{
+        overflow-y:auto;
+      }
+      .reward-editor-page{
+        display:flex;flex-direction:column;gap:24px;padding:4px 0}
+      .reward-editor-page h3{font-size:22px}
+      .reward-editor-page .reward-preview-box{
+        min-height:220px
+      }
       .reward-preview-box,.reward-image-editor{background:#15151b;border:1px solid #34343c;border-radius:18px;padding:24px}
       .reward-editor-page .reward-grid{background:#101015;border:1px solid #2f3038;border-radius:18px;padding:22px}
       .reward-editor-page .reward-grid label{font-size:13px;font-weight:700}
@@ -213,7 +231,13 @@
       if(res.error)return alert(res.error.message);
       load();
     };
-    rwBack.onclick=render;
+    rwBack.onclick=()=>{
+      const modal=document.querySelector('.cms-modal');
+      const modalTitle=document.getElementById('cms-modal-title');
+      if(modal) modal.classList.remove('reward-full-editor');
+      if(modalTitle) modalTitle.textContent='NAGRODY';
+      render();
+    };
   }
 
   load();
