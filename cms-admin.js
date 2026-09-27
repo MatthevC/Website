@@ -988,48 +988,103 @@
     function form(r){
       const oldTitle=r.id?'EDYTUJ NAGRODĘ':'NOWA NAGRODA';
       root.innerHTML=`
-      <button class="cms-secondary reward-back-button" id="backRewards">← COFNIJ</button>
-      <div class="cms-form-card reward-editor reward-full-editor">
-        <div class="reward-editor-header">
+      <div class="cms-form-card reward-full-editor">
+        <div class="cms-modal-head">
           <small>PANEL ADMINISTRATORA</small>
           <h2>${oldTitle}</h2>
         </div>
-        <div class="reward-preview-card">
-          <div class="reward-preview-icon" id="previewRewardIcon">${esc(r.icon||'🎁')}</div>
-          <div><strong id="previewRewardTitle">${esc(r.title||'Nowa nagroda')}</strong><span id="previewRewardCost">${esc(r.cost||'0 COINS')}</span></div>
+
+        <button class="cms-secondary" id="backRewards">← WRÓĆ</button>
+
+        <div class="reward-settings-layout">
+          <section class="reward-editor-panel">
+            <h3>DANE NAGRODY</h3>
+
+            <div class="cms-form-grid">
+              <label>Nazwa nagrody
+                <input id="rTitle" placeholder="np. Skip piosenki" value="${esc(r.title||'')}">
+              </label>
+
+              <label>Koszt COINS
+                <input id="rCost" placeholder="np. 500" value="${esc(r.cost||'')}">
+              </label>
+
+              <label>Kategoria
+                <select id="rCat">
+                  <option value="ogolne">Ogólne</option>
+                  <option value="bingo">Bingo / Stream Bounty</option>
+                  <option value="dixper">Dixper</option>
+                  <option value="dbd">Nagrody związane z DBD</option>
+                  <option value="uniwersalne">Uniwersalne do gier</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </label>
+
+              <label>Rodzina
+                <input id="rFamily" placeholder="Rodzina" value="${esc(r.family||'')}">
+              </label>
+            </div>
+
+            <label>Opis nagrody
+              <textarea id="rDesc" placeholder="Opis nagrody">${esc(r.description||'')}</textarea>
+            </label>
+
+            <h3>IKONA / GRAFIKA NAGRODY</h3>
+
+            <div class="reward-image-box">
+              <label>Emoji
+                <input id="rIcon" placeholder="🎁" value="${esc(r.icon||'🎁')}">
+              </label>
+
+              <label>Własna grafika
+                <input id="rImage" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+              </label>
+
+              <div id="rewardImagePreviewWrap"></div>
+            </div>
+          </section>
+
+          <section class="reward-live-preview">
+            <small>PODGLĄD NA ŻYWO</small>
+            <h3>TAK NAGRODA BĘDZIE WYGLĄDAŁA NA STRONIE</h3>
+
+            <article class="reward-preview-card">
+              <div class="reward-preview-icon" id="previewRewardIcon">${esc(r.icon||'🎁')}</div>
+              <strong id="previewRewardTitle">${esc(r.title||'Nowa nagroda')}</strong>
+              <span id="previewRewardCost">${esc(r.cost||'0 COINS')}</span>
+              <p id="previewRewardDesc">${esc(r.description||'Opis nagrody')}</p>
+            </article>
+          </section>
         </div>
-        <div class="cms-form-grid">
-          <label>Nazwa nagrody<input id="rTitle" placeholder="np. Skip piosenki" value="${esc(r.title)}"></label>
-          <label>Koszt COINS<input id="rCost" placeholder="np. 500" value="${esc(r.cost)}"></label>
-          <label>Kategoria<select id="rCat">
-            <option value="ogolne">Ogólne</option>
-            <option value="bingo">Bingo / Stream Bounty</option>
-            <option value="dixper">Dixper</option>
-            <option value="dbd">Nagrody związane z DBD</option>
-            <option value="uniwersalne">Uniwersalne do gier</option>
-            <option value="premium">Premium</option>
-          </select></label>
-          <label>Rodzina<input id="rFamily" placeholder="Rodzina" value="${esc(r.family)}"></label>
+
+        <div class="cms-form-actions">
+          <button class="cms-secondary" id="backBottom">← WRÓĆ</button>
+          <button class="cms-primary" id="saveReward">ZAPISZ NAGRODĘ</button>
         </div>
-        <label>Opis nagrody<textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea></label>
-        <div class="reward-image-box">
-          <h3>IKONA NAGRODY</h3>
-          <p>Możesz użyć emoji albo własnej grafiki.</p>
-          <label>Emoji<input id="rIcon" placeholder="🎁" value="${esc(r.icon)}"></label>
-          <label>Grafika PNG/JPG/WEBP<input id="rImage" type="file" accept="image/*"></label>
-          <img id="rewardImagePreview" class="reward-image-preview" style="display:none">
-        </div>
-        <button class="cms-primary" id="saveReward">ZAPISZ NAGRODĘ</button>
       </div>`;
-      const cat=root.querySelector('#rCat');
-      cat.value=r.category||'ogolne';
-      root.querySelector('#backRewards').onclick=load;
+
+      root.querySelector('#rCat').value=r.category||'ogolne';
+
+      const goBack=()=>load();
+      root.querySelector('#backRewards').onclick=goBack;
+      root.querySelector('#backBottom').onclick=goBack;
 
       const updatePreview=()=>{
         root.querySelector('#previewRewardTitle').textContent=root.querySelector('#rTitle').value||'Nowa nagroda';
         root.querySelector('#previewRewardCost').textContent=root.querySelector('#rCost').value||'0 COINS';
+        root.querySelector('#previewRewardDesc').textContent=root.querySelector('#rDesc').value||'Opis nagrody';
+        root.querySelector('#previewRewardIcon').textContent=root.querySelector('#rIcon').value||'🎁';
       };
-      root.querySelectorAll('input').forEach(x=>x.addEventListener('input',updatePreview));
+
+      root.querySelectorAll('input,textarea,select').forEach(x=>x.addEventListener('input',updatePreview));
+
+      root.querySelector('#rImage').onchange=e=>{
+        const file=e.target.files[0];
+        if(!file)return;
+        const url=URL.createObjectURL(file);
+        root.querySelector('#rewardImagePreviewWrap').innerHTML=`<img class="reward-image-preview" src="${url}">`;
+        root.querySelector('#previewRewardIcon').innerHTML=`<img src="${url}" style="width:70px;height:70px;object-fit:contain">`;
+      };
 
       root.querySelector('#saveReward').onclick=async()=>{
         const obj={
