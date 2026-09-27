@@ -986,19 +986,41 @@
     }
 
     function form(r){
-      root.querySelector('#rewardForm').innerHTML=`
-      <div class="cms-form-card">
-      <h3>${r.id?'EDYTUJ NAGRODĘ':'NOWA NAGRODA'}</h3>
-      <div class="cms-form-grid">
-      <input id="rTitle" placeholder="Nazwa" value="${esc(r.title)}">
-      <input id="rCost" placeholder="Koszt" value="${esc(r.cost)}">
-      <input id="rCat" placeholder="Kategoria" value="${esc(r.category||'ogolne')}">
-      <input id="rFamily" placeholder="Rodzina" value="${esc(r.family)}">
-      <input id="rIcon" placeholder="Ikona lub emoji" value="${esc(r.icon)}">
-      </div>
-      <textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea>
-      <button class="cms-primary" id="saveReward">ZAPISZ</button>
+      const oldTitle=r.id?'EDYTUJ NAGRODĘ':'NOWA NAGRODA';
+      root.innerHTML=`
+      <button class="cms-secondary" id="backRewards">← COFNIJ</button>
+      <div class="cms-form-card reward-editor">
+        <h3>${oldTitle}</h3>
+        <div class="reward-preview-card">
+          <div class="reward-preview-icon">${esc(r.icon||'🎁')}</div>
+          <div><strong id="previewRewardTitle">${esc(r.title||'Nowa nagroda')}</strong><span id="previewRewardCost">${esc(r.cost||'0 COINS')}</span></div>
+        </div>
+        <div class="cms-form-grid">
+          <label>Nazwa<input id="rTitle" placeholder="Nazwa" value="${esc(r.title)}"></label>
+          <label>Koszt<input id="rCost" placeholder="Koszt" value="${esc(r.cost)}"></label>
+          <label>Kategoria<select id="rCat">
+            <option value="ogolne">Ogólne</option>
+            <option value="bingo">Bingo / Stream Bounty</option>
+            <option value="dixper">Dixper</option>
+            <option value="dbd">Nagrody związane z DBD</option>
+            <option value="uniwersalne">Uniwersalne do gier</option>
+            <option value="premium">Premium</option>
+          </select></label>
+          <label>Rodzina<input id="rFamily" placeholder="Rodzina" value="${esc(r.family)}"></label>
+        </div>
+        <label>Opis<textarea id="rDesc" placeholder="Opis">${esc(r.description)}</textarea></label>
+        <label>Ikona / emoji<input id="rIcon" placeholder="🎁" value="${esc(r.icon)}"></label>
+        <button class="cms-primary" id="saveReward">ZAPISZ NAGRODĘ</button>
       </div>`;
+      const cat=root.querySelector('#rCat');
+      cat.value=r.category||'ogolne';
+      root.querySelector('#backRewards').onclick=load;
+
+      const updatePreview=()=>{
+        root.querySelector('#previewRewardTitle').textContent=root.querySelector('#rTitle').value||'Nowa nagroda';
+        root.querySelector('#previewRewardCost').textContent=root.querySelector('#rCost').value||'0 COINS';
+      };
+      root.querySelectorAll('input').forEach(x=>x.addEventListener('input',updatePreview));
 
       root.querySelector('#saveReward').onclick=async()=>{
         const obj={
