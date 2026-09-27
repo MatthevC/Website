@@ -988,8 +988,8 @@
     function form(r){
       const oldTitle=r.id?'EDYTUJ NAGRODĘ':'NOWA NAGRODA';
       root.innerHTML=`
-      <button class="cms-secondary" id="backRewards">← COFNIJ</button>
-      <div class="cms-form-card reward-editor">
+      <button class="cms-secondary reward-back-button" id="backRewards">← COFNIJ</button>
+      <div class="cms-form-card reward-editor reward-full-editor">
         <h3>${oldTitle}</h3>
         <div class="reward-preview-card">
           <div class="reward-preview-icon">${esc(r.icon||'🎁')}</div>

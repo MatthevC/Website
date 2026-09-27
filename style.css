@@ -11486,3 +11486,42 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 
 /* Nagrody: szeroka karta tylko gdy jest dokładnie piąta i ostatnia */
 .reward-grid .reward-card:nth-child(5):last-child { grid-column: 1 / -1; }
+
+/* Rewards full editor */
+.cms-modal:has(.reward-full-editor){
+  width:min(1200px,96vw);
+  max-height:95vh;
+}
+.reward-full-editor{
+  width:100%;
+  padding:24px;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+  background:#121318;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+}
+.reward-full-editor h3{
+  font-size:26px;
+  margin:0;
+}
+.reward-full-editor .cms-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+.reward-full-editor textarea{
+  min-height:160px;
+}
+.reward-full-editor .cms-primary{
+  align-self:flex-end;
+  min-width:180px;
+}
+.reward-back-button{
+  margin:20px 24px 0;
+  width:max-content;
+}
+@media(max-width:700px){
+ .reward-full-editor .cms-form-grid{grid-template-columns:1fr}
+}
