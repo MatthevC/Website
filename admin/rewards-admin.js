@@ -80,18 +80,25 @@
       </div>
 
       <div class="reward-admin-list">
-      ${rows.map((r,i)=>`
-        <article class="reward-admin-item">
-          <div class="reward-admin-info">
-            <b>${esc(r.icon||'🎁')} ${esc(r.title)}</b>
-            <span>${esc(r.cost||'')}</span>
-            <small>${esc(categories[r.category]||r.category||'OGÓLNE')}</small>
-          </div>
-          <div class="reward-actions">
-            <button data-edit="${i}">✏️ EDYTUJ</button>
-            <button data-del="${i}">🗑 USUŃ</button>
-          </div>
-        </article>`).join('')}
+      ${Object.entries(categories).map(([cat,title])=>{
+        const items=rows.map((r,i)=>({r,i})).filter(x=>x.r.category===cat);
+        if(!items.length) return '';
+        return `
+        <section class="reward-admin-category">
+          <h3>${title}</h3>
+          ${items.map(({r,i})=>`
+          <article class="reward-admin-item">
+            <div class="reward-admin-info">
+              <b>${esc(r.icon||'🎁')} ${esc(r.title)}</b>
+              <span>${esc(r.cost||'')}</span>
+            </div>
+            <div class="reward-actions">
+              <button data-edit="${i}">✏️ EDYTUJ</button>
+              <button data-del="${i}">🗑 USUŃ</button>
+            </div>
+          </article>`).join('')}
+        </section>`;
+      }).join('')}
       </div>
       <div id="rewardForm"></div>`;
 
@@ -195,7 +202,7 @@
       .zoom-controls input[type=range]{accent-color:#ff3344;height:8px}
       .reward-card-preview{overflow:hidden}
 
-      .reward-actions{display:flex;justify-content:flex-end;gap:12px}
+      .reward-admin-category{background:#101015;border:1px solid #2f3038;border-radius:16px;padding:18px;margin-bottom:16px}.reward-admin-category h3{margin:0 0 14px;color:#fff;font-size:18px}.reward-admin-category .reward-admin-item{margin-bottom:10px}\n      .reward-actions{display:flex;justify-content:flex-end;gap:12px}
       .reward-actions button,.reward-image-editor button{padding:12px 20px;border-radius:10px;border:1px solid #555;background:#17171d;color:#fff}
       #rwSave{background:#f22;color:white;border:0}
       @media(max-width:700px){.reward-grid.modern,.zoom-controls{grid-template-columns:1fr}}
