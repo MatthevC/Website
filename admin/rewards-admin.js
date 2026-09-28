@@ -56,43 +56,36 @@
 
     const db=data||[];
 
-    // Jednorazowe utworzenie bazy nagród.
-    // Później Supabase jest źródłem prawdy: usunięta nagroda nie wróci.
-    if(db.length===0){
-      const inserted = await client.from('rewards').insert(
-        defaults.map((x,i)=>({...x,is_default:true,active:true,sort_order:i}))
-      );
-      if (inserted.error) {
-        console.error('[REWARDS SEED]', inserted.error);
+    // Panel administracyjny zawsze pokazuje pełny katalog.
+    // Brakujące rekordy są dodawane do Supabase, ale nawet przy blokadzie RLS
+    // nie znikają z panelu jako wpisy wirtualne.
+    const missing = defaults.filter(d => !db.some(r =>
+      String(r.title||'').toLowerCase() === String(d.title||'').toLowerCase()
+    ));
+
+    if(missing.length){
+      const insertRows = missing.map((x,i)=>({
+        ...x,
+        is_default:true,
+        active:true,
+        sort_order: db.length + i
+      }));
+
+      const added = await client.from('rewards').insert(insertRows);
+      if(!added.error){
+        const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
+        rows = refreshed.data || [];
+      } else {
+        console.warn('[REWARDS MIGRATION]', added.error);
+        rows = [
+          ...db,
+          ...missing.map((x,i)=>({...x,id:'local-default-'+i}))
+        ];
       }
-      const refreshed=await client.from('rewards').select('*').order('sort_order',{ascending:true});
-      rows=refreshed.data||[];
     } else {
       rows=db;
-
-      // Uzupełnij brakujące nagrody systemowe po wcześniejszych migracjach.
-      // Istniejące rekordy w Supabase pozostają bez zmian.
-      const missing = defaults.filter(d => !rows.some(r =>
-        String(r.title).toLowerCase() === String(d.title).toLowerCase()
-      ));
-
-      if (missing.length) {
-        const insertRows = missing.map((x,i)=>({
-          ...x,
-          is_default:true,
-          active:true,
-          sort_order: rows.length + i
-        }));
-
-        const added = await client.from('rewards').insert(insertRows);
-        if (!added.error) {
-          const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
-          rows = refreshed.data || rows;
-        } else {
-          console.error('[REWARDS MIGRATION]', added.error);
-        }
-      }
     }
+
     render();
   }
 
