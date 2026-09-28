@@ -9,12 +9,31 @@
   {title:"Banicja",cost:"10K COINS",category:"ogolne",description:"Nakładasz 24h t/o na wybraną osobę.",icon:"🔨"}
  ];
 
+ const categories={
+  ogolne:["OGÓLNE","Szybkie nagrody związane z czatem, muzyką i podstawową zabawą na transmisji."],
+  dixper_bingo:["DIXPER ORAZ STREAM BOUNTY (BINGO)","Skrzynki Dixpera oraz nagrody wpływające na eventy i planszę Stream Bounty."],
+  dbd:["NAGRODY ZWIĄZANE Z DBD","Nagrody związane z Dead by Daylight."],
+  uniwersalne:["NAGRODY UNIWERSALNE DO GIER","Nagrody możliwe do wykorzystania w różnych grach."],
+  premium:["NAGRODY PREMIUM","Specjalne nagrody premium."]
+ };
+
+ function card(r){
+  return `<article class="reward-card" data-reward-card>
+   <div class="reward-card-top"><div class="reward-graphic">${r.image?`<img src="${esc(r.image)}">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
+   <h3>${esc(r.title)}</h3><p>${esc(r.description||'')}</p>
+  </article>`;
+ }
+
  function renderRewards(items){
   const grid=document.querySelector('.rewards-page .reward-grid');
   if(!grid)return;
-  grid.innerHTML=items.map(r=>`<article class="reward-card" data-reward-card>
-   <div class="reward-card-top"><div class="reward-graphic ${esc(r.icon_color||'purple')}">${esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
-   <h3>${esc(r.title)}</h3><p>${esc(r.description||'')}</p></article>`).join('');
+  grid.innerHTML=Object.entries(categories).map(([key,val])=>{
+    const list=items.filter(r=>String(r.category||'ogolne')===key);
+    return `<section class="reward-category-block" data-category="${key}">
+      <h2>${val[0]}</h2><p>${val[1]}</p>
+      <div class="reward-grid-inner">${list.map(card).join('')}</div>
+    </section>`;
+  }).join('');
  }
 
  async function load(){
@@ -27,13 +46,7 @@
     if(!error && Array.isArray(data)) custom=data;
    }catch(e){console.error(e)}
   }
-
-  // GitHub jest bazą. Supabase tylko rozszerza listę.
-  const existing=new Set(githubRewards.map(x=>x.title.toLowerCase()));
-  const merged=[
-    ...githubRewards,
-    ...custom.filter(x=>!existing.has(String(x.title).toLowerCase()))
-  ];
+  const merged=[...githubRewards,...custom.filter(x=>!githubRewards.some(g=>g.title.toLowerCase()===String(x.title).toLowerCase()))];
   renderRewards(merged);
  }
 
