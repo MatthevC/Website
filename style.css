@@ -11613,3 +11613,30 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
     grid-template-columns:1fr;
   }
 }
+
+/* REWARD BACK BUTTON STYLE */
+#backRewards{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:42px;
+  min-width:150px;
+  padding:0 22px;
+  margin:20px 0 0;
+  background:#16181f;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:10px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.3px;
+  cursor:pointer;
+  transition:.2s ease;
+}
+#backRewards:hover{
+  background:#242833;
+  border-color:rgba(255,255,255,.3);
+}
+.reward-full-editor #backRewards{
+  align-self:flex-start;
+}
