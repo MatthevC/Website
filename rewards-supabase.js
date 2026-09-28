@@ -25,15 +25,24 @@
  }
 
  function renderRewards(items){
-  const grid=document.querySelector('.rewards-page .reward-grid');
-  if(!grid)return;
-  grid.innerHTML=Object.entries(categories).map(([key,val])=>{
-    const list=items.filter(r=>String(r.category||'ogolne')===key);
-    return `<section class="reward-category-block" data-category="${key}">
-      <h2>${val[0]}</h2><p>${val[1]}</p>
-      <div class="reward-grid-inner">${list.map(card).join('')}</div>
+  const page=document.querySelector('.rewards-page');
+  const search=document.querySelector('.reward-search-panel');
+  if(!page || !search)return;
+
+  page.querySelectorAll('.reward-group, .reward-category-block').forEach(el=>el.remove());
+
+  const html=Object.entries(categories).map(([key,val])=>{
+    const list=items.filter(r=>String(r.category||'ogolne').toLowerCase()===key);
+    return `<section class="reward-group reward-category-block" data-category="${key}">
+      <div class="reward-group-head">
+        <h2>${val[0]}</h2>
+        <p>${val[1]}</p>
+      </div>
+      <div class="reward-grid">${list.map(card).join('')}</div>
     </section>`;
   }).join('');
+
+  search.insertAdjacentHTML('afterend',html);
  }
 
  async function load(){
