@@ -2,12 +2,7 @@
 (function(){
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
 
- const githubRewards=[
-  {title:"Obecny",cost:"10 COINS",category:"ogolne",description:"Nagroda, która pokazuje, że jesteś aktualnie na transmisji.",icon:"🎁"},
-  {title:"Wyróżnij moją wiadomość",cost:"100 COINS",category:"ogolne",description:"Podkreśla Twoją wiadomość na chacie.",icon:"💬"},
-  {title:"Skip piosenki",cost:"1,5K COINS",category:"ogolne",description:"Pomija aktualnie odtwarzany utwór.",icon:"⏭️"},
-  {title:"Banicja",cost:"10K COINS",category:"ogolne",description:"Nakładasz 24h t/o na wybraną osobę.",icon:"🔨"}
- ];
+ const githubRewards=[];
 
  const categories={
   ogolne:["OGÓLNE","Szybkie nagrody związane z czatem, muzyką i podstawową zabawą na transmisji."],
@@ -55,7 +50,7 @@
     if(!error && Array.isArray(data)) custom=data;
    }catch(e){console.error(e)}
   }
-  const merged=[...githubRewards,...custom.filter(x=>!githubRewards.some(g=>g.title.toLowerCase()===String(x.title).toLowerCase()))];
+  const merged=custom;
   renderRewards(merged);
  }
 
