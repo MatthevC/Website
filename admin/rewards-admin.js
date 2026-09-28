@@ -69,6 +69,29 @@
       rows=refreshed.data||[];
     } else {
       rows=db;
+
+      // Uzupełnij brakujące nagrody systemowe po wcześniejszych migracjach.
+      // Istniejące rekordy w Supabase pozostają bez zmian.
+      const missing = defaults.filter(d => !rows.some(r =>
+        String(r.title).toLowerCase() === String(d.title).toLowerCase()
+      ));
+
+      if (missing.length) {
+        const insertRows = missing.map((x,i)=>({
+          ...x,
+          is_default:true,
+          active:true,
+          sort_order: rows.length + i
+        }));
+
+        const added = await client.from('rewards').insert(insertRows);
+        if (!added.error) {
+          const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
+          rows = refreshed.data || rows;
+        } else {
+          console.error('[REWARDS MIGRATION]', added.error);
+        }
+      }
     }
     render();
   }
@@ -106,11 +129,8 @@
     root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form(rows[b.dataset.edit]));
     root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
       const r=rows[b.dataset.del];
-      if(r.is_default){
-        alert('To jest domyślna nagroda systemowa. Możesz ją edytować, ale nie można jej usunąć.');
-        return;
-      }
       if(confirm('Usunąć nagrodę?')){
+
         await client.from('rewards').delete().eq('id',r.id);
         load();
       }
