@@ -56,12 +56,13 @@
 
     const db=data||[];
 
-    // Zawsze budujemy pełny katalog dla panelu.
-    // Supabase jest źródłem zapisów, ale brakujące rekordy nie mogą ukrywać kategorii.
+    // Nagrody systemowe są częścią strony GitHub.
+    // Panel administratora musi je pokazać nawet gdy nie istnieją jeszcze w Supabase.
     const missing = defaults.filter(d => !db.some(r =>
       String(r.title||'').toLowerCase() === String(d.title||'').toLowerCase()
     ));
 
+    // Próba synchronizacji do Supabase, ale panel nie zależy od powodzenia zapisu.
     if(missing.length){
       const insertRows = missing.map((x,i)=>({
         ...x,
@@ -72,9 +73,18 @@
 
       const added = await client.from('rewards').insert(insertRows);
       if(added.error){
-        console.warn('[REWARDS MIGRATION]', added.error);
+        console.warn('[REWARDS SYNC]', added.error);
       }
     }
+
+    // Łączymy dane z GitHuba i Supabase.
+    // Dzięki temu administrator widzi cały katalog nagród.
+    const merged = [...db];
+    missing.forEach(x => {
+      if(!merged.some(r => String(r.title||'').toLowerCase() === String(x.title||'').toLowerCase())){
+        merged.push({...x, _githubDefault:true});
+      }
+    });
 
     const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
     const latest = refreshed.data || db;
