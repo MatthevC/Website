@@ -56,9 +56,8 @@
 
     const db=data||[];
 
-    // Panel administracyjny zawsze pokazuje pełny katalog.
-    // Brakujące rekordy są dodawane do Supabase, ale nawet przy blokadzie RLS
-    // nie znikają z panelu jako wpisy wirtualne.
+    // Zawsze budujemy pełny katalog dla panelu.
+    // Supabase jest źródłem zapisów, ale brakujące rekordy nie mogą ukrywać kategorii.
     const missing = defaults.filter(d => !db.some(r =>
       String(r.title||'').toLowerCase() === String(d.title||'').toLowerCase()
     ));
@@ -72,20 +71,22 @@
       }));
 
       const added = await client.from('rewards').insert(insertRows);
-      if(!added.error){
-        const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
-        rows = refreshed.data || [];
-      } else {
+      if(added.error){
         console.warn('[REWARDS MIGRATION]', added.error);
-        rows = [
-          ...db,
-          ...missing.map((x,i)=>({...x,id:'local-default-'+i}))
-        ];
       }
-    } else {
-      rows=db;
     }
 
+    const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
+    const latest = refreshed.data || db;
+
+    const merged = [...latest];
+    defaults.forEach((item,index)=>{
+      if(!merged.some(r=>String(r.title||'').toLowerCase()===String(item.title).toLowerCase())){
+        merged.push({...item,id:'local-default-'+index});
+      }
+    });
+
+    rows = merged;
     render();
   }
 
