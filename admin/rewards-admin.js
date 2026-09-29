@@ -120,6 +120,8 @@
               <span>${esc(r.cost||'')}</span>
             </div>
             <div class="reward-actions">
+              <button data-up="${i}">↑</button>
+              <button data-down="${i}">↓</button>
               <button data-edit="${i}">✏️ EDYTUJ</button>
               <button data-del="${i}">🗑 USUŃ</button>
             </div>
@@ -130,6 +132,8 @@
       <div id="rewardForm"></div>`;
 
     document.getElementById('rewardAdd').onclick=()=>form({});
+    root.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveReward(Number(b.dataset.up),-1));
+    root.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveReward(Number(b.dataset.down),1));
     root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>form(rows[b.dataset.edit]));
     root.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
       const r=rows[b.dataset.del];
@@ -139,6 +143,20 @@
         load();
       }
     });
+  }
+
+  async function moveReward(index, direction){
+    const item=rows[index];
+    const target=index+direction;
+    if(!item || !rows[target]) return;
+    const tmp=rows[target];
+    rows[target]=rows[index];
+    rows[index]=tmp;
+    const updates=rows.map((r,i)=>({id:r.id, sort_order:i}));
+    for(const u of updates){
+      if(u.id) await client.from('rewards').update({sort_order:u.sort_order}).eq('id',u.id);
+    }
+    render();
   }
 
   function form(r){
