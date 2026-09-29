@@ -11640,3 +11640,10 @@ body > .matt-sidebar-fixed .recommended-toc-track span {
 .reward-full-editor #backRewards{
   align-self:flex-start;
 }
+
+
+/* Układ nagród: zwykłe kategorie zachowują układ kafelków. Ostatni nieparzysty kafelek jest szeroki.
+DIXPER/BINGO ma własny układ i pozostaje bez zmian. */
+.reward-group:not(:has(.reward-grid-family)) .reward-grid > .reward-card:last-child:nth-child(odd){
+  grid-column:1 / -1;
+}
