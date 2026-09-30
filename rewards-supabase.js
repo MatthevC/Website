@@ -11,7 +11,7 @@
  };
 
  function card(r){
-  return `<article class="reward-card" data-reward-card>
+  return `<article class="reward-card" data-reward-card data-supabase-reward="true">
    <div class="reward-card-top"><div class="reward-graphic">${r.image?`<img src="${esc(r.image)}">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
    <h3>${esc(r.title||r.name||'')}</h3><p>${esc(r.description||'')}</p>
   </article>`;
@@ -23,29 +23,31 @@
  }
 
  function addSupabaseRewards(items){
+  document.querySelectorAll('[data-supabase-reward]').forEach(x=>x.remove());
+
   items.forEach(r=>{
    const section=findSection(String(r.category||'ogolne').toLowerCase());
    if(!section)return;
-   const grid=section.querySelector('.reward-grid');
+   const grid=section.querySelector('.reward-grid:not(.reward-grid-family)');
    if(!grid)return;
-   const old=[...grid.querySelectorAll('[data-supabase-reward]')];
-   old.forEach(x=>x.remove());
    const el=document.createElement('div');
    el.innerHTML=card(r);
-   const cardEl=el.firstElementChild;
-   cardEl.dataset.supabaseReward='true';
-   grid.appendChild(cardEl);
+   grid.appendChild(el.firstElementChild);
   });
  }
 
  async function load(){
   if(!window.supabaseClient)return;
+  const page=document.querySelector('.rewards-page');
+  if(!page)return;
+
   try{
    const {data,error}=await window.supabaseClient
     .from('rewards')
     .select('*')
     .eq('active',true)
     .order('sort_order',{ascending:true});
+
    if(error) throw error;
    if(Array.isArray(data)) addSupabaseRewards(data);
   }catch(e){
@@ -53,5 +55,15 @@
   }
  }
 
- document.addEventListener('DOMContentLoaded',()=>setTimeout(load,500));
+ function scheduleLoad(){
+   setTimeout(load,100);
+ }
+
+ document.addEventListener('DOMContentLoaded',scheduleLoad);
+ window.addEventListener('hashchange',scheduleLoad);
+ new MutationObserver(()=>{
+   if(document.querySelector('.rewards-page')) scheduleLoad();
+ }).observe(document.body,{childList:true,subtree:true});
+
+ window.reloadSupabaseRewards=scheduleLoad;
 })();
