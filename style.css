@@ -11647,3 +11647,38 @@ DIXPER/BINGO ma własny układ i pozostaje bez zmian. */
 .reward-group:not(:has(.reward-grid-family)) .reward-grid > .reward-card:last-child:nth-child(odd){
   grid-column:1 / -1;
 }
+
+
+/* === FINAL FIX: dynamic reward card sizes ===
+   zwykle kategorie: ostatni nieparzysty kafelek szeroki
+   po dodaniu kolejnego wraca do normalnej szerokości
+*/
+.rewards-page .reward-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:1rem;
+}
+
+.rewards-page .reward-grid > .reward-card:last-child:nth-child(odd){
+  grid-column:1 / -1;
+}
+
+.rewards-page .reward-grid > .reward-card:not(:last-child){
+  grid-column:auto;
+}
+
+/* DIXPER/BINGO pozostaje bez zmian */
+.reward-grid-paired > .reward-card,
+.reward-grid-split > .reward-card{
+  grid-column:auto!important;
+}
+
+@media(max-width:860px){
+  .rewards-page .reward-grid{
+    grid-template-columns:1fr;
+  }
+
+  .rewards-page .reward-grid > .reward-card:last-child:nth-child(odd){
+    grid-column:auto;
+  }
+}
