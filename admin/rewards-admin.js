@@ -79,13 +79,6 @@
 
     // Łączymy dane z GitHuba i Supabase.
     // Dzięki temu administrator widzi cały katalog nagród.
-    const merged = [...db];
-    missing.forEach(x => {
-      if(!merged.some(r => String(r.title||'').toLowerCase() === String(x.title||'').toLowerCase())){
-        merged.push({...x, _githubDefault:true});
-      }
-    });
-
     const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
     const latest = refreshed.data || db;
 
