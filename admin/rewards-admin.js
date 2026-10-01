@@ -83,6 +83,7 @@
   }
 
   function form(r){
+    if(['bingo','dixper'].includes(String(r.category||'').toLowerCase())) r={...r,family:r.family||String(r.category).toLowerCase(),category:'dixper_bingo'};
     const modal=document.querySelector('.cms-modal');
     const modalTitle=document.getElementById('cms-modal-title');
     if(modal){
