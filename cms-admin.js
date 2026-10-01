@@ -1069,11 +1069,29 @@
       root.querySelector('#backRewards').onclick=goBack;
       root.querySelector('#backBottom').onclick=goBack;
 
+      let selectedRewardImageFile=null;
+      let selectedRewardImagePreview='';
+      const currentRewardImage=String(r.image||'');
+
+      const paintRewardGraphic=()=>{
+        const holder=root.querySelector('#previewRewardIcon');
+        const imageUrl=selectedRewardImagePreview||currentRewardImage;
+        if(imageUrl){
+          holder.innerHTML=`<img src="${esc(imageUrl)}" alt="" style="width:70px;height:70px;object-fit:contain;border-radius:12px">`;
+        }else{
+          holder.textContent=root.querySelector('#rIcon').value||'🎁';
+        }
+      };
+
+      if(currentRewardImage){
+        root.querySelector('#rewardImagePreviewWrap').innerHTML=`<img class="reward-image-preview" src="${esc(currentRewardImage)}" alt="Aktualna grafika nagrody">`;
+      }
+
       const updatePreview=()=>{
         root.querySelector('#previewRewardTitle').textContent=root.querySelector('#rTitle').value||'Nowa nagroda';
         root.querySelector('#previewRewardCost').textContent=root.querySelector('#rCost').value||'0 COINS';
         root.querySelector('#previewRewardDesc').textContent=root.querySelector('#rDesc').value||'Opis nagrody';
-        root.querySelector('#previewRewardIcon').textContent=root.querySelector('#rIcon').value||'🎁';
+        paintRewardGraphic();
       };
 
       root.querySelectorAll('input,textarea,select').forEach(x=>x.addEventListener('input',updatePreview));
@@ -1081,27 +1099,48 @@
       root.querySelector('#rImage').onchange=e=>{
         const file=e.target.files[0];
         if(!file)return;
-        const url=URL.createObjectURL(file);
-        root.querySelector('#rewardImagePreviewWrap').innerHTML=`<img class="reward-image-preview" src="${url}">`;
-        root.querySelector('#previewRewardIcon').innerHTML=`<img src="${url}" style="width:70px;height:70px;object-fit:contain">`;
+        try{ validateCmsImage(file); }catch(error){ notify(error.message,'error'); e.target.value=''; return; }
+        if(selectedRewardImagePreview) URL.revokeObjectURL(selectedRewardImagePreview);
+        selectedRewardImageFile=file;
+        selectedRewardImagePreview=URL.createObjectURL(file);
+        root.querySelector('#rewardImagePreviewWrap').innerHTML=`<img class="reward-image-preview" src="${selectedRewardImagePreview}" alt="Podgląd grafiki nagrody">`;
+        paintRewardGraphic();
       };
 
       root.querySelector('#saveReward').onclick=async()=>{
-        const obj={
-          title:root.querySelector('#rTitle').value,
-          description:root.querySelector('#rDesc').value,
-          cost:root.querySelector('#rCost').value,
-          category:root.querySelector('#rCat').value||'ogolne',
-          family:root.querySelector('#rFamily').value||null,
-          icon:root.querySelector('#rIcon').value||'🎁',
-          active:true
-        };
-        if(r.id && !String(r.id).startsWith('gh-')){
-          await client.from('rewards').update(obj).eq('id',r.id);
-        }else{
-          await client.from('rewards').insert(obj);
+        const saveButton=root.querySelector('#saveReward');
+        const oldLabel=saveButton.textContent;
+        saveButton.disabled=true;
+        saveButton.textContent=selectedRewardImageFile?'WYSYŁANIE GRAFIKI…':'ZAPISYWANIE…';
+        try{
+          let imageUrl=currentRewardImage||null;
+          if(selectedRewardImageFile){
+            imageUrl=await uploadCmsImage(selectedRewardImageFile,root.querySelector('#rTitle').value||r.title||'nagroda','rewards');
+          }
+          const obj={
+            title:root.querySelector('#rTitle').value,
+            description:root.querySelector('#rDesc').value,
+            cost:root.querySelector('#rCost').value,
+            category:root.querySelector('#rCat').value||'ogolne',
+            family:root.querySelector('#rFamily').value||null,
+            icon:root.querySelector('#rIcon').value||'🎁',
+            image:imageUrl,
+            active:true
+          };
+          const result=(r.id && !String(r.id).startsWith('gh-'))
+            ? await client.from('rewards').update(obj).eq('id',r.id)
+            : await client.from('rewards').insert(obj);
+          if(result.error) throw result.error;
+          if(selectedRewardImagePreview) URL.revokeObjectURL(selectedRewardImagePreview);
+          if(typeof window.reloadSupabaseRewards==='function') window.reloadSupabaseRewards();
+          notify('Nagroda została zapisana.','success');
+          load();
+        }catch(error){
+          console.error('[REWARD SAVE]',error);
+          notify(`Nie udało się zapisać nagrody: ${error.message||error}`,'error');
+          saveButton.disabled=false;
+          saveButton.textContent=oldLabel;
         }
-        load();
       };
     }
 
