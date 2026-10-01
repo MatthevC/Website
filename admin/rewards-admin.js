@@ -3,28 +3,6 @@
   const root = document.getElementById('rewardsAdminApp');
   if (!client || !root) return;
 
-  const defaults = [
-    {title:"Obecny",cost:"10 COINS",category:"ogolne",description:"Nagroda, która pokazuje, że jesteś aktualnie na transmisji.",icon:"🎁"},
-    {title:"Wyróżnij moją wiadomość",cost:"100 COINS",category:"ogolne",description:"Podkreśla Twoją wiadomość na chacie.",icon:"💬"},
-    {title:"Skip piosenki",cost:"1,5K COINS",category:"ogolne",description:"Pomija aktualnie odtwarzany utwór.",icon:"⏭️"},
-    {title:"Banicja",cost:"10K COINS",category:"ogolne",description:"Nakładasz 24h t/o na wybraną osobę.",icon:"🔨"},
-    {title:"BINGO — RANDOM",cost:"1K COINS",category:"dixper_bingo",description:"Losowe wydarzenie w Stream Bounty.",icon:"🎰"},
-    {title:"BINGO — VOTE",cost:"8K COINS",category:"dixper_bingo",description:"Głosowanie społeczności na wydarzenie.",icon:"🎰"},
-    {title:"BINGO ALL",cost:"8K COINS",category:"dixper_bingo",description:"Losowe wydarzenie dla społeczności.",icon:"🎰"},
-    {title:"Dixper — Basic Crate",cost:"1,5K COINS",category:"dixper_bingo",description:"Podstawowa skrzynka Dixper.",icon:"📦"},
-    {title:"Dixper — Rarity Crate",cost:"3K COINS",category:"dixper_bingo",description:"Skrzynka Rarity Dixper.",icon:"📦"},
-    {title:"Dixper — Skill Crate",cost:"4K COINS",category:"dixper_bingo",description:"Skrzynka Skill Dixper.",icon:"🧰"},
-    {title:"Random perk — surv",cost:"5K COINS",category:"dbd",description:"Losowy build na survivora w DBD.",icon:"🎯"},
-    {title:"Random perk — killer",cost:"6K COINS",category:"dbd",description:"Losowy build na killera w DBD.",icon:"🔪"},
-    {title:"Przetestuj build",cost:"10K COINS",category:"dbd",description:"Matt gra wybranym buildem.",icon:"🧪"},
-    {title:"1 vs 1",cost:"15K COINS",category:"uniwersalne",description:"Nagroda uniwersalna do gier.",icon:"⚔️"},
-    {title:"Wybierz w co gramy",cost:"50K COINS",category:"uniwersalne",description:"Wybór gry na transmisję.",icon:"🎮"},
-    {title:"Podpis profilu Steam",cost:"15K COINS",category:"premium",description:"Personalizowany podpis Steam.",icon:"✍️"},
-    {title:"SPAM like / serduszek",cost:"20K COINS",category:"premium",description:"Dostajesz spam reakcji.",icon:"❤️"},
-    {title:"Ban na słowo",cost:"25K COINS",category:"premium",description:"Bon za użycie słowa.",icon:"🚫"},
-    {title:"SUBIK",cost:"80K COINS",category:"premium",description:"Subskrypcja kanału.",icon:"⭐"}
-  ];
-
   const categories = {
     ogolne:"OGÓLNE",
     dixper_bingo:"DIXPER ORAZ STREAM BOUNTY (BINGO)",
@@ -38,58 +16,10 @@
   let rows=[];
 
   async function load(){
-    let data = [];
-    let error = null;
-    try {
-      let res = await client.from('rewards').select('*').order('sort_order',{ascending:true});
-      data = res.data || [];
-      error = res.error;
-      if (error && String(error.message||'').includes('sort_order')) {
-        res = await client.from('rewards').select('*');
-        data = res.data || [];
-        error = res.error;
-      }
-    } catch(e) {
-      error = e;
-    }
-    if(error) console.error('[REWARDS ADMIN]', error);
-
-    const db=data||[];
-
-    // Nagrody systemowe są częścią strony GitHub.
-    // Panel administratora musi je pokazać nawet gdy nie istnieją jeszcze w Supabase.
-    const missing = defaults.filter(d => !db.some(r =>
-      String(r.title||'').toLowerCase() === String(d.title||'').toLowerCase()
-    ));
-
-    // Próba synchronizacji do Supabase, ale panel nie zależy od powodzenia zapisu.
-    if(missing.length){
-      const insertRows = missing.map((x,i)=>({
-        ...x,
-        is_default:true,
-        active:true,
-        sort_order: db.length + i
-      }));
-
-      const added = await client.from('rewards').insert(insertRows);
-      if(added.error){
-        console.warn('[REWARDS SYNC]', added.error);
-      }
-    }
-
-    // Łączymy dane z GitHuba i Supabase.
-    // Dzięki temu administrator widzi cały katalog nagród.
-    const refreshed = await client.from('rewards').select('*').order('sort_order',{ascending:true});
-    const latest = refreshed.data || db;
-
-    const merged = [...latest];
-    defaults.forEach((item,index)=>{
-      if(!merged.some(r=>String(r.title||'').toLowerCase()===String(item.title).toLowerCase())){
-        merged.push({...item,id:'local-default-'+index});
-      }
-    });
-
-    rows = merged;
+    let res = await client.from('rewards').select('*').order('sort_order',{ascending:true});
+    if(res.error && String(res.error.message||'').includes('sort_order')) res = await client.from('rewards').select('*');
+    if(res.error){ console.error('[REWARDS ADMIN]',res.error); rows=[]; }
+    else rows=res.data||[];
     render();
   }
 
@@ -177,6 +107,9 @@
         <label>Koszt<input id="rwCost" value="${esc(r.cost)}"></label>
         <label>Kategoria>
           <select id="rwCat">${Object.entries(categories).map(([k,v])=>`<option value="${k}" ${k===r.category?'selected':''}>${v}</option>`).join('')}</select>
+        </label>
+        <label>Rodzina (tylko DIXPER/BINGO)>
+          <select id="rwFamily"><option value="" ${!r.family?'selected':''}>Brak</option><option value="bingo" ${r.family==='bingo'?'selected':''}>BINGO / STREAM BOUNTY</option><option value="dixper" ${r.family==='dixper'?'selected':''}>DIXPER</option></select>
         </label>
         <label>Ikona / emoji<input id="rwIcon" value="${esc(r.icon||"🎁")}"></label>
       </div>
@@ -268,7 +201,7 @@
         if(up.error)return alert(up.error.message);
         image=client.storage.from("rewards").getPublicUrl(name).data.publicUrl;
       }
-      const obj={title:rwTitle.value,cost:rwCost.value,category:rwCat.value,icon:rwIcon.value,image:removed?"":image,description:rwDesc.value,active:true};
+      const obj={title:rwTitle.value,cost:rwCost.value,category:rwCat.value,family:rwFamily.value||null,icon:rwIcon.value,image:removed?"":image,description:rwDesc.value,active:true};
       const res=r.id?await client.from("rewards").update(obj).eq("id",r.id):await client.from("rewards").insert(obj);
       if(res.error)return alert(res.error.message);
       load();
