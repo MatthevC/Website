@@ -25,11 +25,13 @@
  function addRewards(items){
    clearCards();
    items.forEach(r=>{
-     const cat=String(r.category||'ogolne').toLowerCase();
+     let cat=String(r.category||'ogolne').toLowerCase();
+     if(cat==='bingo'||cat==='dixper') cat='dixper_bingo';
      const section=findSection(cat); if(!section) return;
      let target;
      if(cat==='dixper_bingo'){
-       const family=(String(r.family||'').toLowerCase()==='dixper')?'dixper':'bingo';
+       const rawCategory=String(r.category||'').toLowerCase();
+       const family=(String(r.family||'').toLowerCase()==='dixper'||rawCategory==='dixper')?'dixper':'bingo';
        target=section.querySelector(`[data-reward-family="${family}"]`);
      } else target=section.querySelector('.reward-grid:not(.reward-grid-family)');
      if(!target) return;

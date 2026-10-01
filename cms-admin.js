@@ -1012,8 +1012,7 @@
               <label>Kategoria
                 <select id="rCat">
                   <option value="ogolne">Ogólne</option>
-                  <option value="bingo">Bingo / Stream Bounty</option>
-                  <option value="dixper">Dixper</option>
+                  <option value="dixper_bingo">Dixper oraz Stream Bounty (Bingo)</option>
                   <option value="dbd">Nagrody związane z DBD</option>
                   <option value="uniwersalne">Uniwersalne do gier</option>
                   <option value="premium">Premium</option>
@@ -1021,7 +1020,11 @@
               </label>
 
               <label>Rodzina
-                <input id="rFamily" placeholder="Rodzina" value="${esc(r.family||'')}">
+                <select id="rFamily">
+                  <option value="">Brak</option>
+                  <option value="bingo">Bingo / Stream Bounty</option>
+                  <option value="dixper">Dixper</option>
+                </select>
               </label>
             </div>
 
@@ -1063,7 +1066,18 @@
         </div>
       </div>`;
 
-      root.querySelector('#rCat').value=r.category||'ogolne';
+      const normalizedCategory=['bingo','dixper'].includes(String(r.category||'').toLowerCase())?'dixper_bingo':(r.category||'ogolne');
+      const inferredFamily=String(r.family||'').toLowerCase() || (String(r.category||'').toLowerCase()==='dixper'?'dixper':String(r.category||'').toLowerCase()==='bingo'?'bingo':'');
+      root.querySelector('#rCat').value=normalizedCategory;
+      root.querySelector('#rFamily').value=inferredFamily;
+      const syncFamilyField=()=>{
+        const familySelect=root.querySelector('#rFamily');
+        const isCombined=root.querySelector('#rCat').value==='dixper_bingo';
+        familySelect.disabled=!isCombined;
+        if(!isCombined) familySelect.value='';
+      };
+      root.querySelector('#rCat').addEventListener('change',syncFamilyField);
+      syncFamilyField();
 
       const goBack=()=>load();
       root.querySelector('#backRewards').onclick=goBack;
@@ -1122,7 +1136,7 @@
             description:root.querySelector('#rDesc').value,
             cost:root.querySelector('#rCost').value,
             category:root.querySelector('#rCat').value||'ogolne',
-            family:root.querySelector('#rFamily').value||null,
+            family:root.querySelector('#rCat').value==='dixper_bingo'?(root.querySelector('#rFamily').value||null):null,
             icon:root.querySelector('#rIcon').value||'🎁',
             image:imageUrl,
             active:true
