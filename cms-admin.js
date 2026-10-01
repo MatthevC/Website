@@ -1044,6 +1044,27 @@
               </label>
 
               <div id="rewardImagePreviewWrap"></div>
+
+              <div id="rewardImageControls" class="reward-image-controls">
+                <label>Przybliżenie <strong id="rImageScaleValue">100%</strong>
+                  <input id="rImageScale" type="range" min="50" max="250" step="5" value="${esc(String(r.image_scale||100))}">
+                </label>
+                <div class="reward-image-position-grid">
+                  <label>Pozycja pozioma <strong id="rImageXValue">50%</strong>
+                    <input id="rImageX" type="range" min="0" max="100" step="1" value="${esc(String(r.image_x??50))}">
+                  </label>
+                  <label>Pozycja pionowa <strong id="rImageYValue">50%</strong>
+                    <input id="rImageY" type="range" min="0" max="100" step="1" value="${esc(String(r.image_y??50))}">
+                  </label>
+                </div>
+                <label>Dopasowanie
+                  <select id="rImageFit">
+                    <option value="cover">Wypełnij pole</option>
+                    <option value="contain">Pokaż całą grafikę</option>
+                  </select>
+                </label>
+                <button type="button" class="cms-secondary" id="resetRewardImageView">RESETUJ USTAWIENIE GRAFIKI</button>
+              </div>
             </div>
           </section>
 
@@ -1086,15 +1107,30 @@
       let selectedRewardImageFile=null;
       let selectedRewardImagePreview='';
       const currentRewardImage=String(r.image||'');
+      root.querySelector('#rImageFit').value=['cover','contain'].includes(String(r.image_fit||''))?String(r.image_fit):'cover';
 
+      const imageView=()=>({
+        scale:Number(root.querySelector('#rImageScale').value||100),
+        x:Number(root.querySelector('#rImageX').value||50),
+        y:Number(root.querySelector('#rImageY').value||50),
+        fit:root.querySelector('#rImageFit').value||'cover'
+      });
+      const updateImageControlLabels=()=>{
+        const v=imageView();
+        root.querySelector('#rImageScaleValue').textContent=`${v.scale}%`;
+        root.querySelector('#rImageXValue').textContent=`${v.x}%`;
+        root.querySelector('#rImageYValue').textContent=`${v.y}%`;
+      };
       const paintRewardGraphic=()=>{
         const holder=root.querySelector('#previewRewardIcon');
         const imageUrl=selectedRewardImagePreview||currentRewardImage;
         if(imageUrl){
-          holder.innerHTML=`<img src="${esc(imageUrl)}" alt="" style="width:70px;height:70px;object-fit:contain;border-radius:12px">`;
+          const v=imageView();
+          holder.innerHTML=`<img src="${esc(imageUrl)}" alt="" style="width:70px;height:70px;object-fit:${v.fit};object-position:${v.x}% ${v.y}%;transform:scale(${v.scale/100});transform-origin:${v.x}% ${v.y}%;border-radius:12px">`;
         }else{
           holder.textContent=root.querySelector('#rIcon').value||'🎁';
         }
+        updateImageControlLabels();
       };
 
       if(currentRewardImage){
@@ -1109,6 +1145,15 @@
       };
 
       root.querySelectorAll('input,textarea,select').forEach(x=>x.addEventListener('input',updatePreview));
+      ['#rImageScale','#rImageX','#rImageY','#rImageFit'].forEach(sel=>root.querySelector(sel)?.addEventListener('change',paintRewardGraphic));
+      root.querySelector('#resetRewardImageView').onclick=()=>{
+        root.querySelector('#rImageScale').value='100';
+        root.querySelector('#rImageX').value='50';
+        root.querySelector('#rImageY').value='50';
+        root.querySelector('#rImageFit').value='cover';
+        paintRewardGraphic();
+      };
+      paintRewardGraphic();
 
       root.querySelector('#rImage').onchange=e=>{
         const file=e.target.files[0];
@@ -1139,6 +1184,10 @@
             family:root.querySelector('#rCat').value==='dixper_bingo'?(root.querySelector('#rFamily').value||null):null,
             icon:root.querySelector('#rIcon').value||'🎁',
             image:imageUrl,
+            image_fit:root.querySelector('#rImageFit').value||'cover',
+            image_scale:Number(root.querySelector('#rImageScale').value||100),
+            image_x:Number(root.querySelector('#rImageX').value||50),
+            image_y:Number(root.querySelector('#rImageY').value||50),
             active:true
           };
           const result=(r.id && !String(r.id).startsWith('gh-'))

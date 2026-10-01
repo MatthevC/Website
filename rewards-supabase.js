@@ -13,7 +13,7 @@
    const color=esc(r.icon_color||'');
    const family=r.family?` data-reward-family-card="${esc(r.family)}"`:'';
    return `<article class="reward-card" data-reward-card data-supabase-reward="true"${family}>
-    <div class="reward-card-top"><div class="reward-graphic ${color}">${r.image?`<img class="reward-custom-image" src="${esc(r.image)}" alt="">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
+    <div class="reward-card-top"><div class="reward-graphic ${color}">${r.image?`<img class="reward-custom-image" src="${esc(r.image)}" alt="" style="object-fit:${esc(r.image_fit||'cover')};object-position:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%;transform:scale(${Math.max(50,Math.min(250,Number(r.image_scale||100)))/100});transform-origin:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
     <h3>${esc(r.title||'')}</h3><p>${esc(r.description||'')}</p>${extras(r)}
    </article>`;
  }
