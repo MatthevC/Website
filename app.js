@@ -1911,8 +1911,7 @@ function setupRewardsSearch() {
   const status = document.getElementById("reward-search-status");
   const empty = document.getElementById("reward-no-results");
   const groups = [...document.querySelectorAll("[data-reward-group]")];
-  const cards = [...document.querySelectorAll("[data-reward-card]")];
-  if (!input || !clear || !status || !empty || !groups.length || !cards.length) return;
+  if (!input || !clear || !status || !empty || !groups.length) return;
 
   const normalize = value => value
     .toLowerCase()
@@ -1924,6 +1923,7 @@ function setupRewardsSearch() {
     const query = normalize(input.value);
     let visibleCount = 0;
 
+    const cards = [...document.querySelectorAll("[data-reward-card]")];
     cards.forEach(card => {
       const haystack = normalize(card.textContent || "");
       const visible = !query || haystack.includes(query);
@@ -1961,6 +1961,7 @@ function setupRewardsSearch() {
     filterRewards();
   });
 
+  window.addEventListener("rewards:loaded", filterRewards);
   filterRewards();
 }
 
