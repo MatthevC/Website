@@ -876,7 +876,7 @@
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
       if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
-      if (action === 'images' && has('page.images.manage')) openPageImagesManager();
+      if (action === 'images' && has('page.images.manage') && currentRoute() !== 'viewer/rewards') openPageImagesManager();
       if (action === 'site' && any('site.navigation.manage','site.links.manage')) openSiteSettingsManager();
       if (action === 'backups' && any('backups.view','github.restore')) openBackupsManager();
     });
@@ -909,7 +909,7 @@
     if (layoutBtn) layoutBtn.hidden = inlineEditing || layoutEditing || !has('page.layout.manage');
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
     if (imagesBtn) {
-      const canGraphics = has('page.images.manage') || (currentRoute() === 'home' && has('home.hero.manage'));
+      const canGraphics = currentRoute() !== 'viewer/rewards' && (has('page.images.manage') || (currentRoute() === 'home' && has('home.hero.manage')));
       imagesBtn.hidden = inlineEditing || layoutEditing || !canGraphics;
     }
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
@@ -3236,6 +3236,8 @@
 
   function openPageImagesManager() {
     const route = currentRoute();
+    // Grafiki nagrod sa zarzadzane wylacznie przez TRESC > Nagrody.
+    if (route === 'viewer/rewards') return;
     if (!has('page.images.manage') && !(route === 'home' && has('home.hero.manage'))) return;
     const key = `page_images:${route}`;
     const decorKey = `page_decor_graphics:${route}`;
