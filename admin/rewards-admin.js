@@ -116,16 +116,7 @@
 
       <label>Opis nagrody<textarea id="rwDesc">${esc(r.description)}</textarea></label>
 
-      <div class="reward-image-editor">
-        <h3>Grafika nagrody</h3>
-        <input type="file" id="rwImage" accept="image/png,image/jpeg,image/webp,image/gif">
-        <div class="zoom-controls">
-          <label>Przybliżenie (%) <input type="range" id="rwZoom" min="50" max="250" value="100"><input type="number" value="100" id="rwZoomNumber"></label>
-          <label>Przesunięcie X (px) <input type="number" id="rwX" value="0"></label>
-          <label>Przesunięcie Y (px) <input type="number" id="rwY" value="0"></label>
-        </div>
-        <button id="rwRemoveImage" type="button">USUŃ GRAFIKĘ</button>
-      </div>
+
 
       <div class="reward-actions">
         <button id="rwBack" type="button">← WRÓĆ</button>
@@ -150,10 +141,9 @@
       .reward-editor-page .reward-preview-box{
         min-height:220px
       }
-      .reward-preview-box,.reward-image-editor{background:#15151b;border:1px solid #34343c;border-radius:18px;padding:24px}
+      .reward-preview-box{background:#15151b;border:1px solid #34343c;border-radius:18px;padding:24px}
       .reward-editor-page .reward-grid{background:#101015;border:1px solid #2f3038;border-radius:18px;padding:22px}
       .reward-editor-page .reward-grid label{font-size:13px;font-weight:700}
-      .reward-editor-page .reward-image-editor{display:flex;flex-direction:column;gap:16px}
       .reward-editor-page .reward-actions{border-top:1px solid #303038;padding-top:20px;position:sticky;bottom:0;background:#101015}
       .reward-editor-page input,.reward-editor-page select,.reward-editor-page textarea{font-size:15px}
       .reward-editor-page .reward-preview-box img{transition:.2s}
@@ -171,37 +161,23 @@
       .reward-card-preview{overflow:hidden}
 
       .reward-admin-category{background:#101015;border:1px solid #2f3038;border-radius:16px;padding:18px;margin-bottom:16px}.reward-admin-category h3{margin:0 0 14px;color:#fff;font-size:18px}.reward-admin-category .reward-admin-item{margin-bottom:10px}\n      .reward-actions{display:flex;justify-content:flex-end;gap:12px}
-      .reward-actions button,.reward-image-editor button{padding:12px 20px;border-radius:10px;border:1px solid #555;background:#17171d;color:#fff}
+      .reward-actions button{padding:12px 20px;border-radius:10px;border:1px solid #555;background:#17171d;color:#fff}
       #rwSave{background:#f22;color:white;border:0}
       @media(max-width:700px){.reward-grid.modern,.zoom-controls{grid-template-columns:1fr}}
       `;
       document.head.appendChild(st);
     }
 
-    let image=r.image||"";
-    let removed=false;
-    const updatePreview=()=>{ 
+    const updatePreview=()=>{
       rwLiveTitle.textContent=rwTitle.value||"Nowa nagroda";
       rwLiveCost.textContent=rwCost.value||"0 COINS";
       rwLiveDesc.textContent=rwDesc.value||"Opis nagrody";
-      const img=document.querySelector("#rwLiveImage img");
-      if(img){img.style.transform=`translate(${rwX.value}px,${rwY.value}px) scale(${rwZoom.value/100})`;}
+      if(!r.image) rwLiveImage.textContent=rwIcon.value||"🎁";
     };
-    document.querySelectorAll('#rwTitle,#rwCost,#rwDesc,#rwZoom,#rwX,#rwY').forEach(e=>e.oninput=updatePreview);
-    rwZoom.oninput=()=>{rwZoomNumber.value=rwZoom.value;updatePreview()};
-    rwZoomNumber.oninput=()=>{rwZoom.value=rwZoomNumber.value;updatePreview()};
-    rwImage.onchange=()=>{const f=rwImage.files[0];if(f){image=URL.createObjectURL(f);rwLiveImage.innerHTML=`<img src="${image}">`;removed=false;updatePreview();}};
-    rwRemoveImage.onclick=()=>{image="";removed=true;rwLiveImage.innerHTML=rwIcon.value||"🎁";};
+    document.querySelectorAll('#rwTitle,#rwCost,#rwDesc,#rwIcon').forEach(e=>e.oninput=updatePreview);
 
     rwSave.onclick=async()=>{
-      const file=rwImage.files[0];
-      if(file){
-        const name=`reward-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g,"")}`;
-        const up=await client.storage.from("rewards").upload(name,file,{upsert:true});
-        if(up.error)return alert(up.error.message);
-        image=client.storage.from("rewards").getPublicUrl(name).data.publicUrl;
-      }
-      const obj={title:rwTitle.value,cost:rwCost.value,category:rwCat.value,family:rwFamily.value||null,icon:rwIcon.value,image:removed?"":image,description:rwDesc.value,active:true};
+      const obj={title:rwTitle.value,cost:rwCost.value,category:rwCat.value,family:rwFamily.value||null,icon:rwIcon.value,description:rwDesc.value,active:true};
       const res=r.id?await client.from("rewards").update(obj).eq("id",r.id):await client.from("rewards").insert(obj);
       if(res.error)return alert(res.error.message);
       load();
