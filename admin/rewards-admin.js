@@ -113,6 +113,7 @@
           <select id="rwFamily"><option value="" ${!r.family?'selected':''}>Brak</option><option value="bingo" ${r.family==='bingo'?'selected':''}>BINGO / STREAM BOUNTY</option><option value="dixper" ${r.family==='dixper'?'selected':''}>DIXPER</option></select>
         </label>
         <label>Ikona / emoji<input id="rwIcon" value="${esc(r.icon||"🎁")}"></label>
+        <label>Własna grafika<input id="rwImageFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
       </div>
 
       <label>Opis nagrody<textarea id="rwDesc">${esc(r.description)}</textarea></label>
@@ -178,8 +179,38 @@
     document.querySelectorAll('#rwTitle,#rwCost,#rwDesc,#rwIcon').forEach(e=>e.oninput=updatePreview);
 
     rwSave.onclick=async()=>{
-      const obj={title:rwTitle.value,cost:rwCost.value,category:rwCat.value,family:rwFamily.value||null,icon:rwIcon.value,description:rwDesc.value,active:true};
-      const res=r.id?await client.from("rewards").update(obj).eq("id",r.id):await client.from("rewards").insert(obj);
+      let imageUrl=r.image||null;
+      const file=document.getElementById("rwImageFile")?.files?.[0];
+
+      if(file){
+        const ext=file.name.split(".").pop();
+        const fileName=`rewards/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+        const upload=await client.storage.from("cms-images").upload(fileName,file,{upsert:false});
+        if(upload.error){
+          console.error("UPLOAD ERROR",upload.error);
+          return alert("Nie udało się wysłać grafiki: "+upload.error.message);
+        }
+
+        const pub=client.storage.from("cms-images").getPublicUrl(fileName);
+        imageUrl=pub.data.publicUrl;
+      }
+
+      const obj={
+        title:rwTitle.value,
+        cost:rwCost.value,
+        category:rwCat.value,
+        family:rwFamily.value||null,
+        icon:rwIcon.value,
+        image:imageUrl,
+        description:rwDesc.value,
+        active:true
+      };
+
+      const res=r.id
+        ? await client.from("rewards").update(obj).eq("id",r.id)
+        : await client.from("rewards").insert(obj);
+
       if(res.error)return alert(res.error.message);
       load();
     };
