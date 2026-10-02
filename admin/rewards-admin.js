@@ -96,7 +96,7 @@
         <small>PODGLĄD NA ŻYWO</small>
         <h3>TAK NAGRODA BĘDZIE WYGLĄDAŁA NA STRONIE</h3>
         <article class="reward-card-preview">
-          <div id="rwLiveImage">${r.image?`<img src="${esc(r.image)}">`:esc(r.icon||"🎁")}</div>
+          <div id="rwLiveImage">${(r.image||r.image_data)?`<img src="${esc(r.image||r.image_data)}">`:esc(r.icon||"🎁")}</div>
           <strong id="rwLiveTitle">${esc(r.title||"Nowa nagroda")}</strong>
           <span id="rwLiveCost">${esc(r.cost||"0 COINS")}</span>
           <p id="rwLiveDesc">${esc(r.description||"Opis nagrody")}</p>
@@ -113,6 +113,7 @@
           <select id="rwFamily"><option value="" ${!r.family?'selected':''}>Brak</option><option value="bingo" ${r.family==='bingo'?'selected':''}>BINGO / STREAM BOUNTY</option><option value="dixper" ${r.family==='dixper'?'selected':''}>DIXPER</option></select>
         </label>
         <label>Ikona / emoji<input id="rwIcon" value="${esc(r.icon||"🎁")}"></label>
+        <label>Kolor tła ikonki<input id="rwIconColor" type="color" value="${esc(r.icon_color||"#18181d")}"></label>
         <label>Własna grafika<input id="rwImageFile" type="file" accept="image/png,image/jpeg,image/webp"></label>
       </div>
 
@@ -174,9 +175,20 @@
       rwLiveTitle.textContent=rwTitle.value||"Nowa nagroda";
       rwLiveCost.textContent=rwCost.value||"0 COINS";
       rwLiveDesc.textContent=rwDesc.value||"Opis nagrody";
-      if(!r.image) rwLiveImage.textContent=rwIcon.value||"🎁";
+      const file=document.getElementById('rwImageFile')?.files?.[0];
+      const img=document.querySelector('#rwLiveImage img');
+      if(file){
+        const reader=new FileReader();
+        reader.onload=e=>rwLiveImage.innerHTML=`<img src="${e.target.result}">`;
+        reader.readAsDataURL(file);
+      }else if(img){
+        img.style.transform=`scale(${(r.image_scale||100)/100})`;
+      }else{
+        rwLiveImage.textContent=rwIcon.value||"🎁";
+      }
+      document.querySelector('.reward-card-preview').style.setProperty('background',rwIconColor.value||'#18181d');
     };
-    document.querySelectorAll('#rwTitle,#rwCost,#rwDesc,#rwIcon').forEach(e=>e.oninput=updatePreview);
+    document.querySelectorAll('#rwTitle,#rwCost,#rwDesc,#rwIcon,#rwIconColor,#rwImageFile').forEach(e=>e.oninput=updatePreview);
 
     rwSave.onclick=async()=>{
       let imageUrl=r.image||null;
@@ -202,7 +214,9 @@
         category:rwCat.value,
         family:rwFamily.value||null,
         icon:rwIcon.value,
+        icon_color:rwIconColor.value,
         image:imageUrl,
+        image_data:imageUrl,
         description:rwDesc.value,
         active:true
       };
