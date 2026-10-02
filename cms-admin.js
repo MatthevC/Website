@@ -1274,13 +1274,10 @@
         saveButton.textContent=selectedRewardImageFile?'WYSYŁANIE GRAFIKI…':'ZAPISYWANIE…';
         try{
           let imageUrl=currentRewardImage||null;
+          let imageData=null;
           if(selectedRewardImageFile){
-            imageUrl=await uploadCmsImage(
-              selectedRewardImageFile,
-              root.querySelector('#rTitle').value||r.title||'nagroda',
-              'rewards',
-              (attempt,maxAttempts)=>{ saveButton.textContent=`WYSYŁANIE GRAFIKI… ${attempt}/${maxAttempts}`; }
-            );
+            saveButton.textContent='PRZETWARZANIE GRAFIKI…';
+            imageData=await convertImageToBase64(selectedRewardImageFile);
           }
           const obj={
             title:root.querySelector('#rTitle').value,
@@ -1290,6 +1287,7 @@
             family:root.querySelector('#rCat').value==='dixper_bingo'?(root.querySelector('#rFamily').value||null):null,
             icon:root.querySelector('#rIcon').value||'🎁',
             image:imageUrl,
+            image_data:imageData,
             image_fit:root.querySelector('#rImageFit').value||'cover',
             image_scale:Number(root.querySelector('#rImageScale').value||100),
             image_x:Number(root.querySelector('#rImageX').value||50),
