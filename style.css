@@ -11702,3 +11702,18 @@ DIXPER/BINGO ma własny układ i pozostaje bez zmian. */
 .reward-order-buttons button{width:34px;height:34px;padding:0;border:1px solid #3a3b43;border-radius:9px;background:#090a0d;color:#fff;font-size:18px;font-weight:900;line-height:1;cursor:pointer;transition:.15s ease}
 .reward-order-buttons button:hover:not(:disabled){border-color:#ef2b2d;background:#231113;transform:translateY(-1px)}
 .reward-order-buttons button:disabled{opacity:.25;cursor:not-allowed}
+
+
+/* Route hydration cloak: ukrywa przejściowy, niezhydratowany DOM.
+   Dzięki temu eventy i nagrody pojawiają się dopiero w wersji docelowej. */
+html.matt-route-loading #app {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+#app {
+  transition: opacity 90ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  #app { transition: none; }
+}

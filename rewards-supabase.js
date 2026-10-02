@@ -74,5 +74,6 @@
    if(page && page!==lastRewardsPage) scheduleLoad(false);
    else if(!page) lastRewardsPage=null;
  }).observe(document.body,{childList:true,subtree:true});
- window.reloadSupabaseRewards=()=>scheduleLoad(true);
+ window.reloadSupabaseRewards=()=>load();
+ window.loadSupabaseRewards=load;
 })();

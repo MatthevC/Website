@@ -3607,7 +3607,11 @@ function mattMaintenancePage(config = {}) {
   return `<div class="container content-wrap"><section class="page-panel matt-maintenance-page"><div class="matt-maintenance-icon">⚙</div><span>PRZERWA TECHNICZNA</span><h1>${config.sectionOnly ? 'TA SEKCJA JEST CHWILOWO NIEDOSTĘPNA' : "MATT'S WORLD JEST CHWILOWO NIEDOSTĘPNE"}</h1><p>${escapeHtml(message)}</p><small>Administrator może wyłączyć ten tryb w Centrum moderatora.</small></section></div>`;
 }
 
+let __mattRenderToken = 0;
+
 async function render() {
+  const renderToken = ++__mattRenderToken;
+  document.documentElement.classList.add("matt-route-loading");
   if (window.MattCMS?.ready) await window.MattCMS.ready;
   const raw = location.hash.replace(/^#\/?/, "");
   const [rawPath, rawQuery = ""] = raw.split("?");
@@ -3629,6 +3633,7 @@ async function render() {
     document.title = `${SITE_CONFIG.siteName} — Przerwa techniczna`;
     updateLinks();
     closeMobileMenu();
+    if (renderToken === __mattRenderToken) document.documentElement.classList.remove("matt-route-loading");
     return;
   }
   const routeQuery = new URLSearchParams(rawQuery);
@@ -3645,6 +3650,7 @@ async function render() {
     setupContactForm();
     setupImagePreview();
     setupGlobalPageNavigation();
+    if (renderToken === __mattRenderToken) requestAnimationFrame(() => document.documentElement.classList.remove("matt-route-loading"));
     return;
   }
 
@@ -3700,6 +3706,7 @@ async function render() {
     setupContactForm();
     setupImagePreview();
     setupGlobalPageNavigation();
+    if (renderToken === __mattRenderToken) requestAnimationFrame(() => document.documentElement.classList.remove("matt-route-loading"));
     return;
   }
 
@@ -3712,6 +3719,7 @@ async function render() {
     setupImagePreview();
     setupGlobalPageNavigation();
     closeMobileMenu();
+    if (renderToken === __mattRenderToken) document.documentElement.classList.remove("matt-route-loading");
     return;
   }
 
@@ -3744,6 +3752,13 @@ async function render() {
 
   if (window.MattCMS) window.MattCMS.applyRoute(path || "home");
 
+  // Nagrody są w całości źródłowane z Supabase. Czekamy na ich docelowy
+  // render przed pokazaniem podstrony, żeby użytkownik nie widział najpierw
+  // wersji bazowej z app.js, a chwilę później wersji z Supabase.
+  if (path === "viewer/rewards" && typeof window.loadSupabaseRewards === "function") {
+    await window.loadSupabaseRewards();
+  }
+
   document.title = `${SITE_CONFIG.siteName} — ${stripHtml(page.title)}`;
   updateLinks();
   setupContactForm();
@@ -3763,6 +3778,9 @@ async function render() {
     requestAnimationFrame(() => document.getElementById(jumpTarget)?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
   closeMobileMenu();
+  if (renderToken === __mattRenderToken) {
+    requestAnimationFrame(() => document.documentElement.classList.remove("matt-route-loading"));
+  }
 }
 
 function stripHtml(value) {
