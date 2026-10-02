@@ -1150,6 +1150,18 @@
                 <input id="rIcon" placeholder="🎁" value="${esc(r.icon||'🎁')}">
               </label>
 
+              <label>Kolor tła ikonki
+                <select id="rIconColor">
+                  <option value="">Domyślny</option>
+                  <option value="gold">Gold</option>
+                  <option value="purple">Purple</option>
+                  <option value="red">Red</option>
+                  <option value="blue">Blue</option>
+                  <option value="green">Green</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </label>
+
               <label>Własna grafika
                 <input id="rImage" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
               </label>
@@ -1217,7 +1229,7 @@
 
       let selectedRewardImageFile=null;
       let selectedRewardImagePreview='';
-      const currentRewardImage=String(r.image||'');
+      const currentRewardImage=String(r.image_data||r.image||'');
       root.querySelector('#rImageFit').value=['cover','contain'].includes(String(r.image_fit||''))?String(r.image_fit):'cover';
 
       const imageView=()=>({
@@ -1234,6 +1246,7 @@
       };
       const paintRewardGraphic=()=>{
         const holder=root.querySelector('#previewRewardIcon');
+        holder.className='reward-preview-icon '+(root.querySelector('#rIconColor')?.value||r.icon_color||'');
         const imageUrl=selectedRewardImagePreview||currentRewardImage;
         if(imageUrl){
           const v=imageView();
@@ -1256,7 +1269,7 @@
       };
 
       root.querySelectorAll('input,textarea,select').forEach(x=>x.addEventListener('input',updatePreview));
-      ['#rImageScale','#rImageX','#rImageY','#rImageFit'].forEach(sel=>root.querySelector(sel)?.addEventListener('change',paintRewardGraphic));
+      ['#rImageScale','#rImageX','#rImageY','#rImageFit','#rIconColor'].forEach(sel=>root.querySelector(sel)?.addEventListener('change',paintRewardGraphic));
       root.querySelector('#resetRewardImageView').onclick=()=>{
         root.querySelector('#rImageScale').value='100';
         root.querySelector('#rImageX').value='50';
@@ -1302,6 +1315,7 @@
             image_scale:Number(root.querySelector('#rImageScale').value||100),
             image_x:Number(root.querySelector('#rImageX').value||50),
             image_y:Number(root.querySelector('#rImageY').value||50),
+            icon_color:root.querySelector('#rIconColor')?.value||null,
             active:true
           };
           const result=(r.id && !String(r.id).startsWith('gh-'))
