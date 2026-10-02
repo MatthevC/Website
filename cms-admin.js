@@ -1000,11 +1000,37 @@
       {id:'gh-banicja',title:'Banicja',cost:'10K COINS',category:'ogolne',icon:'🔨',description:'Nakładasz 24h t/o na wybraną osobę.'}
     ];
 
-    async function load(){
-      const {data,error}=await client.from('rewards').select('*').order('sort_order',{ascending:true});
-      if(error){ root.innerHTML='<p>Błąd ładowania nagród</p>'; return; }
+    const rewardCategories = {
+      ogolne:'OGÓLNE',
+      dixper_bingo:'DIXPER ORAZ STREAM BOUNTY (BINGO)',
+      dbd:'NAGRODY ZWIĄZANE Z DBD',
+      uniwersalne:'NAGRODY UNIWERSALNE DO GIER',
+      premium:'NAGRODY PREMIUM'
+    };
+    const normalizedRewardCategory=r=>{
+      const cat=String(r?.category||'ogolne').toLowerCase();
+      return (cat==='bingo'||cat==='dixper')?'dixper_bingo':cat;
+    };
 
-      const custom=data||[];
+    async function saveCategoryOrder(category, orderedItems){
+      const allRows=(await client.from('rewards').select('id,category,sort_order')).data||[];
+      const categoryIds=new Set(orderedItems.filter(x=>x.id&&!String(x.id).startsWith('gh-')).map(x=>String(x.id)));
+      const outside=allRows.filter(x=>!categoryIds.has(String(x.id)) && normalizedRewardCategory(x)!==category);
+      let base=outside.reduce((m,x)=>Math.max(m,Number(x.sort_order)||0),0)+100;
+      for(let i=0;i<orderedItems.length;i++){
+        const item=orderedItems[i];
+        if(!item.id||String(item.id).startsWith('gh-')) continue;
+        const {error}=await client.from('rewards').update({sort_order:base+i}).eq('id',item.id);
+        if(error) throw error;
+      }
+    }
+
+    async function load(){
+      let query=await client.from('rewards').select('*').order('sort_order',{ascending:true});
+      if(query.error && String(query.error.message||'').toLowerCase().includes('sort_order')) query=await client.from('rewards').select('*');
+      if(query.error){ root.innerHTML='<p>Błąd ładowania nagród</p>'; return; }
+
+      const custom=query.data||[];
       const map=new Map(custom.map(x=>[String(x.title).toLowerCase(),x]));
       const rewards=[
         ...githubRewards.map(x=>map.get(x.title.toLowerCase())||x),
@@ -1012,14 +1038,23 @@
       ];
 
       root.innerHTML=`
-      <button class="cms-primary" id="addReward">🎁 DODAJ NAGRODĘ</button>
-      <div class="cms-manager-list">
-      ${rewards.map(r=>`
-      <article class="cms-manager-item">
-       <div><strong>${esc(r.title)}</strong><p>${esc(r.cost||'')}</p><small>${esc(r.category||'ogolne')}</small></div>
-       <div><button data-edit="${esc(r.id)}">EDYTUJ</button>
-       ${r.id && !String(r.id).startsWith('gh-')?`<button class="danger" data-del="${esc(r.id)}">USUŃ</button>`:''}</div>
-      </article>`).join('')}
+      <div class="reward-manager-hero">
+        <div><small>PANEL ADMINISTRATORA</small><h3>ZARZĄDZANIE NAGRODAMI</h3><p>Nagrody są podzielone na kategorie. Numer pozycji określa kolejność wyświetlania w danej kategorii.</p></div>
+        <button class="cms-primary reward-add-prominent" id="addReward">＋ DODAJ NAGRODĘ</button>
+      </div>
+      <div class="reward-manager-categories">
+      ${Object.entries(rewardCategories).map(([cat,label])=>{
+        const items=rewards.filter(r=>normalizedRewardCategory(r)===cat);
+        return `<section class="reward-manager-category">
+          <div class="reward-manager-category-head"><h3>${label}</h3><span>${items.length} ${items.length===1?'nagroda':'nagród'}</span></div>
+          ${items.length?`<div class="cms-manager-list">${items.map((r,index)=>`
+            <article class="cms-manager-item reward-manager-item">
+              <div class="reward-manager-position"><span>POZYCJA</span><select data-position="${esc(r.id)}" data-category="${cat}" aria-label="Pozycja nagrody ${esc(r.title)}">${items.map((_,i)=>`<option value="${i}" ${i===index?'selected':''}>${i+1}</option>`).join('')}</select></div>
+              <div class="reward-manager-copy"><strong>${esc(r.title)}</strong><p>${esc(r.cost||'')}</p>${cat==='dixper_bingo'?`<small>${esc(String(r.family||'').toLowerCase()==='dixper'?'Dixper':'Bingo / Stream Bounty')}</small>`:''}</div>
+              <div class="reward-manager-actions"><button data-edit="${esc(r.id)}">EDYTUJ</button>${r.id&&!String(r.id).startsWith('gh-')?`<button class="danger" data-del="${esc(r.id)}">USUŃ</button>`:''}</div>
+            </article>`).join('')}</div>`:'<div class="cms-empty">Brak nagród w tej kategorii.</div>'}
+        </section>`;
+      }).join('')}
       </div><div id="rewardForm"></div>`;
 
       root.querySelector('#addReward').onclick=()=>form({});
@@ -1029,6 +1064,24 @@
       });
       root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{
         form(rewards.find(x=>String(x.id)===String(b.dataset.edit)));
+      });
+      root.querySelectorAll('[data-position]').forEach(select=>select.onchange=async()=>{
+        const cat=select.dataset.category;
+        const items=rewards.filter(r=>normalizedRewardCategory(r)===cat);
+        const from=items.findIndex(x=>String(x.id)===String(select.dataset.position));
+        const to=Number(select.value);
+        if(from<0||to<0||to>=items.length||from===to) return;
+        const [moved]=items.splice(from,1); items.splice(to,0,moved);
+        try{
+          await saveCategoryOrder(cat,items);
+          notify(`Zmieniono pozycję nagrody na ${to+1}.`,'success');
+          load();
+          if(typeof window.reloadSupabaseRewards==='function') window.reloadSupabaseRewards();
+        }catch(error){
+          console.error('[REWARD ORDER]',error);
+          notify(`Nie udało się zmienić kolejności: ${error.message||error}`,'error');
+          load();
+        }
       });
     }
 
