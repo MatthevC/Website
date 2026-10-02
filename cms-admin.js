@@ -1013,15 +1013,15 @@
     };
 
     async function saveCategoryOrder(category, orderedItems){
-      const allRows=(await client.from('rewards').select('id,category,sort_order')).data||[];
-      const categoryIds=new Set(orderedItems.filter(x=>x.id&&!String(x.id).startsWith('gh-')).map(x=>String(x.id)));
-      const outside=allRows.filter(x=>!categoryIds.has(String(x.id)) && normalizedRewardCategory(x)!==category);
-      let base=outside.reduce((m,x)=>Math.max(m,Number(x.sort_order)||0),0)+100;
-      for(let i=0;i<orderedItems.length;i++){
-        const item=orderedItems[i];
-        if(!item.id||String(item.id).startsWith('gh-')) continue;
-        const {error}=await client.from('rewards').update({sort_order:base+i}).eq('id',item.id);
+      // sort_order jest kolejnością wewnątrz kategorii. Nie pobieramy całej tabeli
+      // i nie przesuwamy rekordów z innych kategorii.
+      const rows=orderedItems.filter(x=>x.id&&!String(x.id).startsWith('gh-'));
+      for(let i=0;i<rows.length;i++){
+        const wanted=i+1;
+        if(Number(rows[i].sort_order)===wanted) continue;
+        const {error}=await client.from('rewards').update({sort_order:wanted}).eq('id',rows[i].id);
         if(error) throw error;
+        rows[i].sort_order=wanted;
       }
     }
 

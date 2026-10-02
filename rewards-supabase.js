@@ -41,15 +41,38 @@
  }
  async function load(){
    if(!window.supabaseClient || !document.querySelector('.rewards-page')) return;
-   try{
-     const {data,error}=await window.supabaseClient.from('rewards').select('*').eq('active',true).order('sort_order',{ascending:true});
-     if(error) throw error;
-     addRewards(Array.isArray(data)?data:[]);
-   }catch(e){ console.error('Rewards Supabase:',e); }
+   if(load._promise) return load._promise;
+   load._promise=(async()=>{
+     try{
+       const {data,error}=await window.supabaseClient.from('rewards').select('*').eq('active',true).order('sort_order',{ascending:true});
+       if(error) throw error;
+       addRewards(Array.isArray(data)?data:[]);
+     }catch(e){
+       console.error('Rewards Supabase:',e);
+     }finally{
+       load._promise=null;
+     }
+   })();
+   return load._promise;
  }
- function scheduleLoad(){ setTimeout(load,80); }
- document.addEventListener('DOMContentLoaded',scheduleLoad);
- window.addEventListener('hashchange',scheduleLoad);
- new MutationObserver(()=>{ if(document.querySelector('.rewards-page')) scheduleLoad(); }).observe(document.body,{childList:true,subtree:true});
- window.reloadSupabaseRewards=scheduleLoad;
+ let loadTimer=0;
+ let lastRewardsPage=null;
+ function scheduleLoad(force=false){
+   clearTimeout(loadTimer);
+   loadTimer=setTimeout(()=>{
+     const page=document.querySelector('.rewards-page');
+     if(!page){ lastRewardsPage=null; return; }
+     if(!force && page===lastRewardsPage) return;
+     lastRewardsPage=page;
+     load();
+   },80);
+ }
+ document.addEventListener('DOMContentLoaded',()=>scheduleLoad(true));
+ window.addEventListener('hashchange',()=>{ lastRewardsPage=null; scheduleLoad(true); });
+ new MutationObserver(()=>{
+   const page=document.querySelector('.rewards-page');
+   if(page && page!==lastRewardsPage) scheduleLoad(false);
+   else if(!page) lastRewardsPage=null;
+ }).observe(document.body,{childList:true,subtree:true});
+ window.reloadSupabaseRewards=()=>scheduleLoad(true);
 })();
