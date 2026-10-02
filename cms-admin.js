@@ -1039,7 +1039,7 @@
 
       root.innerHTML=`
       <div class="reward-manager-hero">
-        <div><small>PANEL ADMINISTRATORA</small><h3>ZARZĄDZANIE NAGRODAMI</h3><p>Nagrody są podzielone na kategorie. Numer pozycji określa kolejność wyświetlania w danej kategorii.</p></div>
+        <div><small>PANEL ADMINISTRATORA</small><h3>ZARZĄDZANIE NAGRODAMI</h3><p>Nagrody są podzielone na kategorie. Użyj strzałek przy nagrodzie, aby przesunąć ją wyżej lub niżej w danej kategorii.</p></div>
         <button class="cms-primary reward-add-prominent" id="addReward">＋ DODAJ NAGRODĘ</button>
       </div>
       <div class="reward-manager-categories">
@@ -1049,7 +1049,7 @@
           <div class="reward-manager-category-head"><h3>${label}</h3><span>${items.length} ${items.length===1?'nagroda':'nagród'}</span></div>
           ${items.length?`<div class="cms-manager-list">${items.map((r,index)=>`
             <article class="cms-manager-item reward-manager-item">
-              <div class="reward-manager-position"><span>POZYCJA</span><select data-position="${esc(r.id)}" data-category="${cat}" aria-label="Pozycja nagrody ${esc(r.title)}">${items.map((_,i)=>`<option value="${i}" ${i===index?'selected':''}>${i+1}</option>`).join('')}</select></div>
+              <div class="reward-manager-position"><span>KOLEJNOŚĆ</span><div class="reward-order-buttons"><button type="button" data-move="up" data-reward-id="${esc(r.id)}" data-category="${cat}" ${index===0?'disabled':''} aria-label="Przesuń ${esc(r.title)} w górę">↑</button><button type="button" data-move="down" data-reward-id="${esc(r.id)}" data-category="${cat}" ${index===items.length-1?'disabled':''} aria-label="Przesuń ${esc(r.title)} w dół">↓</button></div></div>
               <div class="reward-manager-copy"><strong>${esc(r.title)}</strong><p>${esc(r.cost||'')}</p>${cat==='dixper_bingo'?`<small>${esc(String(r.family||'').toLowerCase()==='dixper'?'Dixper':'Bingo / Stream Bounty')}</small>`:''}</div>
               <div class="reward-manager-actions"><button data-edit="${esc(r.id)}">EDYTUJ</button>${r.id&&!String(r.id).startsWith('gh-')?`<button class="danger" data-del="${esc(r.id)}">USUŃ</button>`:''}</div>
             </article>`).join('')}</div>`:'<div class="cms-empty">Brak nagród w tej kategorii.</div>'}
@@ -1065,22 +1065,23 @@
       root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{
         form(rewards.find(x=>String(x.id)===String(b.dataset.edit)));
       });
-      root.querySelectorAll('[data-position]').forEach(select=>select.onchange=async()=>{
-        const cat=select.dataset.category;
+      root.querySelectorAll('[data-move]').forEach(button=>button.onclick=async()=>{
+        const cat=button.dataset.category;
         const items=rewards.filter(r=>normalizedRewardCategory(r)===cat);
-        const from=items.findIndex(x=>String(x.id)===String(select.dataset.position));
-        const to=Number(select.value);
-        if(from<0||to<0||to>=items.length||from===to) return;
-        const [moved]=items.splice(from,1); items.splice(to,0,moved);
+        const from=items.findIndex(x=>String(x.id)===String(button.dataset.rewardId));
+        const to=button.dataset.move==='up'?from-1:from+1;
+        if(from<0||to<0||to>=items.length) return;
+        [items[from],items[to]]=[items[to],items[from]];
+        root.querySelectorAll('[data-move]').forEach(b=>b.disabled=true);
         try{
           await saveCategoryOrder(cat,items);
-          notify(`Zmieniono pozycję nagrody na ${to+1}.`,'success');
-          load();
+          notify(`Nagroda przesunięta ${button.dataset.move==='up'?'w górę':'w dół'}.`,'success');
+          await load();
           if(typeof window.reloadSupabaseRewards==='function') window.reloadSupabaseRewards();
         }catch(error){
           console.error('[REWARD ORDER]',error);
           notify(`Nie udało się zmienić kolejności: ${error.message||error}`,'error');
-          load();
+          await load();
         }
       });
     }
