@@ -277,19 +277,66 @@
     if (file.size > 10 * 1024 * 1024) throw new Error('Zdjęcie jest za duże. Maksymalny rozmiar pliku to 10 MB.');
   }
 
-  async function uploadCmsImage(file, itemLabel, folder = 'moderators') {
+  function cmsSleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function cmsWithTimeout(promise, ms, message) {
+    let timer;
+    return Promise.race([
+      promise.finally(() => clearTimeout(timer)),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(message || 'Przekroczono czas oczekiwania.')), ms);
+      })
+    ]);
+  }
+
+  function cmsIsTransientUploadError(error) {
+    const msg = String(error?.message || error || '').toLowerCase();
+    return msg.includes('failed to fetch') ||
+      msg.includes('network') ||
+      msg.includes('timeout') ||
+      msg.includes('timed out') ||
+      msg.includes('load failed') ||
+      msg.includes('connection') ||
+      msg.includes('502') || msg.includes('503') || msg.includes('504');
+  }
+
+  async function uploadCmsImage(file, itemLabel, folder = 'moderators', onAttempt) {
     validateCmsImage(file);
     if (!window.supabaseClient) throw new Error('Brak połączenia z Supabase.');
     const safeFolder = slugify(folder || 'obrazy');
     const safeName = slugify(itemLabel || 'zdjecie').slice(0, 48) || 'zdjecie';
-    const path = `${safeFolder}/${safeName}-${cmsCompactStamp()}.${cmsImageExtension(file)}`;
-    const { error } = await window.supabaseClient.storage.from('cms-images').upload(path, file, {
-      cacheControl: '3600',
-      upsert: false,
-      contentType: file.type || undefined
-    });
-    if (error) throw new Error(`Nie udało się wysłać zdjęcia: ${error.message}`);
-    return window.supabaseClient.storage.from('cms-images').getPublicUrl(path).data.publicUrl;
+    const unique = `${cmsCompactStamp()}-${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${safeFolder}/${safeName}-${unique}.${cmsImageExtension(file)}`;
+    const bucket = window.supabaseClient.storage.from('cms-images');
+    const maxAttempts = 4;
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (typeof onAttempt === 'function') onAttempt(attempt, maxAttempts);
+      try {
+        const response = await cmsWithTimeout(
+          bucket.upload(path, file, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: file.type || undefined
+          }),
+          30000,
+          'Przekroczono 30 sekund oczekiwania na wysłanie grafiki.'
+        );
+        if (response?.error) throw response.error;
+        const publicUrl = bucket.getPublicUrl(path)?.data?.publicUrl;
+        if (!publicUrl) throw new Error('Supabase nie zwrócił adresu zapisanej grafiki.');
+        return publicUrl;
+      } catch (error) {
+        lastError = error;
+        if (!cmsIsTransientUploadError(error) || attempt === maxAttempts) break;
+        await cmsSleep(700 * attempt);
+      }
+    }
+
+    throw new Error(`Nie udało się wysłać zdjęcia po ${maxAttempts} próbach: ${lastError?.message || lastError || 'nieznany błąd'}`);
   }
 
 
@@ -1174,7 +1221,12 @@
         try{
           let imageUrl=currentRewardImage||null;
           if(selectedRewardImageFile){
-            imageUrl=await uploadCmsImage(selectedRewardImageFile,root.querySelector('#rTitle').value||r.title||'nagroda','rewards');
+            imageUrl=await uploadCmsImage(
+              selectedRewardImageFile,
+              root.querySelector('#rTitle').value||r.title||'nagroda',
+              'rewards',
+              (attempt,maxAttempts)=>{ saveButton.textContent=`WYSYŁANIE GRAFIKI… ${attempt}/${maxAttempts}`; }
+            );
           }
           const obj={
             title:root.querySelector('#rTitle').value,
