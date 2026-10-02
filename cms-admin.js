@@ -1,4 +1,14 @@
 (() => {
+
+  async function convertImageToBase64(file){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   const CMS_MOBILE_PREVIEW = new URLSearchParams(window.location.search).get('mattMobilePreview') === '1';
   if (CMS_MOBILE_PREVIEW) {
     document.documentElement.classList.add('matt-mobile-preview-page');
