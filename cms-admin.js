@@ -1207,10 +1207,12 @@
             <small>PODGLĄD NA ŻYWO</small>
             <h3>TAK NAGRODA BĘDZIE WYGLĄDAŁA NA STRONIE</h3>
 
-            <article class="reward-preview-card">
-              <div class="reward-preview-icon" id="previewRewardIcon">${esc(r.icon||'🎁')}</div>
-              <strong id="previewRewardTitle">${esc(r.title||'Nowa nagroda')}</strong>
-              <span id="previewRewardCost">${esc(r.cost||'0 COINS')}</span>
+            <article class="reward-card reward-preview-card">
+              <div class="reward-card-top">
+                <div class="reward-graphic" id="previewRewardIcon">${esc(r.icon||'🎁')}</div>
+                <span class="reward-cost" id="previewRewardCost">${esc(r.cost||'0 COINS')}</span>
+              </div>
+              <h3 id="previewRewardTitle">${esc(r.title||'Nowa nagroda')}</h3>
               <p id="previewRewardDesc">${esc(r.description||'Opis nagrody')}</p>
             </article>
           </section>
@@ -1258,11 +1260,11 @@
       };
       const paintRewardGraphic=()=>{
         const holder=root.querySelector('#previewRewardIcon');
-        holder.className='reward-preview-icon '+(root.querySelector('#rIconColor')?.value||r.icon_color||'');
+        holder.className='reward-graphic '+(root.querySelector('#rIconColor')?.value||r.icon_color||'');
         const imageUrl=selectedRewardImagePreview||currentRewardImage;
         if(imageUrl){
           const v=imageView();
-          holder.innerHTML=`<img src="${esc(imageUrl)}" alt="" style="width:70px;height:70px;object-fit:${v.fit};object-position:${v.x}% ${v.y}%;transform:scale(${v.scale/100});transform-origin:${v.x}% ${v.y}%;border-radius:12px">`;
+          holder.innerHTML=`<img class="reward-custom-image" src="${esc(imageUrl)}" alt="" style="object-fit:${v.fit};object-position:${v.x}% ${v.y}%;transform:scale(${v.scale/100});transform-origin:${v.x}% ${v.y}%">`;
         }else{
           holder.textContent=root.querySelector('#rIcon').value||'🎁';
         }
