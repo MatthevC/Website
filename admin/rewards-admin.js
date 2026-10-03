@@ -69,17 +69,38 @@
   }
 
   async function moveReward(index, direction){
-    const item=rows[index];
-    const target=index+direction;
-    if(!item || !rows[target]) return;
-    const tmp=rows[target];
-    rows[target]=rows[index];
-    rows[index]=tmp;
-    const updates=rows.map((r,i)=>({id:r.id, sort_order:i}));
+    const item = rows[index];
+    if(!item) return;
+
+    // Lista w panelu jest pogrupowana kategoriami, dlatego przesuwamy
+    // względem poprzedniej/następnej nagrody W TEJ SAMEJ KATEGORII.
+    const sameCategoryIndexes = rows
+      .map((r, i) => r.category === item.category ? i : -1)
+      .filter(i => i >= 0);
+
+    const positionInCategory = sameCategoryIndexes.indexOf(index);
+    const targetPosition = positionInCategory + direction;
+    if(positionInCategory < 0 || targetPosition < 0 || targetPosition >= sameCategoryIndexes.length) return;
+
+    const targetIndex = sameCategoryIndexes[targetPosition];
+    [rows[index], rows[targetIndex]] = [rows[targetIndex], rows[index]];
+
+    // Nadajemy jednoznaczną kolejność całej tabeli. Publiczna strona pobiera
+    // dokładnie po sort_order ASC, więc panel i strona mają ten sam porządek.
+    const updates = rows.map((r, i) => ({ id: r.id, sort_order: i }));
     for(const u of updates){
-      if(u.id) await client.from('rewards').update({sort_order:u.sort_order}).eq('id',u.id);
+      if(!u.id) continue;
+      const { error } = await client.from('rewards').update({ sort_order: u.sort_order }).eq('id', u.id);
+      if(error){
+        console.error('[REWARDS ORDER]', error);
+        alert('Nie udało się zapisać kolejności nagród: ' + (error.message || error));
+        await load();
+        return;
+      }
     }
-    render();
+
+    await load();
+    if(typeof window.reloadSupabaseRewards === 'function') window.reloadSupabaseRewards();
   }
 
   function form(r){
