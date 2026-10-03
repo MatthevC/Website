@@ -480,7 +480,6 @@
 
   function configForRoute(route) {
     if (route === 'recommended') return { label: 'STREAMERZY', action: openStreamersManager, permission:'streamers.manage' };
-    if (['moderator/team','moderator/rules'].includes(route)) return { label: 'OSOBY W MODERACJI', action: openModeratorsManager, permission:'moderation.people.manage' };
     if (['moderator/benefits','moderator/how-to'].includes(route)) return { label: 'KORZYŚCI', action: openBenefitsManager, permission:'moderation.benefits.manage' };
     if (['viewer/commands','vip/commands','moderator/commands'].includes(route)) return { label: 'KOMENDY', action: openCommandsManager, permission:'commands.manage' };
     if (route === 'events' || route.startsWith('events/')) return { label: 'EVENTY', action: openEventsManager, permission:'events.any' };
@@ -959,7 +958,8 @@
     const calloutCount = baseCalloutCount + customCalloutCount;
     const contentBtn = $('[data-cms-action="content"]', toolbar);
     if (contentBtn) {
-      contentBtn.hidden = inlineEditing || layoutEditing || !any('page.text.edit','page.callouts.manage');
+      const canModerationPeople = currentRoute() === 'moderator/team' && has('moderation.people.manage');
+      contentBtn.hidden = inlineEditing || layoutEditing || !(any('page.text.edit','page.callouts.manage') || canModerationPeople);
       contentBtn.textContent = `✎ TREŚĆ${has('page.callouts.manage') && calloutCount ? ` (${calloutCount})` : ''}`;
     }
     const layoutBtn = $('[data-cms-action="layout"]', toolbar);
@@ -977,8 +977,10 @@
   }
 
   function openContentManager() {
-    if (!isAdmin() || !any('page.text.edit','page.callouts.manage')) return;
+    if (!isAdmin()) return;
     const route = currentRoute();
+    const canModerationPeople = route === 'moderator/team' && has('moderation.people.manage');
+    if (!(any('page.text.edit','page.callouts.manage') || canModerationPeople)) return;
     const isRewardsRoute = route === 'viewer/rewards';
     const baseCalloutCount = window.MattCMS?.calloutInfo?.(route)?.length || 0;
     const customCalloutCount = window.MattCMS?.customPageCallouts?.(route)?.length || 0;
@@ -987,6 +989,7 @@
       ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-text><strong>✎ EDYTUJ TEKSTY</strong><span>Włącz bezpośrednią edycję napisów, nagłówków i opisów widocznych na bieżącej podstronie.</span></button>':''}
       ${has('page.callouts.manage')?`<button class="cms-site-setting-card" type="button" data-content-callouts><strong>▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}</strong><span>Dodawaj, edytuj, usuwaj i konfiguruj komunikaty oraz dymki na bieżącej podstronie.</span></button>`:''}
       ${isRewardsRoute?'<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>':''}
+      ${canModerationPeople?'<button class="cms-site-setting-card" type="button" data-content-moderators><strong>👥 OSOBY W MODERACJI</strong><span>Dodawaj, edytuj i usuwaj osoby widoczne na stronie Nasza moderacja.</span></button>':''}
     </div>`);
     const body = $('#cms-modal-body', modal);
     $('[data-content-text]', body)?.addEventListener('click', () => {
@@ -995,6 +998,7 @@
     });
     $('[data-content-callouts]', body)?.addEventListener('click', openPageCalloutsManager);
     $('[data-content-rewards]', body)?.addEventListener('click', openRewardsManager);
+    $('[data-content-moderators]', body)?.addEventListener('click', openModeratorsManager);
   }
 
   function openRewardsManager(){
@@ -2314,6 +2318,11 @@
   }
 
   function openModeratorsManager() {
+    if (currentRoute() !== 'moderator/team') {
+      notify('Edycja osób z moderacji jest dostępna tylko na stronie Moderacja / Nasza moderacja.');
+      return;
+    }
+    if (!has('moderation.people.manage')) return;
     const esc = window.MattCMS.escape;
     openArrayManager({
       key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name, deletePermission:'moderation.people.delete',
