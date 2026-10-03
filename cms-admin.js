@@ -1043,9 +1043,15 @@
       const custom=query.data||[];
       const map=new Map(custom.map(x=>[String(x.title).toLowerCase(),x]));
       const rewards=[
-        ...githubRewards.map(x=>map.get(x.title.toLowerCase())||x),
+        ...githubRewards.map((x,index)=>map.get(x.title.toLowerCase())||{...x,sort_order:index+1}),
         ...custom.filter(x=>!githubRewards.some(g=>g.title.toLowerCase()===String(x.title).toLowerCase()))
-      ];
+      ].sort((a,b)=>{
+        const ao=Number(a.sort_order);
+        const bo=Number(b.sort_order);
+        const av=Number.isFinite(ao)?ao:Number.MAX_SAFE_INTEGER;
+        const bv=Number.isFinite(bo)?bo:Number.MAX_SAFE_INTEGER;
+        return av-bv;
+      });
 
       root.innerHTML=`
       <div class="reward-manager-hero">
