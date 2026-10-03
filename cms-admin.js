@@ -978,13 +978,15 @@
 
   function openContentManager() {
     if (!isAdmin() || !any('page.text.edit','page.callouts.manage')) return;
-    const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
-    const customCalloutCount = window.MattCMS?.customPageCallouts?.(currentRoute())?.length || 0;
+    const route = currentRoute();
+    const isRewardsRoute = route === 'viewer/rewards';
+    const baseCalloutCount = window.MattCMS?.calloutInfo?.(route)?.length || 0;
+    const customCalloutCount = window.MattCMS?.customPageCallouts?.(route)?.length || 0;
     const calloutCount = baseCalloutCount + customCalloutCount;
     openModal('TREŚĆ', `<div class="cms-site-settings-grid">
       ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-text><strong>✎ EDYTUJ TEKSTY</strong><span>Włącz bezpośrednią edycję napisów, nagłówków i opisów widocznych na bieżącej podstronie.</span></button>':''}
       ${has('page.callouts.manage')?`<button class="cms-site-setting-card" type="button" data-content-callouts><strong>▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}</strong><span>Dodawaj, edytuj, usuwaj i konfiguruj komunikaty oraz dymki na bieżącej podstronie.</span></button>`:''}
-      '<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>'
+      ${isRewardsRoute?'<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>':''}
     </div>`);
     const body = $('#cms-modal-body', modal);
     $('[data-content-text]', body)?.addEventListener('click', () => {
@@ -996,6 +998,10 @@
   }
 
   function openRewardsManager(){
+    if(currentRoute() !== 'viewer/rewards'){
+      notify('Zarządzanie nagrodami jest dostępne tylko na stronie Dla widza / Nagrody.');
+      return;
+    }
     const client = window.supabaseClient;
     if(!client){ alert('Brak połączenia z Supabase'); return; }
 
