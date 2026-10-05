@@ -3798,7 +3798,9 @@ async function render() {
   // Nagrody pokazują od razu bazowy widok, a dane Supabase są nakładane
   // z cache lub po zakończeniu zapytania. Sieć nie blokuje już całej trasy.
   if (path === "viewer/rewards" && typeof window.loadSupabaseRewards === "function") {
-    window.loadSupabaseRewards();
+    // Nie odsłaniamy bazowych kart z ikonami. Trasa pozostaje pod cloakem
+    // do czasu wstawienia danych Supabase i dekodowania obrazów nad foldem.
+    await window.loadSupabaseRewards();
   }
 
   document.title = `${SITE_CONFIG.siteName} — ${stripHtml(page.title)}`;

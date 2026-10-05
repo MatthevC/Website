@@ -2,8 +2,9 @@
 (function(){
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
  const categories={ogolne:'OGÓLNE',dixper_bingo:'DIXPER ORAZ STREAM BOUNTY (BINGO)',dbd:'NAGRODY ZWIĄZANE Z DBD',uniwersalne:'NAGRODY UNIWERSALNE DO GIER',premium:'NAGRODY PREMIUM'};
- const CACHE_KEY='matt_rewards_cache_v2';
- const CACHE_TTL=2*60*1000;
+ const CACHE_KEY='matt_rewards_cache_v3';
+ const CACHE_TTL=10*60*1000;
+ const CACHE_STALE_TTL=24*60*60*1000;
  let memoryCache=null;
  let memoryCacheAt=0;
  let fetchPromise=null;
@@ -11,10 +12,10 @@
  function readCache(){
    if(memoryCache && Date.now()-memoryCacheAt<CACHE_TTL) return memoryCache;
    try{
-     const raw=sessionStorage.getItem(CACHE_KEY);
+     const raw=localStorage.getItem(CACHE_KEY) || sessionStorage.getItem(CACHE_KEY);
      if(!raw) return null;
      const parsed=JSON.parse(raw);
-     if(!Array.isArray(parsed?.data) || Date.now()-Number(parsed.at||0)>=CACHE_TTL) return null;
+     if(!Array.isArray(parsed?.data) || Date.now()-Number(parsed.at||0)>=CACHE_STALE_TTL) return null;
      memoryCache=parsed.data;
      memoryCacheAt=Number(parsed.at||Date.now());
      return memoryCache;
@@ -23,7 +24,8 @@
  function writeCache(data){
    memoryCache=Array.isArray(data)?data:[];
    memoryCacheAt=Date.now();
-   try{ sessionStorage.setItem(CACHE_KEY,JSON.stringify({at:memoryCacheAt,data:memoryCache})); }catch(_){}
+   const payload=JSON.stringify({at:memoryCacheAt,data:memoryCache});
+   try{ localStorage.setItem(CACHE_KEY,payload); }catch(_){ try{ sessionStorage.setItem(CACHE_KEY,payload); }catch(__){} }
  }
  async function fetchRewards(force=false){
    if(!force){
@@ -47,12 +49,12 @@
    if(String(r.title||'').startsWith('Dixper')) return '<p><a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>';
    return '';
  }
- function card(r){
+ function card(r,priority=false){
    const color=esc(r.icon_color||'');
    const family=r.family?` data-reward-family-card="${esc(r.family)}"`:'';
    const image=r.image_data||r.image;
    return `<article class="reward-card" data-reward-card data-supabase-reward="true"${family}>
-    <div class="reward-card-top"><div class="reward-graphic ${color}">${image?`<img class="reward-custom-image" src="${esc(image)}" alt="" loading="lazy" decoding="async" style="object-fit:${esc(r.image_fit||'cover')};object-position:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%;transform:scale(${Math.max(50,Math.min(250,Number(r.image_scale||100)))/100});transform-origin:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
+    <div class="reward-card-top"><div class="reward-graphic ${color}">${image?`<img class="reward-custom-image" src="${esc(image)}" alt="" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''} style="object-fit:${esc(r.image_fit||'cover')};object-position:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%;transform:scale(${Math.max(50,Math.min(250,Number(r.image_scale||100)))/100});transform-origin:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
     <h3>${esc(r.title||'')}</h3><p>${esc(r.description||'')}</p>${extras(r)}
    </article>`;
  }
@@ -65,6 +67,7 @@
    if(!document.querySelector('.rewards-page')) return;
    clearCards();
    const buckets=new Map();
+   let cardIndex=0;
    items.forEach(r=>{
      let cat=String(r.category||'ogolne').toLowerCase();
      if(cat==='bingo'||cat==='dixper') cat='dixper_bingo';
@@ -77,14 +80,23 @@
      } else target=section.querySelector('.reward-grid:not(.reward-grid-family)');
      if(!target) return;
      if(!buckets.has(target)) buckets.set(target,[]);
-     buckets.get(target).push(card(r));
+     buckets.get(target).push(card(r,cardIndex++<6));
    });
    buckets.forEach((html,target)=>target.insertAdjacentHTML('beforeend',html.join('')));
    window.dispatchEvent(new CustomEvent('rewards:loaded'));
  }
+ async function waitForCriticalImages(){
+   const imgs=[...document.querySelectorAll('.rewards-page .reward-custom-image')].slice(0,6);
+   await Promise.all(imgs.map(async img=>{
+     try{
+       if(!img.complete) await new Promise(resolve=>{ img.addEventListener('load',resolve,{once:true}); img.addEventListener('error',resolve,{once:true}); });
+       if(typeof img.decode==='function') await img.decode().catch(()=>{});
+     }catch(_){}
+   }));
+ }
  async function load(force=false){
    if(!window.supabaseClient || !document.querySelector('.rewards-page')) return;
-   try{ addRewards(await fetchRewards(force)); }
+   try{ addRewards(await fetchRewards(force)); await waitForCriticalImages(); }
    catch(e){ console.error('Rewards Supabase:',e); }
  }
  function prefetch(){
@@ -111,6 +123,14 @@
    else if(!page) lastRewardsPage=null;
  }).observe(document.body,{childList:true,subtree:true});
  window.prefetchSupabaseRewards=prefetch;
+ window.getSupabaseRewards=fetchRewards;
  window.reloadSupabaseRewards=()=>load(true);
  window.loadSupabaseRewards=load;
+
+ // Rozgrzewamy dane zanim użytkownik otworzy Nagrody.
+ function warmRewards(){ prefetch(); }
+ document.addEventListener('pointerover',e=>{ if(e.target.closest?.('a[href="#/viewer/rewards"]')) warmRewards(); },{passive:true});
+ document.addEventListener('touchstart',e=>{ if(e.target.closest?.('a[href="#/viewer/rewards"]')) warmRewards(); },{passive:true});
+ if('requestIdleCallback' in window) requestIdleCallback(warmRewards,{timeout:2500});
+ else setTimeout(warmRewards,1800);
 })();
