@@ -853,15 +853,15 @@
       <article class="recommended-card" id="streamer-${escapeHtml(s.login)}" data-recommended-section data-streamer-login="${escapeHtml(s.login)}" data-streamer-name="${escapeHtml(s.displayName || s.login)}">
         <div class="recommended-head">
           <a class="recommended-avatar-link" href="${escapeHtml(s.channelUrl || '#')}" target="_blank" rel="noopener" aria-label="Otwórz kanał Twitch ${escapeHtml(s.displayName || s.login)}">
-            <span class="recommended-avatar-wrap"><img class="recommended-avatar" data-streamer-avatar src="https://unavatar.io/twitch/${encodeURIComponent(s.login || '')}" alt="Avatar ${escapeHtml(s.displayName || s.login)}" loading="lazy"></span>
+            <span class="recommended-avatar-wrap"><img class="recommended-avatar" data-streamer-avatar src="https://unavatar.io/twitch/${encodeURIComponent(s.login || '')}" alt="Avatar ${escapeHtml(s.displayName || s.login)}" loading="lazy" decoding="async"></span>
             <span class="recommended-avatar-hover">TWITCH ↗</span>
           </a>
           <div class="recommended-meta"><span class="recommended-index">${String(index + 1).padStart(2,'0')} / POLECANY TWÓRCA</span><h2 data-streamer-name-target>${escapeHtml(s.displayName || s.login)}</h2><p>${escapeHtml(s.tagline || '')}</p></div>
           <div class="recommended-actions"><a class="recommended-action primary" href="${escapeHtml(s.channelUrl || '#')}" target="_blank" rel="noopener">TWITCH ↗</a><a class="recommended-action" href="${escapeHtml(s.clipUrl || '#')}" target="_blank" rel="noopener">OTWÓRZ KLIP ↗</a></div>
         </div>
         <div class="recommended-body">
-          <div class="recommended-clip-frame"><iframe src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(s.clipSlug || '')}&parent=${encodeURIComponent(clipParent)}&autoplay=false" title="Polecany klip Twitch — ${escapeHtml(s.displayName || s.login)}" loading="lazy" allowfullscreen></iframe></div>
-          <div class="recommended-side"><div class="recommended-note-box"><h3>NAJCZĘŚCIEJ OGRYWANE</h3><div class="recommended-games">${(s.games || []).map(game => `<span class="recommended-game-chip"><img src="${escapeHtml(gameBoxArt(game))}" alt="${escapeHtml(game)}" loading="lazy" referrerpolicy="no-referrer"><strong>${escapeHtml(game)}</strong></span>`).join('')}</div></div></div>
+          <div class="recommended-clip-frame"><iframe data-twitch-clip-src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(s.clipSlug || '')}&parent=${encodeURIComponent(clipParent)}&autoplay=false" title="Polecany klip Twitch — ${escapeHtml(s.displayName || s.login)}" loading="lazy" allowfullscreen></iframe></div>
+          <div class="recommended-side"><div class="recommended-note-box"><h3>NAJCZĘŚCIEJ OGRYWANE</h3><div class="recommended-games">${(s.games || []).map(game => `<span class="recommended-game-chip"><img src="${escapeHtml(gameBoxArt(game))}" alt="${escapeHtml(game)}" loading="lazy" decoding="async" fetchpriority="low" referrerpolicy="no-referrer"><strong>${escapeHtml(game)}</strong></span>`).join('')}</div></div></div>
         </div>
       </article>`).join('');
     const title = toc.querySelector('.recommended-toc-title')?.outerHTML || '<div class="recommended-toc-title">TWÓRCY</div>';

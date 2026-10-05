@@ -3995,6 +3995,8 @@ body.image-preview-open { overflow: hidden; }
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 24px;
   background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  content-visibility: auto;
+  contain-intrinsic-size: 620px;
 }
 
 .recommended-head {

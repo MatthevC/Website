@@ -2891,7 +2891,7 @@ function recommendedStreamersPage() {
       <div class="recommended-body">
         <div class="recommended-clip-frame">
           <iframe
-            src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(streamer.clipSlug)}&parent=${encodeURIComponent(clipParent)}&autoplay=false"
+            data-twitch-clip-src="https://clips.twitch.tv/embed?clip=${encodeURIComponent(streamer.clipSlug)}&parent=${encodeURIComponent(clipParent)}&autoplay=false"
             title="Polecany klip Twitch — ${streamer.displayName}"
             loading="lazy"
             allowfullscreen>
@@ -3875,41 +3875,41 @@ async function setupRecommendedPage() {
   const cards = [...document.querySelectorAll('[data-streamer-login]')];
   if (!cards.length) return;
 
-  await Promise.all(cards.map(async (card) => {
-    const login = card.dataset.streamerLogin;
-    const fallbackName = card.dataset.streamerName || login;
-    const avatar = card.querySelector('[data-streamer-avatar]');
-    const nameTarget = card.querySelector('[data-streamer-name-target]');
+  // Player Twitch jest ciężki. Nie tworzymy połączenia z clips.twitch.tv,
+  // dopóki dana karta nie znajdzie się blisko widocznego obszaru strony.
+  const clipFrames = [...document.querySelectorAll('iframe[data-twitch-clip-src]')];
+  const loadClip = (frame) => {
+    if (!frame || frame.src || !frame.dataset.twitchClipSrc) return;
+    frame.src = frame.dataset.twitchClipSrc;
+    frame.removeAttribute('data-twitch-clip-src');
+  };
 
-    // Bez klucza API Twitcha korzystamy z proxy jako awaryjnego źródła,
-    // a następnie próbujemy pobrać aktualny profil i bezpośredni adres CDN Twitcha.
-    if (avatar) {
-      avatar.src = `https://unavatar.io/twitch/${login}?v=${Date.now()}`;
-      avatar.alt = `Avatar ${fallbackName}`;
-    }
-    if (nameTarget) nameTarget.textContent = fallbackName;
+  if ('IntersectionObserver' in window) {
+    const clipObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        loadClip(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: '350px 0px' });
+    clipFrames.forEach(frame => clipObserver.observe(frame));
+  } else {
+    clipFrames.forEach(loadClip);
+  }
 
-    try {
-      let response = await fetch(`https://api.ivr.fi/v2/twitch/user/${encodeURIComponent(login)}`, { cache: "no-store" });
-      if (!response.ok) response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`, { cache: "no-store" });
-      if (!response.ok) return;
-      const data = await response.json();
-      const user = Array.isArray(data) ? data[0] : (Array.isArray(data?.data) ? data.data[0] : data);
-      if (!user) return;
+  const PROFILE_CACHE_KEY = 'matt:twitch-profile-cache:v1';
+  const PROFILE_CACHE_TTL = 30 * 60 * 1000;
+  let profileCache = {};
+  try {
+    profileCache = JSON.parse(sessionStorage.getItem(PROFILE_CACHE_KEY) || '{}') || {};
+  } catch (_) {}
 
-      const freshName = user.displayName || user.login || fallbackName;
-      const freshAvatar = user.logo || user.profileImageUrl || user.avatar;
+  const saveProfileCache = () => {
+    try { sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profileCache)); } catch (_) {}
+  };
 
-      if (nameTarget) nameTarget.textContent = freshName;
-      if (avatar && freshAvatar) {
-        avatar.src = freshAvatar;
-        avatar.alt = `Avatar ${freshName}`;
-      }
-    } catch (_) {
-      // Fallback unavatar pozostaje aktywny, więc avatar nadal jest pobierany dynamicznie.
-    }
-  }));
-
+  // Nawigacja działa od razu. Odświeżanie profili jest wykonywane w tle
+  // i nie opóźnia gotowości strony.
   const sections = [...document.querySelectorAll('[data-recommended-section]')];
   const navLinks = [...document.querySelectorAll('[data-recommended-target]')];
   const progress = document.querySelector('[data-recommended-progress]');
@@ -3917,6 +3917,52 @@ async function setupRecommendedPage() {
     link.addEventListener('click', () => {
       activateSidebarLink(navLinks, link, sections, link.dataset.recommendedTarget, progress);
     });
+  });
+
+  cards.forEach((card) => {
+    const login = card.dataset.streamerLogin;
+    const fallbackName = card.dataset.streamerName || login;
+    const avatar = card.querySelector('[data-streamer-avatar]');
+    const nameTarget = card.querySelector('[data-streamer-name-target]');
+    const cached = profileCache[login];
+
+    if (avatar) {
+      avatar.alt = `Avatar ${fallbackName}`;
+      avatar.decoding = 'async';
+      // Nie dodajemy Date.now(), ponieważ wcześniej całkowicie wyłączało to cache obrazka.
+      if (!avatar.getAttribute('src')) avatar.src = `https://unavatar.io/twitch/${login}`;
+    }
+    if (nameTarget) nameTarget.textContent = cached?.name || fallbackName;
+    if (avatar && cached?.avatar) avatar.src = cached.avatar;
+
+    const cacheFresh = cached && (Date.now() - Number(cached.savedAt || 0) < PROFILE_CACHE_TTL);
+    if (cacheFresh) return;
+
+    (async () => {
+      try {
+        let response = await fetch(`https://api.ivr.fi/v2/twitch/user/${encodeURIComponent(login)}`);
+        if (!response.ok) response = await fetch(`https://api.ivr.fi/v2/twitch/user?login=${encodeURIComponent(login)}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        const user = Array.isArray(data) ? data[0] : (Array.isArray(data?.data) ? data.data[0] : data);
+        if (!user) return;
+
+        const freshName = user.displayName || user.login || fallbackName;
+        const freshAvatar = user.logo || user.profileImageUrl || user.avatar || '';
+        profileCache[login] = { name: freshName, avatar: freshAvatar, savedAt: Date.now() };
+        saveProfileCache();
+
+        // Karta mogła już zniknąć po zmianie podstrony.
+        if (!card.isConnected) return;
+        if (nameTarget) nameTarget.textContent = freshName;
+        if (avatar && freshAvatar) {
+          avatar.src = freshAvatar;
+          avatar.alt = `Avatar ${freshName}`;
+        }
+      } catch (_) {
+        // Statyczna nazwa i avatar z unavatar pozostają dostępne.
+      }
+    })();
   });
 }
 
