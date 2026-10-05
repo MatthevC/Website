@@ -3031,18 +3031,55 @@ function getEventsUrl() {
   return new URL("events/events.json", document.baseURI).href;
 }
 
-async function loadEvents() {
-  console.log("[MATT'S WORLD] Ładowanie eventów z Supabase...");
+const EVENTS_CACHE_KEY = "matt_events_rows_v2";
+const EVENTS_CACHE_TTL = 2 * 60 * 1000;
+let __eventsRowsCache = null;
+let __eventsRowsCacheAt = 0;
+let __eventsRowsPromise = null;
 
+function readEventsRowsCache() {
+  if (__eventsRowsCache && Date.now() - __eventsRowsCacheAt < EVENTS_CACHE_TTL) return __eventsRowsCache;
   try {
+    const raw = sessionStorage.getItem(EVENTS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed?.data) || Date.now() - Number(parsed.at || 0) >= EVENTS_CACHE_TTL) return null;
+    __eventsRowsCache = parsed.data;
+    __eventsRowsCacheAt = Number(parsed.at || Date.now());
+    return __eventsRowsCache;
+  } catch (_) { return null; }
+}
+
+function writeEventsRowsCache(rows) {
+  __eventsRowsCache = Array.isArray(rows) ? rows : [];
+  __eventsRowsCacheAt = Date.now();
+  try { sessionStorage.setItem(EVENTS_CACHE_KEY, JSON.stringify({ at: __eventsRowsCacheAt, data: __eventsRowsCache })); } catch (_) {}
+}
+
+async function fetchEventRows(force = false) {
+  if (!force) {
+    const cached = readEventsRowsCache();
+    if (cached) return cached;
+    if (__eventsRowsPromise) return __eventsRowsPromise;
+  }
+  __eventsRowsPromise = (async () => {
     const { data, error } = await supabaseClient
       .from("events")
       .select("*")
       .order("start_date", { ascending: false });
+    if (error) throw error;
+    const rows = Array.isArray(data) ? data : [];
+    writeEventsRowsCache(rows);
+    return rows;
+  })();
+  try { return await __eventsRowsPromise; } finally { __eventsRowsPromise = null; }
+}
 
-    if (error) {
-      throw error;
-    }
+async function loadEvents() {
+  console.log("[MATT'S WORLD] Ładowanie eventów z cache/Supabase...");
+
+  try {
+    const data = await fetchEventRows(false);
 
     const workflow = window.MattCMS?.get('event_workflow', {}) || {};
     const canPreviewHidden = window.currentUserRole === 'admin' || window.mattHasPermission?.('events.preview.nonpublic') === true;
@@ -3612,10 +3649,17 @@ let __mattRenderToken = 0;
 async function render() {
   const renderToken = ++__mattRenderToken;
   document.documentElement.classList.add("matt-route-loading");
-  if (window.MattCMS?.ready) await window.MattCMS.ready;
   const raw = location.hash.replace(/^#\/?/, "");
   const [rawPath, rawQuery = ""] = raw.split("?");
   const path = rawPath.replace(/^\/+|\/+$/g, "") || "";
+  const eventMatch = path.match(/^events\/(.+)$/);
+
+  // Supabase może odpowiadać równolegle z ładowaniem danych CMS.
+  // Dzięki temu Eventy nie czekają najpierw na CMS, a dopiero potem na drugie zapytanie.
+  if (path === "" || path === "events" || eventMatch) fetchEventRows(false).catch(() => {});
+  if (path === "viewer/rewards") window.prefetchSupabaseRewards?.();
+
+  if (window.MattCMS?.ready) await window.MattCMS.ready;
   const maintenance = window.MattCMS?.get('site_maintenance', null);
   const staffBypass = window.currentUserRole === 'admin' || window.currentUserRole === 'moderator';
   const maintenanceSection = (() => {
@@ -3637,7 +3681,6 @@ async function render() {
     return;
   }
   const routeQuery = new URLSearchParams(rawQuery);
-  const eventMatch = path.match(/^events\/(.+)$/);
 
   if ((path === "viewer/vip" || path === "vip" || path === "vip/how-to" || path === "vip/benefits") && !routeQuery.get("jump")) {
     window.scrollTo(0, 0);
@@ -3752,11 +3795,10 @@ async function render() {
 
   if (window.MattCMS) window.MattCMS.applyRoute(path || "home");
 
-  // Nagrody są w całości źródłowane z Supabase. Czekamy na ich docelowy
-  // render przed pokazaniem podstrony, żeby użytkownik nie widział najpierw
-  // wersji bazowej z app.js, a chwilę później wersji z Supabase.
+  // Nagrody pokazują od razu bazowy widok, a dane Supabase są nakładane
+  // z cache lub po zakończeniu zapytania. Sieć nie blokuje już całej trasy.
   if (path === "viewer/rewards" && typeof window.loadSupabaseRewards === "function") {
-    await window.loadSupabaseRewards();
+    window.loadSupabaseRewards();
   }
 
   document.title = `${SITE_CONFIG.siteName} — ${stripHtml(page.title)}`;
