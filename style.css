@@ -11853,3 +11853,61 @@ html.matt-route-loading #app {
 .cms-modal #matt-lobby-panel .matt-lobby-item-text{min-width:0;overflow-wrap:anywhere}
 .cms-modal #matt-lobby-panel button:disabled{opacity:.55;cursor:wait}
 @media(max-width:600px){.cms-modal #matt-lobby-panel .matt-lobby-editor{padding:12px}.cms-modal #matt-lobby-panel .matt-lobby-choice{flex-direction:column}.cms-modal #matt-lobby-panel .matt-lobby-choice label{width:100%;box-sizing:border-box}}
+/* MATT LOBBY — dopracowany panel administracyjny (izolowane style) */
+.cms-modal:has(#matt-lobby-panel){width:min(1120px,calc(100vw - 28px));max-height:92vh;background:#101116;border:1px solid #333540;border-radius:18px;box-shadow:0 30px 90px #000c}
+.cms-modal:has(#matt-lobby-panel) .cms-modal-body{padding:22px 24px 26px;overflow-y:auto}
+.cms-modal #matt-lobby-panel{font-size:13px;color:#f1f1f4}
+.cms-modal #matt-lobby-panel *{box-sizing:border-box}
+.cms-modal #matt-lobby-panel .matt-lobby-intro{display:flex;align-items:center;gap:16px;background:linear-gradient(105deg,#2b1014,#1c1116 65%,#291217);border:1px solid #b42a32;border-left:3px solid #fa303a;border-radius:11px;padding:16px 20px;margin:0 0 16px}
+.cms-modal #matt-lobby-panel .matt-lobby-intro-icon{font-size:28px;color:#fa343e;width:48px;flex-shrink:0;text-align:center}
+.cms-modal #matt-lobby-panel .matt-lobby-intro strong{font-size:16px;color:#fff}
+.cms-modal #matt-lobby-panel .matt-lobby-intro p{margin:5px 0 0;color:#b9b7be;line-height:1.5}
+.cms-modal #matt-lobby-panel .matt-lobby-toolbar{justify-content:flex-end;margin:0 0 12px}
+.cms-modal #matt-lobby-panel .matt-lobby-btn-primary{background:linear-gradient(135deg,#f3313b,#d91625);border:1px solid #ff454f;border-radius:9px;color:#fff;padding:12px 18px;min-height:42px;font-size:13px;font-weight:800;box-shadow:0 5px 20px #d9172226;transition:filter .15s,transform .15s}
+.cms-modal #matt-lobby-panel .matt-lobby-btn-primary:hover{filter:brightness(1.14);transform:translateY(-1px)}
+.cms-modal #matt-lobby-panel .matt-lobby-btn-secondary{background:#22242b;border:1px solid #525560;border-radius:9px;padding:12px 18px;min-height:42px;font-weight:700}
+.cms-modal #matt-lobby-panel .matt-lobby-editor{background:linear-gradient(125deg,#12151b,#1a1418);border:1px solid #593039;border-radius:12px;padding:22px 24px;margin:14px 0 22px;box-shadow:inset 0 1px #ffffff08}
+.cms-modal #matt-lobby-panel .matt-lobby-editor-heading{align-items:center;margin-bottom:18px}
+.cms-modal #matt-lobby-panel .matt-lobby-editor-heading h3{font-size:19px;margin:6px 0 0;color:#fff}
+.cms-modal #matt-lobby-panel .matt-lobby-kicker{color:#ff424c;font-size:10px;letter-spacing:.16em}
+.cms-modal #matt-lobby-panel .matt-lobby-icon-btn{width:37px;height:37px;border-radius:9px;font-size:21px}
+.cms-modal #matt-lobby-panel .matt-lobby-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.cms-modal #matt-lobby-panel .matt-lobby-grid label,.cms-modal #matt-lobby-panel .matt-lobby-note-label{font-size:12px;font-weight:800;color:#d5d5df;letter-spacing:.025em}
+.cms-modal #matt-lobby-panel .matt-lobby-required{color:#ff343e}
+.cms-modal #matt-lobby-panel .matt-lobby-grid input,.cms-modal #matt-lobby-panel .matt-lobby-note-label textarea{display:block;width:100%;background:#13161d;border:1px solid #3c404c;border-radius:9px;color:#fff;padding:13px 15px;margin-top:8px;outline:none;font:inherit;min-height:47px;transition:border-color .15s,box-shadow .15s}
+.cms-modal #matt-lobby-panel .matt-lobby-grid input:focus,.cms-modal #matt-lobby-panel .matt-lobby-note-label textarea:focus{border-color:#f33a45;box-shadow:0 0 0 3px #f33a4520}
+.cms-modal #matt-lobby-panel input::placeholder,.cms-modal #matt-lobby-panel textarea::placeholder{color:#8b8d9a}
+.cms-modal #matt-lobby-panel .matt-lobby-choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;border:0;margin:0 0 20px;padding:0;min-width:0}
+.cms-modal #matt-lobby-panel .matt-lobby-choice legend{font-size:12px;font-weight:800;color:#d5d5df;letter-spacing:.025em;padding:0;margin-bottom:10px}
+.cms-modal #matt-lobby-panel .matt-lobby-choice label{display:flex;gap:14px;align-items:center;min-width:0;width:100%;padding:14px 16px;background:#13161d;border:1px solid #3d414d;border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s}
+.cms-modal #matt-lobby-panel .matt-lobby-choice label:has(input:checked){border-color:#f33b44;background:#29191e;box-shadow:inset 0 0 0 1px #ed303a38}
+.cms-modal #matt-lobby-panel .matt-lobby-choice input{width:19px;height:19px;flex:0 0 19px;accent-color:#ff3b45;margin:0}
+.cms-modal #matt-lobby-panel .matt-lobby-choice-content{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+.cms-modal #matt-lobby-panel .matt-lobby-choice-content strong{font-size:13px;color:#fff}
+.cms-modal #matt-lobby-panel .matt-lobby-choice-content small{font-size:11px;color:#a3a5b1}
+.cms-modal #matt-lobby-panel .matt-lobby-note-label textarea{min-height:86px;resize:vertical}
+.cms-modal #matt-lobby-panel .matt-lobby-editor-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:18px}
+.cms-modal #matt-lobby-panel .matt-lobby-list-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:18px 0 12px}
+.cms-modal #matt-lobby-panel .matt-lobby-list-header h3{font-size:17px;margin:0;color:#fff;border-left:4px solid #f3343f;padding-left:12px;letter-spacing:.02em}
+.cms-modal #matt-lobby-panel .matt-lobby-list-header h3 span{font-size:12px;color:#9294a0}
+.cms-modal #matt-lobby-panel .matt-lobby-search-wrap{display:flex;align-items:center;gap:9px;min-width:200px;width:min(300px,45%);border:1px solid #42414b;border-radius:9px;background:#17171e;padding:0 12px}
+.cms-modal #matt-lobby-panel .matt-lobby-search-wrap span{font-size:23px;color:#b3b5c0}
+.cms-modal #matt-lobby-panel .matt-lobby-search-wrap input{width:100%;border:0;outline:0;background:transparent;color:#fff;padding:12px 0;font-size:13px;min-width:0}
+.cms-modal #matt-lobby-panel .matt-lobby-list{display:grid;gap:10px}
+.cms-modal #matt-lobby-panel .matt-lobby-item{background:linear-gradient(105deg,#15171d,#1a1519);border:1px solid #353943;border-radius:11px;padding:18px 20px;gap:14px}
+.cms-modal #matt-lobby-panel .matt-lobby-pair{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:9px}
+.cms-modal #matt-lobby-panel .matt-lobby-pair strong{font-size:14px;color:#f6f6f8}
+.cms-modal #matt-lobby-panel .matt-lobby-avatar{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#2a171b;border:1px solid #69313a;color:#ff3945;font-size:22px}
+.cms-modal #matt-lobby-panel .matt-lobby-avatar-second{background:#25272e;border-color:#444852;color:#c3c5cf}
+.cms-modal #matt-lobby-panel .matt-lobby-versus{color:#ff5a46;font-size:20px;font-weight:900}
+.cms-modal #matt-lobby-panel .matt-lobby-meta{font-size:12px;color:#a9abb6;margin:4px 0 0 43px}
+.cms-modal #matt-lobby-panel .matt-lobby-meta b{color:#dedee4;font-weight:700}
+.cms-modal #matt-lobby-panel .matt-lobby-actions{display:flex;gap:10px;margin:0;align-items:center}
+.cms-modal #matt-lobby-panel .matt-lobby-actions button{font-weight:800;border-radius:9px;padding:10px 14px;min-height:40px;cursor:pointer;transition:filter .15s}
+.cms-modal #matt-lobby-panel .matt-lobby-actions button:hover{filter:brightness(1.25)}
+.cms-modal #matt-lobby-panel .matt-lobby-actions .matt-lobby-edit-btn{background:#291b0c;border:1px solid #dd8c0a;color:#ffb22c}
+.cms-modal #matt-lobby-panel .matt-lobby-actions .matt-lobby-delete-btn{background:#371418;border:1px solid #ec2834;color:#ff656d}
+.cms-modal #matt-lobby-panel .matt-lobby-empty{padding:24px;border:1px dashed #454751;border-radius:10px;color:#a6a8b3;text-align:center}
+.cms-modal #matt-lobby-panel #matt-lobby-status:not(:empty){margin:8px 0;padding:10px 12px;border-radius:8px;background:#1c2721}
+.cms-modal #matt-lobby-panel #matt-lobby-status.matt-lobby-error{background:#381b20;color:#ffb5b8}
+@media(max-width:680px){.cms-modal:has(#matt-lobby-panel) .cms-modal-body{padding:14px}.cms-modal #matt-lobby-panel .matt-lobby-grid,.cms-modal #matt-lobby-panel .matt-lobby-choice{grid-template-columns:1fr}.cms-modal #matt-lobby-panel .matt-lobby-editor{padding:16px}.cms-modal #matt-lobby-panel .matt-lobby-list-header{align-items:stretch;flex-direction:column}.cms-modal #matt-lobby-panel .matt-lobby-search-wrap{width:100%}.cms-modal #matt-lobby-panel .matt-lobby-item{padding:14px}.cms-modal #matt-lobby-panel .matt-lobby-actions{width:100%;justify-content:flex-end}.cms-modal #matt-lobby-panel .matt-lobby-intro{padding:12px}}
