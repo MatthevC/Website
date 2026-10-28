@@ -11804,3 +11804,6 @@ html.matt-route-loading #app {
   margin:0!important;
   line-height:1.72!important;
 }
+
+/* MATT Lobby: prywatny panel */
+.matt-lobby-shell{max-width:1100px;margin:0 auto;padding:24px}.matt-lobby-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.matt-lobby-grid label{display:grid;gap:5px}.matt-lobby-grid input,.matt-lobby-grid select,.matt-lobby-grid textarea{padding:12px;background:#181818;color:#fff;border:1px solid #555;border-radius:8px;width:100%;box-sizing:border-box}.matt-lobby-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}.matt-lobby-actions button,.matt-lobby-list button{padding:9px 13px;border:1px solid #ff8b2b;border-radius:8px;background:#2a1d12;color:#fff;cursor:pointer}.matt-lobby-list{display:grid;gap:10px}.matt-lobby-item{padding:14px;border:1px solid #555;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.matt-lobby-muted{opacity:.75}.matt-lobby-error{color:#ffb0a0}.matt-lobby-success{color:#a9f0bb}
