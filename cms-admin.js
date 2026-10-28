@@ -935,7 +935,7 @@
       if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
       if (action === 'images' && has('page.images.manage') && currentRoute() !== 'viewer/rewards') openPageImagesManager();
       if (action === 'site' && any('site.navigation.manage','site.links.manage')) openSiteSettingsManager();
-      if (action === 'lobby' && (window.currentUserRole === 'admin' || has('lobby.conflicts.view'))) window.MattLobbyPanel?.open();
+      if (action === 'lobby' && (window.currentUserRole === 'admin' || has('lobby.conflicts.view'))) { openModal('MATT LOBBY — KONFLIKTY', '<div id="matt-lobby-panel">Sprawdzanie uprawnień...</div>'); window.MattLobbyPanel?.mount(); }
       if (action === 'backups' && any('backups.view','github.restore')) openBackupsManager();
     });
     return toolbar;

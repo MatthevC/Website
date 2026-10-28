@@ -11816,3 +11816,16 @@ html.matt-route-loading #app {
 .matt-lobby-dialog-head button{font-size:25px;color:#fff;background:#26272c;border:1px solid #484951;border-radius:8px;cursor:pointer;padding:2px 12px}
 .matt-lobby-dialog #matt-lobby-panel{min-height:80px}
 @media(max-width:600px){.matt-lobby-overlay{padding:8px}.matt-lobby-dialog{padding:14px;max-height:calc(100vh - 16px)}}
+
+/* MATT Lobby uses the same centered CMS modal as the other admin tools. */
+.cms-modal:has(#matt-lobby-panel){width:min(920px,calc(100vw - 28px));max-height:min(88vh,920px)}
+.cms-modal:has(#matt-lobby-panel) .cms-modal-body{overflow-y:auto;min-height:100px}
+.cms-modal #matt-lobby-panel{padding:2px 0 8px;color:#e9e9ed;font-size:13px}
+.cms-modal #matt-lobby-panel h2{font-size:17px;margin:0 0 7px}
+.cms-modal #matt-lobby-panel h3{font-size:14px;margin:24px 0 10px}
+.cms-modal #matt-lobby-panel .matt-lobby-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cms-modal #matt-lobby-panel .matt-lobby-grid label{font-weight:700;color:#d5d5db;font-size:12px}
+.cms-modal #matt-lobby-panel .matt-lobby-grid input,.cms-modal #matt-lobby-panel .matt-lobby-grid select,.cms-modal #matt-lobby-panel .matt-lobby-grid textarea{background:#191a20;border:1px solid #3c3d47;color:#fff;min-height:40px}
+.cms-modal #matt-lobby-panel .matt-lobby-actions button{background:#bf252e;border:1px solid #db3942;font-weight:700}
+.cms-modal #matt-lobby-panel .matt-lobby-item{background:#18191f;border-color:#34353f}
+@media(max-width:650px){.cms-modal #matt-lobby-panel .matt-lobby-grid{grid-template-columns:1fr}}
