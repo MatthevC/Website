@@ -337,7 +337,6 @@ const pages = {
     title: "DLA WIDZA / <span>KOMENDY</span>",
     body: commandsPage()
   },
-  "moderator/lobby": { title: "MODERACJA / <span>MATT LOBBY</span>", body: `<div class="container content-wrap"><div class="page-panel matt-lobby-shell"><div id="matt-lobby-panel">Sprawdzanie uprawnień...</div></div></div>` },
   "moderator/commands": {
     title: "MODERACJA / <span>KOMENDY</span>",
     body: commandsPage()

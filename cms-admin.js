@@ -913,6 +913,7 @@
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
       <button type="button" data-cms-action="images">▧ GRAFIKI</button>
       <button type="button" data-cms-action="site">⚙ USTAWIENIA STRONY</button>
+      <button type="button" data-cms-action="lobby" hidden>🎮 MATT LOBBY</button>
       <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
@@ -934,6 +935,7 @@
       if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
       if (action === 'images' && has('page.images.manage') && currentRoute() !== 'viewer/rewards') openPageImagesManager();
       if (action === 'site' && any('site.navigation.manage','site.links.manage')) openSiteSettingsManager();
+      if (action === 'lobby' && (window.currentUserRole === 'admin' || has('lobby.conflicts.view'))) window.MattLobbyPanel?.open();
       if (action === 'backups' && any('backups.view','github.restore')) openBackupsManager();
     });
     return toolbar;
@@ -970,6 +972,7 @@
       imagesBtn.hidden = inlineEditing || layoutEditing || !canGraphics;
     }
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
+    $('[data-cms-action="lobby"]', toolbar).hidden = inlineEditing || layoutEditing || !(window.currentUserRole === 'admin' || has('lobby.conflicts.view'));
     $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || layoutEditing || !any('backups.view','github.restore');
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;

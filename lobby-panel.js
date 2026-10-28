@@ -18,6 +18,18 @@ async function refresh(){const {data,error}=await supabaseClient.from('matt_lobb
 async function add(ev){ev.preventDefault();const f=ev.currentTarget,form=new FormData(f),a=nick(form.get('user1')),b=nick(form.get('user2'));if(!a||!b||a===b){status('Podaj dwóch różnych graczy.',true);return;}const row={user1:a,user2:b,problematic:form.get('problematic')==='1'?a:b,note:String(form.get('note')||'').trim()||null};const {error}=await supabaseClient.from('matt_lobby_conflicts').insert(row);if(error){status('Błąd zapisu: '+error.message,true);return;}f.reset();status('Zapisano konflikt.');try{await refresh()}catch(e){status(e.message,true)}}
 async function remove(id){const x=current.find(x=>x.id===id);if(!x||!confirm(`Usunąć konflikt ${x.user1} ↔ ${x.user2}?`))return;const {error}=await supabaseClient.from('matt_lobby_conflicts').delete().eq('id',id);if(error){status(error.message,true);return;}status('Usunięto konflikt.');await refresh();}
 async function edit(id){const x=current.find(x=>x.id===id);if(!x)return;const v=prompt('Który gracz ma mieć niższy priorytet? Wpisz dokładny nick:',x.problematic);if(v===null)return;const problematic=nick(v);if(![nick(x.user1),nick(x.user2)].includes(problematic)){status('Wybierz jednego z dwóch graczy.',true);return;}const note=prompt('Notatka:',x.note||'');if(note===null)return;const {error}=await supabaseClient.from('matt_lobby_conflicts').update({problematic,note:note.trim()||null}).eq('id',id);if(error){status(error.message,true);return;}status('Zaktualizowano konflikt.');await refresh();}
-async function init(){if(loading)return;loading=true;try{access=await getAccess();const nav=document.getElementById('matt-lobby-nav');if(nav)nav.hidden=!can(PERMS[0],access)||access.pending;if(el()){show();if(can(PERMS[0],access)&&!access.pending)await refresh();}}catch(e){if(el())el().innerHTML='<p class="matt-lobby-error">Nie udało się sprawdzić dostępu: '+esc(e.message)+'</p>';}finally{loading=false;}}
-window.addEventListener('hashchange',()=>setTimeout(init,150));window.addEventListener('matt-auth-change',()=>setTimeout(init,150));document.addEventListener('DOMContentLoaded',()=>setTimeout(init,200));
+async function init(){if(loading)return;loading=true;try{access=await getAccess();if(el()){show();if(can(PERMS[0],access)&&!access.pending)await refresh();}}catch(e){if(el())el().innerHTML='<p class="matt-lobby-error">Nie udało się sprawdzić dostępu: '+esc(e.message)+'</p>';}finally{loading=false;}}
+function close(){document.getElementById('matt-lobby-overlay')?.remove();}
+async function open(){
+  // Access is verified again by Supabase before rendering. RLS protects the data.
+  close();
+  const overlay=document.createElement('div');overlay.id='matt-lobby-overlay';overlay.className='matt-lobby-overlay';
+  overlay.innerHTML='<div class="matt-lobby-dialog" role="dialog" aria-modal="true" aria-label="MATT Lobby — konflikty"><div class="matt-lobby-dialog-head"><strong>🎮 MATT LOBBY — ZARZĄDZANIE KONFLIKTAMI</strong><button type="button" data-lobby-close aria-label="Zamknij">×</button></div><div id="matt-lobby-panel">Sprawdzanie uprawnień...</div></div>';
+  document.body.appendChild(overlay);
+  overlay.querySelector('[data-lobby-close]').addEventListener('click',close);
+  overlay.addEventListener('click',ev=>{if(ev.target===overlay)close();});
+  await init();
+}
+window.MattLobbyPanel={open,close};
+window.addEventListener('matt-auth-change',()=>{if(el())init();});
 })();

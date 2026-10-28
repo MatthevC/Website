@@ -51,7 +51,6 @@
             <a href="#/moderator/team">NASZA MODERACJA</a>
             <a href="#/moderator/benefits">KORZYŚCI</a>
             <a href="#/moderator/commands">KOMENDY</a>
-            <a href="#/moderator/lobby" id="matt-lobby-nav" hidden>PANEL LOBBY</a>
           </div>
         </div>
 
@@ -210,7 +209,7 @@
 <script src="rewards-supabase.js?v=5"></script>
 <script src="app.js?v=88"></script>
 <script src="auth-ui.js?v=15"></script>
-<script src="lobby-panel.js?v=1"></script>
+<script src="lobby-panel.js?v=2"></script>
 <script>
 (function(){
   let loaded = false;
@@ -218,7 +217,7 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=101','cms-suite.js?v=7'].forEach(function(src){
+    ['cms-admin.js?v=102','cms-suite.js?v=7'].forEach(function(src){
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;
