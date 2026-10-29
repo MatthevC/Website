@@ -8382,7 +8382,7 @@ color:white;background:none;border:0;text-align:left;padding:8px;cursor:pointer;
   padding:8px 7px 9px;
   border-bottom:1px solid rgba(255,255,255,.08)
 }
-#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-orientation):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-toggle){
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-orientation):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-toggle):not(.cms-toolbar-preferences){
   grid-column:1/-1;
   width:100%;
   min-height:40px;
@@ -12535,3 +12535,41 @@ html.matt-route-loading #app {
  margin:0!important;order:0!important;
 }
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button[hidden]{display:none!important}
+
+
+/* MATT — naprawa układu pionowego (bez nakładania kontrolek) */
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){
+ display:grid!important;
+ grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ grid-auto-flow:row!important;
+ width:280px!important;max-width:calc(100vw - 12px)!important;
+ gap:6px!important;padding:10px!important;
+ align-items:stretch!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-drag-handle,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-toggle,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-mobile-preview,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-preferences,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-orientation {
+ display:inline-flex!important;position:relative!important;visibility:visible!important;
+ opacity:1!important;grid-row:1!important;grid-column:auto!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ height:42px!important;min-height:42px!important;
+ padding:0!important;margin:0!important;justify-content:center!important;
+ align-items:center!important;text-align:center!important;
+ font-size:20px!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-drag-handle{grid-column:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-toggle{grid-column:2!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-mobile-preview{grid-column:3!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-preferences{grid-column:4!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-orientation{grid-column:5!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > .cms-toolbar-title{
+ display:flex!important;grid-row:2!important;grid-column:1/-1!important;
+ width:100%!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > button[data-cms-action]:not(.cms-toolbar-toggle):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-preferences):not(.cms-toolbar-orientation){
+ grid-column:1/-1!important;grid-row:auto!important;
+ width:100%!important;min-width:0!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > button[hidden]{display:none!important}
