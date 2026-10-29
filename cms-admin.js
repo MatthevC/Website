@@ -1018,7 +1018,7 @@
       const callouts = canCallouts ? (window.MattCMS?.calloutInfo?.(route)?.length || 0) + (window.MattCMS?.customPageCallouts?.(route)?.length || 0) : 0;
       openModal('MATT STUDIO — EDYCJA TREŚCI', `<div class="matt-studio">
         <div class="matt-studio-top"><div><small>EDYTOR PODSTRONY</small><strong>${esc(route.toUpperCase())}</strong><p>Wybierz element z listy, zmień treść i zapisz. Nie musisz edytować tekstów bezpośrednio na stronie.</p></div><span>${elements.length} pól tekstowych</span></div>
-        <div class="matt-studio-tabs">${canTexts?'<button class="is-active" data-studio-tab="texts">✎ TEKSTY</button>':''}${canCallouts?`<button data-studio-tab="callouts">▰ KOMUNIKATY (${callouts})</button>`:''}${route==='viewer/rewards'?'<button data-studio-tab="rewards">🎁 NAGRODY</button>':''}${canModerators?'<button data-studio-tab="moderators">👥 MODERACJA</button>':''}</div>
+        <div class="matt-studio-tabs">${canTexts?'<button class="is-active" data-studio-tab="texts">✎ TEKSTY</button><button data-studio-tab="blocks">▦ KREATOR SEKCJI 2.0</button>':''}${canCallouts?`<button data-studio-tab="callouts">▰ KOMUNIKATY (${callouts})</button>`:''}${route==='viewer/rewards'?'<button data-studio-tab="rewards">🎁 NAGRODY</button>':''}${canModerators?'<button data-studio-tab="moderators">👥 MODERACJA</button>':''}</div>
         ${canTexts?`<div class="matt-studio-search"><input type="search" placeholder="Szukaj nagłówka, opisu lub fragmentu tekstu…" data-studio-search value="${esc(search)}"><span>Wybierz EDYTUJ przy wybranym elemencie</span></div><div class="matt-studio-list" data-studio-list></div>`:'<p>Wybierz zakładkę, aby edytować treść.</p>'}
       </div>`);
       const body=$('#cms-modal-body',modal);
@@ -1030,6 +1030,7 @@
       };
       $('[data-studio-search]',body)?.addEventListener('input',e=>{search=e.target.value;renderList();});
       $$('[data-studio-tab]',body).forEach(btn=>btn.addEventListener('click',()=>{
+        if(btn.dataset.studioTab==='blocks') { closeModal(); window.MattStudioBlocks?.open(route); }
         if(btn.dataset.studioTab==='callouts') openPageCalloutsManager();
         if(btn.dataset.studioTab==='moderators') openModeratorsManager();
         if(btn.dataset.studioTab==='rewards') openRewardsManager();

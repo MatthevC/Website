@@ -1283,6 +1283,7 @@
     applyPageBanner(path);
     applyCustomPageCallouts(path);
     applyPageLayout(path);
+    window.MattStudioBlocks?.render(path);
   }
 
   window.MattCMS = {
