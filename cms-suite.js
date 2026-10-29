@@ -611,25 +611,65 @@
     if(error) throw error;
     const rows=data||[];
     inboxNewCount=rows.filter(x=>x.status==='new').length;inboxCountReady=true;paintInboxBadges();
-    const statuses=[['new','NOWE'],['progress','W TRAKCIE'],['done','UKOŃCZONE'],['rejected','ODRZUCONE']];
-    const counts=Object.fromEntries(statuses.map(([k])=>[k,rows.filter(x=>x.status===k).length]));
-    let activeFilter='new';
-    body.innerHTML=`<div class="matt-inbox-head"><div><small>ZGŁOSZENIA SPOŁECZNOŚCI</small><h3>Wnioski i kontakt</h3><p>Wybierz status, aby przeglądać sprawy. Rozstrzygnięte zgłoszenia są usuwane po 30 dniach.</p></div><button type="button" data-inbox-refresh>↻ ODŚWIEŻ</button></div>
-      <div class="matt-inbox-stats matt-inbox-status-tabs" role="group" aria-label="Filtruj zgłoszenia według statusu">${statuses.map(([k,n])=>`<button type="button" data-inbox-tab="${k}" class="${k==='new'?'active':''}" aria-pressed="${k==='new'}"><span>${n}</span><strong>${counts[k]}</strong></button>`).join('')}</div>
-      <div class="matt-inbox-controls"><label class="matt-inbox-search-label"><span>WYSZUKAJ ZGŁOSZENIE</span><input type="search" placeholder="Nick, temat, wiadomość, numer lub e-mail…" data-inbox-search></label><button type="button" class="matt-inbox-all" data-inbox-all>Pokaż wszystkie</button></div>
-      <div class="matt-inbox-result-heading" data-inbox-result-heading></div><div data-inbox-list></div>`;
-    const list=$('[data-inbox-list]',body);
+    const statuses=[['all','Wszystkie'],['new','Nowe'],['progress','W trakcie'],['done','Ukończone'],['rejected','Odrzucone']];
     const labels=Object.fromEntries(statuses);
+    const categoryOf=(topic)=>{
+      const t=String(topic||'').toLocaleLowerCase('pl');
+      if(/nie chc[eę] gra[cć]|konflikt|gracz.*gra/.test(t))return 'Konflikty';
+      if(/unban|ban|odwołan/.test(t))return 'Odwołania';
+      if(/skarg|zażalen|zgłoszen.*użytkownik/.test(t))return 'Skargi';
+      if(/współprac|marketing|reklam|promocj|partner/.test(t))return 'Marketing';
+      if(/moderat|kandydat|rekrutac/.test(t))return 'Rekrutacja';
+      if(/zmian|usprawnien|propozycj|pomysł/.test(t))return 'Sugestie';
+      return 'Pozostałe';
+    };
+    const categories=['Wszystkie',...Array.from(new Set(rows.map(x=>categoryOf(x.topic)))).sort((a,b)=>a.localeCompare(b,'pl'))];
+    const option=(value,label)=>`<option value="${esc(value)}">${esc(label)}</option>`;
+    body.innerHTML=`<section class="matt-inbox-compact">
+      <header class="matt-inbox-compact-head"><div><small>CENTRUM ZGŁOSZEŃ</small><h3>Wnioski / Kontakt</h3></div><button type="button" data-inbox-refresh>↻ Odśwież</button></header>
+      <div class="matt-inbox-compact-filters">
+        <label><span>Temat</span><select data-inbox-category>${categories.map(c=>option(c,c)).join('')}</select></label>
+        <label><span>Status</span><select data-inbox-filter>${statuses.map(([k,n])=>option(k,n)).join('')}</select></label>
+        <label class="matt-inbox-compact-search"><span>Wyszukaj</span><input type="search" data-inbox-search placeholder="Nick, temat, numer, treść..."></label>
+      </div>
+      <div class="matt-inbox-compact-summary"><span data-inbox-count></span><span class="matt-inbox-compact-new">${rows.filter(x=>x.status==='new').length} nowych</span><span class="matt-inbox-compact-hint">Kliknij wiersz, aby rozwinąć szczegóły</span></div>
+      <div class="matt-inbox-compact-list" data-inbox-list></div>
+    </section>`;
+    const list=$('[data-inbox-list]',body);
+    let expandedId=null;
     const draw=()=>{
+      const filter=$('[data-inbox-filter]',body).value;
+      const category=$('[data-inbox-category]',body).value;
       const query=String($('[data-inbox-search]',body).value||'').toLocaleLowerCase('pl');
-      const filter=activeFilter;
-      const visible=rows.filter(x=>(filter==='all'||(filter==='open'?['new','progress'].includes(x.status):x.status===filter))&&[x.id,x.twitch_nick,x.topic,x.message,x.reply_email,...Object.values(x.details||{})].join(' ').toLocaleLowerCase('pl').includes(query));
-      $('[data-inbox-result-heading]',body).textContent=`${filter==='all'?'Wszystkie':labels[filter]||'Otwarte'} · ${visible.length} zgłoszeń`;
-      list.innerHTML=visible.length?visible.map(x=>`<article class="matt-inbox-item" data-inbox-id="${esc(x.id)}"><div class="matt-inbox-item-top"><span class="matt-inbox-tag ${esc(x.status)}">${labels[x.status]||esc(x.status)}</span><small>${esc(fmt(x.created_at))}</small><span class="matt-inbox-mail ${x.email_status==='sent'?'sent':''}">${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</span></div><h4>${esc(x.topic)}</h4><small class="matt-inbox-reference">Numer: ${esc(String(x.id).slice(0,8).toUpperCase())}</small><div class="matt-inbox-meta"><strong>@${esc(x.twitch_nick)}</strong> · ${esc(x.reply_email)}</div><details class="matt-inbox-expand"><summary>POKAŻ WIADOMOŚĆ I SZCZEGÓŁY</summary><p>${esc(x.message)}</p>${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}</details>${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small> · ${esc(fmt(x.resolved_at))} · automatyczne usunięcie po 30 dniach</small></div>`:''}<div class="matt-inbox-actions"><a href="mailto:${encodeURIComponent(x.reply_email)}?subject=${encodeURIComponent('MATT’S WORLD — '+x.topic)}">ODPOWIEDZ E-MAILEM</a><select data-inbox-status>${statuses.map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${n}</option>`).join('')}</select></div><label class="matt-inbox-note">NOTATKA WEWNĘTRZNA<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label><button data-inbox-save>ZAPISZ STATUS I NOTATKĘ</button></article>`).join(''):'<div class="matt-center-empty">Brak zgłoszeń dla wybranych filtrów.</div>';
+      const visible=rows.filter(x=>(filter==='all'||x.status===filter)&&(category==='Wszystkie'||categoryOf(x.topic)===category)&&[x.id,x.twitch_nick,x.topic,x.message,x.reply_email,...Object.values(x.details||{})].join(' ').toLocaleLowerCase('pl').includes(query));
+      $('[data-inbox-count]',body).textContent=`${visible.length} ${visible.length===1?'zgłoszenie':'zgłoszeń'}`;
+      list.innerHTML=visible.length?visible.map(x=>{
+        const expanded=expandedId===String(x.id);
+        return `<article class="matt-inbox-compact-row ${expanded?'is-open':''}" data-inbox-id="${esc(x.id)}">
+          <button type="button" class="matt-inbox-compact-trigger" data-inbox-toggle aria-expanded="${expanded}">
+            <span class="matt-inbox-tag ${esc(x.status)}">${esc(labels[x.status]||x.status)}</span>
+            <span class="matt-inbox-compact-main"><strong>${esc(x.topic)}</strong><small>@${esc(x.twitch_nick)} · ${esc(categoryOf(x.topic))}</small></span>
+            <span class="matt-inbox-compact-date">${esc(fmt(x.created_at))}</span><span class="matt-inbox-compact-chevron">${expanded?'⌃':'⌄'}</span>
+          </button>
+          ${expanded?`<div class="matt-inbox-compact-detail">
+            <div class="matt-inbox-compact-meta">Numer: ${esc(String(x.id).slice(0,8).toUpperCase())} · ${esc(x.reply_email)} · ${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</div>
+            <div class="matt-inbox-compact-message">${esc(x.message)}</div>
+            ${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}
+            ${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small>${esc(fmt(x.resolved_at))} · automatyczne usunięcie po 30 dniach</small></div>`:''}
+            <div class="matt-inbox-compact-actions"><a href="mailto:${encodeURIComponent(x.reply_email)}?subject=${encodeURIComponent('MATT’S WORLD — '+x.topic)}">✉ Odpowiedz e-mailem</a><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>
+            <label class="matt-inbox-note">Notatka wewnętrzna<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label>
+            <button class="matt-inbox-compact-save" data-inbox-save>Zapisz status i notatkę</button>
+          </div>`:''}
+        </article>`;
+      }).join(''):'<div class="matt-center-empty">Brak zgłoszeń dla wybranych filtrów.</div>';
+      $$('[data-inbox-toggle]',list).forEach(btn=>btn.onclick=()=>{
+        const id=btn.closest('[data-inbox-id]').dataset.inboxId;
+        expandedId=expandedId===id?null:id;draw();
+      });
       $$('[data-inbox-save]',list).forEach(btn=>btn.onclick=async()=>{
-        const card=btn.closest('[data-inbox-id]'); const id=card.dataset.inboxId;
+        const card=btn.closest('[data-inbox-id]');const id=card.dataset.inboxId;
         const status=$('[data-inbox-status]',card).value;
-        if(['done','rejected'].includes(status) && !confirm(`Oznaczyć zgłoszenie jako ${labels[status]}? Po 30 dniach zostanie automatycznie usunięte.`))return;
+        if(['done','rejected'].includes(status)&&!confirm(`Oznaczyć zgłoszenie jako ${labels[status]}? Po 30 dniach zostanie automatycznie usunięte.`))return;
         btn.disabled=true;
         const {error}=await window.supabaseClient.rpc('matt_contact_update_submission',{
           p_id:id,p_status:status,p_admin_note:$('[data-inbox-note]',card).value
@@ -638,10 +678,10 @@
         toast('Zapisano zgłoszenie.');openCenter('inbox');
       });
     };
-    $('[data-inbox-search]',body).oninput=draw;
-    $$('[data-inbox-tab]',body).forEach(btn=>btn.onclick=()=>{activeFilter=btn.dataset.inboxTab;$$('[data-inbox-tab]',body).forEach(b=>{const selected=b===btn;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});draw();});
-    $('[data-inbox-all]',body).onclick=()=>{activeFilter='all';$$('[data-inbox-tab]',body).forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});draw();};
-    $('[data-inbox-refresh]',body).onclick=()=>openCenter('inbox');draw();
+    ['data-inbox-filter','data-inbox-category'].forEach(attr=>$(`[${attr}]`,body).onchange=()=>{expandedId=null;draw();});
+    $('[data-inbox-search]',body).oninput=()=>{expandedId=null;draw();};
+    $('[data-inbox-refresh]',body).onclick=()=>openCenter('inbox');
+    draw();
   }
 
   async function recentAudit(limit=30) {
