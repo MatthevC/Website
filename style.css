@@ -12433,7 +12433,7 @@ html.matt-route-loading #app {
 
 
 /* Jeden spójny układ pionowy — zastępuje konfliktujące poprawki */
-#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:6px!important;width:270px!important;max-width:calc(100vw - 12px)!important;padding:10px!important;align-items:stretch!important;justify-items:stretch!important;overflow-x:hidden!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:6px!important;width:270px!important;max-width:calc(100vw - 12px)!important;padding:10px!important;align-items:stretch!important;justify-items:stretch!important;overflow-x:hidden!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle,
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle,
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview,
@@ -12442,8 +12442,8 @@ html.matt-route-loading #app {
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle{grid-column:1!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle{grid-column:2!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview{grid-column:3!important}
-#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-preferences{grid-column:4!important}
-#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{grid-column:5!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-preferences{grid-column:3!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{grid-column:4!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-title{display:flex!important;grid-column:1/-1!important;grid-row:2!important;order:0!important;width:auto!important;min-width:0!important;padding:7px 4px!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-toggle):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-preferences):not(.cms-toolbar-orientation){grid-column:1/-1!important;grid-row:auto!important;order:0!important;width:100%!important;min-width:0!important;max-width:none!important;margin:0!important;white-space:normal!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button[hidden]{display:none!important}
