@@ -542,60 +542,64 @@
     } finally { inboxCheckPending = false; }
   }
 
-  const centerTabs = () => [
-    ['dashboard','PULPIT','cms.dashboard.view'],
-    ...(isStaff() ? [['inbox','WNIOSKI / KONTAKT',null]] : []),
-    ['search','SZUKAJ','cms.search'],
-    ['history','HISTORIA','cms.history.view'],
-    ['trash','KOSZ','cms.trash.view'],
-    ...(any('backups.view','github.restore') ? [['backups','BACKUPY',null]] : []),
-    ...((viewerIsAdmin() || has('lobby.conflicts.view')) ? [['lobby','MATT LOBBY',null]] : []),
-    ['alerts','ALERTY','cms.notifications.view'],
-    ['links','LINKI','cms.links.check'],
-    ['integrity','INTEGRALNOŚĆ','cms.integrity.check'],
-    ['stats','STATYSTYKI','statistics.view'],
-    ['maintenance','KONSERWACJA','site.maintenance.manage']
-  ].filter(([, ,p]) => has(p));
+  // Jedna główna nawigacja; mniej używane narzędzia mają podzakładki.
+  const centerGroups = () => [
+    ['dashboard','PULPIT',[['dashboard','Pulpit','cms.dashboard.view'],['stats','Statystyki','statistics.view']]],
+    ['inbox','WNIOSKI / KONTAKT',isStaff()?[['inbox','Wnioski',null]]:[]],
+    ['lobby','MATT LOBBY',[[ 'lobby','Konflikty',null]].filter(()=>viewerIsAdmin()||has('lobby.conflicts.view'))],
+    ['history','HISTORIA',[[ 'history','Dziennik zmian','cms.history.view'],['search','Wyszukiwarka','cms.search']]],
+    ['backups','BACKUPY',[[ 'backups','Kopie zapasowe',null],['trash','Kosz','cms.trash.view']].filter(([id,,perm])=>id==='backups'?any('backups.view','github.restore'):has(perm))],
+    ['security','BEZPIECZEŃSTWO',[[ 'alerts','Alerty','cms.notifications.view'],['integrity','Integralność','cms.integrity.check'],['maintenance','Konserwacja','site.maintenance.manage']]],
+    ['settings','USTAWIENIA',[[ 'links','Linki','cms.links.check']]]
+  ].map(([id,label,children])=>[id,label,children.filter(([, ,permission])=>permission === null || has(permission))]).filter(([, ,children])=>children.length);
+  const centerTabs = () => centerGroups().flatMap(([, ,children])=>children);
 
   async function openCenter(tab='dashboard') {
-    const tabs = centerTabs();
-    if (!tabs.length) return;
-    if (!tabs.some(x=>x[0]===tab)) tab=tabs[0][0];
+    const groups = centerGroups();
+    const available = groups.flatMap(g=>g[2]);
+    if (!available.length) return;
+    const group = groups.find(g=>g[0]===tab || g[2].some(c=>c[0]===tab));
+    if (!group) tab=available[0][0];
+    else if (group[0]===tab && !group[2].some(c=>c[0]===tab)) tab=group[2][0][0];
+    const currentGroup=groups.find(g=>g[2].some(c=>c[0]===tab));
     centerTab=tab;
-    const modal=ensureCenter();
-    modal.classList.add('active');
+    const modal=ensureCenter();modal.classList.add('active');
     const nav=$('[data-center-tabs]',modal);
-    nav.innerHTML=tabs.map(([id,label])=>`<button type="button" class="${id===tab?'active':''}" data-center-tab="${id}">${label}${id==='inbox'?` <span class="matt-inbox-notification" data-matt-inbox-badge ${!inboxCountReady||!inboxNewCount?'hidden':''}>${inboxNewCount>99?'99+':inboxNewCount}</span>`:''}${id==='alerts'&&alertCache.length?` <span>${alertCache.length}</span>`:''}</button>`).join('');
+    nav.innerHTML=groups.map(([id,label,children])=>`<button type="button" class="${currentGroup[0]===id?'active':''}" data-center-tab="${id}">${label}${id==='inbox'?` <span class="matt-inbox-notification" data-matt-inbox-badge ${!inboxCountReady||!inboxNewCount?'hidden':''}>${inboxNewCount>99?'99+':inboxNewCount}</span>`:''}</button>`).join('');
     $$('[data-center-tab]',nav).forEach(btn=>btn.onclick=()=>openCenter(btn.dataset.centerTab));
     refreshInboxBadge();
     const body=$('[data-center-body]',modal);
-    body.innerHTML='<div class="matt-center-loading">Ładowanie…</div>';
-    try {
-      if(tab==='dashboard') await renderDashboard(body);
-      if(tab==='inbox') await renderInbox(body);
-      if(tab==='search') await renderSearch(body);
-      if(tab==='history') await renderHistory(body);
-      if(tab==='trash') await renderTrash(body);
-      if(tab==='backups') renderCenterExternal(body,'backups');
-      if(tab==='lobby') renderCenterExternal(body,'lobby');
-      if(tab==='alerts') await renderAlerts(body);
-      if(tab==='links') await renderLinks(body);
-      if(tab==='integrity') await renderIntegrity(body);
-      if(tab==='stats') await renderStats(body);
-      if(tab==='maintenance') await renderMaintenance(body);
-    } catch (error) {
-      body.innerHTML=`<div class="matt-center-empty"><strong>Nie udało się wczytać narzędzia.</strong><p>${esc(error?.message || 'Nieznany błąd')}</p></div>`;
+    body.innerHTML='';
+    if(currentGroup[2].length>1){
+      const sub=document.createElement('nav');sub.className='matt-center-subtabs';sub.setAttribute('aria-label','Narzędzia sekcji');
+      sub.innerHTML=currentGroup[2].map(([id,label])=>`<button type="button" class="${id===tab?'active':''}" data-center-subtab="${id}">${label}</button>`).join('');
+      $$('[data-center-subtab]',sub).forEach(btn=>btn.onclick=()=>openCenter(btn.dataset.centerSubtab));
+      body.appendChild(sub);
     }
-  }
-
-  function renderCenterExternal(body,kind) {
-    const label=kind==='lobby'?'MATT LOBBY — KONFLIKTY':'BACKUPY I PRZYWRACANIE';
-    body.innerHTML=`<section class="matt-center-external"><div class="matt-center-external-icon">${kind==='lobby'?'🎮':'⛁'}</div><h3>${label}</h3><p>${kind==='lobby'?'Zarządzanie konfliktami i bezpieczeństwem wspólnych rozgrywek.':'Przegląd, tworzenie i przywracanie kopii bezpieczeństwa strony.'}</p><button type="button" data-open-external>OTWÓRZ NARZĘDZIE →</button></section>`;
-    $('[data-open-external]',body).onclick=()=>{
-      const btn=document.querySelector(`[data-cms-action="${kind}"]`);
-      if(!btn) return toast('Narzędzie jest niedostępne dla tego konta.','error');
-      btn.click();
-    };
+    const content=document.createElement('div');content.className='matt-center-content';content.innerHTML='<div class="matt-center-loading">Ładowanie…</div>';body.appendChild(content);
+    try {
+      if(tab==='dashboard') await renderDashboard(content);
+      else if(tab==='inbox') await renderInbox(content);
+      else if(tab==='search') await renderSearch(content);
+      else if(tab==='history') await renderHistory(content);
+      else if(tab==='trash') await renderTrash(content);
+      else if(tab==='backups') {
+        if(!window.MattAdminTools?.mountBackups) throw new Error('Moduł backupów nie jest jeszcze dostępny.');
+        await window.MattAdminTools.mountBackups(content);
+      }
+      else if(tab==='lobby') {
+        content.innerHTML='<div id="matt-lobby-panel">Sprawdzanie uprawnień…</div>';
+        if(!window.MattLobbyPanel?.mount) throw new Error('Moduł MATT Lobby nie jest dostępny.');
+        await window.MattLobbyPanel.mount();
+      }
+      else if(tab==='alerts') await renderAlerts(content);
+      else if(tab==='links') await renderLinks(content);
+      else if(tab==='integrity') await renderIntegrity(content);
+      else if(tab==='stats') await renderStats(content);
+      else if(tab==='maintenance') await renderMaintenance(content);
+    } catch (error) {
+      content.innerHTML=`<div class="matt-center-empty"><strong>Nie udało się wczytać narzędzia.</strong><p>${esc(error?.message || 'Nieznany błąd')}</p></div>`;
+    }
   }
 
   async function renderInbox(body) {

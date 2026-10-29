@@ -12056,3 +12056,19 @@ html.matt-route-loading #app {
 .matt-center-backdrop .matt-center-external{margin:clamp(25px,6vh,65px) auto}
 @media(max-width:1080px){.matt-center-backdrop .matt-center-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.matt-center-backdrop .matt-dashboard-columns{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:650px){.matt-center-backdrop .matt-center-body{padding:17px 14px}.matt-center-backdrop .matt-center-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.matt-dashboard-intro{align-items:flex-start;flex-direction:column}.matt-dashboard-live{display:none}.matt-center-backdrop .matt-dashboard-panel-head{padding:15px!important;gap:9px!important}.matt-center-backdrop .matt-dashboard-action{padding:8px 10px!important}.matt-center-backdrop .matt-dashboard-activity article{grid-template-columns:32px minmax(0,1fr)!important}.matt-center-backdrop .matt-dashboard-activity time{grid-column:2;text-align:left!important;max-width:none!important}.matt-center-backdrop .matt-dashboard-alerts article{flex-direction:column!important}}
+
+/* Centrum Moderacji 4.0 — zintegrowane narzędzia i uproszczona nawigacja */
+.matt-center-backdrop .matt-center-tabs{flex-wrap:wrap;overflow:visible;gap:7px;padding:12px 22px}
+.matt-center-backdrop .matt-center-tabs button{font-size:11px;letter-spacing:.02em}
+.matt-center-subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid #292d36}
+.matt-center-subtabs button{background:#181a21;border:1px solid #30333d;color:#b9beca;padding:10px 16px;border-radius:9px;font-weight:750;font-size:12px;cursor:pointer}
+.matt-center-subtabs button:hover{color:white;border-color:#626675}
+.matt-center-subtabs button.active{background:#32171c;border-color:#e62c3b;color:white}
+.matt-center-content{min-width:0;width:100%;padding-bottom:12px}
+.matt-center-content #matt-lobby-panel{width:100%;max-width:none;margin:0 auto}
+.matt-center-content .cms-manager-list{display:grid;gap:12px}
+.matt-center-content .cms-backup-item{min-width:0}
+.matt-center-content .cms-backup-topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.matt-center-content .cms-backup-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.matt-center-content :is(.cms-backup-tabs button,.cms-manager-item button,.cms-manager-actions button,.cms-github-quick){cursor:pointer}
+@media(max-width:700px){.matt-center-backdrop .matt-center-tabs{flex-wrap:nowrap;overflow-x:auto}.matt-center-subtabs{flex-wrap:nowrap;overflow-x:auto}.matt-center-content .cms-backup-item{flex-direction:column;align-items:stretch}}

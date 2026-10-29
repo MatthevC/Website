@@ -4455,7 +4455,10 @@
     draw();
   }
 
-  async function openBackupsManager() {
+  async function openBackupsManager(inlineHost = null) {
+    const inline = inlineHost instanceof HTMLElement;
+    const present = (title, html) => { if (inline) { if (inlineHost.isConnected) inlineHost.innerHTML = html; } else openModal(title, html); };
+    const backupBody = () => inline ? inlineHost : $('#cms-modal-body', modal);
     if (!any('backups.view','github.restore')) return;
     const canViewBackups = has('backups.view');
     let activeType = 'automatic';
@@ -4482,24 +4485,24 @@
 
     const draw = async () => {
       if (!canViewBackups) {
-        openModal('BACKUPY I PRZYWRACANIE', `
+        present('BACKUPY I PRZYWRACANIE', `
           <div class="cms-backup-github-only">
             ${has('github.restore') ? `<button class="cms-github-quick" type="button" data-github-restore-page title="Przywróć bieżącą podstronę do wersji z repozytorium">↶ PRZYWRÓĆ Z GITHUBA</button>` : ''}
           </div>
           <div class="cms-backup-note"><strong>WERSJA Z GITHUBA:</strong> przywraca bazową treść bieżącej podstrony z plików znajdujących się w repozytorium. Przed przywróceniem aktualny stan zostanie zabezpieczony przez system backupów.</div>
         `);
-        const body = $('#cms-modal-body', modal);
+        const body = backupBody();
         $('[data-github-restore-page]', body)?.addEventListener('click', () => resetCmsKey(`page:${currentRoute()}`, 'teksty na tej podstronie'));
         return;
       }
-      openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-backup-loading">Ładowanie kopii bezpieczeństwa…</div>`);
+      present('BACKUPY I PRZYWRACANIE', `<div class="cms-backup-loading">Ładowanie kopii bezpieczeństwa…</div>`);
       try {
         const backups = await window.MattCMS.listBackups();
         const automatic = backups.filter(b => b.backup_type !== 'manual');
         const manual = backups.filter(b => b.backup_type === 'manual');
         const current = activeType === 'manual' ? manual : automatic;
 
-        openModal('BACKUPY I PRZYWRACANIE', `
+        present('BACKUPY I PRZYWRACANIE', `
           <div class="cms-backup-topbar">
             <div class="cms-backup-tabs" role="tablist" aria-label="Rodzaj zapisów">
               <button type="button" class="${activeType === 'automatic' ? 'active' : ''}" data-backup-tab="automatic">Automatyczne zapisy <span>${automatic.length}</span></button>
@@ -4525,7 +4528,7 @@
           <div class="cms-manager-list">${current.length ? current.map(renderBackupItem).join('') : `<div class="cms-empty">${activeType === 'manual' ? 'Brak ręcznych zapisów.' : 'Brak automatycznych zapisów.'}</div>`}</div>
         `);
 
-        const body = $('#cms-modal-body', modal);
+        const body = backupBody();
         $$('[data-backup-tab]', body).forEach(btn => btn.addEventListener('click', async () => {
           activeType = ['automatic','manual'].includes(btn.dataset.backupTab) ? btn.dataset.backupTab : 'automatic';
           await draw();
@@ -4585,12 +4588,14 @@
           catch (e) { notify(`Nie udało się usunąć: ${e.message}`, 'error'); }
         }));
       } catch (error) {
-        openModal('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Sprawdź, czy backend Supabase ma aktywne funkcje i tabele odpowiedzialne za backupy.</div>`);
+        present('BACKUPY I PRZYWRACANIE', `<div class="cms-empty">Nie udało się odczytać backupów.<br><br><strong>${window.MattCMS.escape(error.message)}</strong><br><br>Sprawdź, czy backend Supabase ma aktywne funkcje i tabele odpowiedzialne za backupy.</div>`);
       }
     };
 
     await draw();
   }
+
+  window.MattAdminTools = Object.assign(window.MattAdminTools || {}, { mountBackups: host => openBackupsManager(host) });
 
   window.addEventListener('matt-auth-change', () => { if (!has('page.text.edit') && inlineEditing) cancelInlineEdit(); refreshToolbar(); });
   window.addEventListener('hashchange', () => { if (inlineEditing) finishInlineEdit(); setTimeout(refreshToolbar, 0); });
