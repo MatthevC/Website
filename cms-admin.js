@@ -1022,12 +1022,12 @@
     toolbar.innerHTML = `
       <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek. Dosuń do lewej lub prawej krawędzi, aby go przypiąć. Dwuklik przywraca położenie domyślne.">⠿</button>
       <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
-      <button type="button" class="cms-toolbar-mobile-preview" data-cms-action="mobile-preview" aria-label="Pokaż całą stronę w wersji mobilnej" title="Podgląd całej strony w wersji mobilnej">▯</button>
       <button type="button" class="cms-toolbar-preferences" data-cms-action="pins" aria-label="Dostosuj panel" title="Dostosuj panel">⚙</button>
       <button type="button" class="cms-toolbar-orientation" data-cms-action="toolbar-orientation" aria-label="Zmień pasek na pionowy" title="Zmień pasek na pionowy">↕</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
       <button type="button" data-cms-action="studio">▣ MATT STUDIO</button>
+      <button type="button" class="cms-toolbar-mobile-action" data-cms-action="mobile-preview" aria-label="Podgląd mobilny strony" title="Testuj stronę w widoku mobilnym">▯ PODGLĄD MOBILNY</button>
       <button type="button" data-cms-action="content" hidden>✎ TREŚĆ</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
       <button type="button" data-cms-action="images" hidden>▧ GRAFIKI</button>
