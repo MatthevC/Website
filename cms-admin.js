@@ -979,29 +979,101 @@
     applyToolbarState();
   }
 
+  // MATT STUDIO: wspólny punkt edycji treści i komunikatów.
+  // Zachowuje istniejące klucze CMS, uprawnienia i mechanizm zapisu do Supabase.
   function openContentManager() {
     if (!isAdmin()) return;
     const route = currentRoute();
-    const canModerationPeople = route === 'moderator/team' && has('moderation.people.manage');
-    if (!(any('page.text.edit','page.callouts.manage') || canModerationPeople)) return;
-    const isRewardsRoute = route === 'viewer/rewards';
-    const baseCalloutCount = window.MattCMS?.calloutInfo?.(route)?.length || 0;
-    const customCalloutCount = window.MattCMS?.customPageCallouts?.(route)?.length || 0;
-    const calloutCount = baseCalloutCount + customCalloutCount;
-    openModal('TREŚĆ', `<div class="cms-site-settings-grid">
-      ${has('page.text.edit')?'<button class="cms-site-setting-card" type="button" data-content-text><strong>✎ EDYTUJ TEKSTY</strong><span>Włącz bezpośrednią edycję napisów, nagłówków i opisów widocznych na bieżącej podstronie.</span></button>':''}
-      ${has('page.callouts.manage')?`<button class="cms-site-setting-card" type="button" data-content-callouts><strong>▰ KOMUNIKATY${calloutCount ? ` (${calloutCount})` : ''}</strong><span>Dodawaj, edytuj, usuwaj i konfiguruj komunikaty oraz dymki na bieżącej podstronie.</span></button>`:''}
-      ${isRewardsRoute?'<button class="cms-site-setting-card" type="button" data-content-rewards><strong>🎁 NAGRODY</strong><span>Dodawaj, edytuj i usuwaj nagrody widoczne dla widzów.</span></button>':''}
-      ${canModerationPeople?'<button class="cms-site-setting-card" type="button" data-content-moderators><strong>👥 OSOBY W MODERACJI</strong><span>Dodawaj, edytuj i usuwaj osoby widoczne na stronie Nasza moderacja.</span></button>':''}
-    </div>`);
-    const body = $('#cms-modal-body', modal);
-    $('[data-content-text]', body)?.addEventListener('click', () => {
-      closeModal();
-      setTimeout(startInlineEdit, 0);
-    });
-    $('[data-content-callouts]', body)?.addEventListener('click', openPageCalloutsManager);
-    $('[data-content-rewards]', body)?.addEventListener('click', openRewardsManager);
-    $('[data-content-moderators]', body)?.addEventListener('click', openModeratorsManager);
+    const canTexts = has('page.text.edit');
+    const canCallouts = has('page.callouts.manage');
+    const canModerators = route === 'moderator/team' && has('moderation.people.manage');
+    if (!(canTexts || canCallouts || canModerators)) return;
+    const esc = value => window.MattCMS.escape(String(value ?? ''));
+    const elements = canTexts ? (window.MattCMS?.decorateEditable(route) || []) : [];
+    const key = `page:${route}`;
+    const textData = Object.assign({}, window.MattCMS?.get(key, {}) || {});
+    let search = '';
+    let active = -1;
+    let dirty = false;
+    const plain = html => { const d=document.createElement('div'); d.innerHTML=window.MattCMS.sanitizeHtml(String(html||'')); return (d.textContent||'').trim(); };
+    const getHtml = (el) => Object.prototype.hasOwnProperty.call(textData, el.dataset.cmsTextId) ? textData[el.dataset.cmsTextId] : el.innerHTML;
+    const original = el => window.MattCMS.sanitizeHtml(window.MattCMS.baseHtml(el));
+    const current = el => window.MattCMS.sanitizeHtml(getHtml(el));
+    const saveText = async (el, value) => {
+      const id = el.dataset.cmsTextId;
+      const html = window.MattCMS.sanitizeHtml(value);
+      if (html === original(el)) delete textData[id]; else textData[id] = html;
+      try {
+        if (Object.keys(textData).length) await window.MattCMS.save(key, textData);
+        else if (window.MattCMS.get(key, null) != null) await window.MattCMS.remove(key);
+        el.innerHTML = html;
+        dirty = false;
+        notify('Tekst zapisany w Supabase.');
+        draw();
+      } catch (error) { notify(`Błąd zapisu: ${error.message}`, 'error'); }
+    };
+    const guard = () => !dirty || confirm('Masz niezapisane zmiany. Odrzucić je?');
+    const draw = () => {
+      active = -1; dirty = false;
+      const callouts = canCallouts ? (window.MattCMS?.calloutInfo?.(route)?.length || 0) + (window.MattCMS?.customPageCallouts?.(route)?.length || 0) : 0;
+      openModal('MATT STUDIO — EDYCJA TREŚCI', `<div class="matt-studio">
+        <div class="matt-studio-top"><div><small>EDYTOR PODSTRONY</small><strong>${esc(route.toUpperCase())}</strong><p>Wybierz element z listy, zmień treść i zapisz. Nie musisz edytować tekstów bezpośrednio na stronie.</p></div><span>${elements.length} pól tekstowych</span></div>
+        <div class="matt-studio-tabs">${canTexts?'<button class="is-active" data-studio-tab="texts">✎ TEKSTY</button>':''}${canCallouts?`<button data-studio-tab="callouts">▰ KOMUNIKATY (${callouts})</button>`:''}${route==='viewer/rewards'?'<button data-studio-tab="rewards">🎁 NAGRODY</button>':''}${canModerators?'<button data-studio-tab="moderators">👥 MODERACJA</button>':''}</div>
+        ${canTexts?`<div class="matt-studio-search"><input type="search" placeholder="Szukaj nagłówka, opisu lub fragmentu tekstu…" data-studio-search value="${esc(search)}"><span>Wybierz EDYTUJ przy wybranym elemencie</span></div><div class="matt-studio-list" data-studio-list></div>`:'<p>Wybierz zakładkę, aby edytować treść.</p>'}
+      </div>`);
+      const body=$('#cms-modal-body',modal);
+      const renderList = () => {
+        const list=$('[data-studio-list]',body); if(!list) return;
+        const matches=elements.map((el,i)=>({el,i,label:plain(getHtml(el))||'(pusty tekst)'})).filter(x=>!search || x.label.toLocaleLowerCase('pl').includes(search.toLocaleLowerCase('pl')));
+        list.innerHTML=matches.length?matches.map(({el,i,label})=>`<article class="matt-studio-item"><span class="matt-studio-index">${String(i+1).padStart(2,'0')}</span><div><small>${esc(el.tagName)} · ${Object.prototype.hasOwnProperty.call(textData,el.dataset.cmsTextId)?'ZMIENIONY':'Z GITHUBA'}</small><strong>${esc(label.slice(0,190))}${label.length>190?'…':''}</strong></div><button type="button" data-studio-edit="${i}">EDYTUJ</button></article>`).join(''):'<div class="cms-empty">Nie znaleziono pasujących tekstów.</div>';
+        $$('[data-studio-edit]',list).forEach(btn=>btn.addEventListener('click',()=>editText(Number(btn.dataset.studioEdit))));
+      };
+      $('[data-studio-search]',body)?.addEventListener('input',e=>{search=e.target.value;renderList();});
+      $$('[data-studio-tab]',body).forEach(btn=>btn.addEventListener('click',()=>{
+        if(btn.dataset.studioTab==='callouts') openPageCalloutsManager();
+        if(btn.dataset.studioTab==='moderators') openModeratorsManager();
+        if(btn.dataset.studioTab==='rewards') openRewardsManager();
+      }));
+      renderList();
+    };
+    const editText = index => {
+      const el=elements[index]; if(!el) return draw();
+      active=index; dirty=false;
+      const safe = current(el);
+      openModal('MATT STUDIO — EDYTUJ TEKST', `<div class="matt-studio matt-studio-edit">
+        <div class="matt-studio-top"><div><small>ELEMENT ${String(index+1).padStart(2,'0')} / ${elements.length} · ${esc(el.tagName)}</small><strong>${esc(plain(safe).slice(0,90)||'Nowy tekst')}</strong><p>Edytuj wizualnie jak w edytorze tekstu. Podgląd pokazuje wygląd przed zapisaniem.</p></div></div>
+        <div class="matt-studio-format" data-studio-toolbar>
+          <button type="button" data-cmd="bold" title="Pogrubienie"><b>B</b></button><button type="button" data-cmd="italic" title="Kursywa"><i>I</i></button><button type="button" data-cmd="underline" title="Podkreślenie"><u>U</u></button>
+          <button type="button" data-cmd="insertUnorderedList" title="Lista punktowana">☷ Lista</button><button type="button" data-cmd="insertOrderedList" title="Lista numerowana">1. Lista</button>
+          <button type="button" data-cmd="createLink" title="Dodaj link">🔗 Link</button><button type="button" data-cmd="unlink" title="Usuń link">Usuń link</button><button type="button" data-cmd="removeFormat" title="Wyczyść formatowanie">Wyczyść styl</button>
+        </div>
+        <div class="matt-studio-editable" data-studio-editor contenteditable="true" spellcheck="true" role="textbox" aria-multiline="true">${safe}</div>
+        <div class="matt-studio-preview"><small>PODGLĄD NA ŻYWO</small><div data-studio-preview></div></div>
+        <div class="matt-studio-actions"><button type="button" data-studio-back>← LISTA TEKSTÓW</button><button type="button" data-studio-original>↶ PRZYWRÓĆ Z GITHUBA</button><button type="button" class="cms-primary" data-studio-save>ZAPISZ ZMIANY</button></div>
+      </div>`);
+      const body=$('#cms-modal-body',modal);
+      const editor=$('[data-studio-editor]',body), preview=$('[data-studio-preview]',body);
+      const update=()=>{dirty=true;preview.innerHTML=window.MattCMS.sanitizeHtml(editor.innerHTML);};
+      preview.innerHTML=safe;
+      editor.addEventListener('input',update);
+      $$('[data-cmd]',body).forEach(btn=>{
+        btn.addEventListener('mousedown',e=>e.preventDefault());
+        btn.addEventListener('click',()=>{
+          editor.focus();
+          if(btn.dataset.cmd==='createLink'){
+            const url=prompt('Podaj adres linku (https://… lub #/ścieżka):','https://');
+            if(!url)return;
+            if(!/^https:\/\//i.test(url)&&!/^#\/[a-z0-9/_-]+$/i.test(url)){notify('Dozwolone są linki HTTPS lub wewnętrzne #/…','error');return;}
+            document.execCommand('createLink',false,url);
+          } else document.execCommand(btn.dataset.cmd,false,null);
+          update();
+        });
+      });
+      $('[data-studio-back]',body)?.addEventListener('click',()=>{if(guard())draw();});
+      $('[data-studio-original]',body)?.addEventListener('click',()=>{editor.innerHTML=original(el);update();});
+      $('[data-studio-save]',body)?.addEventListener('click',()=>saveText(el,editor.innerHTML));
+    };
+    draw();
   }
 
   function openRewardsManager(){
