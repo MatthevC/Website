@@ -12433,7 +12433,7 @@ html.matt-route-loading #app {
 
 
 /* Jeden spójny układ pionowy — zastępuje konfliktujące poprawki */
-#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:6px!important;width:270px!important;max-width:calc(100vw - 12px)!important;padding:10px!important;align-items:stretch!important;justify-items:stretch!important;overflow-x:hidden!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-flow:row!important;gap:6px!important;width:236px!important;max-width:calc(100vw - 12px)!important;padding:9px!important;align-items:stretch!important;justify-items:stretch!important;overflow-x:hidden!important}
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle,
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle,
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview,
