@@ -12469,3 +12469,30 @@ html.matt-route-loading #app {
   width:100%!important;min-width:0!important;height:40px!important;justify-self:stretch!important;
 }
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{grid-column:5!important;grid-row:1!important}
+
+/* MATT ADMIN — pionowy panel: pięć niezależnych kontrolek w pierwszym rzędzie */
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ grid-auto-flow:row!important;width:260px!important;max-width:calc(100vw - 12px)!important;
+ gap:6px!important;overflow-x:hidden!important;overflow-y:auto!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-drag-handle,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-toggle,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-mobile-preview,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-preferences,
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-orientation{
+ grid-row:1!important;width:100%!important;min-width:0!important;height:40px!important;
+ min-height:40px!important;padding:0!important;display:flex!important;align-items:center!important;
+ justify-content:center!important;box-sizing:border-box!important;order:0!important;font-size:19px!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-drag-handle{grid-column:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-toggle{grid-column:2!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-mobile-preview{grid-column:3!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-preferences{grid-column:4!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button.cms-toolbar-orientation{grid-column:5!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-title{
+ grid-column:1/-1!important;grid-row:2!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-toggle):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-preferences):not(.cms-toolbar-orientation){
+ grid-column:1/-1!important;grid-row:auto!important;width:100%!important;min-width:0!important;order:0!important;
+}
