@@ -12430,3 +12430,42 @@ html.matt-route-loading #app {
 .matt-inbox-compact-save{font-size:12px}
 @media(max-width:700px){.matt-inbox-compact-filters{grid-template-columns:1fr 1fr}.matt-inbox-compact-search{grid-column:1/-1}.matt-inbox-compact-trigger{grid-template-columns:80px minmax(0,1fr) 16px;gap:8px;padding:10px}.matt-inbox-compact-date{display:none}.matt-inbox-compact-hint{display:none}.matt-inbox-compact-head h3{font-size:18px}}
 @media(max-width:420px){.matt-inbox-compact-filters{grid-template-columns:1fr}.matt-inbox-compact-search{grid-column:auto}.matt-inbox-compact-trigger{grid-template-columns:75px minmax(0,1fr) 16px}}
+
+/* MATT ADMIN — uporządkowane kontrolki i osobne ustawienia (2026-10) */
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-drag-handle{order:-100!important}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-toggle{order:-99!important}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-mobile-preview{order:-98!important}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-orientation{order:-97!important}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-title{order:-96!important}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-preferences{
+  order:900!important;flex:0 0 42px!important;width:42px!important;min-width:42px!important;
+  height:42px!important;padding:0!important;display:inline-flex!important;
+  align-items:center!important;justify-content:center!important;font-size:21px!important;
+  line-height:1!important;border-radius:9px!important;white-space:nowrap!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle{grid-column:1!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle{grid-column:2!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview{grid-column:3!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{grid-column:4!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-preferences{
+  grid-column:1/-1!important;justify-self:end!important;width:42px!important;
+  min-width:42px!important;grid-row:auto!important;
+}
+
+/* MATT: ustawienia panelu tuż przy podglądzie mobilnym */
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-preferences{
+  order:-97!important; flex:0 0 42px!important;
+  width:42px!important;min-width:42px!important;height:42px!important;
+  padding:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-orientation{order:-96!important}
+#cms-admin-toolbar:not(.cms-collapsed)>.cms-toolbar-title{order:-95!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){grid-template-columns:repeat(5,minmax(0,1fr))!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle{grid-column:1!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle{grid-column:2!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview{grid-column:3!important;grid-row:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-preferences{
+  grid-column:4!important;grid-row:1!important;order:0!important;
+  width:100%!important;min-width:0!important;height:40px!important;justify-self:stretch!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{grid-column:5!important;grid-row:1!important}

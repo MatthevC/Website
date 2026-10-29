@@ -1021,9 +1021,10 @@
     toolbar.id = 'cms-admin-toolbar';
     toolbar.innerHTML = `
       <button type="button" class="cms-toolbar-drag-handle" aria-label="Przeciągnij pasek" title="Przeciągnij pasek. Dosuń do lewej lub prawej krawędzi, aby go przypiąć. Dwuklik przywraca położenie domyślne.">⠿</button>
-      <button type="button" class="cms-toolbar-orientation" data-cms-action="toolbar-orientation" aria-label="Zmień pasek na pionowy" title="Zmień pasek na pionowy">↕</button>
-      <button type="button" class="cms-toolbar-mobile-preview" data-cms-action="mobile-preview" aria-label="Pokaż całą stronę w wersji mobilnej" title="Podgląd całej strony w wersji mobilnej">▯</button>
       <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
+      <button type="button" class="cms-toolbar-mobile-preview" data-cms-action="mobile-preview" aria-label="Pokaż całą stronę w wersji mobilnej" title="Podgląd całej strony w wersji mobilnej">▯</button>
+      <button type="button" class="cms-toolbar-preferences" data-cms-action="pins" aria-label="Dostosuj panel" title="Dostosuj panel">⚙</button>
+      <button type="button" class="cms-toolbar-orientation" data-cms-action="toolbar-orientation" aria-label="Zmień pasek na pionowy" title="Zmień pasek na pionowy">↕</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
       <button type="button" data-cms-action="studio">▣ MATT STUDIO</button>
@@ -1034,7 +1035,6 @@
       <button type="button" data-cms-action="lobby" hidden>🎮 MATT LOBBY</button>
       <button type="button" data-cms-action="backups" hidden>⛁ BACKUPY</button>
       ${MATT_CENTER_SHORTCUTS.map(([id,label,,icon])=>`<button type="button" class="matt-center-shortcut" data-cms-action="center-${id}" title="Otwórz ${label} w Centrum Moderacji"><span class="matt-shortcut-icon" aria-hidden="true">${icon}</span><span class="matt-shortcut-label">${label.toUpperCase()}</span></button>`).join('')}
-      <button type="button" data-cms-action="pins">⚙ DOSTOSUJ PANEL</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
     document.body.appendChild(toolbar);
