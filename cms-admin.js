@@ -32,6 +32,86 @@
   const TOOLBAR_POSITION_OLD_KEY = 'matt_cms_toolbar_position_v2';
   const TOOLBAR_DOCK_SNAP = 34;
 
+  // Ustawienia paska są prywatne dla zalogowanego konta i tej przeglądarki.
+  const MATT_PINNABLE = ['layout','mobile-preview','toolbar-orientation'];
+  function mattToolbarUserKey() {
+    const profile=window.currentUserProfile || {};
+    const id=profile.id || profile.user_id || window.currentUser?.id || window.currentUser?.email || 'unknown';
+    return 'matt_toolbar_pins_v1_' + String(id);
+  }
+  function mattReadPins() {
+    try {
+      const saved=JSON.parse(localStorage.getItem(mattToolbarUserKey()) || 'null');
+      if(saved && Array.isArray(saved.order) && Array.isArray(saved.hidden)) return {
+        order:[...new Set([...saved.order.filter(x=>MATT_PINNABLE.includes(x)),...MATT_PINNABLE])],
+        hidden:saved.hidden.filter(x=>MATT_PINNABLE.includes(x))
+      };
+    } catch (_) {}
+    return {order:[...MATT_PINNABLE],hidden:[]};
+  }
+  function mattWritePins(state) {
+    try { localStorage.setItem(mattToolbarUserKey(),JSON.stringify(state)); } catch (_) {}
+  }
+  function mattApplyPins() {
+    if(!toolbar) return;
+    const state=mattReadPins();
+    for(const action of MATT_PINNABLE) {
+      const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
+      if(!button)continue;
+      button.classList.toggle('matt-user-unpinned',state.hidden.includes(action));
+    }
+    const studio=toolbar.querySelector('[data-cms-action="studio"]');
+    if(studio)for(const action of state.order){
+      const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
+      if(button)toolbar.insertBefore(button,studio);
+    }
+  }
+  function mattToolbarPreferences() {
+    if(!toolbar)return;
+    const state=mattReadPins();
+    const options=[['layout','Układ strony'],['mobile-preview','Podgląd mobilny'],['toolbar-orientation','Orientacja paska']];
+    const items=options.map(([key,label])=>`<div class="matt-pin-row" data-pin-row="${key}"><label><input type="checkbox" data-pin-check="${key}" ${state.hidden.includes(key)?'':'checked'}> <span>${label}</span></label><div class="matt-pin-move"><button type="button" data-pin-up="${key}" aria-label="Przesuń wyżej ${label}">↑</button><button type="button" data-pin-down="${key}" aria-label="Przesuń niżej ${label}">↓</button></div></div>`).join('');
+    openModal('DOSTOSUJ PANEL ADMINISTRACYJNY',`<div class="matt-pin-settings"><p>Wybierz, które dodatkowe narzędzia mają być przypięte do Twojego paska. Zmiany dotyczą wyłącznie Twojego konta w tej przeglądarce i nie zmieniają uprawnień.</p><div class="matt-pin-fixed"><strong>ZAWSZE PRZYPIĘTE</strong><span>✦ MATT STUDIO</span><span>⚙ Ustawienia strony</span><span>◎ Centrum Moderacji</span></div><strong class="matt-pin-caption">DODATKOWE NARZĘDZIA</strong><div class="matt-pin-list">${items}</div><div class="cms-form-actions"><button type="button" data-pin-reset>PRZYWRÓĆ DOMYŚLNE</button><button type="button" class="cms-primary" data-pin-save>ZAPISZ UKŁAD</button></div></div>`);
+    const body=$('#cms-modal-body',modal);
+    let order=[...state.order];
+    const list=$('.matt-pin-list',body);
+    function redraw(){order.forEach(k=>{const item=list.querySelector(`[data-pin-row="${k}"]`);if(item)list.appendChild(item);});}
+    $$('[data-pin-up],[data-pin-down]',body).forEach(button=>button.addEventListener('click',()=>{
+      const k=button.dataset.pinUp||button.dataset.pinDown;const index=order.indexOf(k);const target=index+(button.dataset.pinUp?-1:1);
+      if(index<0||target<0||target>=order.length)return;
+      [order[index],order[target]]=[order[target],order[index]];redraw();
+    }));
+    $('[data-pin-reset]',body).onclick=()=>{order=[...MATT_PINNABLE];$$('[data-pin-check]',body).forEach(x=>x.checked=true);redraw();};
+    $('[data-pin-save]',body).onclick=()=>{
+      mattWritePins({order,hidden:$$('[data-pin-check]',body).filter(x=>!x.checked).map(x=>x.dataset.pinCheck)});
+      closeModal();refreshToolbar();
+    };
+  }
+  function mattStudioHome() {
+    const route=currentRoute();
+    const canText=any('page.text.edit','page.callouts.manage')||(route==='moderator/team'&&has('moderation.people.manage'));
+    const canImages=has('page.images.manage')||(route==='home'&&has('home.hero.manage'));
+    const canTopics=route==='contact'&&has('contact.topics.manage');
+    const config=configForRoute(route);
+    const canRouteConfig=canConfig(config);
+    const cards=[
+      canText?['texts','✎','Treści i sekcje','Edytuj teksty, komunikaty i kreator sekcji.']:null,
+      canImages?['images','▧','Grafiki','Zarządzaj zdjęciami i dekoracjami strony.']:null,
+      canTopics?['topics','☷','Tematy formularza','Zarządzaj tematami formularza kontaktowego.']:null,
+      canRouteConfig&&!canTopics?['config','⚙','Konfigurator podstrony',config.label]:null
+    ].filter(Boolean);
+    openModal('MATT STUDIO',`<div class="matt-studio-hub"><div class="matt-studio-hub-head"><small>JEDNO MIEJSCE DO EDYCJI</small><h3>MATT STUDIO</h3><p>Wybierz obszar, którym chcesz zarządzać na bieżącej podstronie. Dostępne narzędzia zależą od Twoich uprawnień.</p></div><div class="matt-studio-hub-grid">${cards.map(([id,icon,title,desc])=>`<button type="button" class="matt-studio-hub-card" data-studio-open="${id}"><span class="matt-studio-hub-icon">${icon}</span><strong>${title}</strong><small>${desc}</small><span class="matt-studio-hub-arrow">OTWÓRZ →</span></button>`).join('')||'<p>Brak dostępnych narzędzi na tej podstronie.</p>'}</div></div>`);
+    const body=$('#cms-modal-body',modal);
+    $$('[data-studio-open]',body).forEach(button=>button.onclick=()=>{
+      const action=button.dataset.studioOpen;
+      if(action==='texts')openContentManager();
+      else if(action==='images')openPageImagesManager();
+      else if(action==='topics')openTopicsManager();
+      else if(action==='config')config?.action();
+    });
+  }
+
+
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const clone = value => JSON.parse(JSON.stringify(value));
@@ -909,17 +989,20 @@
       <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
-      <button type="button" data-cms-action="content">✎ TREŚĆ</button>
+      <button type="button" data-cms-action="studio">✦ MATT STUDIO</button>
+      <button type="button" data-cms-action="content" hidden>✎ TREŚĆ</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
-      <button type="button" data-cms-action="images">▧ GRAFIKI</button>
+      <button type="button" data-cms-action="images" hidden>▧ GRAFIKI</button>
       <button type="button" data-cms-action="site">⚙ USTAWIENIA STRONY</button>
       <button type="button" data-cms-action="lobby" hidden>🎮 MATT LOBBY</button>
-      <button type="button" data-cms-action="backups">⛁ BACKUPY</button>
+      <button type="button" data-cms-action="backups" hidden>⛁ BACKUPY</button>
+      <button type="button" data-cms-action="pins">⚙ DOSTOSUJ PANEL</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
     document.body.appendChild(toolbar);
     bindToolbarDrag();
     applyToolbarState();
+    mattApplyPins();
     toolbar.addEventListener('click', e => {
       const action = e.target.closest('[data-cms-action]')?.dataset.cmsAction;
       if (action === 'toggle-toolbar') { setToolbarCollapsed(!isToolbarCollapsed()); return; }
@@ -928,6 +1011,8 @@
         return;
       }
       if (action === 'mobile-preview') { openMobilePreview(); return; }
+      if (action === 'pins') { mattToolbarPreferences(); return; }
+      if (action === 'studio') { mattStudioHome(); return; }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
       if (action === 'content' && isAdmin()) openContentManager();
       if (action === 'save') saveInlineEdit();
@@ -955,6 +1040,7 @@
     const configBtn = $('[data-cms-action="config"]', toolbar);
     configBtn.hidden = !config || !canConfig(config) || inlineEditing || layoutEditing;
     if (config) configBtn.textContent = `⚙ ${config.label}`;
+    configBtn.hidden=true;
     const baseCalloutCount = window.MattCMS?.calloutInfo?.(currentRoute())?.length || 0;
     const customCalloutCount = window.MattCMS?.customPageCallouts?.(currentRoute())?.length || 0;
     const calloutCount = baseCalloutCount + customCalloutCount;
@@ -963,19 +1049,25 @@
       const canModerationPeople = currentRoute() === 'moderator/team' && has('moderation.people.manage');
       contentBtn.hidden = inlineEditing || layoutEditing || !(any('page.text.edit','page.callouts.manage') || canModerationPeople);
       contentBtn.textContent = `✎ TREŚĆ${has('page.callouts.manage') && calloutCount ? ` (${calloutCount})` : ''}`;
+      contentBtn.hidden=true;
     }
     const layoutBtn = $('[data-cms-action="layout"]', toolbar);
     if (layoutBtn) layoutBtn.hidden = inlineEditing || layoutEditing || !has('page.layout.manage');
     const imagesBtn = $('[data-cms-action="images"]', toolbar);
     if (imagesBtn) {
       const canGraphics = currentRoute() !== 'viewer/rewards' && (has('page.images.manage') || (currentRoute() === 'home' && has('home.hero.manage')));
-      imagesBtn.hidden = inlineEditing || layoutEditing || !canGraphics;
+      imagesBtn.hidden = true;
     }
     $('[data-cms-action="site"]', toolbar).hidden = inlineEditing || layoutEditing || !any('site.navigation.manage','site.links.manage');
     $('[data-cms-action="lobby"]', toolbar).hidden = inlineEditing || layoutEditing || !(window.currentUserRole === 'admin' || has('lobby.conflicts.view'));
-    $('[data-cms-action="backups"]', toolbar).hidden = inlineEditing || layoutEditing || !any('backups.view','github.restore');
+    $('[data-cms-action="backups"]', toolbar).hidden = true;
     $('[data-cms-action="save"]', toolbar).hidden = !inlineEditing;
     $('[data-cms-action="cancel"]', toolbar).hidden = !inlineEditing;
+    const studio=$('[data-cms-action="studio"]',toolbar);
+    if(studio)studio.hidden=inlineEditing||layoutEditing||!(any('page.text.edit','page.callouts.manage','page.images.manage','home.hero.manage','contact.topics.manage','moderation.people.manage')||canConfig(config));
+    const pinButton=$('[data-cms-action="pins"]',toolbar);
+    if(pinButton)pinButton.hidden=inlineEditing||layoutEditing;
+    mattApplyPins();
     applyToolbarState();
   }
 
