@@ -12320,3 +12320,72 @@ html.matt-route-loading #app {
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) .cms-toolbar-title{grid-column:1/-1}
 #cms-admin-toolbar .matt-center-shortcut[hidden],
 #cms-admin-toolbar .matt-center-shortcut.matt-user-unpinned{display:none!important}
+
+
+/* MATT toolbar V4 — kontrolki w tym samym miejscu i pionowy panel przy krawędzi */
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  width:240px;
+  box-sizing:border-box;
+  max-width:min(240px,calc(100vw - 12px));
+  overflow-x:hidden!important;
+  gap:7px;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle{
+  grid-column:1!important;grid-row:1!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{
+  grid-column:2!important;grid-row:1!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview{
+  grid-column:3!important;grid-row:1!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle{
+  grid-column:4!important;grid-row:1!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-title{
+  grid-column:1/-1!important;grid-row:2!important;order:0!important;
+  display:flex!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-orientation):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-toggle){
+  grid-column:1/-1!important;
+  min-width:0;
+  box-sizing:border-box;
+  width:100%!important;
+  justify-content:flex-start;
+  text-align:left;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed).cms-docked-right{
+  right:0!important;left:auto!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed).cms-docked-left{
+  left:0!important;right:auto!important;
+}
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed){
+  width:max-content;
+  max-width:calc(100vw - 16px)!important;
+  box-sizing:border-box;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  white-space:nowrap;
+  flex-wrap:nowrap!important;
+}
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed)>.cms-toolbar-drag-handle,
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed)>.cms-toolbar-orientation,
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed)>.cms-toolbar-mobile-preview,
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed)>.cms-toolbar-toggle{
+  flex:0 0 40px;
+  order:0;
+}
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed)>.cms-toolbar-title{
+  flex:0 0 auto;
+}
+@media(max-width:650px){
+  #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){
+    width:220px!important;
+    max-height:calc(100dvh - 16px);
+  }
+  #cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed){
+    max-width:calc(100vw - 12px)!important;
+  }
+}

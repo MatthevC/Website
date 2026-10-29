@@ -154,7 +154,21 @@
     try { localStorage.setItem(TOOLBAR_ORIENTATION_KEY, orientation); }
     catch (_) {}
     // Pionowy pasek ma zawsze być przyklejony do lewej lub prawej krawędzi.
-    if (orientation === 'vertical') ensureToolbarDocked();
+    if (orientation === 'vertical') {
+      // Zachowaj wybraną krawędź, ale nie dziedzicz położenia swobodnego,
+      // które potrafiło umieścić panel na środku strony.
+      const saved = getToolbarPosition();
+      const side = saved?.mode === 'dock-left' ? 'left' : 'right';
+      const top = Math.max(8, Math.min(window.innerHeight - 80,
+        Number.isFinite(saved?.top) ? saved.top : 90));
+      saveToolbarDock(side, top);
+    }
+    if (orientation === 'horizontal') {
+      const saved = getToolbarPosition();
+      if (saved?.mode === 'dock-right' || saved?.mode === 'dock-left') {
+        saveToolbarDock(saved.mode === 'dock-left' ? 'left' : 'right', saved.top);
+      }
+    }
     applyToolbarState();
   }
 
