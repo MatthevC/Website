@@ -545,7 +545,7 @@
   // Jedna główna nawigacja; mniej używane narzędzia mają podzakładki.
   const centerGroups = () => [
     ['dashboard','PULPIT',[['dashboard','Pulpit','cms.dashboard.view'],['stats','Statystyki','statistics.view']]],
-    ['inbox','WNIOSKI / KONTAKT',isStaff()?[['inbox','Wnioski',null]]:[]],
+    ['inbox','WNIOSKI / KONTAKT',isStaff() && (viewerIsAdmin() || has('cms.inbox.view'))?[['inbox','Wnioski',null]]:[]],
     ['lobby','MATT LOBBY',[[ 'lobby','Konflikty',null]].filter(()=>viewerIsAdmin()||has('lobby.conflicts.view'))],
     ['history','HISTORIA',[[ 'history','Dziennik zmian','cms.history.view'],['search','Wyszukiwarka','cms.search']]],
     ['backups','BACKUPY',[[ 'backups','Kopie zapasowe',null],['trash','Kosz','cms.trash.view']].filter(([id,,perm])=>id==='backups'?any('backups.view','github.restore'):has(perm))],
@@ -555,6 +555,7 @@
   const centerTabs = () => centerGroups().flatMap(([, ,children])=>children);
 
   async function openCenter(tab='dashboard') {
+    if (!viewerIsAdmin() && !any('cms.center.access','cms.dashboard.view','cms.history.view','cms.search','cms.notifications.view','cms.integrity.check','cms.links.check','cms.inbox.view','cms.trash.view','backups.view','lobby.conflicts.view','statistics.view','site.maintenance.manage')) return;
     const groups = centerGroups();
     const available = groups.flatMap(g=>g[2]);
     if (!available.length) return;
@@ -1102,7 +1103,7 @@
 
   function injectToolbar() {
     const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar)return;
-    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.dashboard.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','statistics.view','site.maintenance.manage'))) {
+    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.center.access','cms.dashboard.view','cms.inbox.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','cms.trash.view','backups.view','lobby.conflicts.view','statistics.view','site.maintenance.manage'))) {
       const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM MODERACJI';btn.addEventListener('click',()=>openCenter('dashboard'));
       const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
     }

@@ -3,6 +3,9 @@ const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 // Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Supabase,
 // aby były od razu dostępne w panelu Zarządzaj kontami bez dokładania plików wdrożeniowych do paczki strony.
 const MATT_EXTRA_PERMISSION_CATALOG = [
+  // Centrum Moderacji 4.1: dostęp do modułu oraz poszczególnych sekcji.
+  { permission:"cms.center.access", group_name:"CENTRUM MODERACJI", label:"Otwieranie Centrum Moderacji", description:"Pozwala otworzyć Centrum Moderacji. Dostęp do konkretnych zakładek wymaga osobnych uprawnień.", sort_order:590 },
+  { permission:"cms.inbox.view", group_name:"CENTRUM MODERACJI", label:"Wnioski i kontakt — przeglądanie", description:"Pozwala wyświetlić zakładkę Wnioski / Kontakt. Dostęp do danych zależy również od zasad bezpieczeństwa Supabase.", sort_order:591 },
   { permission:"events.schedule.manage", group_name:"EVENTY", label:"Terminy i status eventów", description:"Może zmieniać rozpoczęcie, zakończenie, publikację oraz status „w trakcie / zakończ teraz” w istniejących eventach. Do edycji istniejącego eventu potrzebuje też „Edycja eventów”.", sort_order:125 },
   { permission:"events.images.manage", group_name:"EVENTY", label:"Grafiki eventów", description:"Może zmieniać tryb jednej/dwóch grafik, pliki oraz dopasowanie grafik w istniejących eventach. Do edycji istniejącego eventu potrzebuje też „Edycja eventów”.", sort_order:126 },
   { permission:"discord.join.messages.manage", group_name:"DISCORD", label:"Wiadomości w podglądzie Discorda", description:"Może dodawać, edytować, usuwać i ustawiać kolejność wiadomości w makiecie czatu Discorda.", sort_order:325 },
@@ -36,19 +39,19 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
   { permission:"streamers.notes.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Notatki wewnętrzne streamerów", description:"Może dodawać notatki dla obsługi do wpisów polecanych streamerów. Używaj razem z „Zarządzanie streamerami”.", sort_order:433 },
   { permission:"streamers.bulk.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Masowe operacje na streamerach", description:"Może wykonywać operacje na wielu wpisach streamerów jednocześnie. Używaj razem z „Zarządzanie streamerami”.", sort_order:434 },
 
-  { permission:"cms.dashboard.view", group_name:"NARZĘDZIA MODERATORA", label:"Centrum moderatora", description:"Dostęp do panelu ostatnich zmian, szybkich podsumowań i narzędzi administracyjnych.", sort_order:610 },
-  { permission:"cms.search", group_name:"NARZĘDZIA MODERATORA", label:"Globalna wyszukiwarka CMS", description:"Może przeszukiwać eventy i treści zarządzane przez CMS z jednego miejsca.", sort_order:611 },
-  { permission:"cms.notifications.view", group_name:"NARZĘDZIA MODERATORA", label:"Centrum powiadomień", description:"Może przeglądać ostrzeżenia, szkice, zaplanowane publikacje i problemy wymagające uwagi.", sort_order:612 },
+  { permission:"cms.dashboard.view", group_name:"NARZĘDZIA MODERATORA", label:"Pulpit Centrum Moderacji", description:"Wyświetlanie pulpitu z aktywnością zespołu i podsumowaniami.", sort_order:610 },
+  { permission:"cms.search", group_name:"NARZĘDZIA MODERATORA", label:"Historia — wyszukiwarka", description:"Może przeszukiwać eventy i treści zarządzane przez CMS z jednego miejsca.", sort_order:611 },
+  { permission:"cms.notifications.view", group_name:"NARZĘDZIA MODERATORA", label:"Bezpieczeństwo — alerty", description:"Może przeglądać ostrzeżenia, szkice, zaplanowane publikacje i problemy wymagające uwagi.", sort_order:612 },
   { permission:"cms.history.view", group_name:"NARZĘDZIA MODERATORA", label:"Historia wersji treści", description:"Może przeglądać wersje treści zapisane w systemie backupów.", sort_order:613 },
   { permission:"cms.history.restore", group_name:"NARZĘDZIA MODERATORA", label:"Przywracanie pojedynczych sekcji", description:"Może przywracać wybraną sekcję CMS bez odtwarzania całego backupu.", sort_order:614 },
-  { permission:"cms.trash.view", group_name:"NARZĘDZIA MODERATORA", label:"Podgląd kosza", description:"Może przeglądać elementy przeniesione do kosza.", sort_order:615 },
+  { permission:"cms.trash.view", group_name:"NARZĘDZIA MODERATORA", label:"Backupy — podgląd kosza", description:"Może przeglądać elementy przeniesione do kosza.", sort_order:615 },
   { permission:"cms.trash.restore", group_name:"NARZĘDZIA MODERATORA", label:"Przywracanie z kosza", description:"Może przywracać eventy, pliki i elementy Discorda z kosza.", sort_order:616 },
   { permission:"cms.trash.delete", group_name:"NARZĘDZIA MODERATORA", label:"Trwałe usuwanie z kosza", description:"Może bezpowrotnie usuwać elementy znajdujące się w koszu.", sort_order:617 },
   { permission:"cms.preview.mode", group_name:"NARZĘDZIA MODERATORA", label:"Tryb podglądu strony", description:"Może ukryć narzędzia CMS i zobaczyć stronę w widoku zbliżonym do zwykłego użytkownika.", sort_order:618 },
-  { permission:"cms.links.check", group_name:"NARZĘDZIA MODERATORA", label:"Testowanie linków", description:"Może uruchamiać kontrolę linków, grafik i odnośników do Twitcha/Discorda.", sort_order:619 },
+  { permission:"cms.links.check", group_name:"NARZĘDZIA MODERATORA", label:"Ustawienia — sprawdzanie linków", description:"Może uruchamiać kontrolę linków, grafik i odnośników do Twitcha/Discorda.", sort_order:619 },
   { permission:"cms.editlocks.view", group_name:"NARZĘDZIA MODERATORA", label:"Ostrzeżenia o równoczesnej edycji", description:"Otrzymuje ostrzeżenie, gdy ten sam element jest edytowany przez inną osobę.", sort_order:620 },
   { permission:"cms.forms.autosave", group_name:"NARZĘDZIA MODERATORA", label:"Autozapis formularzy CMS", description:"Automatycznie zapisuje lokalny szkic podczas edycji i pozwala przywrócić niezapisane zmiany po zamknięciu lub odświeżeniu strony.", sort_order:620.5 },
-  { permission:"cms.integrity.check", group_name:"NARZĘDZIA MODERATORA", label:"Test integralności strony", description:"Może sprawdzać eventy, pliki, streamerów, Discord, nawigację i dane CMS pod kątem braków, duplikatów i niespójności.", sort_order:621 },
+  { permission:"cms.integrity.check", group_name:"NARZĘDZIA MODERATORA", label:"Bezpieczeństwo — integralność", description:"Może sprawdzać eventy, pliki, streamerów, Discord, nawigację i dane CMS pod kątem braków, duplikatów i niespójności.", sort_order:621 },
   { permission:"site.maintenance.manage", group_name:"STRONA I WYGLĄD", label:"Tryb konserwacji strony", description:"Może włączyć lub wyłączyć stronę dla odwiedzających i ustawić komunikat przerwy technicznej.", sort_order:525 },
   { permission:"statistics.view", group_name:"LOGI I BEZPIECZEŃSTWO", label:"Statystyki CMS", description:"Dostęp do statystyk administracyjnych: liczba treści, szkiców, backupów i działań. Bez śledzenia odwiedzających.", sort_order:825 },
   { permission:"accounts.preview_as", group_name:"KONTA I DOSTĘP", label:"Podgląd panelu jako moderator", description:"Może uruchomić bezpieczny podgląd interfejsu z uprawnieniami wybranego moderatora, bez przejmowania jego konta.", sort_order:725 },
@@ -73,7 +76,7 @@ const MATT_PERMISSION_GROUP_ORDER = [
   ["backups.", "BACKUPY I PRZYWRACANIE", 60],
   ["github.", "BACKUPY I PRZYWRACANIE", 60],
   ["accounts.", "KONTA I DOSTĘP", 70],
-  ["cms.", "NARZĘDZIA MODERATORA", 75],
+  ["cms.", "CENTRUM MODERACJI", 75],
   ["statistics.", "LOGI I BEZPIECZEŃSTWO", 80],
   ["audit.", "LOGI I BEZPIECZEŃSTWO", 80]
 ];
@@ -952,7 +955,8 @@ async function mattOpenAccountManager() {
     {name:"Discord", permissions:["discord.join.messages.manage","discord.join.members.manage","discord.channels.delete"], desc:"Moderacja serwera Discord"},
     {name:"Eventy", permissions:["events.create","events.edit","events.delete","events.schedule.manage","events.images.manage","events.publish"], desc:"Tworzenie i zarządzanie wydarzeniami"},
     {name:"Treści strony", permissions:["rules.delete","contact.topics.delete"], desc:"Zarządzanie materiałami i treścią"},
-    {name:"Społeczność", permissions:["moderation.people.delete","moderation.benefits.delete"], desc:"Obsługa użytkowników i zgłoszeń"},
+    {name:"Społeczność", permissions:["moderation.people.delete","moderation.benefits.delete"], desc:"Moderowanie społeczności"},
+    {name:"Centrum Moderacji", permissions:["cms.center.access","cms.dashboard.view","cms.inbox.view","cms.notifications.view"], desc:"Pulpit, wnioski i alerty; pozostałe sekcje przydzielisz w trybie zaawansowanym"},
     {name:"Pełna administracja", permissions:null, desc:"Pełny dostęp do wszystkich funkcji"}
   ];
 
