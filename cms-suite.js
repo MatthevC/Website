@@ -1028,13 +1028,68 @@
       ['recommended','Polecani streamerzy'],['viewer','Sekcje dla widza'],['vip','VIP'],['rules','Regulaminy'],
       ['moderator','Moderacja'],['contact','Kontakt']
     ];
-    body.innerHTML=`<div class="matt-center-note warning"><strong>TRYB KONSERWACJI</strong><p>Możesz wyłączyć całą publiczną stronę albo tylko wybrane sekcje. Administratorzy i moderatorzy nadal mają dostęp.</p></div><form class="matt-maintenance-form" data-maintenance-form>
-      <label class="matt-switch-row"><input type="checkbox" name="enabled" ${data.enabled?'checked':''}><span><strong>WYŁĄCZ CAŁĄ STRONĘ DLA ODWIEDZAJĄCYCH</strong><small>Ma pierwszeństwo przed ustawieniami pojedynczych sekcji.</small></span></label>
-      <div class="matt-maintenance-sections"><strong>WYŁĄCZ TYLKO WYBRANE SEKCJE</strong><div>${sections.map(([value,label])=>`<label><input type="checkbox" name="sections" value="${value}" ${selected.has(value)?'checked':''}><span>${label}</span></label>`).join('')}</div></div>
-      <label><span>Komunikat dla odwiedzających</span><textarea name="message" rows="5">${esc(data.message||'')}</textarea></label>
-      <button class="matt-primary" type="submit">ZAPISZ USTAWIENIA</button>
-    </form>`;
-    $('[data-maintenance-form]',body).onsubmit=async e=>{e.preventDefault();const f=e.currentTarget;const next={enabled:Boolean(f.elements.enabled.checked),sections:[...f.querySelectorAll('input[name="sections"]:checked')].map(x=>x.value),message:String(f.elements.message.value||'').trim()};await window.MattCMS.save(KEYS.maintenance,next);toast(next.enabled?'Tryb konserwacji całej strony został włączony.':next.sections.length?`Wyłączono ${next.sections.length} sekcji dla odwiedzających.`:'Tryb konserwacji został wyłączony.');if(typeof window.render==='function')await window.render();openCenter('maintenance');};
+    const currentMessage=String(data.message||'');
+    body.innerHTML=`<div class="matt-maintenance-panel">
+      <div class="matt-maintenance-hero">
+        <div><span class="matt-maintenance-eyebrow">USTAWIENIA DOSTĘPNOŚCI</span><h3>Tryb konserwacji</h3><p>Wybierz, które części witryny mają być niedostępne dla odwiedzających. Zmiany zaczną obowiązywać po zapisaniu.</p></div>
+        <span class="matt-maintenance-state" data-maintenance-state></span>
+      </div>
+      <form class="matt-maintenance-form" data-maintenance-form>
+        <section class="matt-maintenance-card">
+          <div class="matt-maintenance-card-head"><span class="matt-maintenance-step">01</span><div><h4>Dostęp do strony</h4><p>Cała witryna lub wybrane podstrony.</p></div></div>
+          <label class="matt-maintenance-master"><span class="matt-maintenance-master-copy"><strong>Wyłącz całą stronę dla odwiedzających</strong><small>Ustawienie nadrzędne — ma pierwszeństwo przed wybranymi sekcjami.</small></span><input type="checkbox" name="enabled" ${data.enabled?'checked':''}><span class="matt-maintenance-toggle" aria-hidden="true"></span></label>
+          <div class="matt-maintenance-sections">
+            <div class="matt-maintenance-section-head"><strong>Wyłącz tylko wybrane sekcje</strong><small>Możesz zaznaczyć kilka pozycji.</small></div>
+            <div class="matt-maintenance-section-grid">${sections.map(([value,label])=>`<label class="matt-maintenance-section-item"><input type="checkbox" name="sections" value="${value}" ${selected.has(value)?'checked':''}><span>${label}</span></label>`).join('')}</div>
+          </div>
+        </section>
+        <section class="matt-maintenance-card">
+          <div class="matt-maintenance-card-head"><span class="matt-maintenance-step">02</span><div><h4>Komunikat dla odwiedzających</h4><p>Ta wiadomość pojawi się na stronie niedostępnej podczas konserwacji.</p></div></div>
+          <label class="matt-maintenance-editor-label" for="matt-maintenance-message">Treść komunikatu</label>
+          <textarea id="matt-maintenance-message" name="message" rows="5" maxlength="2000" placeholder="Np. Trwają prace techniczne. Wróć za chwilę.">${esc(currentMessage)}</textarea>
+          <div class="matt-maintenance-editor-meta"><span>Krótki i jasny komunikat ułatwi odwiedzającym powrót.</span><span data-maintenance-counter>0 / 2000</span></div>
+          <div class="matt-maintenance-preview"><div class="matt-maintenance-preview-heading"><span class="matt-maintenance-preview-dot"></span><strong>Podgląd komunikatu</strong><small>Tak zobaczą go odwiedzający</small></div><div class="matt-maintenance-preview-content"><span>PRZERWA TECHNICZNA</span><p data-maintenance-preview-text></p></div></div>
+        </section>
+        <div class="matt-maintenance-actions"><span data-maintenance-save-note>Zmiany zostaną opublikowane po zapisaniu.</span><button class="matt-primary matt-maintenance-save" type="submit">ZAPISZ USTAWIENIA <span aria-hidden="true">→</span></button></div>
+      </form>
+    </div>`;
+    const form=$('[data-maintenance-form]',body);
+    const message=form.elements.message;
+    const updatePreview=()=>{
+      const value=String(message.value||'');
+      $('[data-maintenance-counter]',body).textContent=`${value.length} / 2000`;
+      $('[data-maintenance-preview-text]',body).textContent=value.trim()||'Tutaj pojawi się wpisany komunikat.';
+    };
+    const updateState=()=>{
+      const enabled=form.elements.enabled.checked;
+      const count=form.querySelectorAll('input[name="sections"]:checked').length;
+      const state=$('[data-maintenance-state]',body);
+      state.textContent=enabled?'● CAŁA STRONA WYŁĄCZONA':count?`● WYŁĄCZONE SEKCJE: ${count}`:'● STRONA AKTYWNA';
+      state.classList.toggle('is-disabled',enabled||count>0);
+      const grid=$('.matt-maintenance-sections',body);
+      grid.classList.toggle('is-overridden',enabled);
+      grid.setAttribute('aria-description',enabled?'Wyłączenie całej strony ma pierwszeństwo nad ustawieniami sekcji.':'');
+    };
+    message.addEventListener('input',updatePreview);
+    form.addEventListener('change',updateState);
+    updatePreview();updateState();
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      const f=e.currentTarget;
+      const next={enabled:Boolean(f.elements.enabled.checked),sections:[...f.querySelectorAll('input[name="sections"]:checked')].map(x=>x.value),message:String(f.elements.message.value||'').trim()};
+      const button=f.querySelector('button[type="submit"]');
+      button.disabled=true;button.textContent='ZAPISYWANIE…';
+      try{
+        await window.MattCMS.save(KEYS.maintenance,next);
+        toast(next.enabled?'Tryb konserwacji całej strony został włączony.':next.sections.length?`Wyłączono ${next.sections.length} sekcji dla odwiedzających.`:'Tryb konserwacji został wyłączony.');
+        if(typeof window.render==='function')await window.render();
+        openCenter('maintenance');
+      }catch(error){
+        console.error('Maintenance save error',error);
+        toast('Nie udało się zapisać ustawień. Spróbuj ponownie.','error');
+        button.disabled=false;button.innerHTML='ZAPISZ USTAWIENIA <span aria-hidden="true">→</span>';
+      }
+    };
   }
 
   function enableVisitorPreview() {
