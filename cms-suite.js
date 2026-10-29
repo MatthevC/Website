@@ -719,23 +719,28 @@
     const workflow=await getEventWorkflow(false);
     const drafts=events.filter(e=>String(workflow[String(e.id)]?.visibility||'public')==='draft').length;
     const scheduled=events.filter(e=>String(workflow[String(e.id)]?.visibility||'public')==='scheduled' && new Date(workflow[String(e.id)]?.publishAt||e.publish_date||0).getTime()>Date.now()).length;
-    body.innerHTML=`<div class="matt-center-kpis">
-      <div><small>EVENTY</small><strong>${events.length}</strong></div><div><small>SZKICE</small><strong>${drafts}</strong></div><div><small>ZAPLANOWANE</small><strong>${scheduled}</strong></div><div><small>ALERTY</small><strong>${canAlerts?alerts.length:'—'}</strong></div><div><small>KOSZ</small><strong>${canTrash?trash.length:'—'}</strong></div>
+    body.innerHTML=`<div class="matt-dashboard-intro"><div><span class="matt-dashboard-eyebrow">PULPIT · PRZEGLĄD</span><h3>Wszystko pod kontrolą</h3><p>Najważniejsze informacje o społeczności i ostatnich działaniach zespołu.</p></div><span class="matt-dashboard-live">● PANEL MODERACJI</span></div>
+    <div class="matt-center-kpis">
+      <article><span>EVENTY</span><strong>${events.length}</strong><small>Wszystkie wydarzenia</small></article>
+      <article><span>SZKICE</span><strong>${drafts}</strong><small>Nieopublikowane</small></article>
+      <article><span>ZAPLANOWANE</span><strong>${scheduled}</strong><small>Przyszłe publikacje</small></article>
+      <article><span>ALERTY</span><strong>${canAlerts?alerts.length:'—'}</strong><small>Do sprawdzenia</small></article>
+      <article><span>KOSZ</span><strong>${canTrash?trash.length:'—'}</strong><small>Elementy w koszu</small></article>
     </div>
-    <div class="matt-center-columns">
-      <section class="matt-center-card"><header><div><small>OSTATNIE ZMIANY</small><strong>Aktywność zespołu</strong></div>${has('audit.view')?'<button type="button" data-open-full-audit>PEŁNE LOGI</button>':''}</header>
-        <div class="matt-activity-list">${audit.length?audit.slice(0,10).map(row=>`<article><span>${esc((row.actor_username||row.actor_email||'SYSTEM').slice(0,2).toUpperCase())}</span><div><strong>${esc(auditLabel(row.action))}</strong><p>${esc(row.summary||row.entity_type||'')}</p></div><time>${esc(fmt(row.created_at))}</time></article>`).join(''):'<div class="matt-center-empty">Brak dostępnych zmian do wyświetlenia.</div>'}</div>
+    <div class="matt-center-columns matt-dashboard-columns">
+      <section class="matt-center-card matt-dashboard-panel"><header class="matt-dashboard-panel-head"><div><small>HISTORIA DZIAŁAŃ</small><h3>Aktywność zespołu</h3><p>Ostatnie zmiany na stronie</p></div>${has('audit.view')?'<button type="button" class="matt-dashboard-action" data-open-full-audit>Pełne logi <span aria-hidden="true">↗</span></button>':''}</header>
+        <div class="matt-activity-list matt-dashboard-activity">${audit.length?audit.slice(0,7).map(row=>`<article><span class="matt-dashboard-avatar">${esc((row.actor_username||row.actor_email||'SYSTEM').slice(0,2).toUpperCase())}</span><div><strong>${esc(auditLabel(row.action))}</strong><p>${esc(row.summary||row.entity_type||'')}</p></div><time>${esc(fmt(row.created_at))}</time></article>`).join(''):'<div class="matt-dashboard-empty">Nie ma jeszcze zmian do wyświetlenia.</div>'}</div>
       </section>
-      <section class="matt-center-card"><header><div><small>DO UWAGI</small><strong>Najważniejsze alerty</strong></div>${canAlerts?'<button type="button" data-open-alerts>WSZYSTKIE</button>':''}</header>
-        <div class="matt-alert-mini">${canAlerts?(alerts.length?alerts.slice(0,8).map(a=>`<article class="${esc(a.level)}"><span>${esc(a.kind)}</span><div><strong>${esc(a.title)}</strong><p>${esc(a.detail)}</p></div></article>`).join(''):'<div class="matt-center-empty">Brak problemów wymagających uwagi.</div>'):'<div class="matt-center-empty">Centrum powiadomień wymaga osobnego uprawnienia.</div>'}</div>
+      <section class="matt-center-card matt-dashboard-panel"><header class="matt-dashboard-panel-head"><div><small>POWIADOMIENIA</small><h3>Wymaga uwagi</h3><p>Stan strony i zgłoszone problemy</p></div>${canAlerts?'<button type="button" class="matt-dashboard-action" data-open-alerts>Wszystkie <span aria-hidden="true">↗</span></button>':''}</header>
+        <div class="matt-alert-mini matt-dashboard-alerts">${canAlerts?(alerts.length?alerts.slice(0,5).map(a=>`<article class="${esc(a.level)}"><span>${esc(a.kind)}</span><div><strong>${esc(a.title)}</strong><p>${esc(a.detail)}</p></div></article>`).join(''):'<div class="matt-dashboard-empty matt-dashboard-clear"><span class="matt-dashboard-check">✓</span><strong>Wszystko w porządku</strong><p>Brak problemów wymagających uwagi.</p></div>'):'<div class="matt-dashboard-empty">Nie masz uprawnień do przeglądania alertów.</div>'}</div>
       </section>
     </div>
-    <div class="matt-quick-actions">
-      ${has('cms.search')?'<button data-quick="search">⌕ GLOBALNE SZUKANIE</button>':''}
-      ${canTrash?'<button data-quick="trash">♲ KOSZ</button>':''}
-      ${has('cms.links.check')?'<button data-quick="links">↗ TEST LINKÓW</button>':''}
-      ${has('cms.integrity.check')?'<button data-quick="integrity">✓ TEST INTEGRALNOŚCI</button>':''}
-      ${has('cms.preview.mode')?'<button data-preview-mode>◉ PODGLĄD STRONY</button>':''}
+    <div class="matt-quick-actions matt-dashboard-quick">
+      ${has('cms.search')?'<button data-quick="search">⌕ &nbsp; Wyszukiwarka</button>':''}
+      ${canTrash?'<button data-quick="trash">♲ &nbsp; Kosz</button>':''}
+      ${has('cms.links.check')?'<button data-quick="links">↗ &nbsp; Sprawdź linki</button>':''}
+      ${has('cms.integrity.check')?'<button data-quick="integrity">✓ &nbsp; Integralność</button>':''}
+      ${has('cms.preview.mode')?'<button data-preview-mode>◉ &nbsp; Podgląd strony</button>':''}
     </div>`;
     $('[data-open-alerts]',body)?.addEventListener('click',()=>openCenter('alerts'));
     $('[data-open-full-audit]',body)?.addEventListener('click',()=>window.mattOpenAuditLogs?.());
