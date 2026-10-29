@@ -496,6 +496,7 @@
 
   const centerTabs = () => [
     ['dashboard','PULPIT','cms.dashboard.view'],
+    ...(isStaff() ? [['inbox','WNIOSKI / KONTAKT',null]] : []),
     ['search','SZUKAJ','cms.search'],
     ['history','HISTORIA','cms.history.view'],
     ['trash','KOSZ','cms.trash.view'],
@@ -520,6 +521,7 @@
     body.innerHTML='<div class="matt-center-loading">Ładowanie…</div>';
     try {
       if(tab==='dashboard') await renderDashboard(body);
+      if(tab==='inbox') await renderInbox(body);
       if(tab==='search') await renderSearch(body);
       if(tab==='history') await renderHistory(body);
       if(tab==='trash') await renderTrash(body);
@@ -531,6 +533,40 @@
     } catch (error) {
       body.innerHTML=`<div class="matt-center-empty"><strong>Nie udało się wczytać narzędzia.</strong><p>${esc(error?.message || 'Nieznany błąd')}</p></div>`;
     }
+  }
+
+  async function renderInbox(body) {
+    if(!isStaff()) {body.textContent='Brak dostępu.';return;}
+    const {data,error}=await window.supabaseClient.from('matt_contact_submissions')
+      .select('id,created_at,twitch_nick,reply_email,topic,message,details,status,admin_note,email_status,resolved_at,resolved_by')
+      .order('created_at',{ascending:false}).limit(1000);
+    if(error) throw error;
+    const rows=data||[];
+    const statuses=[['new','NOWE'],['progress','W TRAKCIE'],['done','UKOŃCZONE'],['rejected','ODRZUCONE']];
+    const counts=Object.fromEntries(statuses.map(([k])=>[k,rows.filter(x=>x.status===k).length]));
+    body.innerHTML=`<div class="matt-inbox-head"><div><small>CENTRUM ZGŁOSZEŃ · ADMINISTRACJA I MODERACJA</small><h3>WNIOSKI / KONTAKT</h3><p>Nowe i w trakcie pozostają bezterminowo. Ukończone i odrzucone są automatycznie usuwane po 30 dniach od rozstrzygnięcia.</p></div><button data-inbox-refresh>↻ ODŚWIEŻ</button></div><div class="matt-inbox-stats">${statuses.map(([k,n])=>`<span>${n}: <b>${counts[k]}</b></span>`).join('')}</div><div class="matt-inbox-controls"><input type="search" placeholder="Szukaj po nicku, temacie, treści…" data-inbox-search><select data-inbox-filter><option value="open">Nieukończone (nowe + w trakcie)</option>${statuses.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}<option value="all">Wszystkie</option></select></div><div data-inbox-list></div>`;
+    const list=$('[data-inbox-list]',body);
+    const labels=Object.fromEntries(statuses);
+    const draw=()=>{
+      const query=String($('[data-inbox-search]',body).value||'').toLocaleLowerCase('pl');
+      const filter=$('[data-inbox-filter]',body).value;
+      const visible=rows.filter(x=>(filter==='all'||(filter==='open'?['new','progress'].includes(x.status):x.status===filter))&&[x.twitch_nick,x.topic,x.message,x.reply_email].join(' ').toLocaleLowerCase('pl').includes(query));
+      list.innerHTML=visible.length?visible.map(x=>`<article class="matt-inbox-item" data-inbox-id="${esc(x.id)}"><div class="matt-inbox-item-top"><span class="matt-inbox-tag ${esc(x.status)}">${labels[x.status]||esc(x.status)}</span><small>${esc(fmt(x.created_at))}</small><span class="matt-inbox-mail ${x.email_status==='sent'?'sent':''}">${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</span></div><h4>${esc(x.topic)}</h4><div class="matt-inbox-meta"><strong>@${esc(x.twitch_nick)}</strong> · ${esc(x.reply_email)}</div><p>${esc(x.message)}</p>${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small> · ${esc(fmt(x.resolved_at))} · automatyczne usunięcie po 30 dniach</small></div>`:''}<div class="matt-inbox-actions"><a href="mailto:${encodeURIComponent(x.reply_email)}?subject=${encodeURIComponent('MATT’S WORLD — '+x.topic)}">ODPOWIEDZ E-MAILEM</a><select data-inbox-status>${statuses.map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${n}</option>`).join('')}</select></div><label class="matt-inbox-note">NOTATKA WEWNĘTRZNA<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label><button data-inbox-save>ZAPISZ STATUS I NOTATKĘ</button></article>`).join(''):'<div class="matt-center-empty">Brak zgłoszeń dla wybranych filtrów.</div>';
+      $$('[data-inbox-save]',list).forEach(btn=>btn.onclick=async()=>{
+        const card=btn.closest('[data-inbox-id]'); const id=card.dataset.inboxId;
+        const status=$('[data-inbox-status]',card).value;
+        if(['done','rejected'].includes(status) && !confirm(`Oznaczyć zgłoszenie jako ${labels[status]}? Po 30 dniach zostanie automatycznie usunięte.`))return;
+        btn.disabled=true;
+        const {error}=await window.supabaseClient.rpc('matt_contact_update_submission',{
+          p_id:id,p_status:status,p_admin_note:$('[data-inbox-note]',card).value
+        });
+        if(error){toast('Nie zapisano: '+error.message,'error');btn.disabled=false;return;}
+        toast('Zapisano zgłoszenie.');openCenter('inbox');
+      });
+    };
+    $('[data-inbox-search]',body).oninput=draw;
+    $('[data-inbox-filter]',body).onchange=draw;
+    $('[data-inbox-refresh]',body).onclick=()=>openCenter('inbox');draw();
   }
 
   async function recentAudit(limit=30) {
@@ -986,7 +1022,7 @@
 
   function injectToolbar() {
     const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar)return;
-    if(!toolbar.querySelector('[data-matt-suite-center]') && any('cms.dashboard.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','statistics.view','site.maintenance.manage')) {
+    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.dashboard.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','statistics.view','site.maintenance.manage'))) {
       const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM';btn.addEventListener('click',()=>openCenter('dashboard'));
       const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
     }

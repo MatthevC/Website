@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Oficjalna strona społeczności kanału Twitch. Regulaminy, komendy, VIP, moderacja, Discord i eventy.">
   <title>MatthevC — Centrum społeczności</title>
-  <link rel="stylesheet" href="style.css?v=103">
+  <link rel="stylesheet" href="style.css?v=104">
 </head>
 <body>
   <header class="site-header">
@@ -208,7 +208,7 @@
 <script src="cms.js?v=83"></script>
 <script src="studio-blocks.js?v=1"></script>
 <script src="rewards-supabase.js?v=5"></script>
-<script src="app.js?v=88"></script>
+<script src="app.js?v=104"></script>
 <script src="auth-ui.js?v=15"></script>
 <script src="lobby-panel.js?v=5"></script>
 <script>
@@ -218,7 +218,7 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=105','cms-suite.js?v=7'].forEach(function(src){
+    ['cms-admin.js?v=105','cms-suite.js?v=104'].forEach(function(src){
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;

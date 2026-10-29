@@ -2985,6 +2985,7 @@ function contactPage() {
             </select>
           </label>
 
+          <div id="matt-contact-details" class="matt-contact-details" aria-live="polite"></div>
           <label>
             <span>WIADOMOŚĆ <b>*</b></span>
             <textarea name="message" id="contact-message" maxlength="1000" required placeholder="Napisz swoją wiadomość..."></textarea>
@@ -3000,7 +3001,7 @@ function contactPage() {
           <div id="contact-status" class="form-status" role="status" aria-live="polite"></div>
         </form>
 
-        <div class="contact-note">Wiadomość zostanie wysłana na <strong>matthevc.twitch@gmail.com</strong>. Podany adres e-mail służy wyłącznie do odpowiedzi na Twoją wiadomość.</div>
+        <div class="contact-note">Zgłoszenie trafia do prywatnej skrzynki w Centrum Administratora i jest przesyłane na adres <strong>matthevc.twitch@gmail.com</strong>. Dane kontaktowe są widoczne wyłącznie dla administratora. Nie wpisuj haseł ani danych wrażliwych.</div>
       </div>
     </div>
   `;
@@ -4090,65 +4091,67 @@ async function setupDiscordJoinPage() {
 }
 
 function setupContactForm() {
-  const form = document.getElementById("contact-form");
-  if (!form || form.dataset.ready === "1") return;
-  form.dataset.ready = "1";
-
-  const topic = document.getElementById("contact-topic");
-  const message = document.getElementById("contact-message");
-  const counter = document.getElementById("message-counter");
-  const subject = document.getElementById("contact-subject");
-  const status = document.getElementById("contact-status");
-
-  const updateCounter = () => {
-    if (counter && message) counter.textContent = message.value.length;
+  const form = document.getElementById('contact-form');
+  if (!form || form.dataset.ready === '1') return;
+  form.dataset.ready = '1';
+  const topic = form.querySelector('#contact-topic');
+  const message = form.querySelector('#contact-message');
+  const counter = form.querySelector('#message-counter');
+  const status = form.querySelector('#contact-status');
+  const details = form.querySelector('#matt-contact-details');
+  const subject = form.querySelector('#contact-subject');
+  const rules = [
+    {test:/nie chc[eę] gra[cć]|konflikt/i, title:'ZGŁOSZENIE KONFLIKTU W GRZE', fields:[['other_player','Nick gracza, z którym nie chcesz grać','text'],['reason','Krótki powód (bez danych prywatnych)','textarea']], hint:'Zgłoszenie nie tworzy automatycznie konfliktu w MATT Lobby. Administrator rozpatrzy sprawę.'},
+    {test:/unban|bana/i, title:'ODWOŁANIE OD BANA', fields:[['platform','Gdzie otrzymałeś bana?','select:Twitch|Discord|Inne'],['ban_date','Przybliżona data bana','date']]},
+    {test:/skarga|zażalenie/i, title:'SKARGA / ZAŻALENIE', fields:[['person','Kogo lub czego dotyczy zgłoszenie?','text'],['incident_date','Data zdarzenia (opcjonalnie)','date']]},
+    {test:/wsp[oó]łprac|marketing/i, title:'PROPOZYCJA WSPÓŁPRACY', fields:[['organization','Marka / firma / kanał','text'],['link','Link do strony lub profilu (opcjonalnie)','url']]},
+    {test:/moderator|kandydatur/i, title:'KANDYDATURA NA MODERATORA', fields:[['experience','Doświadczenie i dostępność','textarea']]},
+    {test:/uprawnieni/i, title:'WNIOSEK O UPRAWNIENIA', fields:[['requested_role','Jakich uprawnień potrzebujesz?','text']]},
+    {test:/zmian|usprawnien/i, title:'POMYSŁ / USPRAWNIENIE', fields:[['area','Obszar propozycji','select:Strona WWW|Discord|Twitch|Eventy|MATT Lobby|Inny']]}
+  ];
+  const safe = value => String(value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const update = () => {
+    if(counter) counter.textContent = String(message?.value.length || 0);
+    if(subject) subject.value = `MATT'S WORLD — ${topic?.value || 'Kontakt'}`;
+    if(!details) return;
+    const rule = rules.find(x=>x.test.test(topic?.value || ''));
+    details.innerHTML = rule ? `<div class="matt-contact-section-title">${safe(rule.title)}</div><div class="matt-contact-extra-grid">${rule.fields.map(([name,label,type])=>`<label><span>${safe(label)}${type==='date'?'':' *'}</span>${type==='textarea'?`<textarea name="${name}" maxlength="1200" rows="3" required></textarea>`:type.startsWith('select:')?`<select name="${name}" required><option value="">Wybierz…</option>${type.slice(7).split('|').map(v=>`<option>${safe(v)}</option>`).join('')}</select>`:`<input name="${name}" type="${type}" maxlength="120" ${type==='date'?'':'required'}>`}</label>`).join('')}</div>${rule.hint?`<p class="matt-contact-hint">${safe(rule.hint)}</p>`:''}` : '';
   };
-
-  if (message) message.addEventListener("input", updateCounter);
-  if (topic) {
-    topic.addEventListener("change", () => {
-      if (subject) subject.value = `MATT'S WORLD — ${topic.value}`;
-    });
-  }
-  updateCounter();
-
-  form.addEventListener("submit", async (event) => {
+  topic?.addEventListener('change',update);
+  message?.addEventListener('input',()=>{if(counter)counter.textContent=message.value.length;});
+  update();
+  form.addEventListener('submit',async event=>{
     event.preventDefault();
-    if (!status) return;
-
-    status.className = "form-status";
-    status.textContent = "Wysyłanie wiadomości...";
-
-    const submit = form.querySelector("button[type=submit]");
-    if (submit) submit.disabled = true;
-
+    if(!status || !form.reportValidity()) return;
+    const submit=form.querySelector('[type=submit]');
+    const fd=new FormData(form);
+    const payload={
+      twitch_nick:String(fd.get('twitch_nick')||'').trim(),
+      reply_email:String(fd.get('reply_email')||'').trim(),
+      topic:String(fd.get('topic')||'').trim(),
+      message:String(fd.get('message')||'').trim(),
+      details:Object.fromEntries([...fd.entries()].filter(([key])=>['other_player','reason','platform','ban_date','person','incident_date','organization','link','experience','requested_role','area'].includes(key))),
+      honey:String(fd.get('_honey')||'')
+    };
+    status.className='form-status';status.textContent='Zapisywanie i wysyłanie zgłoszenia…';
+    if(submit)submit.disabled=true;
     try {
-      const response = await fetch("https://formsubmit.co/ajax/matthevc.twitch@gmail.com", {
-        method: "POST",
-        headers: { "Accept": "application/json" },
-        body: new FormData(form)
-      });
-
-      const text = await response.text();
-      let data = {};
-      try { data = JSON.parse(text); } catch (_) {}
-
-      if (!response.ok || data.success === false) {
-        throw new Error(data.message || `HTTP ${response.status}`);
+      const {data,error}=await window.supabaseClient.functions.invoke('matt-contact-submit',{body:payload});
+      if(error)throw error;
+      if(!data?.ok)throw new Error(data?.error || 'Nie udało się zapisać zgłoszenia.');
+      if(data.email_status==='sent') {
+        status.className='form-status success';
+        status.textContent=`Zgłoszenie #${data.reference} zapisane w Centrum i wysłane e-mailem. Dziękujemy!`;
+      } else {
+        status.className='form-status error';
+        status.textContent=`Zgłoszenie #${data.reference} zapisane w Centrum. E-mail nie został wysłany — administrator zobaczy zgłoszenie w panelu.`;
       }
-
-      form.reset();
-      if (counter) counter.textContent = "0";
-      if (subject) subject.value = "KONTAKT — MATT'S WORLD";
-      status.className = "form-status success";
-      status.textContent = "Wiadomość została wysłana. Dziękuję za kontakt!";
-    } catch (error) {
-      console.error("Formularz kontaktowy:", error);
-      status.className = "form-status error";
-      status.innerHTML = `Nie udało się wysłać wiadomości automatycznie. <a href="mailto:${SITE_CONFIG.contactEmail}" class="red-link">Kliknij tutaj, aby wysłać ją e-mailem →</a>`;
-    } finally {
-      if (submit) submit.disabled = false;
-    }
+      form.reset();update();
+    } catch(error) {
+      console.error('Kontakt:',error);
+      status.className='form-status error';
+      status.textContent='Nie udało się potwierdzić zapisu. Spróbuj ponownie później. Nie wysyłaj wielokrotnie tej samej wiadomości.';
+    } finally {if(submit)submit.disabled=false;}
   });
 }
 
