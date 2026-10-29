@@ -12496,3 +12496,42 @@ html.matt-route-loading #app {
 #cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-toggle):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-preferences):not(.cms-toolbar-orientation){
  grid-column:1/-1!important;grid-row:auto!important;width:100%!important;min-width:0!important;order:0!important;
 }
+
+
+/* 2026-10-29: niezawodny pionowy pasek — kontrolki zawsze widoczne */
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) {
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  width:260px!important; min-width:0!important;
+  padding:10px!important; gap:6px!important;
+  align-items:start!important; justify-items:stretch!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) > :is(
+ .cms-toolbar-drag-handle,.cms-toolbar-toggle,.cms-toolbar-mobile-preview,
+ .cms-toolbar-preferences,.cms-toolbar-orientation) {
+  display:flex!important;visibility:visible!important;opacity:1!important;
+  position:static!important;float:none!important;
+  min-width:0!important;width:100%!important;max-width:100%!important;
+  height:40px!important;min-height:40px!important;
+  margin:0!important;padding:0!important;
+  align-items:center!important;justify-content:center!important;
+  font-size:20px!important;line-height:1!important;
+  grid-row:1!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-drag-handle{grid-column:1!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-toggle{grid-column:2!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-mobile-preview{grid-column:3!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-preferences{grid-column:4!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-orientation{grid-column:5!important}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.cms-toolbar-title {
+  display:flex!important;grid-column:1/-1!important;grid-row:2!important;
+  order:0!important;min-width:0!important;width:auto!important;
+  padding:7px 3px!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button[data-cms-action]:not(
+ .cms-toolbar-toggle,.cms-toolbar-mobile-preview,.cms-toolbar-preferences,.cms-toolbar-orientation){
+ grid-column:1/-1!important;grid-row:auto!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ margin:0!important;order:0!important;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button[hidden]{display:none!important}
