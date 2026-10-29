@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Oficjalna strona społeczności kanału Twitch. Regulaminy, komendy, VIP, moderacja, Discord i eventy.">
   <title>MatthevC — Centrum społeczności</title>
-  <link rel="stylesheet" href="style.css?v=106">
+  <link rel="stylesheet" href="style.css?v=110-vertical-clean">
 <style>
 /* MATT KONTAKT 2.3 — licznik nowych wniosków */
 .matt-inbox-notification{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;margin-left:7px;border-radius:99px;background:#ed303a;color:#fff;font-size:11px;font-weight:900;line-height:1;box-shadow:0 0 0 2px #161013;vertical-align:middle}
@@ -224,7 +224,7 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=107','cms-suite.js?v=108'].forEach(function(src){
+    ['cms-admin.js?v=110-vertical-clean','cms-suite.js?v=108'].forEach(function(src){
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;
