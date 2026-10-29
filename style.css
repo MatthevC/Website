@@ -11955,3 +11955,16 @@ html.matt-route-loading #app {
 .matt-inbox-resolution{margin:12px 0;padding:12px;border-radius:8px;border:1px solid #3b5947;background:#18251e;color:#b4e8c2}
 .matt-inbox-item:has(.matt-inbox-tag.rejected) .matt-inbox-resolution{background:#2a191b;border-color:#66343b;color:#ffb9bf}
 .matt-inbox-resolution small{display:block;color:#aaa;margin-top:5px}
+
+/* MATT Kontakt 2.2 — czytelne pola tematyczne */
+.contact-form .matt-contact-details{padding:20px 22px;border:1px solid #653038;border-radius:12px;background:linear-gradient(135deg,#211316,#171215);min-width:0}
+.contact-form .matt-contact-details:empty{display:none}
+.contact-form .matt-contact-extra-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.contact-form .matt-contact-extra-grid label{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;min-width:0}
+.contact-form .matt-contact-extra-grid input,.contact-form .matt-contact-extra-grid select,.contact-form .matt-contact-extra-grid textarea{width:100%;min-width:0;box-sizing:border-box;min-height:50px;background:#101012;border:1px solid #484044;border-radius:8px;padding:13px 15px;color:#f6f6f6;font:500 14px "Space Grotesk",sans-serif}
+.contact-form .matt-contact-extra-grid textarea{min-height:100px}
+.contact-form .matt-contact-extra-grid label>span{font-size:13px;line-height:1.45;letter-spacing:.3px;color:#eee}
+.contact-form .matt-contact-section-title{margin:0 0 16px;font-size:16px;line-height:1.4}
+.contact-form .matt-contact-hint{margin:14px 0 0;line-height:1.6}
+.contact-form input:invalid:not(:placeholder-shown),.contact-form textarea:invalid:not(:placeholder-shown){border-color:#784047}
+@media(max-width:650px){.contact-form .matt-contact-details{padding:16px}.contact-form .matt-contact-extra-grid{grid-template-columns:minmax(0,1fr)}}

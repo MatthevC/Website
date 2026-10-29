@@ -2988,7 +2988,7 @@ function contactPage() {
           <div id="matt-contact-details" class="matt-contact-details" aria-live="polite"></div>
           <label>
             <span>WIADOMOŚĆ <b>*</b></span>
-            <textarea name="message" id="contact-message" maxlength="1000" required placeholder="Napisz swoją wiadomość..."></textarea>
+            <textarea name="message" id="contact-message" minlength="5" maxlength="1000" required placeholder="Opisz sprawę (minimum 5 znaków)..."></textarea>
             <small class="char-counter"><span id="message-counter">0</span>/1000</small>
           </label>
 
@@ -4101,11 +4101,11 @@ function setupContactForm() {
   const details = form.querySelector('#matt-contact-details');
   const subject = form.querySelector('#contact-subject');
   const rules = [
-    {test:/nie chc[eę] gra[cć]|konflikt/i, title:'ZGŁOSZENIE KONFLIKTU W GRZE', fields:[['other_player','Nick gracza, z którym nie chcesz grać','text'],['reason','Krótki powód (bez danych prywatnych)','textarea']], hint:'Zgłoszenie nie tworzy automatycznie konfliktu w MATT Lobby. Administrator rozpatrzy sprawę.'},
+    {test:/nie chc[eę] gra[cć]|konflikt/i, title:'ZGŁOSZENIE KONFLIKTU W GRZE', fields:[['other_player','Nick gracza, z którym nie chcesz grać','text']], hint:'Zgłoszenie nie tworzy automatycznie konfliktu w MATT Lobby. Administrator rozpatrzy sprawę.'},
     {test:/unban|bana/i, title:'ODWOŁANIE OD BANA', fields:[['platform','Gdzie otrzymałeś bana?','select:Twitch|Discord|Inne'],['ban_date','Przybliżona data bana','date']]},
     {test:/skarga|zażalenie/i, title:'SKARGA / ZAŻALENIE', fields:[['person','Kogo lub czego dotyczy zgłoszenie?','text'],['incident_date','Data zdarzenia (opcjonalnie)','date']]},
     {test:/wsp[oó]łprac|marketing/i, title:'PROPOZYCJA WSPÓŁPRACY', fields:[['organization','Marka / firma / kanał','text'],['link','Link do strony lub profilu (opcjonalnie)','url']]},
-    {test:/moderator|kandydatur/i, title:'KANDYDATURA NA MODERATORA', fields:[['experience','Doświadczenie i dostępność','textarea']]},
+    {test:/moderator|kandydatur/i, title:'KANDYDATURA NA MODERATORA', fields:[]},
     {test:/uprawnieni/i, title:'WNIOSEK O UPRAWNIENIA', fields:[['requested_role','Jakich uprawnień potrzebujesz?','text']]},
     {test:/zmian|usprawnien/i, title:'POMYSŁ / USPRAWNIENIE', fields:[['area','Obszar propozycji','select:Strona WWW|Discord|Twitch|Eventy|MATT Lobby|Inny']]}
   ];
@@ -4115,7 +4115,7 @@ function setupContactForm() {
     if(subject) subject.value = `MATT'S WORLD — ${topic?.value || 'Kontakt'}`;
     if(!details) return;
     const rule = rules.find(x=>x.test.test(topic?.value || ''));
-    details.innerHTML = rule ? `<div class="matt-contact-section-title">${safe(rule.title)}</div><div class="matt-contact-extra-grid">${rule.fields.map(([name,label,type])=>`<label><span>${safe(label)}${type==='date'?'':' *'}</span>${type==='textarea'?`<textarea name="${name}" maxlength="1200" rows="3" required></textarea>`:type.startsWith('select:')?`<select name="${name}" required><option value="">Wybierz…</option>${type.slice(7).split('|').map(v=>`<option>${safe(v)}</option>`).join('')}</select>`:`<input name="${name}" type="${type}" maxlength="120" ${type==='date'?'':'required'}>`}</label>`).join('')}</div>${rule.hint?`<p class="matt-contact-hint">${safe(rule.hint)}</p>`:''}` : '';
+    details.innerHTML = rule && rule.fields.length ? `<div class="matt-contact-section-title">${safe(rule.title)}</div><div class="matt-contact-extra-grid">${rule.fields.map(([name,label,type])=>`<label><span>${safe(label)}${type==='date'?'':' *'}</span>${type==='textarea'?`<textarea name="${name}" maxlength="1200" rows="3" required></textarea>`:type.startsWith('select:')?`<select name="${name}" required><option value="">Wybierz…</option>${type.slice(7).split('|').map(v=>`<option>${safe(v)}</option>`).join('')}</select>`:`<input name="${name}" type="${type}" maxlength="120" ${type==='date'?'':'required'}>`}</label>`).join('')}</div>${rule.hint?`<p class="matt-contact-hint">${safe(rule.hint)}</p>`:''}` : '';
   };
   topic?.addEventListener('change',update);
   message?.addEventListener('input',()=>{if(counter)counter.textContent=message.value.length;});
@@ -4133,11 +4133,17 @@ function setupContactForm() {
       details:Object.fromEntries([...fd.entries()].filter(([key])=>['other_player','reason','platform','ban_date','person','incident_date','organization','link','experience','requested_role','area'].includes(key))),
       honey:String(fd.get('_honey')||'')
     };
+    if(payload.message.length<5){status.className='form-status error';status.textContent='Wiadomość musi mieć co najmniej 5 znaków.';message?.focus();return;}
     status.className='form-status';status.textContent='Zapisywanie i wysyłanie zgłoszenia…';
     if(submit)submit.disabled=true;
     try {
       const {data,error}=await window.supabaseClient.functions.invoke('matt-contact-submit',{body:payload});
-      if(error)throw error;
+      if(error){
+        let explanation='';
+        try { const response=error.context; if(response && typeof response.clone==='function'){const body=await response.clone().json();explanation=String(body?.error||'');} } catch(_){}
+        if(explanation)throw new Error(explanation);
+        throw error;
+      }
       if(!data?.ok)throw new Error(data?.error || 'Nie udało się zapisać zgłoszenia.');
       if(data.email_status==='sent') {
         status.className='form-status success';
@@ -4150,7 +4156,8 @@ function setupContactForm() {
     } catch(error) {
       console.error('Kontakt:',error);
       status.className='form-status error';
-      status.textContent='Nie udało się potwierdzić zapisu. Spróbuj ponownie później. Nie wysyłaj wielokrotnie tej samej wiadomości.';
+      const msg=String(error?.message||'');
+      status.textContent=/Uzupełnij wymagane pola/i.test(msg)?'Sprawdź wymagane pola: nick (min. 2 znaki), poprawny e-mail, temat i wiadomość (min. 5 znaków).':/Zbyt wiele zgłoszeń/i.test(msg)?'Zbyt wiele zgłoszeń. Odczekaj 15 minut i spróbuj ponownie.':`Nie udało się potwierdzić zapisu. ${msg && !/FunctionsHttpError|non-2xx|Failed to fetch/i.test(msg)?msg+' ':' '}Nie wysyłaj wielokrotnie tej samej wiadomości.`;
     } finally {if(submit)submit.disabled=false;}
   });
 }
