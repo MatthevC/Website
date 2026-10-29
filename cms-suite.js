@@ -494,6 +494,54 @@
     return centerModal;
   }
 
+  // Licznik aktywnych NOWYCH zgłoszeń (bez oznaczania ich jako przeczytane).
+  let inboxNewCount = 0;
+  let inboxCountReady = false;
+  let inboxCheckPending = false;
+  function paintInboxBadges() {
+    const label = inboxNewCount > 99 ? '99+' : String(inboxNewCount);
+    document.querySelectorAll('[data-matt-inbox-badge]').forEach(badge => {
+      badge.textContent = label;
+      badge.hidden = !isStaff() || !inboxCountReady || inboxNewCount === 0;
+    });
+    const toolbar = document.querySelector('[data-matt-suite-center]');
+    if (toolbar) {
+      let badge = toolbar.querySelector('[data-matt-inbox-badge]');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'matt-inbox-notification';
+        badge.dataset.mattInboxBadge = '1';
+        badge.setAttribute('aria-label', 'Nowe wnioski');
+        toolbar.appendChild(badge);
+      }
+      badge.textContent = label;
+      badge.hidden = !isStaff() || !inboxCountReady || inboxNewCount === 0;
+      toolbar.title = inboxNewCount ? `${inboxNewCount} nowych wniosków — otwórz Centrum` : 'Otwórz Centrum';
+    }
+  }
+  async function refreshInboxBadge() {
+    if (inboxCheckPending) return;
+    if (!isStaff() || !window.supabaseClient) {
+      inboxCountReady = false;
+      inboxNewCount = 0;
+      paintInboxBadges();
+      return;
+    }
+    inboxCheckPending = true;
+    try {
+      const {count,error} = await window.supabaseClient
+        .from('matt_contact_submissions')
+        .select('id', {count:'exact',head:true})
+        .eq('status','new');
+      if (error) throw error;
+      inboxNewCount = count || 0;
+      inboxCountReady = true;
+      paintInboxBadges();
+    } catch (_) {
+      // Przy chwilowym braku sieci zachowaj ostatni znany licznik.
+    } finally { inboxCheckPending = false; }
+  }
+
   const centerTabs = () => [
     ['dashboard','PULPIT','cms.dashboard.view'],
     ...(isStaff() ? [['inbox','WNIOSKI / KONTAKT',null]] : []),
@@ -515,8 +563,9 @@
     const modal=ensureCenter();
     modal.classList.add('active');
     const nav=$('[data-center-tabs]',modal);
-    nav.innerHTML=tabs.map(([id,label])=>`<button type="button" class="${id===tab?'active':''}" data-center-tab="${id}">${label}${id==='alerts'&&alertCache.length?` <span>${alertCache.length}</span>`:''}</button>`).join('');
+    nav.innerHTML=tabs.map(([id,label])=>`<button type="button" class="${id===tab?'active':''}" data-center-tab="${id}">${label}${id==='inbox'?` <span class="matt-inbox-notification" data-matt-inbox-badge ${!inboxCountReady||!inboxNewCount?'hidden':''}>${inboxNewCount>99?'99+':inboxNewCount}</span>`:''}${id==='alerts'&&alertCache.length?` <span>${alertCache.length}</span>`:''}</button>`).join('');
     $$('[data-center-tab]',nav).forEach(btn=>btn.onclick=()=>openCenter(btn.dataset.centerTab));
+    refreshInboxBadge();
     const body=$('[data-center-body]',modal);
     body.innerHTML='<div class="matt-center-loading">Ładowanie…</div>';
     try {
@@ -542,6 +591,7 @@
       .order('created_at',{ascending:false}).limit(1000);
     if(error) throw error;
     const rows=data||[];
+    inboxNewCount=rows.filter(x=>x.status==='new').length;inboxCountReady=true;paintInboxBadges();
     const statuses=[['new','NOWE'],['progress','W TRAKCIE'],['done','UKOŃCZONE'],['rejected','ODRZUCONE']];
     const counts=Object.fromEntries(statuses.map(([k])=>[k,rows.filter(x=>x.status===k).length]));
     body.innerHTML=`<div class="matt-inbox-head"><div><small>CENTRUM ZGŁOSZEŃ · ADMINISTRACJA I MODERACJA</small><h3>WNIOSKI / KONTAKT</h3><p>Nowe i w trakcie pozostają bezterminowo. Ukończone i odrzucone są automatycznie usuwane po 30 dniach od rozstrzygnięcia.</p></div><button data-inbox-refresh>↻ ODŚWIEŻ</button></div><div class="matt-inbox-stats">${statuses.map(([k,n])=>`<span>${n}: <b>${counts[k]}</b></span>`).join('')}</div><div class="matt-inbox-controls"><input type="search" placeholder="Szukaj po nicku, temacie, treści…" data-inbox-search><select data-inbox-filter><option value="open">Nieukończone (nowe + w trakcie)</option>${statuses.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}<option value="all">Wszystkie</option></select></div><div data-inbox-list></div>`;
@@ -846,6 +896,7 @@
     const alerts=await buildAlerts();
     body.innerHTML=`<div class="matt-center-note"><strong>CENTRUM POWIADOMIEŃ</strong><p>Alerty są wyliczane na podstawie bieżących danych strony. Nie wymagają dodatkowej tabeli w Supabase.</p></div><div class="matt-alert-list">${alerts.length?alerts.map(a=>`<article class="${esc(a.level)}"><span>${esc(a.kind)}</span><div><strong>${esc(a.title)}</strong><p>${esc(a.detail)}</p></div></article>`).join(''):'<div class="matt-center-empty"><strong>Wszystko wygląda dobrze.</strong><p>Brak aktywnych ostrzeżeń.</p></div>'}</div>`;
     updateToolbarAlertBadge();
+    paintInboxBadges();
   }
 
   async function collectLinks() {
@@ -1121,6 +1172,10 @@
       if(!applyModeratorPreviewFromStorage())enhanceDom();
     },50));
     window.addEventListener('hashchange',()=>setTimeout(enhanceDom,50));
+    window.setInterval(refreshInboxBadge, 30000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshInboxBadge();});
+    window.addEventListener('matt-auth-change',()=>setTimeout(refreshInboxBadge,500));
+    window.setTimeout(refreshInboxBadge,1500);
     document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{applyModeratorPreviewFromStorage();enhanceDom();},100));
     if(document.readyState!=='loading')setTimeout(()=>{applyModeratorPreviewFromStorage();enhanceDom();},100);
   }
