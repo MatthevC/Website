@@ -484,7 +484,7 @@
     centerModal.className = 'matt-center-backdrop';
     centerModal.id = 'mattCenterModal';
     centerModal.innerHTML = `<div class="matt-center-box" role="dialog" aria-modal="true">
-      <header class="matt-center-head"><div><small>CENTRUM MODERATORA</small><h2>NARZĘDZIA I KONTROLA STRONY</h2><p>Ostatnie zmiany, wyszukiwarka, historia, kosz, alerty, bezpieczeństwo i utrzymanie.</p></div><button type="button" data-center-close>×</button></header>
+      <header class="matt-center-head"><div><small>CENTRUM MODERACJI</small><h2>ZARZĄDZANIE SPOŁECZNOŚCIĄ</h2><p>Zgłoszenia, MATT Lobby, kopie zapasowe i narzędzia administracyjne w jednym miejscu.</p></div><button type="button" data-center-close>×</button></header>
       <nav class="matt-center-tabs" data-center-tabs></nav>
       <div class="matt-center-body" data-center-body></div>
     </div>`;
@@ -548,6 +548,8 @@
     ['search','SZUKAJ','cms.search'],
     ['history','HISTORIA','cms.history.view'],
     ['trash','KOSZ','cms.trash.view'],
+    ...(any('backups.view','github.restore') ? [['backups','BACKUPY',null]] : []),
+    ...((viewerIsAdmin() || has('lobby.conflicts.view')) ? [['lobby','MATT LOBBY',null]] : []),
     ['alerts','ALERTY','cms.notifications.view'],
     ['links','LINKI','cms.links.check'],
     ['integrity','INTEGRALNOŚĆ','cms.integrity.check'],
@@ -574,6 +576,8 @@
       if(tab==='search') await renderSearch(body);
       if(tab==='history') await renderHistory(body);
       if(tab==='trash') await renderTrash(body);
+      if(tab==='backups') renderCenterExternal(body,'backups');
+      if(tab==='lobby') renderCenterExternal(body,'lobby');
       if(tab==='alerts') await renderAlerts(body);
       if(tab==='links') await renderLinks(body);
       if(tab==='integrity') await renderIntegrity(body);
@@ -582,6 +586,16 @@
     } catch (error) {
       body.innerHTML=`<div class="matt-center-empty"><strong>Nie udało się wczytać narzędzia.</strong><p>${esc(error?.message || 'Nieznany błąd')}</p></div>`;
     }
+  }
+
+  function renderCenterExternal(body,kind) {
+    const label=kind==='lobby'?'MATT LOBBY — KONFLIKTY':'BACKUPY I PRZYWRACANIE';
+    body.innerHTML=`<section class="matt-center-external"><div class="matt-center-external-icon">${kind==='lobby'?'🎮':'⛁'}</div><h3>${label}</h3><p>${kind==='lobby'?'Zarządzanie konfliktami i bezpieczeństwem wspólnych rozgrywek.':'Przegląd, tworzenie i przywracanie kopii bezpieczeństwa strony.'}</p><button type="button" data-open-external>OTWÓRZ NARZĘDZIE →</button></section>`;
+    $('[data-open-external]',body).onclick=()=>{
+      const btn=document.querySelector(`[data-cms-action="${kind}"]`);
+      if(!btn) return toast('Narzędzie jest niedostępne dla tego konta.','error');
+      btn.click();
+    };
   }
 
   async function renderInbox(body) {
@@ -594,14 +608,19 @@
     inboxNewCount=rows.filter(x=>x.status==='new').length;inboxCountReady=true;paintInboxBadges();
     const statuses=[['new','NOWE'],['progress','W TRAKCIE'],['done','UKOŃCZONE'],['rejected','ODRZUCONE']];
     const counts=Object.fromEntries(statuses.map(([k])=>[k,rows.filter(x=>x.status===k).length]));
-    body.innerHTML=`<div class="matt-inbox-head"><div><small>CENTRUM ZGŁOSZEŃ · ADMINISTRACJA I MODERACJA</small><h3>WNIOSKI / KONTAKT</h3><p>Nowe i w trakcie pozostają bezterminowo. Ukończone i odrzucone są automatycznie usuwane po 30 dniach od rozstrzygnięcia.</p></div><button data-inbox-refresh>↻ ODŚWIEŻ</button></div><div class="matt-inbox-stats">${statuses.map(([k,n])=>`<span>${n}: <b>${counts[k]}</b></span>`).join('')}</div><div class="matt-inbox-controls"><input type="search" placeholder="Szukaj po nicku, temacie, treści…" data-inbox-search><select data-inbox-filter><option value="open">Nieukończone (nowe + w trakcie)</option>${statuses.map(([k,n])=>`<option value="${k}">${n}</option>`).join('')}<option value="all">Wszystkie</option></select></div><div data-inbox-list></div>`;
+    let activeFilter='new';
+    body.innerHTML=`<div class="matt-inbox-head"><div><small>ZGŁOSZENIA SPOŁECZNOŚCI</small><h3>Wnioski i kontakt</h3><p>Wybierz status, aby przeglądać sprawy. Rozstrzygnięte zgłoszenia są usuwane po 30 dniach.</p></div><button type="button" data-inbox-refresh>↻ ODŚWIEŻ</button></div>
+      <div class="matt-inbox-stats matt-inbox-status-tabs" role="group" aria-label="Filtruj zgłoszenia według statusu">${statuses.map(([k,n])=>`<button type="button" data-inbox-tab="${k}" class="${k==='new'?'active':''}" aria-pressed="${k==='new'}"><span>${n}</span><strong>${counts[k]}</strong></button>`).join('')}</div>
+      <div class="matt-inbox-controls"><label class="matt-inbox-search-label"><span>WYSZUKAJ ZGŁOSZENIE</span><input type="search" placeholder="Nick, temat, wiadomość, numer lub e-mail…" data-inbox-search></label><button type="button" class="matt-inbox-all" data-inbox-all>Pokaż wszystkie</button></div>
+      <div class="matt-inbox-result-heading" data-inbox-result-heading></div><div data-inbox-list></div>`;
     const list=$('[data-inbox-list]',body);
     const labels=Object.fromEntries(statuses);
     const draw=()=>{
       const query=String($('[data-inbox-search]',body).value||'').toLocaleLowerCase('pl');
-      const filter=$('[data-inbox-filter]',body).value;
-      const visible=rows.filter(x=>(filter==='all'||(filter==='open'?['new','progress'].includes(x.status):x.status===filter))&&[x.twitch_nick,x.topic,x.message,x.reply_email].join(' ').toLocaleLowerCase('pl').includes(query));
-      list.innerHTML=visible.length?visible.map(x=>`<article class="matt-inbox-item" data-inbox-id="${esc(x.id)}"><div class="matt-inbox-item-top"><span class="matt-inbox-tag ${esc(x.status)}">${labels[x.status]||esc(x.status)}</span><small>${esc(fmt(x.created_at))}</small><span class="matt-inbox-mail ${x.email_status==='sent'?'sent':''}">${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</span></div><h4>${esc(x.topic)}</h4><div class="matt-inbox-meta"><strong>@${esc(x.twitch_nick)}</strong> · ${esc(x.reply_email)}</div><p>${esc(x.message)}</p>${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small> · ${esc(fmt(x.resolved_at))} · automatyczne usunięcie po 30 dniach</small></div>`:''}<div class="matt-inbox-actions"><a href="mailto:${encodeURIComponent(x.reply_email)}?subject=${encodeURIComponent('MATT’S WORLD — '+x.topic)}">ODPOWIEDZ E-MAILEM</a><select data-inbox-status>${statuses.map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${n}</option>`).join('')}</select></div><label class="matt-inbox-note">NOTATKA WEWNĘTRZNA<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label><button data-inbox-save>ZAPISZ STATUS I NOTATKĘ</button></article>`).join(''):'<div class="matt-center-empty">Brak zgłoszeń dla wybranych filtrów.</div>';
+      const filter=activeFilter;
+      const visible=rows.filter(x=>(filter==='all'||(filter==='open'?['new','progress'].includes(x.status):x.status===filter))&&[x.id,x.twitch_nick,x.topic,x.message,x.reply_email,...Object.values(x.details||{})].join(' ').toLocaleLowerCase('pl').includes(query));
+      $('[data-inbox-result-heading]',body).textContent=`${filter==='all'?'Wszystkie':labels[filter]||'Otwarte'} · ${visible.length} zgłoszeń`;
+      list.innerHTML=visible.length?visible.map(x=>`<article class="matt-inbox-item" data-inbox-id="${esc(x.id)}"><div class="matt-inbox-item-top"><span class="matt-inbox-tag ${esc(x.status)}">${labels[x.status]||esc(x.status)}</span><small>${esc(fmt(x.created_at))}</small><span class="matt-inbox-mail ${x.email_status==='sent'?'sent':''}">${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</span></div><h4>${esc(x.topic)}</h4><small class="matt-inbox-reference">Numer: ${esc(String(x.id).slice(0,8).toUpperCase())}</small><div class="matt-inbox-meta"><strong>@${esc(x.twitch_nick)}</strong> · ${esc(x.reply_email)}</div><details class="matt-inbox-expand"><summary>POKAŻ WIADOMOŚĆ I SZCZEGÓŁY</summary><p>${esc(x.message)}</p>${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}</details>${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small> · ${esc(fmt(x.resolved_at))} · automatyczne usunięcie po 30 dniach</small></div>`:''}<div class="matt-inbox-actions"><a href="mailto:${encodeURIComponent(x.reply_email)}?subject=${encodeURIComponent('MATT’S WORLD — '+x.topic)}">ODPOWIEDZ E-MAILEM</a><select data-inbox-status>${statuses.map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${n}</option>`).join('')}</select></div><label class="matt-inbox-note">NOTATKA WEWNĘTRZNA<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label><button data-inbox-save>ZAPISZ STATUS I NOTATKĘ</button></article>`).join(''):'<div class="matt-center-empty">Brak zgłoszeń dla wybranych filtrów.</div>';
       $$('[data-inbox-save]',list).forEach(btn=>btn.onclick=async()=>{
         const card=btn.closest('[data-inbox-id]'); const id=card.dataset.inboxId;
         const status=$('[data-inbox-status]',card).value;
@@ -615,7 +634,8 @@
       });
     };
     $('[data-inbox-search]',body).oninput=draw;
-    $('[data-inbox-filter]',body).onchange=draw;
+    $$('[data-inbox-tab]',body).forEach(btn=>btn.onclick=()=>{activeFilter=btn.dataset.inboxTab;$$('[data-inbox-tab]',body).forEach(b=>{const selected=b===btn;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected));});draw();});
+    $('[data-inbox-all]',body).onclick=()=>{activeFilter='all';$$('[data-inbox-tab]',body).forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false');});draw();};
     $('[data-inbox-refresh]',body).onclick=()=>openCenter('inbox');draw();
   }
 
@@ -1074,12 +1094,15 @@
   function injectToolbar() {
     const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar)return;
     if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.dashboard.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','statistics.view','site.maintenance.manage'))) {
-      const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM';btn.addEventListener('click',()=>openCenter('dashboard'));
+      const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM MODERACJI';btn.addEventListener('click',()=>openCenter('dashboard'));
       const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
     }
-    if(has('cms.trash.view') && !toolbar.querySelector('[data-matt-suite-trash]')) {
+    if(false && has('cms.trash.view') && !toolbar.querySelector('[data-matt-suite-trash]')) {
       const trash=document.createElement('button');trash.type='button';trash.dataset.mattSuiteTrash='1';trash.innerHTML='♲ KOSZ';trash.title='Centralny kosz — elementy są przechowywane przez 30 dni';trash.addEventListener('click',()=>openCenter('trash'));
       const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(trash,backups||toolbar.querySelector('[data-cms-action="save"]'));
+    }
+    if(toolbar.querySelector('[data-matt-suite-center]')) {
+      ['backups','lobby'].forEach(action=>{const btn=toolbar.querySelector(`[data-cms-action="${action}"]`);if(btn){btn.classList.add('matt-center-moved-tool');btn.setAttribute('aria-label',action==='backups'?'Backupy — w Centrum Moderacji':'MATT Lobby — w Centrum Moderacji');}});
     }
     updateToolbarAlertBadge();
   }
