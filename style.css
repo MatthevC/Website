@@ -12255,3 +12255,68 @@ html.matt-route-loading #app {
 #cms-admin-toolbar .matt-toolbar-shortcuts button[hidden]{display:none!important}
 .matt-pin-settings .matt-pin-list{max-height:min(56vh,560px);overflow:auto;padding-right:5px}
 .matt-pin-settings .matt-pin-row{min-height:44px}
+
+
+/* MATT TOOLBAR V3: spójny wygląd, prawidłowa kolejność i brak nachodzenia */
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed){
+  max-width:calc(100vw - 32px);
+  min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:thin;
+}
+#cms-admin-toolbar:not(.cms-toolbar-vertical):not(.cms-collapsed)>button{
+  flex:0 0 auto;
+}
+#cms-admin-toolbar .matt-center-shortcut{
+  font:inherit;
+  font-size:inherit;
+  font-weight:inherit;
+  letter-spacing:inherit;
+  text-transform:none;
+  white-space:normal;
+  overflow-wrap:break-word;
+  word-break:normal;
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:7px;
+  min-height:40px;
+  background:#1b1d24;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:9px;
+  color:#f3f3f5;
+  padding:9px 12px;
+  text-align:left;
+}
+#cms-admin-toolbar .matt-center-shortcut:hover{border-color:#ed2939;background:#25252a}
+#cms-admin-toolbar .matt-center-shortcut .matt-shortcut-icon{flex:none;font-size:15px;line-height:1}
+#cms-admin-toolbar .matt-center-shortcut .matt-shortcut-label{font:inherit;line-height:1.3}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed){
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  width:220px;
+  max-width:calc(100vw - 16px);
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>.matt-center-shortcut{
+  grid-column:1/-1;
+  width:100%;
+  min-width:0;
+  min-height:43px;
+  margin:0;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed)>button:not(.cms-toolbar-drag-handle):not(.cms-toolbar-orientation):not(.cms-toolbar-mobile-preview):not(.cms-toolbar-toggle){
+  grid-column:1/-1;
+  width:100%;
+  min-width:0;
+  margin:0;
+  white-space:normal;
+  overflow-wrap:break-word;
+  font-size:12px;
+  line-height:1.3;
+}
+#cms-admin-toolbar.cms-toolbar-vertical:not(.cms-collapsed) .cms-toolbar-title{grid-column:1/-1}
+#cms-admin-toolbar .matt-center-shortcut[hidden],
+#cms-admin-toolbar .matt-center-shortcut.matt-user-unpinned{display:none!important}

@@ -75,15 +75,17 @@
   function mattApplyPins() {
     if(!toolbar) return;
     const state=mattReadPins();
+    // Wszystkie skróty są bezpośrednimi dziećmi paska, nie osobną grupą.
+    // Dzięki temu pionowy układ GRID traktuje je identycznie jak pozostałe przyciski.
+    const anchor=toolbar.querySelector('[data-cms-action="pins"]');
+    if(anchor) for(const action of state.order) {
+      const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
+      if(button) toolbar.insertBefore(button,anchor);
+    }
     for(const action of MATT_PINNABLE) {
       const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
-      if(!button)continue;
-      button.classList.toggle('matt-user-unpinned',state.hidden.includes(action) || !mattCanShortcut(action));
-    }
-    const studio=toolbar.querySelector('[data-cms-action="studio"]');
-    if(studio)for(const action of state.order){
-      const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
-      if(button && !action.startsWith('center-'))toolbar.insertBefore(button,studio);
+      if(button) button.classList.toggle('matt-user-unpinned',
+        state.hidden.includes(action) || !mattCanShortcut(action));
     }
   }
   function mattToolbarPreferences() {
@@ -1017,9 +1019,7 @@
       <button type="button" data-cms-action="site">⚙ USTAWIENIA STRONY</button>
       <button type="button" data-cms-action="lobby" hidden>🎮 MATT LOBBY</button>
       <button type="button" data-cms-action="backups" hidden>⛁ BACKUPY</button>
-      <div class="matt-toolbar-shortcuts" data-toolbar-shortcuts aria-label="Przypięte skróty Centrum Moderacji">
-        ${MATT_CENTER_SHORTCUTS.map(([id,label,,icon])=>`<button type="button" data-cms-action="center-${id}" title="Otwórz ${label} w Centrum Moderacji">${icon} ${label.toUpperCase()}</button>`).join('')}
-      </div>
+      ${MATT_CENTER_SHORTCUTS.map(([id,label,,icon])=>`<button type="button" class="matt-center-shortcut" data-cms-action="center-${id}" title="Otwórz ${label} w Centrum Moderacji"><span class="matt-shortcut-icon" aria-hidden="true">${icon}</span><span class="matt-shortcut-label">${label.toUpperCase()}</span></button>`).join('')}
       <button type="button" data-cms-action="pins">⚙ DOSTOSUJ PANEL</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
