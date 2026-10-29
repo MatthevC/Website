@@ -33,7 +33,27 @@
   const TOOLBAR_DOCK_SNAP = 34;
 
   // Ustawienia paska są prywatne dla zalogowanego konta i tej przeglądarki.
-  const MATT_PINNABLE = ['layout','mobile-preview','toolbar-orientation'];
+  const MATT_CENTER_SHORTCUTS = [
+    ['inbox','Wnioski / Kontakt','cms.inbox.view','📨'],
+    ['lobby','MATT Lobby','lobby.conflicts.view','🎮'],
+    ['history','Historia zmian','cms.history.view','🕘'],
+    ['backups','Backupy','backups.view','🗄️'],
+    ['trash','Kosz','cms.trash.view','🗑️'],
+    ['alerts','Alerty','cms.notifications.view','🔔'],
+    ['integrity','Integralność','cms.integrity.check','🛡️'],
+    ['maintenance','Konserwacja','site.maintenance.manage','🛠️'],
+    ['stats','Statystyki','statistics.view','📊'],
+    ['links','Linki','cms.links.check','🔗'],
+    ['search','Wyszukiwarka','cms.search','🔎']
+  ];
+  const MATT_PINNABLE = ['layout','mobile-preview','toolbar-orientation',...MATT_CENTER_SHORTCUTS.map(x=>'center-'+x[0])];
+  const MATT_DEFAULT_HIDDEN = MATT_CENTER_SHORTCUTS.map(x=>'center-'+x[0]);
+  function mattCanShortcut(key) {
+    const item=MATT_CENTER_SHORTCUTS.find(x=>'center-'+x[0]===key);
+    if(!item)return true;
+    if(window.currentUserRole==='admin')return true;
+    return has(item[2]) || (item[0]==='backups'&&has('github.restore'));
+  }
   function mattToolbarUserKey() {
     const profile=window.currentUserProfile || {};
     const id=profile.id || profile.user_id || window.currentUser?.id || window.currentUser?.email || 'unknown';
@@ -44,10 +64,10 @@
       const saved=JSON.parse(localStorage.getItem(mattToolbarUserKey()) || 'null');
       if(saved && Array.isArray(saved.order) && Array.isArray(saved.hidden)) return {
         order:[...new Set([...saved.order.filter(x=>MATT_PINNABLE.includes(x)),...MATT_PINNABLE])],
-        hidden:saved.hidden.filter(x=>MATT_PINNABLE.includes(x))
+        hidden:[...new Set([...saved.hidden.filter(x=>MATT_PINNABLE.includes(x)),...MATT_DEFAULT_HIDDEN.filter(x=>!saved.order.includes(x))])]
       };
     } catch (_) {}
-    return {order:[...MATT_PINNABLE],hidden:[]};
+    return {order:[...MATT_PINNABLE],hidden:[...MATT_DEFAULT_HIDDEN]};
   }
   function mattWritePins(state) {
     try { localStorage.setItem(mattToolbarUserKey(),JSON.stringify(state)); } catch (_) {}
@@ -58,20 +78,21 @@
     for(const action of MATT_PINNABLE) {
       const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
       if(!button)continue;
-      button.classList.toggle('matt-user-unpinned',state.hidden.includes(action));
+      button.classList.toggle('matt-user-unpinned',state.hidden.includes(action) || !mattCanShortcut(action));
     }
     const studio=toolbar.querySelector('[data-cms-action="studio"]');
     if(studio)for(const action of state.order){
       const button=toolbar.querySelector(`[data-cms-action="${action}"]`);
-      if(button)toolbar.insertBefore(button,studio);
+      if(button && !action.startsWith('center-'))toolbar.insertBefore(button,studio);
     }
   }
   function mattToolbarPreferences() {
     if(!toolbar)return;
     const state=mattReadPins();
-    const options=[['layout','Układ strony'],['mobile-preview','Podgląd mobilny'],['toolbar-orientation','Orientacja paska']];
+    const options=[['layout','Układ strony'],['mobile-preview','Podgląd mobilny'],['toolbar-orientation','Orientacja paska'],
+      ...MATT_CENTER_SHORTCUTS.filter(x=>mattCanShortcut('center-'+x[0])).map(x=>['center-'+x[0],x[3]+' '+x[1]])];
     const items=options.map(([key,label])=>`<div class="matt-pin-row" data-pin-row="${key}"><label><input type="checkbox" data-pin-check="${key}" ${state.hidden.includes(key)?'':'checked'}> <span>${label}</span></label><div class="matt-pin-move"><button type="button" data-pin-up="${key}" aria-label="Przesuń wyżej ${label}">↑</button><button type="button" data-pin-down="${key}" aria-label="Przesuń niżej ${label}">↓</button></div></div>`).join('');
-    openModal('DOSTOSUJ PANEL ADMINISTRACYJNY',`<div class="matt-pin-settings"><p>Wybierz, które dodatkowe narzędzia mają być przypięte do Twojego paska. Zmiany dotyczą wyłącznie Twojego konta w tej przeglądarce i nie zmieniają uprawnień.</p><div class="matt-pin-fixed"><strong>ZAWSZE PRZYPIĘTE</strong><span>✦ MATT STUDIO</span><span>⚙ Ustawienia strony</span><span>◎ Centrum Moderacji</span></div><strong class="matt-pin-caption">DODATKOWE NARZĘDZIA</strong><div class="matt-pin-list">${items}</div><div class="cms-form-actions"><button type="button" data-pin-reset>PRZYWRÓĆ DOMYŚLNE</button><button type="button" class="cms-primary" data-pin-save>ZAPISZ UKŁAD</button></div></div>`);
+    openModal('DOSTOSUJ PANEL ADMINISTRACYJNY',`<div class="matt-pin-settings"><p>Wybierz, które dodatkowe narzędzia mają być przypięte do Twojego paska. Zmiany dotyczą wyłącznie Twojego konta w tej przeglądarce i nie zmieniają uprawnień.</p><div class="matt-pin-fixed"><strong>ZAWSZE PRZYPIĘTE</strong><span>▣ MATT STUDIO</span><span>⚙ Ustawienia strony</span><span>◎ Centrum Moderacji</span></div><strong class="matt-pin-caption">DODATKOWE NARZĘDZIA</strong><div class="matt-pin-list">${items}</div><div class="cms-form-actions"><button type="button" data-pin-reset>PRZYWRÓĆ DOMYŚLNE</button><button type="button" class="cms-primary" data-pin-save>ZAPISZ UKŁAD</button></div></div>`);
     const body=$('#cms-modal-body',modal);
     let order=[...state.order];
     const list=$('.matt-pin-list',body);
@@ -81,7 +102,7 @@
       if(index<0||target<0||target>=order.length)return;
       [order[index],order[target]]=[order[target],order[index]];redraw();
     }));
-    $('[data-pin-reset]',body).onclick=()=>{order=[...MATT_PINNABLE];$$('[data-pin-check]',body).forEach(x=>x.checked=true);redraw();};
+    $('[data-pin-reset]',body).onclick=()=>{order=[...MATT_PINNABLE];$$('[data-pin-check]',body).forEach(x=>x.checked=!MATT_DEFAULT_HIDDEN.includes(x.dataset.pinCheck));redraw();};
     $('[data-pin-save]',body).onclick=()=>{
       mattWritePins({order,hidden:$$('[data-pin-check]',body).filter(x=>!x.checked).map(x=>x.dataset.pinCheck)});
       closeModal();refreshToolbar();
@@ -989,13 +1010,16 @@
       <button type="button" class="cms-toolbar-toggle" data-cms-action="toggle-toolbar" aria-label="Ukryj pasek administratora" title="Ukryj pasek administratora">−</button>
       <div class="cms-toolbar-title"><span>ADMIN</span><strong>EDYCJA STRONY</strong></div>
       <button type="button" data-cms-action="layout">✣ UKŁAD</button>
-      <button type="button" data-cms-action="studio">✦ MATT STUDIO</button>
+      <button type="button" data-cms-action="studio">▣ MATT STUDIO</button>
       <button type="button" data-cms-action="content" hidden>✎ TREŚĆ</button>
       <button type="button" data-cms-action="config" hidden>⚙ KONFIGURATOR</button>
       <button type="button" data-cms-action="images" hidden>▧ GRAFIKI</button>
       <button type="button" data-cms-action="site">⚙ USTAWIENIA STRONY</button>
       <button type="button" data-cms-action="lobby" hidden>🎮 MATT LOBBY</button>
       <button type="button" data-cms-action="backups" hidden>⛁ BACKUPY</button>
+      <div class="matt-toolbar-shortcuts" data-toolbar-shortcuts aria-label="Przypięte skróty Centrum Moderacji">
+        ${MATT_CENTER_SHORTCUTS.map(([id,label,,icon])=>`<button type="button" data-cms-action="center-${id}" title="Otwórz ${label} w Centrum Moderacji">${icon} ${label.toUpperCase()}</button>`).join('')}
+      </div>
       <button type="button" data-cms-action="pins">⚙ DOSTOSUJ PANEL</button>
       <button type="button" class="cms-save" data-cms-action="save" hidden>✓ ZAPISZ</button>
       <button type="button" class="cms-cancel" data-cms-action="cancel" hidden>× ANULUJ</button>`;
@@ -1012,6 +1036,11 @@
       }
       if (action === 'mobile-preview') { openMobilePreview(); return; }
       if (action === 'pins') { mattToolbarPreferences(); return; }
+      if (action?.startsWith('center-')) {
+        const tab=action.slice(7);
+        if(mattCanShortcut(action))window.MattSuite?.openCenter?.(tab);
+        return;
+      }
       if (action === 'studio') { mattStudioHome(); return; }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
       if (action === 'content' && isAdmin()) openContentManager();
@@ -1067,6 +1096,10 @@
     if(studio)studio.hidden=inlineEditing||layoutEditing||!(any('page.text.edit','page.callouts.manage','page.images.manage','home.hero.manage','contact.topics.manage','moderation.people.manage')||canConfig(config));
     const pinButton=$('[data-cms-action="pins"]',toolbar);
     if(pinButton)pinButton.hidden=inlineEditing||layoutEditing;
+    for(const [id] of MATT_CENTER_SHORTCUTS){
+      const btn=toolbar.querySelector(`[data-cms-action="center-${id}"]`);
+      if(btn)btn.hidden=inlineEditing||layoutEditing||!mattCanShortcut('center-'+id);
+    }
     mattApplyPins();
     applyToolbarState();
   }
