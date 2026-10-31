@@ -3,6 +3,8 @@ const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 // Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Supabase,
 // aby były od razu dostępne w panelu Zarządzaj kontami bez dokładania plików wdrożeniowych do paczki strony.
 const MATT_EXTRA_PERMISSION_CATALOG = [
+  { permission:"lobby.config.view", group_name:"MATT LOBBY", label:"Konfiguracja — podgląd", description:"Może oglądać ustawienia profili gier, rang i kolejki.", sort_order:640 },
+  { permission:"lobby.config.edit", group_name:"MATT LOBBY", label:"Konfiguracja — edycja", description:"Może zmieniać i zapisywać ustawienia MATT LOBBY.", sort_order:641 },
   // Centrum Moderacji 4.1: dostęp do modułu oraz poszczególnych sekcji.
   { permission:"cms.center.access", group_name:"CENTRUM MODERACJI", label:"Otwieranie Centrum Moderacji", description:"Pozwala otworzyć Centrum Moderacji. Dostęp do konkretnych zakładek wymaga osobnych uprawnień.", sort_order:590 },
   { permission:"cms.inbox.view", group_name:"CENTRUM MODERACJI", label:"Wnioski i kontakt — przeglądanie", description:"Pozwala wyświetlić zakładkę Wnioski / Kontakt. Dostęp do danych zależy również od zasad bezpieczeństwa Supabase.", sort_order:591 },
@@ -77,6 +79,7 @@ const MATT_PERMISSION_GROUP_ORDER = [
   ["github.", "BACKUPY I PRZYWRACANIE", 60],
   ["accounts.", "KONTA I DOSTĘP", 70],
   ["cms.", "CENTRUM MODERACJI", 75],
+  ["lobby.", "MATT LOBBY", 76],
   ["statistics.", "LOGI I BEZPIECZEŃSTWO", 80],
   ["audit.", "LOGI I BEZPIECZEŃSTWO", 80]
 ];
