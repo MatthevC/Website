@@ -1838,11 +1838,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Okresowe sprawdzanie blokady / wymuszonego ponownego logowania.
 setInterval(async () => {
+  if (document.hidden) return;
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (session) await mattEnforceAccountSecurity(session, window.currentUserProfile);
   } catch (_) {}
-}, 60000);
+}, 120000);
 window.addEventListener('focus', async () => {
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();

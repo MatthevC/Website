@@ -498,6 +498,15 @@
   let inboxNewCount = 0;
   let inboxCountReady = false;
   let inboxCheckPending = false;
+  let inboxLastCheckAt = 0;
+  const INBOX_POLL_MS = 5 * 60 * 1000;
+  let trashLastCheckAt = 0;
+  function purgeTrashOccasionally() {
+    if (!isStaff() || !has('cms.trash.view')) return;
+    if (Date.now() - trashLastCheckAt < 24 * 60 * 60 * 1000) return;
+    trashLastCheckAt = Date.now();
+    purgeExpiredTrash().catch(() => { trashLastCheckAt = 0; });
+  }
   function paintInboxBadges() {
     const label = inboxNewCount > 99 ? '99+' : String(inboxNewCount);
     document.querySelectorAll('[data-matt-inbox-badge]').forEach(badge => {
@@ -519,8 +528,9 @@
       toolbar.title = inboxNewCount ? `${inboxNewCount} nowych wniosków — otwórz Centrum` : 'Otwórz Centrum';
     }
   }
-  async function refreshInboxBadge() {
-    if (inboxCheckPending) return;
+  async function refreshInboxBadge(force = false) {
+    if (document.hidden || inboxCheckPending) return;
+    if (!force && Date.now() - inboxLastCheckAt < INBOX_POLL_MS) return;
     if (!isStaff() || !window.supabaseClient) {
       inboxCountReady = false;
       inboxNewCount = 0;
@@ -536,6 +546,7 @@
       if (error) throw error;
       inboxNewCount = count || 0;
       inboxCountReady = true;
+      inboxLastCheckAt = Date.now();
       paintInboxBadges();
     } catch (_) {
       // Przy chwilowym braku sieci zachowaj ostatni znany licznik.
@@ -1290,17 +1301,17 @@
   }
 
   function install() {
-    purgeExpiredTrash().catch(()=>{});
+    purgeTrashOccasionally();
     document.addEventListener('click',trackEventOpenClicks,true);
     document.addEventListener('click',interceptDeletes,true);
     new MutationObserver(enhanceDom).observe(document.body,{childList:true,subtree:true});
     window.addEventListener('matt-auth-change',(event)=>setTimeout(()=>{
-      purgeExpiredTrash().catch(()=>{});
+      purgeTrashOccasionally();
       if(event?.detail?.preview===true){enhanceDom();return;}
       if(!applyModeratorPreviewFromStorage())enhanceDom();
     },50));
     window.addEventListener('hashchange',()=>setTimeout(enhanceDom,50));
-    window.setInterval(refreshInboxBadge, 30000);
+    window.setInterval(refreshInboxBadge, INBOX_POLL_MS);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshInboxBadge();});
     window.addEventListener('matt-auth-change',()=>setTimeout(refreshInboxBadge,500));
     window.setTimeout(refreshInboxBadge,1500);

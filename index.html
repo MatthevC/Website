@@ -213,9 +213,9 @@
 <script src="supabase.js"></script>
 <script src="cms.js?v=83"></script>
 <script src="studio-blocks.js?v=1"></script>
-<script src="rewards-supabase.js?v=5"></script>
+<script src="rewards-supabase.js?v=6-opt"></script>
 <script src="app.js?v=104"></script>
-<script src="auth-ui.js?v=15"></script>
+<script src="auth-ui.js?v=16-opt"></script>
 <script src="lobby-config.js?v=1"></script>
 <script src="lobby-panel.js?v=7"></script>
 <script>
@@ -225,7 +225,7 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=110-mobile-button','cms-suite.js?v=108'].forEach(function(src){
+    ['cms-admin.js?v=110-mobile-button','cms-suite.js?v=109-opt'].forEach(function(src){
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;

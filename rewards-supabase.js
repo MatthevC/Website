@@ -127,10 +127,7 @@
  window.reloadSupabaseRewards=()=>load(true);
  window.loadSupabaseRewards=load;
 
- // Rozgrzewamy dane zanim użytkownik otworzy Nagrody.
- function warmRewards(){ prefetch(); }
- document.addEventListener('pointerover',e=>{ if(e.target.closest?.('a[href="#/viewer/rewards"]')) warmRewards(); },{passive:true});
- document.addEventListener('touchstart',e=>{ if(e.target.closest?.('a[href="#/viewer/rewards"]')) warmRewards(); },{passive:true});
- if('requestIdleCallback' in window) requestIdleCallback(warmRewards,{timeout:2500});
- else setTimeout(warmRewards,1800);
+ // Dane nagród pobieramy dopiero przy wejściu na podstronę.
+ // Nie uruchamiamy automatycznego prefetch na każdej wizycie.
+
 })();
