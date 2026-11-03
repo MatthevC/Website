@@ -557,7 +557,7 @@
   const centerGroups = () => [
     ['dashboard','PULPIT',[['dashboard','Pulpit','cms.dashboard.view'],['stats','Statystyki','statistics.view']]],
     ['inbox','WNIOSKI / KONTAKT',isStaff() && (viewerIsAdmin() || has('cms.inbox.view'))?[['inbox','Wnioski',null]]:[]],
-    ['bots','BOTY',[['bots-control','Panel sterowania','bots.panel.view'],['lobby','MATT LOBBY',null],['discord-bot','DISCORD BOT','bots.discord.view']].filter(([id,,perm])=>id==='lobby' ? (viewerIsAdmin()||any('lobby.conflicts.view','lobby.config.view','bots.lobby.view')) : (viewerIsAdmin()||has(perm)))],
+    ['bots','BOTY', [['lobby','MATT LOBBY',null]].filter(()=>viewerIsAdmin() || any('lobby.conflicts.view','lobby.config.view'))],
     ['history','HISTORIA',[[ 'history','Dziennik zmian','cms.history.view'],['search','Wyszukiwarka','cms.search']]],
     ['backups','BACKUPY',[[ 'backups','Kopie zapasowe',null],['trash','Kosz','cms.trash.view']].filter(([id,,perm])=>id==='backups'?any('backups.view','github.restore'):has(perm))],
     ['security','BEZPIECZEŃSTWO',[[ 'alerts','Alerty','cms.notifications.view'],['integrity','Integralność','cms.integrity.check'],['maintenance','Konserwacja','site.maintenance.manage']]],
@@ -566,7 +566,7 @@
   const centerTabs = () => centerGroups().flatMap(([, ,children])=>children);
 
   async function openCenter(tab='dashboard') {
-    if (!viewerIsAdmin() && !any('cms.center.access','cms.dashboard.view','cms.history.view','cms.search','cms.notifications.view','cms.integrity.check','cms.links.check','cms.inbox.view','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','bots.panel.view','bots.discord.view','bots.lobby.view','statistics.view','site.maintenance.manage')) return;
+    if (!viewerIsAdmin() && !any('cms.center.access','cms.dashboard.view','cms.history.view','cms.search','cms.notifications.view','cms.integrity.check','cms.links.check','cms.inbox.view','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','statistics.view','site.maintenance.manage')) return;
     const groups = centerGroups();
     const available = groups.flatMap(g=>g[2]);
     if (!available.length) return;
@@ -599,8 +599,6 @@
         if(!window.MattAdminTools?.mountBackups) throw new Error('Moduł backupów nie jest jeszcze dostępny.');
         await window.MattAdminTools.mountBackups(content);
       }
-      else if(tab==='bots-control') renderBotsControl(content);
-      else if(tab==='discord-bot') renderDiscordBot(content);
       else if(tab==='lobby') {
         content.innerHTML='<div id="matt-lobby-panel">Sprawdzanie uprawnień…</div>';
         if(!window.MattLobbyPanel?.mount) throw new Error('Moduł MATT Lobby nie jest dostępny.');
@@ -614,19 +612,6 @@
     } catch (error) {
       content.innerHTML=`<div class="matt-center-empty"><strong>Nie udało się wczytać narzędzia.</strong><p>${esc(error?.message || 'Nieznany błąd')}</p></div>`;
     }
-  }
-
-  // ETAP 1: interfejs bez poleceń zdalnych. Stan botów nie jest zgadywany.
-  function renderBotsControl(body) {
-    const discord = viewerIsAdmin() || has('bots.discord.view') || has('bots.discord.control');
-    const lobby = viewerIsAdmin() || has('bots.lobby.view') || has('bots.lobby.control');
-    body.innerHTML = `<section class="matt-bots-intro"><h2>Panel sterowania botami</h2><p>Przygotowano osobne uprawnienia dla obu botów. Sterowanie zostanie uruchomione dopiero po wdrożeniu bezpiecznej komunikacji z lokalnym menedżerem.</p></section><div class="matt-bots-grid">
-      ${lobby ? `<article class="matt-bots-card"><h3>MATT LOBBY</h3><p>Status: <strong>Niepodłączony</strong></p><p>Włączenie i wyłączenie dotyczy wyłącznie funkcji lobby w Streamer.bot, a nie całego Streamer.bot.</p><button type="button" disabled title="Wymaga integracji z lokalnym menedżerem">Włącz / wyłącz — wkrótce</button></article>` : ''}
-      ${discord ? `<article class="matt-bots-card"><h3>DISCORD BOT</h3><p>Status: <strong>Niepodłączony</strong></p><p>Bot obsługujący przenoszenie użytkowników kanałów głosowych.</p><button type="button" disabled title="Wymaga integracji z lokalnym menedżerem">Włącz / wyłącz — wkrótce</button></article>` : ''}
-    </div>`;
-  }
-  function renderDiscordBot(body) {
-    body.innerHTML = `<section class="matt-bots-intro"><h2>DISCORD BOT</h2><p>Status: <strong>Niepodłączony</strong></p><p>Docelowo znajdziesz tu status połączenia z Discordem, liczbę osób na kanałach oraz sterowanie botem. Dane będą widoczne dopiero po bezpiecznym podłączeniu lokalnego menedżera.</p></section>`;
   }
 
   async function renderInbox(body) {
@@ -1224,7 +1209,7 @@
 
   function injectToolbar() {
     const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar)return;
-    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.center.access','cms.dashboard.view','cms.inbox.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','bots.panel.view','bots.discord.view','bots.lobby.view','statistics.view','site.maintenance.manage'))) {
+    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.center.access','cms.dashboard.view','cms.inbox.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','statistics.view','site.maintenance.manage'))) {
       const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM MODERACJI';btn.addEventListener('click',()=>openCenter('dashboard'));
       const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
     }
