@@ -111,6 +111,15 @@
     };
   }
   function mattStudioHome() {
+    if (window.MattVisualStudio && (has('page.text.edit') || has('page.images.manage') || has('page.callouts.manage'))) {
+      closeModal();
+      window.MattVisualStudio.open(currentRoute(), {
+        blocks: () => window.MattStudioBlocks?.open(currentRoute()),
+        images: () => openPageImagesManager()
+      });
+      return;
+    }
+
     const route=currentRoute();
     const canText=any('page.text.edit','page.callouts.manage')||(route==='moderator/team'&&has('moderation.people.manage'));
     const canImages=has('page.images.manage')||(route==='home'&&has('home.hero.manage'));
