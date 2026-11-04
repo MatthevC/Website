@@ -8,3 +8,10 @@
 
 /* Studio 3.2 usability: search, focus mode, clearer tool controls */
 #mv-root #mv-search{margin:2px 0 12px;background:#0b0c10;border-color:#444753}#mv-root .mv-item[hidden]{display:none!important}#mv-root .mv-item{transition:background .15s,border-color .15s}#mv-root .mv-item:focus-visible,#mv-root button:focus-visible{outline:2px solid #ff5877;outline-offset:2px}#mv-root.mv-focus-mode .mv-body{grid-template-columns:minmax(0,1fr)}#mv-root.mv-focus-mode .mv-body>aside{display:none}#mv-root.mv-focus-mode .mv-site-frame{height:calc(100vh - 195px)}#mv-root .mv-editor{min-height:90px}#mv-root .mv-pane-head{letter-spacing:.3px}#mv-root .mv-preview{border-color:#353540}
+
+/* Studio 3.4: visible duplication controls in main editor */
+#mv-root .mv-item-row{display:flex;align-items:center;gap:5px;margin:7px 0}
+#mv-root .mv-item-row .mv-item{margin:0;min-width:0;flex:1}
+#mv-root .mv-copy{flex:0 0 39px;padding:10px 5px;color:#ff8da3;border-color:#763145;font-size:19px}
+#mv-root .mv-copy:hover{background:#4b1828}
+#mv-root .mv-duplicate-selected{width:100%;margin:0 0 14px}
