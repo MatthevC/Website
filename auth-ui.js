@@ -3,6 +3,11 @@ const MATT_DEFAULT_AVATAR = "pictures/social/default-avatar.svg";
 // Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Supabase,
 // aby były od razu dostępne w panelu Zarządzaj kontami bez dokładania plików wdrożeniowych do paczki strony.
 const MATT_EXTRA_PERMISSION_CATALOG = [
+  // MATT STUDIO 3: use the established permission identifiers so existing Supabase grants remain effective.
+  { permission:"page.text.edit", group_name:"MATT STUDIO 3", label:"Studio 3 — edycja tekstów i kreator sekcji", description:"Edycja tekstów oraz dodawanie, duplikowanie, usuwanie i sortowanie własnych sekcji. Zachowuje dotychczasowe uprawnienia.", sort_order:501 },
+  { permission:"page.images.manage", group_name:"MATT STUDIO 3", label:"Studio 3 — multimedia i grafiki", description:"Zarządzanie zdjęciami i dekoracjami podstron.", sort_order:502 },
+  { permission:"page.callouts.manage", group_name:"MATT STUDIO 3", label:"Studio 3 — komunikaty i wyróżnienia", description:"Edycja komunikatów oraz wyróżnionych informacji.", sort_order:503 },
+  { permission:"home.hero.manage", group_name:"MATT STUDIO 3", label:"Studio 3 — grafika strony głównej", description:"Zmiana głównej grafiki na stronie startowej.", sort_order:504 },
   { permission:"lobby.config.view", group_name:"MATT LOBBY", label:"Konfiguracja — podgląd", description:"Może oglądać ustawienia profili gier, rang i kolejki.", sort_order:640 },
   { permission:"lobby.config.edit", group_name:"MATT LOBBY", label:"Konfiguracja — edycja", description:"Może zmieniać i zapisywać ustawienia MATT LOBBY.", sort_order:641 },
   // Centrum Moderacji 4.1: dostęp do modułu oraz poszczególnych sekcji.
@@ -86,6 +91,7 @@ const MATT_PERMISSION_GROUP_ORDER = [
 
 function mattPermissionGroupMeta(permission, fallback = "INNE") {
   const p = String(permission || "");
+  if (["page.text.edit","page.images.manage","page.callouts.manage","home.hero.manage"].includes(p)) return {name:"MATT STUDIO 3",order:49};
   const found = MATT_PERMISSION_GROUP_ORDER.find(([prefix]) => p.startsWith(prefix));
   return found ? { name: found[1], order: found[2] } : { name: String(fallback || "INNE").toUpperCase(), order: 90 };
 }
@@ -859,7 +865,7 @@ async function mattOpenAccountManager() {
     const mergedCatalog = new Map((catalogRes.data || []).map(item => [item.permission, { ...item }]));
     MATT_EXTRA_PERMISSION_CATALOG.forEach(item => {
       const existing = mergedCatalog.get(item.permission);
-      mergedCatalog.set(item.permission, existing ? { ...item, ...existing } : { ...item });
+      mergedCatalog.set(item.permission, existing ? { ...existing, ...item } : { ...item });
     });
     catalog = [...mergedCatalog.values()].sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999));
     if (!selectedId && accounts.length) {

@@ -111,11 +111,13 @@
     };
   }
   function mattStudioHome() {
-    if (window.MattVisualStudio && (has('page.text.edit') || has('page.images.manage') || has('page.callouts.manage'))) {
+    if (window.MattVisualStudio && (has('page.text.edit') || has('page.images.manage') || has('page.callouts.manage') || has('home.hero.manage') || has('contact.topics.manage'))) {
       closeModal();
       window.MattVisualStudio.open(currentRoute(), {
         blocks: () => window.MattStudioBlocks?.open(currentRoute()),
-        images: () => openPageImagesManager()
+        images: () => openPageImagesManager(),
+        callouts: () => openPageCalloutsManager(),
+        special: (currentRoute()==='contact' && has('contact.topics.manage')) ? () => openTopicsManager() : (canConfig(configForRoute(currentRoute())) ? () => configForRoute(currentRoute())?.action() : null)
       });
       return;
     }
@@ -136,7 +138,7 @@
     const body=$('#cms-modal-body',modal);
     $$('[data-studio-open]',body).forEach(button=>button.onclick=()=>{
       const action=button.dataset.studioOpen;
-      if(action==='texts')openContentManager();
+      if(action==='texts')mattStudioHome();
       else if(action==='images')openPageImagesManager();
       else if(action==='topics')openTopicsManager();
       else if(action==='config')config?.action();
@@ -1066,7 +1068,7 @@
       }
       if (action === 'studio') { mattStudioHome(); return; }
       if (action === 'layout' && has('page.layout.manage')) startLayoutDesigner();
-      if (action === 'content' && isAdmin()) openContentManager();
+      if (action === 'content' && isAdmin()) mattStudioHome();
       if (action === 'save') saveInlineEdit();
       if (action === 'cancel') cancelInlineEdit();
       if (action === 'config') { const c=configForRoute(currentRoute()); if (canConfig(c)) c?.action(); }
@@ -1166,7 +1168,7 @@
       const callouts = canCallouts ? (window.MattCMS?.calloutInfo?.(route)?.length || 0) + (window.MattCMS?.customPageCallouts?.(route)?.length || 0) : 0;
       openModal('MATT STUDIO — EDYCJA TREŚCI', `<div class="matt-studio">
         <div class="matt-studio-top"><div><small>EDYTOR PODSTRONY</small><strong>${esc(route.toUpperCase())}</strong><p>Wybierz element z listy, zmień treść i zapisz. Nie musisz edytować tekstów bezpośrednio na stronie.</p></div><span>${elements.length} pól tekstowych</span></div>
-        <div class="matt-studio-tabs">${canTexts?'<button class="is-active" data-studio-tab="texts">✎ TEKSTY</button><button data-studio-tab="blocks">▦ KREATOR SEKCJI 2.0</button>':''}${canCallouts?`<button data-studio-tab="callouts">▰ KOMUNIKATY (${callouts})</button>`:''}${route==='viewer/rewards'?'<button data-studio-tab="rewards">🎁 NAGRODY</button>':''}${canModerators?'<button data-studio-tab="moderators">👥 MODERACJA</button>':''}</div>
+        <div class="matt-studio-tabs">${canTexts?'<button class="is-active" data-studio-tab="texts">✎ TEKSTY</button><button data-studio-tab="blocks">▦ KREATOR SEKCJI 3</button>':''}${canCallouts?`<button data-studio-tab="callouts">▰ KOMUNIKATY (${callouts})</button>`:''}${route==='viewer/rewards'?'<button data-studio-tab="rewards">🎁 NAGRODY</button>':''}${canModerators?'<button data-studio-tab="moderators">👥 MODERACJA</button>':''}</div>
         ${canTexts?`<div class="matt-studio-search"><input type="search" placeholder="Szukaj nagłówka, opisu lub fragmentu tekstu…" data-studio-search value="${esc(search)}"><span>Wybierz EDYTUJ przy wybranym elemencie</span></div><div class="matt-studio-list" data-studio-list></div>`:'<p>Wybierz zakładkę, aby edytować treść.</p>'}
       </div>`);
       const body=$('#cms-modal-body',modal);

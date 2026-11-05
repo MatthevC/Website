@@ -1,4 +1,4 @@
-/* MATT STUDIO 2.0 — optional page sections; content stored through existing MattCMS. */
+/* MATT STUDIO 3 — section builder; existing Supabase keys retained. */
 (function(){
  'use strict';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -31,13 +31,15 @@
   page.appendChild(host);
  }
  const uid=()=>String(Date.now())+Math.random().toString(36).slice(2,8);
- function open(r=route()){
+ function open(r=route(), options={}){
+  // Standalone entry points are redirected into the unified Studio 3 shell.
+  if(!options.embedded && window.MattVisualStudio?.open){window.MattVisualStudio.open(r,{initialTab:"blocks"});return;}
   if(!window.mattHasPermission?.('page.text.edit')){alert('Brak uprawnienia do edycji treści.');return;}
   let blocks=read(r),selected=-1,dirty=false;
-  const overlay=node('div','matt-studio2-overlay');overlay.innerHTML=`<div class="matt-studio2-dialog" role="dialog" aria-modal="true" aria-label="MATT STUDIO 2.0"><header><div><small>PANEL ADMINISTRATORA · KREATOR PODSTRON</small><h2>MATT STUDIO 2.0 <span>${esc(r)}</span></h2></div><button data-s2="close" aria-label="Zamknij">✕</button></header><div class="matt-studio2-body"><aside><h3>BLOKI PODSTRONY</h3><div data-s2-list></div><label for="s2-add">Dodaj element</label><select id="s2-add"><option value="">Wybierz rodzaj bloku…</option>${Object.entries(types).map(([v,t])=>`<option value="${v}">${esc(t)}</option>`).join('')}</select><button data-s2="add">+ DODAJ BLOK</button></aside><div class="matt-studio2-main"><div data-s2-fields></div><h3>PODGLĄD NOWEJ SEKCJI</h3><div data-s2-preview></div></div></div><footer><span data-s2-status>Zmiany nie są zapisane</span><button data-s2="cancel">ZAMKNIJ</button><button data-s2="save" class="primary">ZAPISZ I OPUBLIKUJ</button></footer></div>`;
-  document.body.appendChild(overlay);
+  const overlay=node('div','matt-studio2-overlay');overlay.innerHTML=`<div class="matt-studio2-dialog" role="dialog" aria-modal="true" aria-label="Kreator sekcji MATT STUDIO 3"><header><div><small>PANEL ADMINISTRATORA · KREATOR PODSTRON</small><h2>MATT STUDIO 3 · KREATOR SEKCJI <span>${esc(r)}</span></h2></div><button data-s2="close" aria-label="Zamknij">✕</button></header><div class="matt-studio2-body"><aside><h3>BLOKI PODSTRONY</h3><div data-s2-list></div><label for="s2-add">Dodaj element</label><select id="s2-add"><option value="">Wybierz rodzaj bloku…</option>${Object.entries(types).map(([v,t])=>`<option value="${v}">${esc(t)}</option>`).join('')}</select><button data-s2="add">+ DODAJ BLOK</button></aside><div class="matt-studio2-main"><div data-s2-fields></div><h3>PODGLĄD NOWEJ SEKCJI</h3><div data-s2-preview></div></div></div><footer><span data-s2-status>Zmiany nie są zapisane</span><button data-s2="cancel">ZAMKNIJ</button><button data-s2="save" class="primary">ZAPISZ I OPUBLIKUJ</button></footer></div>`;
+  (options.container || document.body).appendChild(overlay);
   const $=s=>overlay.querySelector(s);
-  const close=()=>{if(dirty&&!confirm('Odrzucić niezapisane zmiany?'))return;overlay.remove();};
+  const close=()=>{if(dirty&&!confirm('Odrzucić niezapisane zmiany?'))return;overlay.remove();options.onClose?.();};
   const field=(label,name,value,multiline=false)=>`<label>${esc(label)}${multiline?`<textarea data-field="${name}" rows="4">${esc(value)}</textarea>`:`<input data-field="${name}" value="${esc(value)}">`}</label>`;
   function draw(){
    $('[data-s2-list]').innerHTML=blocks.map((b,i)=>`<div class="s2-item ${i===selected?'active':''}"><button data-pick="${i}">${i+1}. ${esc(types[b.type])}<small>${esc(b.title||b.label||'Bez tytułu')}</small></button><div><button data-copy="${i}" title="Duplikuj cały blok">⧉</button><button data-up="${i}" title="W górę">↑</button><button data-down="${i}" title="W dół">↓</button><button data-delete="${i}" title="Usuń">×</button></div></div>`).join('')||'<p>Brak dodatkowych bloków. Dodaj pierwszy.</p>';
@@ -63,7 +65,7 @@
   }
   $('[data-s2="close"]').onclick=close;$('[data-s2="cancel"]').onclick=close;
   $('[data-s2="add"]').onclick=()=>{const t=$('#s2-add').value;if(!types[t])return;blocks.push(clean({id:uid(),type:t,title:'Nowa sekcja',steps:t==='steps'?[{title:'Krok 1',body:'',image:''}]:[]}));selected=blocks.length-1;dirty=true;draw();};
-  $('[data-s2="save"]').onclick=async()=>{const btn=$('[data-s2="save"]');btn.disabled=true;$('[data-s2-status]').textContent='Zapisywanie w Supabase…';try{const data=blocks.map(clean);await window.MattCMS.save(key(r),data);dirty=false;render(r);$('[data-s2-status]').textContent='Opublikowano pomyślnie';setTimeout(()=>{if(overlay.isConnected)overlay.remove();},600);}catch(e){$('[data-s2-status]').textContent='Błąd: '+(e.message||e);alert('Nie udało się zapisać. '+(e.message||e));}finally{btn.disabled=false;}};
+  $('[data-s2="save"]').onclick=async()=>{const btn=$('[data-s2="save"]');btn.disabled=true;$('[data-s2-status]').textContent='Zapisywanie w Supabase…';try{const data=blocks.map(clean);await window.MattCMS.save(key(r),data);dirty=false;render(r);$('[data-s2-status]').textContent='Opublikowano pomyślnie';setTimeout(()=>{if(overlay.isConnected){overlay.remove();options.onClose?.();}},600);}catch(e){$('[data-s2-status]').textContent='Błąd: '+(e.message||e);alert('Nie udało się zapisać. '+(e.message||e));}finally{btn.disabled=false;}};
   draw();
  }
  window.MattStudioBlocks={open,render};
