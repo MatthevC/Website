@@ -22,3 +22,10 @@
 #mv-root>.matt-studio2-overlay .matt-studio2-dialog header{background:linear-gradient(100deg,#270b15,#14151b)}
 #mv-root>.matt-studio2-overlay .matt-studio2-dialog header h2{font-size:19px}
 #mv-root>.matt-studio2-overlay .matt-studio2-dialog footer button.primary{background:#c81c42}
+
+/* Studio 3.6: delete / restore buttons for the section list */
+#mv-root .mv-trash{flex:0 0 37px;padding:10px 4px;border-color:#713044;color:#ff8098;font-size:16px}
+#mv-root .mv-trash:hover{background:#5b172a;border-color:#ff3154}
+#mv-root .mv-trash.mv-restore{color:#9ce5ae;border-color:#306b4a}
+#mv-root .mv-item.mv-hidden{opacity:.55;border-style:dashed}
+#mv-root .mv-item.mv-hidden strong{text-decoration:line-through}

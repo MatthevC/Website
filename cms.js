@@ -757,6 +757,25 @@
     });
   }
 
+  // Studio 3.6: reversible removal of original page tiles, persisted in Supabase.
+  // IDs are assigned before hiding, so their mapping remains stable on each route render.
+  function applyHiddenTiles(path) {
+    const key = `studio_hidden_tiles:${routeKey(path)}`;
+    const saved = get(key, []);
+    const hidden = new Set(Array.isArray(saved) ? saved.filter(v => typeof v === 'string') : []);
+    const els = decorateEditable(path);
+    const selector = 'article,.info-card,.vip-card,.benefit-card,.content-card,.feature-card,.rule-card,.glass-card,.card,.callout,.alert,.section-card';
+    for (const el of els) {
+      const card = el.closest(selector) || el;
+      // Hide a card when its first editable text element is marked as hidden.
+      const first = card.querySelector('[data-cms-text-id]') || el;
+      if (first !== el) continue;
+      const managed = hidden.has(el.dataset.cmsTextId);
+      if (managed) { card.style.setProperty('display', 'none'); card.dataset.mattStudioHidden = '1'; }
+      else if (card.dataset.mattStudioHidden === '1') { card.style.removeProperty('display'); delete card.dataset.mattStudioHidden; }
+    }
+  }
+
   function parseTwitchUrl(value) {
     const raw = String(value || '').trim();
     if (!raw) return null;
@@ -1276,6 +1295,7 @@
     applyGlobal();
     applyStructured(path);
     applyTextOverrides(path);
+    applyHiddenTiles(path);
     applyPageCallouts(path);
     applyPageImages(path);
     applyRewardGraphics(path);
@@ -1289,7 +1309,7 @@
   window.MattCMS = {
     ready, get, refreshKey, refreshAll, save, remove, createBackup, createManualBackup, listBackups, getBackup, deleteBackup, restoreBackup, restoreSnapshot,
     routeKey, escape: escapeHtml, sanitizeHtml, baseHtml,
-    applyRoute, applyGlobal, applyStructured, applyTextOverrides, decorateEditable, editableElements,
+    applyRoute, applyGlobal, applyStructured, applyTextOverrides, applyHiddenTiles, decorateEditable, editableElements,
     layoutElements, layoutParentKey, layoutElementLabel, layoutElementZone, applyPageLayout,
     pageImageElements, pageImageInfo, applyPageImages, rewardGraphicElements, rewardGraphicInfo, normalizeRewardGraphicItem, applyRewardGraphics, pageDecorGraphicElements, pageDecorGraphicInfo, normalizeDecorGraphicItem, applyPageDecorGraphics, redCalloutElements, calloutInfo, applyPageCallouts,
     customPageCallouts, renderCustomPageCallouts, applyCustomPageCallouts, normalizeCustomPageCallout, renderPageBanner, applyPageBanner,
