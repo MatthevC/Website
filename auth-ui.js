@@ -1293,6 +1293,22 @@ async function mattOpenAccountManager() {
       }
     };
 
+    // Podgląd w trybie zaawansowanym korzysta z aktualnie zaznaczonych
+    // uprawnień (również niezapisanych), tak samo jak tryb uproszczony.
+    body.querySelectorAll('[data-preview-role-view]').forEach(previewBtn => previewBtn.addEventListener('click', () => {
+      const role = selectedRole();
+      const permissions = role === 'admin'
+        ? catalog.map(item => item.permission)
+        : role === 'moderator'
+          ? [...body.querySelectorAll('[data-permissions] input[type="checkbox"]:checked')].map(input => input.value)
+          : [];
+      sessionStorage.setItem('matt_preview_as_moderator', JSON.stringify({
+        username: account.username || 'Podgląd roli',
+        permissions: [...new Set(permissions)]
+      }));
+      location.reload();
+    }));
+
     roleSelect?.addEventListener("change", syncPermissionUi);
     body.querySelectorAll("[data-permissions] input[type=checkbox]").forEach(input => input.addEventListener("change", syncPermissionUi));
 
