@@ -4751,6 +4751,17 @@
     await draw();
   }
 
+  // MATT STUDIO 5.1: expose the existing, permission-checked visual layout designer.
+  // Keep one layout engine and one Supabase storage format (page_layout:*).
+  window.MattStudioLayout = Object.freeze({
+    open: () => {
+      if (!has('page.layout.manage')) { alert('Brak uprawnienia: page.layout.manage'); return false; }
+      if (layoutEditing) return true;
+      startLayoutDesigner();
+      return layoutEditing;
+    }
+  });
+
   window.MattAdminTools = Object.assign(window.MattAdminTools || {}, { mountBackups: host => openBackupsManager(host), openEvents: (id) => openEventsManager(id), openDownloads: () => openDownloadsManager() });
 
   window.addEventListener('matt-auth-change', () => { if (!has('page.text.edit') && inlineEditing) cancelInlineEdit(); refreshToolbar(); });

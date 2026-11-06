@@ -65,3 +65,6 @@
 
 /* MATT STUDIO 5.0: czytelne akcje i panel szkiców */
 #mv-root .mv-top-actions{flex-wrap:wrap;justify-content:flex-end}#mv-root .mv-top{height:auto;min-height:72px}#mv-root #mv-drafts{border-color:#8d5362;background:#32202a}#mv-root #mv-save{background:#b8183c}#mv-root .mv4-actions .mv-red{background:#b8183c;border-color:#ff5575}#mv-root .mv-status{min-height:35px}#mv-root .mv-top-actions button{white-space:nowrap}
+
+/* MATT STUDIO 5.1: direct entry to the existing full-page drag-and-drop designer */
+#mv-root #mv-dragdrop{background:linear-gradient(120deg,#b8183c,#74172c);border-color:#ff6683;font-weight:800}#mv-root #mv-dragdrop:hover{filter:brightness(1.2)}
