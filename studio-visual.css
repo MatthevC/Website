@@ -58,3 +58,7 @@
 #mv-root .mv4-note{font-size:12px;margin-top:22px}
 #mv-root button:focus-visible,#mv-root [contenteditable]:focus-visible{outline:2px solid #ff6582;outline-offset:2px}
 @media(max-width:600px){#mv-root .mv4-metrics{grid-template-columns:1fr}#mv-root .mv4-dialog{padding:16px}}
+
+/* MATT STUDIO 4.5 */
+#mv-route{background:#191b24;color:#fff;border:1px solid #414451;border-radius:6px;padding:8px;max-width:150px}
+.mv45-history{max-height:45vh;overflow:auto}.mv45-history-row,.mv45-permissions>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #34343b}.mv45-history-row button{background:#a51938;color:white;border:0;border-radius:6px;padding:8px;cursor:pointer}.mv45-permissions{max-height:45vh;overflow:auto}.mv45-permissions code{font-size:12px}.mv45-permissions strong{white-space:nowrap}.mv45-appearance{margin-top:20px;padding:12px;border:1px solid #3d3d47;border-radius:8px}.mv45-appearance select{display:block;width:100%;margin:6px 0 12px;padding:8px;background:#15151b;color:#fff}.s2-item[draggable=true]{cursor:grab}.matt-block.mv45-width-wide{width:100%;max-width:1100px}.matt-block.mv45-width-full{width:100%;max-width:none}.matt-block.mv45-tone-accent{border-color:#e52b48!important;background:linear-gradient(120deg,#261116,#151515)!important}.matt-block.mv45-tone-muted{background:#121317!important;border-color:#383943!important}
