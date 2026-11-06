@@ -213,8 +213,8 @@
 <script src="supabase.js"></script>
 <script src="cms.js?v=36"></script>
 <script src="studio-blocks.js?v=35"></script>
-<link rel="stylesheet" href="studio-visual.css?v=36">
-<script src="studio-visual.js?v=38"></script>
+<link rel="stylesheet" href="studio-visual.css?v=39">
+<script src="studio-visual.js?v=39"></script>
 <script src="rewards-supabase.js?v=6-opt"></script>
 <script src="app.js?v=104"></script>
 <script src="auth-ui.js?v=35"></script>
@@ -227,7 +227,7 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=35-unified','cms-suite.js?v=lobby-only-20261103'].forEach(function(src){
+    ['cms-admin.js?v=39-events','cms-suite.js?v=lobby-only-20261103'].forEach(function(src){
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;

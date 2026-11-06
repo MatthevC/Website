@@ -29,3 +29,13 @@
 #mv-root .mv-trash.mv-restore{color:#9ce5ae;border-color:#306b4a}
 #mv-root .mv-item.mv-hidden{opacity:.55;border-style:dashed}
 #mv-root .mv-item.mv-hidden strong{text-decoration:line-through}
+
+/* Event Studio 3.9 */
+.mv-events-studio .mv-event-entry{display:flex;width:100%;flex-direction:column;align-items:flex-start;gap:7px;text-align:left;margin:7px 0;padding:13px;border:1px solid #38323c;border-radius:9px;background:#18171d;color:#fff;cursor:pointer}
+.mv-events-studio .mv-event-entry:hover{border-color:#ef3150;background:#27151d}
+.mv-events-studio .mv-event-entry strong{font-size:13px;white-space:normal}
+.mv-events-studio .mv-event-entry small{color:#a8a6ad}
+.mv-events-studio .mv-event-entry span{color:#ff536c;font-size:11px;font-weight:800}
+.mv-events-studio #mv-event-info{line-height:1.65;color:#c5c3ca}
+.mv-events-studio #mv-event-info h3{color:#fff}
+.mv-events-studio #mv-event-info .mv-red{width:100%;margin-top:15px}

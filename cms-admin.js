@@ -2788,7 +2788,7 @@
 
 
   function openDownloadsManager() {
-    if (!isAdmin()) return;
+    if (!isAdmin() && !has('downloads.create') && !has('downloads.edit') && !has('downloads.reorder') && !has('downloads.publish')) return;
     const esc = window.MattCMS?.escape || (v => String(v || ''));
     const baseItems = clone(window.MattDownloads?.baseItems || []);
     let config = clone(window.MattDownloads?.getConfig?.() || { order: [], overrides: {}, hidden: [], custom: [], visibility: {}, notes: {} });
@@ -4302,7 +4302,7 @@
     </article>`;
   }
 
-  function openEventsManager() {
+  function openEventsManager(initialEvent = undefined) {
     if (!isAdmin() || !any(
       'events.create','events.edit','events.delete','events.publish','events.duplicate',
       'events.notes.manage','events.history.view','events.history.restore','events.bulk.manage',
@@ -4334,6 +4334,12 @@
       $('[data-event-add]',body)?.addEventListener('click',()=>openEventForm(null));
       $$('[data-event-edit]',body).forEach(btn=>btn.addEventListener('click',()=>openEventForm(rows.find(row=>String(row.id)===String(btn.dataset.eventEdit))||null)));
       $$('[data-event-view]',body).forEach(btn=>btn.addEventListener('click',()=>openEventReadPreview(rows.find(row=>String(row.id)===String(btn.dataset.eventView))||null)));
+      if (initialEvent !== undefined) {
+        const requested = initialEvent; initialEvent = undefined;
+        if (requested === 'new') { if(has('events.create')) openEventForm(null); }
+        else { const found=rows.find(row=>String(row.id)===String(requested)); if(found && has('events.edit')) openEventForm(found); }
+        return;
+      }
       $$('[data-event-delete]',body).forEach(btn=>btn.addEventListener('click',async()=>{
         const row=rows.find(item=>String(item.id)===String(btn.dataset.eventDelete));
         if(!row || !has('events.delete')) return;
@@ -4745,7 +4751,7 @@
     await draw();
   }
 
-  window.MattAdminTools = Object.assign(window.MattAdminTools || {}, { mountBackups: host => openBackupsManager(host) });
+  window.MattAdminTools = Object.assign(window.MattAdminTools || {}, { mountBackups: host => openBackupsManager(host), openEvents: (id) => openEventsManager(id), openDownloads: () => openDownloadsManager() });
 
   window.addEventListener('matt-auth-change', () => { if (!has('page.text.edit') && inlineEditing) cancelInlineEdit(); refreshToolbar(); });
   window.addEventListener('hashchange', () => { if (inlineEditing) finishInlineEdit(); setTimeout(refreshToolbar, 0); });
