@@ -39,3 +39,22 @@
 .mv-events-studio #mv-event-info{line-height:1.65;color:#c5c3ca}
 .mv-events-studio #mv-event-info h3{color:#fff}
 .mv-events-studio #mv-event-info .mv-red{width:100%;margin-top:15px}
+
+/* MATT STUDIO 4.0: pulpit i dostępność */
+#mv-root .mv4-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2147483600;display:grid;place-items:center;padding:20px}
+#mv-root .mv4-dialog{background:#12141a;border:1px solid #4c2834;border-top:3px solid #ff3154;border-radius:14px;color:#fff;width:min(760px,95vw);max-height:88vh;overflow:auto;padding:25px;box-shadow:0 20px 70px #000b}
+#mv-root .mv4-dialog-head{display:flex;justify-content:space-between;gap:18px;align-items:start}
+#mv-root .mv4-dialog-head small{color:#ff4564;letter-spacing:2px;font-weight:800}
+#mv-root .mv4-dialog h2{margin:8px 0;font-size:26px}
+#mv-root .mv4-dialog p{color:#adb0bb;line-height:1.6}
+#mv-root .mv4-dialog-head button{background:#222630;color:#fff;border:1px solid #414551;border-radius:8px;padding:10px 14px}
+#mv-root .mv4-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:24px 0}
+#mv-root .mv4-metrics>div{padding:18px;background:#1c1f28;border:1px solid #303540;border-radius:10px;display:flex;flex-direction:column;gap:8px}
+#mv-root .mv4-metrics strong{font-size:23px;color:#fff;overflow-wrap:anywhere}
+#mv-root .mv4-metrics span{font-size:12px;color:#a6a9b4}
+#mv-root .mv4-actions{display:flex;flex-wrap:wrap;gap:10px}
+#mv-root .mv4-actions button{padding:12px;background:#27212a;color:white;border:1px solid #6b3441;border-radius:8px;cursor:pointer}
+#mv-root .mv4-actions button:hover{background:#682438}
+#mv-root .mv4-note{font-size:12px;margin-top:22px}
+#mv-root button:focus-visible,#mv-root [contenteditable]:focus-visible{outline:2px solid #ff6582;outline-offset:2px}
+@media(max-width:600px){#mv-root .mv4-metrics{grid-template-columns:1fr}#mv-root .mv4-dialog{padding:16px}}
