@@ -1,0 +1,70 @@
+#mv-root{position:fixed;inset:0;z-index:2147483000;background:#09090d;color:#f5f5f7;font:14px Arial,sans-serif;display:flex;flex-direction:column}#mv-root *{box-sizing:border-box}#mv-root button,#mv-root input,#mv-root select,#mv-root textarea{font:inherit}#mv-root button{cursor:pointer}#mv-root .mv-top{height:72px;flex-shrink:0;background:linear-gradient(110deg,#24070e,#101014 48%);border-bottom:1px solid #632034;display:flex;align-items:center;justify-content:space-between;padding:12px 22px;gap:15px}#mv-root .mv-brand{font-weight:900;font-size:23px;white-space:nowrap}#mv-root .mv-brand span{color:#ff3154}#mv-root .mv-top-actions{display:flex;gap:9px;align-items:center}#mv-root button{background:#23242b;color:#fff;border:1px solid #41414d;border-radius:9px;padding:10px 13px}#mv-root button:hover{border-color:#ff3154}#mv-root .mv-red{background:linear-gradient(#e52a4a,#a4092a);border-color:#fc395a;font-weight:bold}#mv-root .mv-body{display:grid;grid-template-columns:300px minmax(300px,1fr) 340px;gap:12px;padding:12px;min-height:0;flex:1}#mv-root .mv-pane{background:#14151b;border:1px solid #34343e;border-radius:13px;min-height:0;display:flex;flex-direction:column;overflow:hidden}#mv-root .mv-pane-head{padding:17px;border-bottom:1px solid #35353e;font-weight:800}#mv-root .mv-scroll{overflow:auto;flex:1;padding:14px}#mv-root .mv-small{font-size:11px;letter-spacing:1px;color:#fa4260;font-weight:800;margin-bottom:9px}#mv-root select,#mv-root input,#mv-root textarea{background:#101116;border:1px solid #454650;color:#f4f4f5;border-radius:8px;padding:11px;width:100%;outline:none}#mv-root textarea{resize:vertical;min-height:80px}#mv-root label{display:block;color:#b8b8c3;font-size:12px;margin:15px 0 7px}#mv-root .mv-item{display:flex;align-items:center;gap:8px;background:#202128;border:1px solid #383944;border-radius:9px;padding:11px;margin:8px 0;text-align:left;width:100%}#mv-root .mv-item.active{border-color:#ff3154;background:#32131f;box-shadow:inset 0 0 15px #58132555}#mv-root .mv-item strong{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#mv-root .mv-stage{flex:1;overflow:auto;background:#08080a;padding:22px;min-height:0}#mv-root .mv-preview{background:#111;max-width:100%;margin:auto;min-height:400px;border:1px solid #393943;border-radius:9px;padding:22px;transition:width .2s}#mv-root .mv-preview [data-mv-preview-card]{cursor:pointer;outline:1px solid transparent;outline-offset:5px;margin-bottom:16px}#mv-root .mv-preview [data-mv-preview-card].active{outline:2px solid #ff3154;border-radius:5px}#mv-root .mv-preview img{max-width:100%}#mv-root .mv-preview a{pointer-events:none}#mv-root .mv-preview h1,#mv-root .mv-preview h2,#mv-root .mv-preview h3{color:#fff}#mv-root .mv-preview p,#mv-root .mv-preview li{color:#ccc;line-height:1.6}#mv-root .mv-preview li{margin-bottom:5px}#mv-root .mv-editor{min-height:150px;background:#0c0d12;border:1px solid #484854;border-radius:9px;padding:13px;outline:none;line-height:1.6}#mv-root .mv-editor:focus{border-color:#f43f5e}#mv-root .mv-tools{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}#mv-root .mv-tools button{padding:7px 10px}#mv-root .mv-bottom{border-top:1px solid #373740;padding:12px;display:flex;gap:8px;flex-wrap:wrap}#mv-root .mv-status{font-size:12px;color:#a8a8b3;padding:10px 16px}#mv-root .mv-empty{color:#a6a6b1;line-height:1.6}#mv-root .mv-card-tag{font-size:10px;color:#ff5571;margin-bottom:7px;font-weight:bold}#mv-root .mv-preview-card{padding:14px;border:1px solid #35353a;background:#17171b;border-radius:9px;margin-bottom:14px}#mv-root .mv-preview-card h2{font-size:19px}#mv-root .mv-preview-card h3{font-size:16px}@media(max-width:1150px){#mv-root .mv-body{grid-template-columns:235px minmax(250px,1fr) 280px}}@media(max-width:850px){#mv-root .mv-body{display:flex;flex-direction:column;overflow:auto}#mv-root .mv-pane{min-height:240px;overflow:visible}#mv-root .mv-stage{min-height:320px}#mv-root .mv-top{height:auto;flex-wrap:wrap}}
+
+/* MATT Studio 3.1: actual page snapshot inside isolated, non-executing iframe */
+#mv-root .mv-stage{padding:12px;background:#09090c;display:flex;align-items:flex-start;justify-content:center}
+#mv-root .mv-preview{width:100%;max-width:100%;padding:0;min-height:0;overflow:hidden;background:#080809;box-shadow:0 12px 45px #0009;transition:width .2s}
+#mv-root .mv-site-frame{width:100%;height:calc(100vh - 200px);min-height:500px;border:0;display:block;background:#080809}
+#mv-root .mv-stage:has(.mv-preview[style*="390px"]){justify-content:center}
+
+/* Studio 3.2 usability: search, focus mode, clearer tool controls */
+#mv-root #mv-search{margin:2px 0 12px;background:#0b0c10;border-color:#444753}#mv-root .mv-item[hidden]{display:none!important}#mv-root .mv-item{transition:background .15s,border-color .15s}#mv-root .mv-item:focus-visible,#mv-root button:focus-visible{outline:2px solid #ff5877;outline-offset:2px}#mv-root.mv-focus-mode .mv-body{grid-template-columns:minmax(0,1fr)}#mv-root.mv-focus-mode .mv-body>aside{display:none}#mv-root.mv-focus-mode .mv-site-frame{height:calc(100vh - 195px)}#mv-root .mv-editor{min-height:90px}#mv-root .mv-pane-head{letter-spacing:.3px}#mv-root .mv-preview{border-color:#353540}
+
+/* Studio 3.4: visible duplication controls in main editor */
+#mv-root .mv-item-row{display:flex;align-items:center;gap:5px;margin:7px 0}
+#mv-root .mv-item-row .mv-item{margin:0;min-width:0;flex:1}
+#mv-root .mv-copy{flex:0 0 39px;padding:10px 5px;color:#ff8da3;border-color:#763145;font-size:19px}
+#mv-root .mv-copy:hover{background:#4b1828}
+#mv-root .mv-duplicate-selected{width:100%;margin:0 0 14px}
+
+/* Unified Studio 3: legacy block tools appear as an in-studio workspace. */
+#mv-root>.matt-studio2-overlay{position:absolute;inset:72px 0 0;z-index:10;background:#08090df5;padding:12px;display:flex;align-items:stretch;justify-content:center}
+#mv-root>.matt-studio2-overlay .matt-studio2-dialog{width:min(1440px,100%);height:100%;max-height:100%;border-color:#64253a}
+#mv-root>.matt-studio2-overlay .matt-studio2-dialog header{background:linear-gradient(100deg,#270b15,#14151b)}
+#mv-root>.matt-studio2-overlay .matt-studio2-dialog header h2{font-size:19px}
+#mv-root>.matt-studio2-overlay .matt-studio2-dialog footer button.primary{background:#c81c42}
+
+/* Studio 3.6: delete / restore buttons for the section list */
+#mv-root .mv-trash{flex:0 0 37px;padding:10px 4px;border-color:#713044;color:#ff8098;font-size:16px}
+#mv-root .mv-trash:hover{background:#5b172a;border-color:#ff3154}
+#mv-root .mv-trash.mv-restore{color:#9ce5ae;border-color:#306b4a}
+#mv-root .mv-item.mv-hidden{opacity:.55;border-style:dashed}
+#mv-root .mv-item.mv-hidden strong{text-decoration:line-through}
+
+/* Event Studio 3.9 */
+.mv-events-studio .mv-event-entry{display:flex;width:100%;flex-direction:column;align-items:flex-start;gap:7px;text-align:left;margin:7px 0;padding:13px;border:1px solid #38323c;border-radius:9px;background:#18171d;color:#fff;cursor:pointer}
+.mv-events-studio .mv-event-entry:hover{border-color:#ef3150;background:#27151d}
+.mv-events-studio .mv-event-entry strong{font-size:13px;white-space:normal}
+.mv-events-studio .mv-event-entry small{color:#a8a6ad}
+.mv-events-studio .mv-event-entry span{color:#ff536c;font-size:11px;font-weight:800}
+.mv-events-studio #mv-event-info{line-height:1.65;color:#c5c3ca}
+.mv-events-studio #mv-event-info h3{color:#fff}
+.mv-events-studio #mv-event-info .mv-red{width:100%;margin-top:15px}
+
+/* MATT STUDIO 4.0: pulpit i dostępność */
+#mv-root .mv4-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:2147483600;display:grid;place-items:center;padding:20px}
+#mv-root .mv4-dialog{background:#12141a;border:1px solid #4c2834;border-top:3px solid #ff3154;border-radius:14px;color:#fff;width:min(760px,95vw);max-height:88vh;overflow:auto;padding:25px;box-shadow:0 20px 70px #000b}
+#mv-root .mv4-dialog-head{display:flex;justify-content:space-between;gap:18px;align-items:start}
+#mv-root .mv4-dialog-head small{color:#ff4564;letter-spacing:2px;font-weight:800}
+#mv-root .mv4-dialog h2{margin:8px 0;font-size:26px}
+#mv-root .mv4-dialog p{color:#adb0bb;line-height:1.6}
+#mv-root .mv4-dialog-head button{background:#222630;color:#fff;border:1px solid #414551;border-radius:8px;padding:10px 14px}
+#mv-root .mv4-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:24px 0}
+#mv-root .mv4-metrics>div{padding:18px;background:#1c1f28;border:1px solid #303540;border-radius:10px;display:flex;flex-direction:column;gap:8px}
+#mv-root .mv4-metrics strong{font-size:23px;color:#fff;overflow-wrap:anywhere}
+#mv-root .mv4-metrics span{font-size:12px;color:#a6a9b4}
+#mv-root .mv4-actions{display:flex;flex-wrap:wrap;gap:10px}
+#mv-root .mv4-actions button{padding:12px;background:#27212a;color:white;border:1px solid #6b3441;border-radius:8px;cursor:pointer}
+#mv-root .mv4-actions button:hover{background:#682438}
+#mv-root .mv4-note{font-size:12px;margin-top:22px}
+#mv-root button:focus-visible,#mv-root [contenteditable]:focus-visible{outline:2px solid #ff6582;outline-offset:2px}
+@media(max-width:600px){#mv-root .mv4-metrics{grid-template-columns:1fr}#mv-root .mv4-dialog{padding:16px}}
+
+/* MATT STUDIO 4.5 */
+#mv-route{background:#191b24;color:#fff;border:1px solid #414451;border-radius:6px;padding:8px;max-width:150px}
+.mv45-history{max-height:45vh;overflow:auto}.mv45-history-row,.mv45-permissions>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border-bottom:1px solid #34343b}.mv45-history-row button{background:#a51938;color:white;border:0;border-radius:6px;padding:8px;cursor:pointer}.mv45-permissions{max-height:45vh;overflow:auto}.mv45-permissions code{font-size:12px}.mv45-permissions strong{white-space:nowrap}.mv45-appearance{margin-top:20px;padding:12px;border:1px solid #3d3d47;border-radius:8px}.mv45-appearance select{display:block;width:100%;margin:6px 0 12px;padding:8px;background:#15151b;color:#fff}.s2-item[draggable=true]{cursor:grab}.matt-block.mv45-width-wide{width:100%;max-width:1100px}.matt-block.mv45-width-full{width:100%;max-width:none}.matt-block.mv45-tone-accent{border-color:#e52b48!important;background:linear-gradient(120deg,#261116,#151515)!important}.matt-block.mv45-tone-muted{background:#121317!important;border-color:#383943!important}
+
+/* MATT STUDIO 5.0: czytelne akcje i panel szkiców */
+#mv-root .mv-top-actions{flex-wrap:wrap;justify-content:flex-end}#mv-root .mv-top{height:auto;min-height:72px}#mv-root #mv-drafts{border-color:#8d5362;background:#32202a}#mv-root #mv-save{background:#b8183c}#mv-root .mv4-actions .mv-red{background:#b8183c;border-color:#ff5575}#mv-root .mv-status{min-height:35px}#mv-root .mv-top-actions button{white-space:nowrap}
+
+/* MATT STUDIO 5.1: direct entry to the existing full-page drag-and-drop designer */
+#mv-root #mv-dragdrop{background:linear-gradient(120deg,#b8183c,#74172c);border-color:#ff6683;font-weight:800}#mv-root #mv-dragdrop:hover{filter:brightness(1.2)}
