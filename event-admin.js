@@ -359,8 +359,9 @@ document.getElementById("saveEditEvent")?.addEventListener("click",async()=>{
     document.getElementById("editEventTitle")?.value,
     document.getElementById("editEventStart")?.value
   );
-  await firebaseClient.storage.from("events").upload(name,file);
-  image=firebaseClient.storage.from("events").getPublicUrl(name).data.publicUrl;
+  const result=await firebaseClient.storage.from("events").upload(name,file);
+  if(result.error) throw new Error(result.error.message);
+  image=result.data.publicUrl;
  }
  const combine=(d,t)=>{let a=document.getElementById(d).value,b=document.getElementById(t).value||"00:00";return a?`${a}T${b}:00`:null};
  const upd={title:editEventTitle.value,description:editEventDesc.value,start_date:combine("editEventStart","editEventStartTime"),end_date:combine("editEventEnd","editEventEndTime"),publish_date:combine("editEventPublish","editEventPublishTime"), image_fit:document.getElementById("editEventImageFit")?.value || "contain", main_image_fit:document.getElementById("editEventMainImageFit")?.value || "contain"};

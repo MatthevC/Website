@@ -6,10 +6,11 @@ let sdk,auth,db;
 const ready=Promise.all([
  import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
  import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js'),
- import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js')
-]).then(([a,u,f])=>{const app=a.initializeApp(firebaseConfig);auth=u.getAuth(app);db=f.getFirestore(app);sdk={u,f};return new Promise(resolve=>u.onAuthStateChanged(auth,()=>resolve()));});
+ import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js'),
+ import('https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js')
+]).then(([a,u,f,st])=>{const app=a.initializeApp(firebaseConfig);auth=u.getAuth(app);db=f.getFirestore(app);sdk={u,f,st,storage:st.getStorage(app)};return new Promise(resolve=>u.onAuthStateChanged(auth,()=>resolve()));});
 const fail=(message)=>({data:null,error:{message,code:'firebase-operation-unavailable'}});
-const collectionMap={profiles:'profiles',cms_data:'cms_data',events:'events',rewards:'rewards',matt_lobby_game_config:'matt_lobby_game_config',matt_contact_submissions:'matt_contact_submissions',matt_user_permissions:'legacy_user_permissions'};
+const collectionMap={profiles:'profiles',cms_data:'cms_data',events:'events',rewards:'rewards',matt_lobby_game_config:'matt_lobby_game_config',matt_contact_submissions:'matt_contact_submissions',matt_user_permissions:'legacy_user_permissions',matt_lobby_conflicts:'matt_lobby_conflicts'};
 const docId=(table,row)=>String(table==='cms_data'?row.key:table==='matt_lobby_game_config'?row.game:row.id||'');
 const date=(v)=>v?.toDate?.()?.toISOString?.()||v;
 const normalize=(d)=>Object.fromEntries(Object.entries(d||{}).map(([k,v])=>[k,date(v)]));
@@ -75,7 +76,14 @@ const rpc=async(name,args={})=>{await ready;
  if(name==='matt_cms_remove'){return new Query('cms_data').delete().eq('key',args.p_key).run();}
  return fail(`Funkcja ${name} wymaga migracji na Firebase i jest wyłączona w wersji testowej.`);
 };
+// Firebase Storage upload is asynchronous; cache the download URL for the legacy synchronous getPublicUrl API.
+const uploadedUrls=new Map();
+const storageApi={from:(bucket)=>({
+ async upload(path,file){try{await ready;if(!auth.currentUser)return fail('Zaloguj się, aby wysłać plik.');const key=`${bucket}/${path}`;const ref=sdk.st.ref(sdk.storage,key);await sdk.st.uploadBytes(ref,file,{contentType:file.type||'application/octet-stream'});const url=await sdk.st.getDownloadURL(ref);uploadedUrls.set(key,url);return {data:{path,publicUrl:url},error:null};}catch(e){return fail(e.message||String(e));}},
+ async remove(paths){try{await ready;if(!auth.currentUser)return fail('Zaloguj się, aby usunąć plik.');for(const path of paths){await sdk.st.deleteObject(sdk.st.ref(sdk.storage,`${bucket}/${path}`));uploadedUrls.delete(`${bucket}/${path}`);}return {data:paths,error:null};}catch(e){return fail(e.message||String(e));}},
+ getPublicUrl(path){const url=uploadedUrls.get(`${bucket}/${path}`)||'';return {data:{publicUrl:url},error:url?null:{message:'Nieznany adres pliku. Wczytaj adres z Firestore lub prześlij plik ponownie.'}};}
+})};
 const unsupported=(what)=>({data:null,error:{message:`${what} wymaga osobnej migracji; operacja zablokowana.`}});
-const facade={auth:authApi,from:(name)=>new Query(name),rpc,functions:{invoke:async()=>unsupported('Funkcje serwerowe')},storage:{from:()=>({upload:async()=>unsupported('Przesyłanie plików'),remove:async()=>unsupported('Usuwanie plików'),getPublicUrl:()=>({data:{publicUrl:''},error:{message:'Storage nieprzeniesiony'}})})}};
+const facade={auth:authApi,from:(name)=>new Query(name),rpc,functions:{invoke:async()=>unsupported('Funkcje serwerowe')},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();

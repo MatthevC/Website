@@ -559,7 +559,7 @@
     ['inbox','WNIOSKI / KONTAKT',isStaff() && (viewerIsAdmin() || has('cms.inbox.view'))?[['inbox','Wnioski',null]]:[]],
     ['bots','BOTY', [['lobby','MATT LOBBY',null]].filter(()=>viewerIsAdmin() || any('lobby.conflicts.view','lobby.config.view'))],
     ['history','HISTORIA',[[ 'history','Dziennik zmian','cms.history.view'],['search','Wyszukiwarka','cms.search']]],
-    ['backups','BACKUPY',[[ 'backups','Kopie zapasowe',null],['trash','Kosz','cms.trash.view']].filter(([id,,perm])=>id==='backups'?any('backups.view','github.restore'):has(perm))],
+    ['trash','KOSZ', [['trash','Kosz','cms.trash.view']]],
     ['security','BEZPIECZEŃSTWO',[[ 'alerts','Alerty','cms.notifications.view'],['integrity','Integralność','cms.integrity.check'],['maintenance','Konserwacja','site.maintenance.manage']]],
     ['settings','USTAWIENIA',[[ 'links','Linki','cms.links.check']]]
   ].map(([id,label,children])=>[id,label,children.filter(([, ,permission])=>permission === null || has(permission))]).filter(([, ,children])=>children.length);
