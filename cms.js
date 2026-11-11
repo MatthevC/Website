@@ -227,9 +227,29 @@
 
   function renderHeroImage(data) {
     const img = document.querySelector('.hero-main.hero-main-image > img');
-    if (!img || !data || typeof data !== 'object') return;
-    if (data.url) img.src = String(data.url);
+    if (!img) return;
+    const fallback = new URL('assets/pictures/home/matts-world-hero.png', document.baseURI).href;
+    const restore = () => {
+      img.onerror = null;
+      if (img.src !== fallback) img.src = fallback;
+    };
+    img.onerror = restore;
+    if (!data || typeof data !== 'object') return;
     if (typeof data.alt === 'string' && data.alt.trim()) img.alt = data.alt.trim();
+    const url = typeof data.url === 'string' ? data.url.trim() : '';
+    if (!url) return;
+    // Legacy root-relative links point outside a GitHub Pages project repository.
+    let target;
+    try {
+      if (/^\/(?!\/)/.test(url) && !url.startsWith(new URL('.', document.baseURI).pathname)) {
+        target = new URL(url.replace(/^\/+/, ''), document.baseURI).href;
+      } else {
+        target = new URL(url, document.baseURI).href;
+      }
+      if (!['https:', 'http:', 'data:', 'blob:'].includes(new URL(target).protocol)) return;
+    } catch (_) { return; }
+    if (img.src !== target) img.src = target;
+    if (img.complete && img.naturalWidth === 0) restore();
   }
 
 
