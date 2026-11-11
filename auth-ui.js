@@ -1600,9 +1600,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.onclick = async () => {
       msg.textContent = "Logowanie...";
       // Firebase Auth używa e-maila. Nie odczytujemy prywatnych profili przed zalogowaniem.
-      const email = nick.value.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        msg.textContent = "Wpisz adres e-mail konta Firebase (logowanie nickiem wymaga osobnego, bezpiecznego mapowania).";
+      const email = window.mattLoginAlias?.resolve(nick.value);
+      if (!email) {
+        msg.textContent = "Na tym urządzeniu zaloguj się najpierw e-mailem. Następnie będziesz mógł używać nicku.";
         return;
       }
 
@@ -1614,6 +1614,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         msg.textContent = "Nie udało się zalogować. Sprawdź e-mail i hasło Firebase.";
         return;
       }
+      try {
+        const { data: { session } } = await firebaseClient.auth.getSession();
+        if (session?.user?.id && session?.user?.email) {
+          const p = await firebaseClient.from('profiles').select('username').eq('id',session.user.id).maybeSingle();
+          if (p.data?.username) window.mattLoginAlias?.remember(p.data.username,session.user.email);
+        }
+      } catch (_) {}
       location.reload();
     };
 
