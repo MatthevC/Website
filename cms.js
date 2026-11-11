@@ -111,9 +111,9 @@
 
   async function save(key, data, options = {}) {
     requireLoggedIn();
-    if (options.backup !== false) {
-      await createBackup(options.backupLabel || `AUTO: przed zmianą CMS — ${key}`);
-    }
+    // Firebase: legacy Supabase backup RPC is not available.
+    // Do not block an authorized CMS write on an unrelated legacy backup operation.
+    // Firestore security rules must enforce write access independently of this UI check.
     const { error } = await firebaseClient.rpc('matt_cms_save', { p_key: key, p_data: data });
     if (error) throw error;
     cache.set(key, data);
@@ -122,9 +122,7 @@
 
   async function remove(key, options = {}) {
     requireLoggedIn();
-    if (options.backup !== false) {
-      await createBackup(options.backupLabel || `AUTO: przed przywróceniem z GitHuba — ${key}`);
-    }
+    // Legacy backup RPC is unavailable on Firebase; deletion still requires Firestore authorization.
     const { error } = await firebaseClient.rpc('matt_cms_remove', { p_key: key });
     if (error) throw error;
     cache.delete(key);
