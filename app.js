@@ -3021,15 +3021,9 @@ const FALLBACK_EVENTS = [
 ];
 
 function getEventsUrl() {
-  // app.js jest ładowany z /Website/app.js, więc ścieżka do eventów
-  // jest liczona względem rzeczywistego położenia pliku JS.
-  const script = document.querySelector('script[src*="app.js"]');
-  if (script) {
-    return new URL("../Website/events/events.json", new URL(script.src, document.baseURI)).href;
-  }
-
-  // Fallback dla GitHub Pages /Website/
-  return new URL("events/events.json", document.baseURI).href;
+  // Relatywna ścieżka działa niezależnie od nazwy repozytorium GitHub Pages.
+  const script = [...document.scripts].find(el => /(?:^|\/)app\.js(?:\?|$)/.test(el.getAttribute('src') || ''));
+  return new URL('events/events.json', script ? script.src : document.baseURI).href;
 }
 
 const EVENTS_CACHE_KEY = "matt_events_rows_v2";
