@@ -41,6 +41,12 @@
   }
 
   const ready = loadAll();
+  // Retry CMS data after sign-in: public Firestore rules may not permit full collection listing.
+  window.addEventListener('matt-auth-change', event => {
+    if (event?.detail?.role && event.detail.role !== 'guest') {
+      refreshAll().then(ok => { if(ok) { const route=window.MattCMS?.routeKey?.(location.hash)||'home'; window.MattCMS?.applyRoute?.(route); } });
+    }
+  });
 
   function get(key, fallback = null) {
     return cache.has(key) ? cache.get(key) : fallback;
@@ -116,7 +122,10 @@
     // Firestore security rules must enforce write access independently of this UI check.
     const { error } = await firebaseClient.rpc('matt_cms_save', { p_key: key, p_data: data });
     if (error) throw error;
-    cache.set(key, data);
+    // Verify persisted data instead of reporting success based only on a write acknowledgement.
+    const {data:stored,error:readError}=await firebaseClient.from('cms_data').select('data').eq('key',key).maybeSingle();
+    if(readError || !stored || JSON.stringify(stored.data)!==JSON.stringify(data)) throw new Error('Zapis nie został potwierdzony przez ponowny odczyt Firestore. '+(readError?.message||''));
+    cache.set(key, stored.data);
     return data;
   }
 

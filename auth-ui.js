@@ -836,7 +836,8 @@ async function mattOpenAccountManager() {
       mattLoadExtraPermissionsMap()
     ]);
     if (accountsRes.error) throw accountsRes.error;
-    if (catalogRes.error) throw catalogRes.error;
+    // Catalog is optional during Firebase migration; local catalog still enables permission editor.
+    if (catalogRes.error) console.warn('Katalog Firestore niedostępny, używam katalogu wbudowanego:', catalogRes.error.message);
     dbCatalogPermissions = new Set((catalogRes.data || []).map(item => item.permission));
     accounts = (accountsRes.data || []).map(account => {
       const base = Array.isArray(account.permissions) ? account.permissions : [];

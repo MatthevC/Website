@@ -10,7 +10,7 @@ const ready=Promise.all([
  import('https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js')
 ]).then(([a,u,f,st])=>{const app=a.initializeApp(firebaseConfig);auth=u.getAuth(app);db=f.getFirestore(app);sdk={u,f,st,storage:st.getStorage(app)};return new Promise(resolve=>u.onAuthStateChanged(auth,()=>resolve()));});
 const fail=(message)=>({data:null,error:{message,code:'firebase-operation-unavailable'}});
-const collectionMap={profiles:'profiles',cms_data:'cms_data',events:'events',rewards:'rewards',matt_lobby_game_config:'matt_lobby_game_config',matt_contact_submissions:'matt_contact_submissions',matt_user_permissions:'legacy_user_permissions',matt_lobby_conflicts:'matt_lobby_conflicts'};
+const collectionMap={matt_permission_catalog:'matt_permission_catalog',profiles:'profiles',cms_data:'cms_data',events:'events',rewards:'rewards',matt_lobby_game_config:'matt_lobby_game_config',matt_contact_submissions:'matt_contact_submissions',matt_user_permissions:'legacy_user_permissions',matt_lobby_conflicts:'matt_lobby_conflicts'};
 const docId=(table,row)=>String(table==='cms_data'?row.key:table==='matt_lobby_game_config'?row.game:row.id||'');
 const date=(v)=>v?.toDate?.()?.toISOString?.()||v;
 const normalize=(d)=>Object.fromEntries(Object.entries(d||{}).map(([k,v])=>[k,date(v)]));
@@ -70,7 +70,20 @@ const authApi={
 const rpc=async(name,args={})=>{await ready;
  if(name==='matt_get_my_access'){
   if(!auth.currentUser)return {data:null,error:null};
-  try{const p=await sdk.f.getDoc(sdk.f.doc(db,'profiles',auth.currentUser.uid));const profile=p.data();return {data:profile?{role:profile.role,permissions:[],user_id:auth.currentUser.uid,username:profile.username}:null,error:null};}catch(e){return fail(e.message);}
+  try{const p=await sdk.f.getDoc(sdk.f.doc(db,'profiles',auth.currentUser.uid));const profile=p.data();return {data:profile?{role:profile.role,permissions:Array.isArray(profile.permissions)?profile.permissions:[],user_id:auth.currentUser.uid,username:profile.username}:null,error:null};}catch(e){return fail(e.message);}
+ }
+ if(name==='matt_admin_list_accounts'){
+  if(auth.currentUser?.uid!=='6UYgp0Lj7NMDRbIK3UBr40oNRLq2')return fail('Brak uprawnień administratora.');
+  try{const snap=await sdk.f.getDocs(sdk.f.collection(db,'profiles'));
+    return {data:snap.docs.map(d=>{const p=normalize(d.data());return {...p,auth_user_id:p.firebase_uid||p.auth_user_id||d.id,username:p.username||'',role:p.role||'user',permissions:Array.isArray(p.permissions)?p.permissions:[]};}),error:null};
+  }catch(e){return fail(e.message||String(e));}
+ }
+ if(name==='matt_admin_set_account_access'){
+  if(auth.currentUser?.uid!=='6UYgp0Lj7NMDRbIK3UBr40oNRLq2')return fail('Brak uprawnień administratora.');
+  const uid=String(args.p_user_id||'');const role=String(args.p_role||'user');
+  if(!/^[A-Za-z0-9_-]{10,128}$/.test(uid)||!['admin','moderator','user'].includes(role))return fail('Nieprawidłowy użytkownik lub rola.');
+  if(uid==='6UYgp0Lj7NMDRbIK3UBr40oNRLq2'&&role!=='admin')return fail('Nie można odebrać roli głównemu administratorowi.');
+  try{await sdk.f.updateDoc(sdk.f.doc(db,'profiles',uid),{role,permissions:Array.isArray(args.p_permissions)?args.p_permissions.filter(x=>typeof x==='string').slice(0,200):[]});return {data:true,error:null};}catch(e){return fail(e.message||String(e));}
  }
  if(name==='matt_cms_save'){const q=new Query('cms_data');return q.upsert({key:args.p_key,data:args.p_data,updated_at:new Date().toISOString()}).run();}
  if(name==='matt_cms_remove'){return new Query('cms_data').delete().eq('key',args.p_key).run();}
