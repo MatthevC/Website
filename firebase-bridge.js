@@ -85,7 +85,19 @@ const rpc=async(name,args={})=>{await ready;
   if(uid==='6UYgp0Lj7NMDRbIK3UBr40oNRLq2'&&role!=='admin')return fail('Nie można odebrać roli głównemu administratorowi.');
   try{await sdk.f.updateDoc(sdk.f.doc(db,'profiles',uid),{role,permissions:Array.isArray(args.p_permissions)?args.p_permissions.filter(x=>typeof x==='string').slice(0,200):[]});return {data:true,error:null};}catch(e){return fail(e.message||String(e));}
  }
- if(name==='matt_cms_save'){const q=new Query('cms_data');return q.upsert({key:args.p_key,data:args.p_data,updated_at:new Date().toISOString()}).run();}
+ if(name==='matt_cms_save'){
+  // CMS overrides are a complete map. Replacing the document is essential:
+  // merge:true would retain deleted keys such as t0001 when restoring base text.
+  if(!auth.currentUser)return fail('Zaloguj się, aby zapisywać dane.');
+  const key=String(args.p_key||'');
+  if(!key || !args.p_data || typeof args.p_data!=='object' || Array.isArray(args.p_data))return fail('Nieprawidłowe dane CMS.');
+  try{
+    await sdk.f.setDoc(sdk.f.doc(db,'cms_data',key),{
+      key,data:args.p_data,updated_at:new Date().toISOString()
+    });
+    return {data:null,error:null};
+  }catch(e){return fail(e.message||String(e));}
+ }
  if(name==='matt_cms_remove'){return new Query('cms_data').delete().eq('key',args.p_key).run();}
  return fail(`Funkcja ${name} wymaga migracji na Firebase i jest wyłączona w wersji testowej.`);
 };
