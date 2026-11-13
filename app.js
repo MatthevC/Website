@@ -1,3 +1,18 @@
+
+// Compatibility for image URLs saved before assets/ migration.
+// Retry only missing local pictures once, without affecting working images.
+document.addEventListener('error', function mattRestoreLegacyPicture(event) {
+  const img = event.target;
+  if (!(img instanceof HTMLImageElement) || img.dataset.mattPictureRetried) return;
+  let url;
+  try { url = new URL(img.currentSrc || img.src, document.baseURI); } catch (_) { return; }
+  if (url.origin !== location.origin) return;
+  const match = url.pathname.match(/^(\/Website)?\/pictures\/(.+)$/i);
+  if (!match) return;
+  img.dataset.mattPictureRetried = '1';
+  url.pathname = (match[1] || '') + '/assets/pictures/' + match[2];
+  img.src = url.href;
+}, true);
 let tocScrollLock = false;
 let tocUnlockTimer = null;
 let tocScrollListenerReady = false;
