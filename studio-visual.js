@@ -85,6 +85,19 @@ function createSnapshot(){
  const stylesheet=[...document.querySelectorAll('link[rel="stylesheet"]')].filter(x=>!x.href.includes('studio-visual.css')).map(x=>`<link rel="stylesheet" href="${esc(x.href)}">`).join('');
  const h=header?header.cloneNode(true):null;
  if(h){h.querySelectorAll('.user-area,.mobile-menu-btn').forEach(x=>x.remove());}
+ // The preview is intentionally script-free. Remove inline handlers and javascript: URLs
+ // from cloned markup to avoid sandbox execution errors without enabling scripts.
+ for (const subtree of [clone, h].filter(Boolean)) {
+   for (const el of [subtree, ...subtree.querySelectorAll('*')]) {
+     for (const attr of [...el.attributes]) {
+       const name = attr.name.toLowerCase();
+       if (name.startsWith('on') || ((name === 'href' || name === 'src') && /^\s*javascript:/i.test(attr.value))) {
+         el.removeAttribute(attr.name);
+       }
+     }
+     if (el.tagName === 'SCRIPT') el.remove();
+   }
+ }
  const html=`<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base href="${esc(base)}">${stylesheet}<style>html{scroll-behavior:auto!important}body{margin:0!important}a,button{cursor:default!important}[data-mv-picked]{outline:3px solid #ff3154!important;outline-offset:3px!important;box-shadow:0 0 0 5px #ff31542b!important} [data-cms-text-id]{cursor:pointer!important} .mv-hover{outline:2px dashed #ff8aa0!important;outline-offset:3px!important}</style></head><body>${h?h.outerHTML:''}${clone.outerHTML}</body></html>`;
  const host=$('#mv-preview',root);host.innerHTML='';frame=document.createElement('iframe');frame.className='mv-site-frame';frame.title='Podgląd prawdziwej strony';frame.setAttribute('sandbox','allow-same-origin');host.append(frame);
  frame.addEventListener('load',()=>{

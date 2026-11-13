@@ -115,6 +115,15 @@
     return createBackup(label, { type: 'manual' });
   }
 
+  // Firestore may reorder map keys during serialization. Compare values, not JSON key order.
+  function canonical(value) {
+    if (Array.isArray(value)) return value.map(canonical);
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(Object.keys(value).sort().map(k => [k, canonical(value[k])]));
+    }
+    return value;
+  }
+
   async function save(key, data, options = {}) {
     requireLoggedIn();
     // Firebase: legacy Supabase backup RPC is not available.
@@ -124,7 +133,7 @@
     if (error) throw error;
     // Verify persisted data instead of reporting success based only on a write acknowledgement.
     const {data:stored,error:readError}=await firebaseClient.from('cms_data').select('data').eq('key',key).maybeSingle();
-    if(readError || !stored || JSON.stringify(stored.data)!==JSON.stringify(data)) throw new Error('Zapis nie został potwierdzony przez ponowny odczyt Firestore. '+(readError?.message||''));
+    if(readError || !stored || JSON.stringify(canonical(stored.data))!==JSON.stringify(canonical(data))) throw new Error('Zapis nie został potwierdzony przez ponowny odczyt Firestore. '+(readError?.message||''));
     cache.set(key, stored.data);
     return data;
   }
