@@ -49,12 +49,77 @@
    if(String(r.title||'').startsWith('Dixper')) return '<p><a href="#/viewer/dixper" class="reward-inline-link">Więcej info tutaj →</a></p>';
    return '';
  }
+ // Lokalny katalog grafik nagrod. Dane i kolejnosc kart pozostaja w Firebase.
+ const REWARD_ASSETS='/Website/assets/pictures/rewards/';
+ const knownImages={
+   'banicja':'twitch_reward_ban_24h_56x56.png',
+   'ban na slowo':'ban_slowa_56x56.png',
+   'wybor gry':'twitch_reward_choose_game_56x56.png',
+   'wybierz gre':'twitch_reward_choose_game_56x56.png',
+   'zmiana gry':'twitch_reward_choose_game_56x56.png',
+   'test build':'twitch_reward_test_build_56x56.png',
+   'alt f4':'twitch_reward_alt_f4_transparent_56x56.png',
+   'zamowienie z pyszne do 50 zl / 100 zl':'fac075d8-e54d-4de3-938e-9c536aca56a9.png',
+ };
+ const availableFiles=new Set([
+   'b74a5aaa-c5f9-4e1c-8500-cfd1c1c1f7e8.png','ban_slowa_56x56.png',
+   'be4fcfe4-94ba-4a85-8597-7ce52d26dffe.png','d84e13dd-b36d-41b0-9e08-6eb39a18b8b7.png',
+   'fac075d8-e54d-4de3-938e-9c536aca56a9.png','killer_56x56.png','survivor_56x56.png',
+   'twitch_reward_alt_f4_transparent_56x56.png','twitch_reward_ban_24h_56x56.png',
+   'twitch_reward_choose_game_56x56.png','twitch_reward_test_build_56x56.png'
+ ]);
+ function normalizedTitle(value){
+   return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/ł/g,'l').replace(/[^a-z0-9]+/g,' ').trim();
+ }
+ function rewardImage(r){
+   const title=normalizedTitle(r.title);
+   const known=knownImages[title];
+   if(known) return REWARD_ASSETS+known;
+   if(title.includes('pyszne')) return REWARD_ASSETS+'fac075d8-e54d-4de3-938e-9c536aca56a9.png';
+   if(title.includes('ban na slowo')) return REWARD_ASSETS+'ban_slowa_56x56.png';
+   if(title.includes('killer') && (title.includes('losow')||title.includes('random'))) return REWARD_ASSETS+'killer_56x56.png';
+   if((title.includes('survivor')||title.includes('surw')) && (title.includes('losow')||title.includes('random'))) return REWARD_ASSETS+'survivor_56x56.png';
+   const original=String(r.image_data||r.image||'').trim();
+   if(!original) return '';
+   if(/^data:image\//i.test(original)||/^blob:/i.test(original)) return original;
+   try {
+     const u=new URL(original,location.href);
+     if(u.origin===location.origin){
+       const file=decodeURIComponent(u.pathname.split('/').pop()||'');
+       if(availableFiles.has(file)) return REWARD_ASSETS+file;
+       // Historyczne pliki z /pictures/rewards/ bez /assets/.
+       if(u.pathname.includes('/pictures/rewards/')) return '';
+     }
+     // Zewnetrzne URL-e moga nadal byc prawidlowe; blad obsluzy fallback.
+     return /^https?:$/.test(u.protocol)?u.href:'';
+   }catch(_){return '';}
+ }
+ function rewardFallback(r){
+   const title=normalizedTitle(r.title);
+   if(title.includes('bingo')) return '🎲';
+   if(title.includes('dixper')) return '🎁';
+   if(title.includes('subik')) return '⭐';
+   if(title.includes('spam')||title.includes('like')) return '❤️';
+   if(title.includes('ban')) return '🔨';
+   return r.icon||'🎁';
+ }
+ // Brak grafiki nie powinien wyswietlac uszkodzonej ikony i tekstu alt.
+ document.addEventListener('error',event=>{
+   const img=event.target;
+   if(!(img instanceof HTMLImageElement)||!img.matches('.rewards-page .reward-custom-image')) return;
+   const wrapper=img.closest('.reward-graphic');
+   if(!wrapper) return;
+   const fallback=img.getAttribute('data-reward-fallback')||'🎁';
+   img.remove();
+   wrapper.textContent=fallback;
+ },true);
  function card(r,priority=false){
    const color=esc(r.icon_color||'');
    const family=r.family?` data-reward-family-card="${esc(r.family)}"`:'';
-   const image=r.image_data||r.image;
+   const image=rewardImage(r);
+   const fallback=rewardFallback(r);
    return `<article class="reward-card" data-reward-card data-firebase-reward="true"${family}>
-    <div class="reward-card-top"><div class="reward-graphic ${color}">${image?`<img class="reward-custom-image" src="${esc(image)}" alt="" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''} style="object-fit:${esc(r.image_fit||'cover')};object-position:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%;transform:scale(${Math.max(50,Math.min(250,Number(r.image_scale||100)))/100});transform-origin:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%">`:esc(r.icon||'🎁')}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
+    <div class="reward-card-top"><div class="reward-graphic ${color}">${image?`<img class="reward-custom-image" src="${esc(image)}" data-reward-fallback="${esc(fallback)}" alt="" loading="${priority?'eager':'lazy'}" decoding="async"${priority?' fetchpriority="high"':''} style="object-fit:${esc(r.image_fit||'cover')};object-position:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%;transform:scale(${Math.max(50,Math.min(250,Number(r.image_scale||100)))/100});transform-origin:${Number(r.image_x??50)}% ${Number(r.image_y??50)}%">`:esc(fallback)}</div><span class="reward-cost">${esc(r.cost||'')}</span></div>
     <h3>${esc(r.title||'')}</h3><p>${esc(r.description||'')}</p>${extras(r)}
    </article>`;
  }
