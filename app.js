@@ -3131,17 +3131,47 @@ async function loadEvents() {
   }
 }
 
+// Automatyczna, bezplatna grafika zastepcza dla eventow (bez zapisu w Firebase).
+function mattEventFallbackImage(event) {
+  const title = String(event?.title || 'WYDARZENIE MATT’S WORLD').trim().slice(0, 90);
+  const description = String(event?.excerpt || event?.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 105);
+  const xml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  const wrap = (value, limit, maxLines) => {
+    const words = value.split(/\s+/).filter(Boolean);
+    const lines = []; let current = '';
+    for (const word of words) {
+      if ((current + ' ' + word).trim().length > limit && current) { lines.push(current); current = word; }
+      else current = (current + ' ' + word).trim();
+      if (lines.length >= maxLines) break;
+    }
+    if (current && lines.length < maxLines) lines.push(current);
+    return lines;
+  };
+  const titleLines = wrap(title.toUpperCase(), 22, 3);
+  const descriptionLines = wrap(description, 44, 2);
+  const titleSvg = titleLines.map((line, i) => `<text x="52" y="${185 + i * 54}" fill="#fff" font-size="42" font-family="Arial,sans-serif" font-weight="900">${xml(line)}</text>`).join('');
+  const descSvg = descriptionLines.map((line, i) => `<text x="54" y="${386 + i * 25}" fill="#c5b8bd" font-size="19" font-family="Arial,sans-serif">${xml(line)}</text>`).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#171015"/><stop offset=".58" stop-color="#2b1018"/><stop offset="1" stop-color="#09090c"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/><circle cx="850" cy="110" r="250" fill="#ff253d" opacity=".08"/><path d="M0 0h11v540H0z" fill="#f5223c"/><text x="52" y="75" fill="#ff4255" font-family="Arial,sans-serif" font-size="21" font-weight="800" letter-spacing="4">MATT’S WORLD  /  EVENT</text><path d="M52 101h855" stroke="#86303d" stroke-width="2"/>${titleSvg}${descSvg}<path d="M52 468h855" stroke="#86303d" stroke-width="2"/><text x="52" y="510" fill="#ff4255" font-size="18" font-weight="800" font-family="Arial,sans-serif" letter-spacing="2">WSPÓLNE GRANIE • SPOŁECZNOŚĆ • WYDARZENIA</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// Jesli istniejacy adres grafiki zwraca 404, pokaz przygotowany podglad.
+document.addEventListener('error', function mattEventImageFallback(error) {
+  const img = error.target;
+  if (!(img instanceof HTMLImageElement) || !img.matches('img[data-matt-event-fallback]')) return;
+  if (img.dataset.mattFallbackApplied === '1') return;
+  img.dataset.mattFallbackApplied = '1';
+  img.src = img.dataset.mattEventFallback;
+}, true);
+
 function eventCard(event) {
   const ended = isEventEnded(event);
   const ongoing = isEventOngoing(event);
   const archived = event.archived === true;
   const statusBadge = archived ? '<div class="event-ended-badge event-archive-badge">ARCHIWUM</div>' : (ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : ''));
-  const cover = event.image
-    ? `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
-         <img style="object-fit:${escapeHtml(event.imageFit || "contain")};object-position:center" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.title)}" loading="lazy">
-         ${statusBadge}
-       </div>`
-    : `<div class="event-cover${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
+  const fallback = mattEventFallbackImage(event);
+  const cover = `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
+         <img style="object-fit:${event.image ? escapeHtml(event.imageFit || "contain") : "cover"};object-position:center" src="${escapeHtml(event.image || fallback)}" data-matt-event-fallback="${escapeHtml(fallback)}" alt="Grafika wydarzenia: ${escapeHtml(event.title)}" loading="lazy">
          ${statusBadge}
        </div>`;
 
