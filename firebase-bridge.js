@@ -97,6 +97,16 @@ const storageApi={from:(bucket)=>({
  getPublicUrl(path){const url=uploadedUrls.get(`${bucket}/${path}`)||'';return {data:{publicUrl:url},error:url?null:{message:'Nieznany adres pliku. Wczytaj adres z Firestore lub prześlij plik ponownie.'}};}
 })};
 const unsupported=(what)=>({data:null,error:{message:`${what} wymaga osobnej migracji; operacja zablokowana.`}});
-const facade={auth:authApi,from:(name)=>new Query(name),rpc,functions:{invoke:async()=>unsupported('Funkcje serwerowe')},storage:storageApi};
+// Verify CMS writes against the Firestore server, never the local snapshot cache.
+async function readCmsFromServer(key) {
+  try {
+    await ready;
+    const snap = await sdk.f.getDocFromServer(sdk.f.doc(db, 'cms_data', String(key)));
+    return {data: snap.exists() ? normalize(snap.data()) : null, error: null};
+  } catch (e) {
+    return fail(e.message || String(e));
+  }
+}
+const facade={auth:authApi,from:(name)=>new Query(name),readCmsFromServer,rpc,functions:{invoke:async()=>unsupported('Funkcje serwerowe')},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();

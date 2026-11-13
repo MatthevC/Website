@@ -132,7 +132,7 @@
     const { error } = await firebaseClient.rpc('matt_cms_save', { p_key: key, p_data: data });
     if (error) throw error;
     // Verify persisted data instead of reporting success based only on a write acknowledgement.
-    const {data:stored,error:readError}=await firebaseClient.from('cms_data').select('data').eq('key',key).maybeSingle();
+    const {data:stored,error:readError}=await firebaseClient.readCmsFromServer(key);
     if(readError || !stored || JSON.stringify(canonical(stored.data))!==JSON.stringify(canonical(data))) throw new Error('Zapis nie został potwierdzony przez ponowny odczyt Firestore. '+(readError?.message||''));
     cache.set(key, stored.data);
     return data;
