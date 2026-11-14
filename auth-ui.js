@@ -408,7 +408,7 @@ function mattSetHeaderUser(profile) {
   }
 
   name.textContent = profile.username || "UŻYTKOWNIK";
-  avatar.src = profile.avatar_url || MATT_DEFAULT_AVATAR;
+  avatar.src = profile.avatar_url || mattDefaultMonkey(profile?.id || profile?.auth_user_id);
   avatar.hidden = false;
   avatar.onerror = () => {
     avatar.onerror = null;
@@ -419,12 +419,8 @@ function mattSetHeaderUser(profile) {
 
 async function mattGetOwnProfile(session) {
   if (!session?.user) return null;
-
-  const result = await firebaseClient.from("profiles")
-    .select("id,username,email,role,avatar_url,avatar_path,auth_user_id,must_complete_account")
-    .eq("id", session.user.id).maybeSingle();
-  if (result.error) throw result.error;
-  return result.data;
+  const data = await mattProfileApi('/profile/me', {}, session);
+  return data.profile;
 }
 
 async function mattLoadUserHeader() {
@@ -515,7 +511,7 @@ async function mattForceFirstLoginSetup(session, profile) {
   modal.classList.add("active");
   modal.setAttribute("aria-hidden", "false");
   if (username) username.textContent = profile.username || "UŻYTKOWNIK";
-  if (avatar) avatar.src = profile.avatar_url || MATT_DEFAULT_AVATAR;
+  if (avatar) avatar.src = profile.avatar_url || mattDefaultMonkey(profile?.id || profile?.auth_user_id);
   if (email) email.value = "";
   if (password) password.value = "";
   if (repeat) repeat.value = "";
@@ -677,7 +673,7 @@ async function mattOpenAccountManager() {
         <div class="account-list">${accounts.map(a => {
           const isSelf = a.auth_user_id === viewerUserId;
           return `<button type="button" class="account-row ${selectedId===a.auth_user_id?'active':''}" data-account-id="${mattAccountEscape(a.auth_user_id)}">
-            <img src="${mattAccountEscape(a.avatar_url || MATT_DEFAULT_AVATAR)}" alt="">
+            <img src="${mattAccountEscape(a.avatar_url || mattDefaultMonkey(a.auth_user_id || a.id))}" alt="">
             <span>
               <strong>${mattAccountEscape(a.username || 'Użytkownik')}${isSelf ? ' <em>TY</em>' : ''}</strong>
               <small>${a.must_complete_account === true ? 'Konto wymaga ustawienia/zmiany danych logowania' : mattAccountEscape(a.email || 'Brak e-maila')}</small>
@@ -1279,35 +1275,52 @@ window.mattOpenAccountManager = mattOpenAccountManager;
 
 window.mattForceFirstLoginSetup = mattForceFirstLoginSetup;
 
-async function mattUploadProfileAvatar(file, userId, username) {
-  if (!file) return null;
-  if (!file.type?.startsWith("image/")) throw new Error("Wybrany plik nie jest obrazem.");
-  if (file.size > 8 * 1024 * 1024) throw new Error("Avatar może mieć maksymalnie 8 MB.");
 
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-  const slug = (username || "user")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 30) || "user";
-  const path = `${userId}/${slug}-${Date.now()}.${ext}`;
-
-  const { error } = await firebaseClient.storage.from("profile-avatars").upload(path, file, {
-    cacheControl: "3600",
-    upsert: false,
-    contentType: file.type
+const MATT_ACCOUNT_API = 'https://matt-world-auth.mateuszchrusciel95.workers.dev';
+async function mattProfileApi(path, body, session, contentType='application/json') {
+  const token = session?.access_token;
+  if (!token) throw new Error('Brak tokenu sesji. Zaloguj się ponownie.');
+  const response = await fetch(MATT_ACCOUNT_API + path, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': contentType },
+    body: contentType === 'application/json' ? JSON.stringify(body) : body
   });
-  if (error) throw error;
-
-  const publicUrl = firebaseClient.storage.from("profile-avatars").getPublicUrl(path).data.publicUrl;
-  return { path, publicUrl };
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.ok) throw new Error(data.error || 'Błąd usługi profilu (HTTP ' + response.status + ')');
+  return data;
+}
+async function mattCompressAvatar(file) {
+  if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('Wybierz JPG, PNG lub WebP.');
+  if (file.size > 4 * 1024 * 1024) throw new Error('Maksymalny rozmiar oryginału: 4 MB.');
+  const bitmap = await createImageBitmap(file);
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    const side = Math.min(bitmap.width, bitmap.height);
+    ctx.drawImage(bitmap, (bitmap.width-side)/2, (bitmap.height-side)/2, side, side, 0, 0, 256, 256);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.75));
+    if (!blob || blob.size > 150 * 1024) throw new Error('Nie udało się skompresować avatara poniżej 150 KB.');
+    return blob;
+  } finally { bitmap.close(); }
+}
+const MATT_MONKEY_ROLES = ['moderator','policjant','zolnierz','lekarz','sedzia','strazak','kucharz','astronauta','detektyw','mechanik','gracz','naukowiec'];
+function mattDefaultMonkey(uid='') {
+  let hash=0; for (const c of String(uid)) hash=(Math.imul(hash,31)+c.charCodeAt(0))|0;
+  const role=MATT_MONKEY_ROLES[Math.abs(hash)%MATT_MONKEY_ROLES.length];
+  return 'https://matthevc.github.io/Website/assets/avatars/roles/' + role + '.webp';
+}
+function mattRandomMonkey(exclude='') {
+  const choices = MATT_MONKEY_ROLES.map(role => 'https://matthevc.github.io/Website/assets/avatars/roles/' + role + '.webp').filter(url => url !== exclude);
+  return choices[Math.floor(Math.random() * choices.length)];
 }
 
+async function mattUploadProfileAvatar(file, userId, username, session) {
+  const blob = await mattCompressAvatar(file);
+  return await mattProfileApi('/profile/avatar', blob, session, 'image/webp');
+}
 async function mattDeleteProfileAvatar(path, userId) {
-  if (!path || !userId || !path.startsWith(`${userId}/`)) return;
-  const { error } = await firebaseClient.storage.from("profile-avatars").remove([path]);
-  if (error) console.warn("Nie udało się usunąć starego avatara:", error.message);
+  // Old images are kept until an authenticated cleanup endpoint is configured.
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1429,12 +1442,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedAvatarFile = null;
   let avatarRemovalRequested = false;
+  let selectedRoleAvatar = null;
   let originalAvatarUrl = null;
   let originalAvatarPath = null;
   let session = null;
 
   const setPreview = (url) => {
-    avatarPreview.src = url || MATT_DEFAULT_AVATAR;
+    avatarPreview.src = url || mattDefaultMonkey(session?.user?.id);
     avatarPreview.onerror = () => {
       avatarPreview.onerror = null;
       avatarPreview.src = MATT_DEFAULT_AVATAR;
@@ -1452,6 +1466,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modal.classList.add("active");
     selectedAvatarFile = null;
     avatarRemovalRequested = false;
+    selectedRoleAvatar = null;
     avatarName.textContent = "Nie wybrano nowego zdjęcia";
     resetSensitiveFields();
 
@@ -1472,7 +1487,7 @@ document.addEventListener("DOMContentLoaded", () => {
       newEmail.value = session.user.email || profile.email || "";
       originalAvatarUrl = profile.avatar_url || null;
       originalAvatarPath = profile.avatar_path || null;
-      setPreview(originalAvatarUrl);
+      setPreview(originalAvatarUrl || mattDefaultMonkey(session.user.id));
       msg.textContent = "";
     } catch (error) {
       console.error(error);
@@ -1498,15 +1513,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     selectedAvatarFile = file;
     avatarRemovalRequested = false;
+    selectedRoleAvatar = null;
     avatarName.textContent = file.name;
     setPreview(URL.createObjectURL(file));
     msg.textContent = "";
   };
 
+  const randomButton = document.getElementById('profileAvatarRandom');
+  if (randomButton) randomButton.onclick = () => {
+    selectedRoleAvatar = mattRandomMonkey(selectedRoleAvatar || originalAvatarUrl || '');
+    selectedAvatarFile = null;
+    avatarInput.value = '';
+    avatarRemovalRequested = false;
+    avatarName.textContent = 'Losowa małpka: ' + selectedRoleAvatar.split('/').pop().replace('.webp','');
+    setPreview(selectedRoleAvatar);
+    msg.textContent = 'Kliknij ZAPISZ PROFIL, aby zachować tę małpkę.';
+  };
   avatarRemove.onclick = () => {
     selectedAvatarFile = null;
     avatarInput.value = "";
     avatarRemovalRequested = true;
+    selectedRoleAvatar = null;
     avatarName.textContent = "Użyty zostanie avatar domyślny";
     setPreview(null);
     msg.textContent = "Po zapisaniu zostanie ustawiony domyślny avatar.";
@@ -1530,7 +1557,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (username.length < 2 || username.length > 32) throw new Error("Nazwa użytkownika musi mieć od 2 do 32 znaków.");
       if (!email || !/^\S+@\S+\.\S+$/.test(email)) throw new Error("Podaj poprawny adres e-mail.");
-      if (password && password.length < 8) throw new Error("Nowe hasło musi mieć co najmniej 12 znaków.");
+      if (password && password.length < 12) throw new Error("Nowe hasło musi mieć co najmniej 12 znaków.");
       if (password !== passwordRepeat) throw new Error("Nowe hasła nie są takie same.");
 
       const emailChanged = email.toLowerCase() !== (session.user.email || "").toLowerCase();
@@ -1553,9 +1580,13 @@ document.addEventListener("DOMContentLoaded", () => {
       let setAvatar = false;
 
       if (selectedAvatarFile) {
-        uploaded = await mattUploadProfileAvatar(selectedAvatarFile, session.user.id, username);
+        uploaded = await mattUploadProfileAvatar(selectedAvatarFile, session.user.id, username, session);
         avatarUrl = uploaded.publicUrl;
         avatarPath = uploaded.path;
+        setAvatar = true;
+      } else if (selectedRoleAvatar) {
+        avatarUrl = selectedRoleAvatar;
+        avatarPath = null;
         setAvatar = true;
       } else if (avatarRemovalRequested) {
         avatarUrl = null;
@@ -1563,17 +1594,12 @@ document.addEventListener("DOMContentLoaded", () => {
         setAvatar = true;
       }
 
-      const profileUpdate = await firebaseClient.rpc("matt_update_own_profile", {
-        p_username: username,
-        p_avatar_url: avatarUrl,
-        p_avatar_path: avatarPath,
-        p_set_avatar: setAvatar
-      });
-      if (profileUpdate.error) {
-        if (uploaded?.path) await mattDeleteProfileAvatar(uploaded.path, session.user.id);
-        uploaded = null;
-        throw profileUpdate.error;
-      }
+      await mattProfileApi('/profile/update', {
+        username,
+        avatarUrl,
+        avatarPath,
+        setAvatar
+      }, session);
 
       let authNote = "";
       if (emailChanged || passwordChanged) {
@@ -1598,6 +1624,7 @@ document.addEventListener("DOMContentLoaded", () => {
       originalAvatarPath = avatarPath;
       selectedAvatarFile = null;
       avatarRemovalRequested = false;
+      selectedRoleAvatar = null;
       avatarInput.value = "";
       avatarName.textContent = "Nie wybrano nowego zdjęcia";
       resetSensitiveFields();
