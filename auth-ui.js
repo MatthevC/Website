@@ -46,7 +46,6 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
   { permission:"streamers.notes.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Notatki wewnętrzne streamerów", description:"Może dodawać notatki dla obsługi do wpisów polecanych streamerów. Używaj razem z „Zarządzanie streamerami”.", sort_order:433 },
   { permission:"streamers.bulk.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Masowe operacje na streamerach", description:"Może wykonywać operacje na wielu wpisach streamerów jednocześnie. Używaj razem z „Zarządzanie streamerami”.", sort_order:434 },
 
-  { permission:"cms.dashboard.view", group_name:"NARZĘDZIA MODERATORA", label:"Pulpit Centrum Moderacji", description:"Wyświetlanie pulpitu z aktywnością zespołu i podsumowaniami.", sort_order:610 },
   { permission:"cms.search", group_name:"NARZĘDZIA MODERATORA", label:"Historia — wyszukiwarka", description:"Może przeszukiwać eventy i treści zarządzane przez CMS z jednego miejsca.", sort_order:611 },
   { permission:"cms.notifications.view", group_name:"NARZĘDZIA MODERATORA", label:"Bezpieczeństwo — alerty", description:"Może przeglądać ostrzeżenia, szkice, zaplanowane publikacje i problemy wymagające uwagi.", sort_order:612 },
   { permission:"cms.history.view", group_name:"NARZĘDZIA MODERATORA", label:"Historia wersji treści", description:"Może przeglądać wersje treści zapisane w systemie backupów.", sort_order:613 },
@@ -392,236 +391,6 @@ function mattDashboardEscape(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char] || char));
 }
 
-function mattDashboardFormatDate(value) {
-  if (!value) return "brak daty";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "brak daty";
-  return new Intl.DateTimeFormat("pl-PL", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }).format(date);
-}
-
-function mattDashboardRelativeDate(value) {
-  if (!value) return "brak aktywności";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "brak aktywności";
-  const diff = Date.now() - date.getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "przed chwilą";
-  if (minutes < 60) return `${minutes} min temu`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} godz. temu`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days} dni temu`;
-  return mattDashboardFormatDate(value);
-}
-
-async function mattHydrateAdminDashboard(modal) {
-  const root = modal?.querySelector('.flash-dashboard-content .admin-dashboard, .flash-dashboard-content.admin-dashboard');
-  if (!root || !window.firebaseClient) return;
-
-  const set = (selector, value) => {
-    const node = root.querySelector(selector);
-    if (node) node.textContent = value;
-  };
-  const recentChanges = root.querySelector('#recentChanges');
-  const inactiveMods = root.querySelector('#inactiveMods');
-
-  if (recentChanges) recentChanges.innerHTML = '<div class="empty-state">Ładowanie aktywności...</div>';
-  if (inactiveMods) inactiveMods.innerHTML = '<div class="empty-state">Sprawdzanie aktywności moderatorów...</div>';
-
-  set('#dashViewerRole', String(window.currentUserRole || 'użytkownik').toUpperCase());
-  set('#dashViewerPermissions', window.currentUserIsAdmin ? 'Pełny dostęp' : String(Array.isArray(window.currentUserPermissions) ? window.currentUserPermissions.length : 0));
-
-  const recentBtn = root.querySelector('[data-dashboard-action="refresh"]');
-  if (recentBtn) recentBtn.disabled = true;
-
-  try {
-    const sinceToday = new Date();
-    sinceToday.setHours(0,0,0,0);
-    const inactiveThreshold = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-
-    const [profilesCountRes, moderatorsRes, auditRes] = await Promise.all([
-      firebaseClient.from('profiles').select('id', { count:'exact', head:true }),
-      firebaseClient.from('profiles').select('id, username, email, role').eq('role', 'moderator'),
-      firebaseClient.from('matt_audit_logs').select('id,created_at,actor_user_id,actor_email,actor_username,action,entity_type,entity_id,summary,details').order('created_at', { ascending:false }).limit(80)
-    ]);
-
-    if (profilesCountRes.error) throw profilesCountRes.error;
-    if (moderatorsRes.error) throw moderatorsRes.error;
-    if (auditRes.error) throw auditRes.error;
-
-    const moderators = Array.isArray(moderatorsRes.data) ? moderatorsRes.data : [];
-    const logs = Array.isArray(auditRes.data) ? auditRes.data : [];
-    const todayLogs = logs.filter(item => item?.created_at && new Date(item.created_at) >= sinceToday);
-    const actorsToday = new Set(todayLogs.map(item => item?.actor_email || item?.actor_user_id).filter(Boolean));
-
-    set('#dashUsers', String(profilesCountRes.count ?? 0));
-    set('#dashModerators', String(moderators.length));
-    set('#dashLogsToday', String(todayLogs.length));
-    set('#dashLogs7', String(logs.filter(x => x.created_at && new Date(x.created_at) >= new Date(Date.now()-7*86400000)).length));
-    set('#dashLogs30', String(logs.filter(x => x.created_at && new Date(x.created_at) >= new Date(Date.now()-30*86400000)).length));
-    set('#dashStatusText', 'OK');
-    set('#dashStatusHint', logs.length ? 'Połączono z logami i profilami' : 'Połączono, brak zapisanych zmian');
-    set('#dashActorsToday', String(actorsToday.size));
-    set('#dashRecentTotal', String(logs.length));
-    set('#dashLastUpdate', logs[0]?.created_at ? mattDashboardFormatDate(logs[0].created_at) : 'Brak aktywności');
-
-    if (recentChanges) {
-      recentChanges.innerHTML = logs.length ? logs.slice(0, 6).map(item => {
-        const title = item?.summary || item?.action || 'Zmiana w systemie';
-        const actor = item?.actor_username || item?.actor_email || 'Nieznany użytkownik';
-        const scope = item?.entity_type || 'sekcja strony';
-        const when = mattDashboardRelativeDate(item?.created_at);
-        return `<article class="activity-item"><div class="activity-icon">↻</div><div class="activity-main"><div class="activity-title">${mattDashboardEscape(title)}</div><div class="activity-text">${mattDashboardEscape(actor)} wprowadził zmianę w sekcji ${mattDashboardEscape(scope)}.</div><div class="activity-meta">${mattDashboardEscape(mattDashboardFormatDate(item?.created_at))}</div></div><div class="activity-time">${mattDashboardEscape(when)}</div></article>`;
-      }).join('') : '<div class="empty-state">Brak nowych działań w logach.</div>';
-    }
-
-    const lastLogByModerator = new Map();
-    logs.forEach(item => {
-      const email = String(item?.actor_email || '').toLowerCase();
-      const actorId = String(item?.actor_user_id || '');
-      if (email && !lastLogByModerator.has(`mail:${email}`)) lastLogByModerator.set(`mail:${email}`, item.created_at || null);
-      if (actorId && !lastLogByModerator.has(`id:${actorId}`)) lastLogByModerator.set(`id:${actorId}`, item.created_at || null);
-    });
-
-    const inactive = moderators.filter(mod => {
-      const emailKey = `mail:${String(mod.email || '').toLowerCase()}`;
-      const idKey = `id:${String(mod.id || '')}`;
-      const last = lastLogByModerator.get(emailKey) || lastLogByModerator.get(idKey) || null;
-      return !last || last < inactiveThreshold;
-    });
-
-    set('#inactiveModsCount', inactive.length ? `${inactive.length} do sprawdzenia` : 'Wszyscy aktywni');
-
-    if (inactiveMods) {
-      inactiveMods.innerHTML = inactive.length ? inactive.slice(0, 6).map(mod => {
-        const emailKey = `mail:${String(mod.email || '').toLowerCase()}`;
-        const idKey = `id:${String(mod.id || '')}`;
-        const last = lastLogByModerator.get(emailKey) || lastLogByModerator.get(idKey) || null;
-        const displayName = mod.username || mod.email || 'Moderator';
-        const sub = mod.email || 'Brak adresu e-mail';
-        const timeText = last ? mattDashboardRelativeDate(last) : 'Brak wpisów w logach';
-        const detail = last ? `Ostatnia zarejestrowana aktywność: ${mattDashboardFormatDate(last)}.` : 'W ostatnich 14 dniach nie znaleziono żadnej aktywności w logach.';
-        return `<article class="moderator-item"><div class="moderator-icon">!</div><div class="moderator-main"><div class="moderator-name">${mattDashboardEscape(displayName)}</div><div class="moderator-meta">${mattDashboardEscape(sub)}</div><div class="moderator-text">${mattDashboardEscape(detail)}</div></div><div class="moderator-time">${mattDashboardEscape(timeText)}</div></article>`;
-      }).join('') : '<div class="empty-state">Świetnie, wszyscy moderatorzy mieli aktywność w logach w ostatnich 14 dniach.</div>';
-    }
-  } catch (error) {
-    console.error('Nie udało się odświeżyć dashboardu:', error);
-    set('#dashStatusText', 'BŁĄD');
-    set('#dashStatusHint', 'Nie udało się pobrać danych z Firebase');
-    if (recentChanges) recentChanges.innerHTML = `<div class="empty-state">Nie udało się pobrać aktywności.<br><br>${mattDashboardEscape(error?.message || 'Błąd odczytu danych')}.</div>`;
-    if (inactiveMods) inactiveMods.innerHTML = `<div class="empty-state">Nie udało się sprawdzić aktywności moderatorów.</div>`;
-    set('#inactiveModsCount', 'Brak danych');
-  } finally {
-    if (recentBtn) recentBtn.disabled = false;
-  }
-
-  const permissionAliases = {
-    'accounts.manage': ['accounts.manage','profiles.manage','users.manage','admin.users','users'],
-    'logs.view': ['logs.view','audit.view','audit_logs.view','logs','history.view']
-  };
-  const hasDashboardPermission = (needed) => {
-    if (window.currentUserIsAdmin) return true;
-    const perms = Array.isArray(window.currentUserPermissions) ? window.currentUserPermissions.map(String) : [];
-    const allowed = permissionAliases[needed] || [needed];
-    return allowed.some(item => perms.includes(item));
-  };
-  root.querySelectorAll('[data-required-permission]').forEach(btn => {
-    const permission = btn.dataset.requiredPermission;
-    if (!hasDashboardPermission(permission)) {
-      btn.classList.add('locked');
-      const body = btn.querySelector('.quick-action-body');
-      if (body && !body.querySelector('.quick-action-lock')) {
-        const lock = document.createElement('small');
-        lock.className = 'quick-action-lock';
-        lock.textContent = '🔒 Brak dostępu';
-        body.appendChild(lock);
-      }
-      btn.dataset.locked = 'true';
-    }
-  });
-
-  root.querySelectorAll('[data-dashboard-action]').forEach(btn => {
-    btn.onclick = () => {
-      const action = btn.dataset.dashboardAction;
-      if (btn.dataset.locked === 'true') return;
-      if (action === 'refresh') {
-        mattHydrateAdminDashboard(modal);
-        return;
-      }
-      if (action === 'close') {
-        modal.classList.remove('active');
-        return;
-      }
-      if (action === 'accounts') {
-        modal.classList.remove('active');
-        setTimeout(() => window.mattOpenAccountManager?.(), 120);
-        return;
-      }
-      if (action === 'logs') {
-        modal.classList.remove('active');
-        setTimeout(() => window.mattOpenAuditLogs?.(), 120);
-      }
-    };
-  });
-}
-
-async function mattOpenAdminDashboard() {
-  let modal = document.getElementById('adminDashboardModal');
-
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'adminDashboardModal';
-    modal.className = 'admin-dashboard-modal';
-
-    let content = '';
-    try {
-      const response = await fetch('./admin/index.html');
-      const html = await response.text();
-      const parsed = new DOMParser().parseFromString(html, 'text/html');
-      const dashboard = parsed.querySelector('.admin-dashboard');
-
-      if (dashboard) {
-        const clone = dashboard.cloneNode(true);
-        clone.classList.add('flash-dashboard-content', 'themed-admin-dashboard');
-        content = `<div class="flash-dashboard-shell">${clone.outerHTML}</div>`;
-      } else {
-        content = '<div class="admin-load-error">Nie udało się załadować panelu.</div>';
-      }
-    } catch (e) {
-      content = '<div class="admin-load-error">Nie udało się załadować panelu administratora.</div>';
-    }
-
-    modal.innerHTML = `
-      <div class="admin-dashboard-box flash-admin-box" role="dialog" aria-modal="true">
-        <header class="admin-dashboard-head">
-          <div>
-            <span>DOSTĘP UPRAWNIONY</span>
-            <h2 data-dashboard-title>PANEL ADMINISTRATORA</h2>
-            <p data-dashboard-description>Statystyki, najnowsze działania i kontrola aktywności moderatorów w jednym miejscu.</p>
-          </div>
-          <button type="button" class="admin-dashboard-close">×</button>
-        </header>
-        <div class="admin-dashboard-content">${content}</div>
-      </div>`;
-
-    document.body.appendChild(modal);
-    modal.querySelector('.admin-dashboard-close')?.addEventListener('click',()=>modal.classList.remove('active'));
-    modal.addEventListener('click',e=>{if(e.target===modal) modal.classList.remove('active');});
-  }
-
-  modal.classList.add('active');
-
-  const dashTitle = modal.querySelector('[data-dashboard-title]');
-  const dashDesc = modal.querySelector('[data-dashboard-description]');
-  const currentRole = String(window.currentUserRole || 'user').toLowerCase();
-  if (dashTitle) dashTitle.textContent = currentRole === 'admin' ? 'PANEL ADMINISTRATORA' : 'PANEL MODERACJI';
-  if (dashDesc) dashDesc.textContent = currentRole === 'admin'
-    ? 'Statystyki, najnowsze działania i kontrola aktywności moderatorów w jednym miejscu.'
-    : 'Podsumowanie moderacji, aktywności i dostępnych narzędzi zgodnie z nadanymi uprawnieniami.';
-
-  await mattHydrateAdminDashboard(modal);
-}
-
 window.mattOpenAuditLogs = mattOpenAuditLogs;
 
 function mattSetHeaderUser(profile) {
@@ -666,7 +435,6 @@ async function mattLoadUserHeader() {
   const logout = document.getElementById("logoutBtn");
   const auditLogs = document.getElementById("adminAuditLogsBtn");
   const manageAccounts = document.getElementById("manageAccountsBtn");
-  const dashboard = document.getElementById("adminDashboardBtn");
   if (!open) return;
 
   const { data: { session } } = await firebaseClient.auth.getSession();
@@ -679,7 +447,6 @@ async function mattLoadUserHeader() {
     mattSetHeaderUser(null);
     if (auditLogs) auditLogs.hidden = true;
     if (manageAccounts) manageAccounts.hidden = true;
-    if (dashboard) dashboard.hidden = true;
     open.onclick = () => modal?.classList.add("active");
     return;
   }
@@ -701,8 +468,6 @@ async function mattLoadUserHeader() {
     if (auditLogs) { auditLogs.hidden = !canViewAudit; auditLogs.onclick = canViewAudit ? (() => { menu?.classList.remove("show"); mattOpenAuditLogs(); }) : null; }
     const canManageAccounts = access.isAdmin || window.mattHasPermission?.("accounts.view") === true;
     if (manageAccounts) { manageAccounts.hidden = !canManageAccounts; manageAccounts.onclick = canManageAccounts ? (() => { menu?.classList.remove("show"); mattOpenAccountManager(); }) : null; }
-    const canDashboard = access.isAdmin || window.mattHasPermission?.("cms.dashboard.view") === true;
-    if (dashboard) { dashboard.hidden = !canDashboard; dashboard.onclick = canDashboard ? (() => { menu?.classList.remove("show"); mattOpenAdminDashboard(); }) : null; }
     mattSetHeaderUser(profile);
 
     if (profile.must_complete_account === true) {
@@ -766,7 +531,7 @@ async function mattForceFirstLoginSetup(session, profile) {
     const newPassword = String(password?.value || "");
     const repeated = String(repeat?.value || "");
     if (!/^\S+@\S+\.\S+$/.test(realEmail)) { if (msg) msg.textContent = "Podaj poprawny adres e-mail."; return; }
-    if (newPassword.length < 8) { if (msg) msg.textContent = "Nowe hasło musi mieć co najmniej 8 znaków."; return; }
+    if (newPassword.length < 12) { if (msg) msg.textContent = "Nowe hasło musi mieć co najmniej 12 znaków."; return; }
     if (newPassword !== repeated) { if (msg) msg.textContent = "Nowe hasła nie są takie same."; return; }
 
     save.disabled = true;
@@ -947,7 +712,7 @@ async function mattOpenAccountManager() {
     {name:"Eventy", permissions:["events.create","events.edit","events.delete","events.schedule.manage","events.images.manage","events.publish"], desc:"Tworzenie i zarządzanie wydarzeniami"},
     {name:"Treści strony", permissions:["rules.delete","contact.topics.delete"], desc:"Zarządzanie materiałami i treścią"},
     {name:"Społeczność", permissions:["moderation.people.delete","moderation.benefits.delete"], desc:"Moderowanie społeczności"},
-    {name:"Centrum Moderacji", permissions:["cms.center.access","cms.dashboard.view","cms.inbox.view","cms.notifications.view"], desc:"Pulpit, wnioski i alerty; pozostałe sekcje przydzielisz w trybie zaawansowanym"},
+    {name:"Centrum Moderacji", permissions:["cms.center.access","cms.inbox.view","cms.notifications.view"], desc:"Wnioski i alerty; pozostałe sekcje przydzielisz w trybie zaawansowanym"},
     {name:"Pełna administracja", permissions:null, desc:"Pełny dostęp do wszystkich funkcji"}
   ];
 
@@ -1466,7 +1231,7 @@ async function mattOpenAccountManager() {
       <h3>UTWÓRZ UŻYTKOWNIKA</h3>
       <p>Podaj tylko nick i hasło tymczasowe. Przy pierwszym logowaniu użytkownik będzie musiał podać swój e-mail i ustawić nowe hasło.</p>
       <label class="account-field">Nick<input data-create-username maxlength="32" autocomplete="off" placeholder="np. NowyModerator"></label>
-      <label class="account-field">Hasło tymczasowe<input data-create-password type="password" autocomplete="new-password" placeholder="Minimum 8 znaków"></label>
+      <label class="account-field">Hasło tymczasowe<input data-create-password type="password" autocomplete="new-password" placeholder="Minimum 12 znaków"></label>
       <button class="account-primary" type="button" data-create-submit>UTWÓRZ KONTO</button>
       <p class="account-message" data-create-message></p>
     </div>`;
@@ -1479,7 +1244,7 @@ async function mattOpenAccountManager() {
       const message = body.querySelector("[data-create-message]");
 
       if (username.length < 2) { message.textContent = "Nick musi mieć co najmniej 2 znaki."; return; }
-      if (password.length < 8) { message.textContent = "Hasło tymczasowe musi mieć co najmniej 8 znaków."; return; }
+      if (password.length < 12) { message.textContent = "Hasło tymczasowe musi mieć co najmniej 12 znaków."; return; }
 
       button.disabled = true;
       message.textContent = "Tworzenie konta…";
@@ -1511,7 +1276,7 @@ async function mattOpenAccountManager() {
   }
 }
 window.mattOpenAccountManager = mattOpenAccountManager;
-window.mattOpenAdminDashboard = mattOpenAdminDashboard;
+
 window.mattForceFirstLoginSetup = mattForceFirstLoginSetup;
 
 async function mattUploadProfileAvatar(file, userId, username) {
@@ -1600,16 +1365,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (btn) {
     btn.onclick = async () => {
       msg.textContent = "Logowanie...";
-      // Firebase Auth używa e-maila. Nie odczytujemy prywatnych profili przed zalogowaniem.
-      const email = window.mattLoginAlias?.resolve(nick.value);
-      if (!email) {
-        msg.textContent = "Na tym urządzeniu zaloguj się najpierw e-mailem. Następnie będziesz mógł używać nicku.";
-        return;
+      let email = String(nick.value || '').trim();
+      if (!email.includes('@')) {
+        try {
+          const response = await fetch('https://matt-world-auth.mateuszchrusciel95.workers.dev/login', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({username:email,password:pass.value})
+          });
+          const result = await response.json();
+          if (!response.ok || !result.ok || !result.email) throw new Error(result.error || 'Nieprawidłowy nick lub hasło');
+          email = result.email;
+        } catch (e) {
+          msg.textContent = e.message || 'Nie udało się zalogować przez nick.';
+          return;
+        }
       }
-
       const { error } = await firebaseClient.auth.signInWithPassword({
-        email,
-        password: pass.value
+        email, password:pass.value
       });
       if (error) {
         msg.textContent = "Nie udało się zalogować. Sprawdź e-mail i hasło Firebase.";
@@ -1758,7 +1530,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (username.length < 2 || username.length > 32) throw new Error("Nazwa użytkownika musi mieć od 2 do 32 znaków.");
       if (!email || !/^\S+@\S+\.\S+$/.test(email)) throw new Error("Podaj poprawny adres e-mail.");
-      if (password && password.length < 8) throw new Error("Nowe hasło musi mieć co najmniej 8 znaków.");
+      if (password && password.length < 8) throw new Error("Nowe hasło musi mieć co najmniej 12 znaków.");
       if (password !== passwordRepeat) throw new Error("Nowe hasła nie są takie same.");
 
       const emailChanged = email.toLowerCase() !== (session.user.email || "").toLowerCase();

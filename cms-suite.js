@@ -85,7 +85,7 @@
   }
 
   let centerModal = null;
-  let centerTab = 'dashboard';
+  let centerTab = 'history';
   let lastEventEditId = null;
   let linkResults = [];
   let alertCache = [];
@@ -555,7 +555,6 @@
 
   // Jedna główna nawigacja; mniej używane narzędzia mają podzakładki.
   const centerGroups = () => [
-    ['dashboard','PULPIT',[['dashboard','Pulpit','cms.dashboard.view'],['stats','Statystyki','statistics.view']]],
     ['inbox','WNIOSKI / KONTAKT',isStaff() && (viewerIsAdmin() || has('cms.inbox.view'))?[['inbox','Wnioski',null]]:[]],
     ['bots','BOTY', [['lobby','MATT LOBBY',null]].filter(()=>viewerIsAdmin() || any('lobby.conflicts.view','lobby.config.view'))],
     ['history','HISTORIA',[[ 'history','Dziennik zmian','cms.history.view'],['search','Wyszukiwarka','cms.search']]],
@@ -565,8 +564,8 @@
   ].map(([id,label,children])=>[id,label,children.filter(([, ,permission])=>permission === null || has(permission))]).filter(([, ,children])=>children.length);
   const centerTabs = () => centerGroups().flatMap(([, ,children])=>children);
 
-  async function openCenter(tab='dashboard') {
-    if (!viewerIsAdmin() && !any('cms.center.access','cms.dashboard.view','cms.history.view','cms.search','cms.notifications.view','cms.integrity.check','cms.links.check','cms.inbox.view','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','statistics.view','site.maintenance.manage')) return;
+  async function openCenter(tab='history') {
+    if (!viewerIsAdmin() && !any('cms.center.access','cms.history.view','cms.search','cms.notifications.view','cms.integrity.check','cms.links.check','cms.inbox.view','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','statistics.view','site.maintenance.manage')) return;
     const groups = centerGroups();
     const available = groups.flatMap(g=>g[2]);
     if (!available.length) return;
@@ -590,8 +589,7 @@
     }
     const content=document.createElement('div');content.className='matt-center-content';content.innerHTML='<div class="matt-center-loading">Ładowanie…</div>';body.appendChild(content);
     try {
-      if(tab==='dashboard') await renderDashboard(content);
-      else if(tab==='inbox') await renderInbox(content);
+      if(tab==='inbox') await renderInbox(content);
       else if(tab==='search') await renderSearch(content);
       else if(tab==='history') await renderHistory(content);
       else if(tab==='trash') await renderTrash(content);
@@ -758,59 +756,6 @@
       'account.created':'Utworzono konto','account.deleted':'Usunięto konto','access.changed':'Zmieniono uprawnienia','backup.automatic.created':'Automatyczny backup','backup.manual.created':'Ręczny backup'
     };
     return map[action]||String(action||'Zmiana');
-  }
-
-  async function renderDashboard(body) {
-    const canAlerts = has('cms.notifications.view');
-    const canTrash = has('cms.trash.view');
-    const [events,auditRaw,alerts,trash] = await Promise.all([
-      fetchEvents().catch(()=>[]),
-      recentAudit(20),
-      canAlerts ? buildAlerts() : Promise.resolve([]),
-      canTrash ? freshKey(KEYS.trash,[]) : Promise.resolve([])
-    ]);
-    const audit = has('audit.view')
-      ? auditRaw
-      : auditRaw.filter(row => !/^(account|access|profile|auth)\./i.test(String(row.action || '')));
-    const workflow=await getEventWorkflow(false);
-    const drafts=events.filter(e=>String(workflow[String(e.id)]?.visibility||'public')==='draft').length;
-    const scheduled=events.filter(e=>String(workflow[String(e.id)]?.visibility||'public')==='scheduled' && new Date(workflow[String(e.id)]?.publishAt||e.publish_date||0).getTime()>Date.now()).length;
-    body.innerHTML=`<div class="matt-dashboard-intro"><div><span class="matt-dashboard-eyebrow">PULPIT · PRZEGLĄD</span><h3>Wszystko pod kontrolą</h3><p>Najważniejsze informacje o społeczności i ostatnich działaniach zespołu.</p></div><span class="matt-dashboard-live">● PANEL MODERACJI</span></div>
-    <div class="matt-center-kpis">
-      <article><span>EVENTY</span><strong>${events.length}</strong><small>Wszystkie wydarzenia</small></article>
-      <article><span>SZKICE</span><strong>${drafts}</strong><small>Nieopublikowane</small></article>
-      <article><span>ZAPLANOWANE</span><strong>${scheduled}</strong><small>Przyszłe publikacje</small></article>
-      <article><span>ALERTY</span><strong>${canAlerts?alerts.length:'—'}</strong><small>Do sprawdzenia</small></article>
-      <article><span>KOSZ</span><strong>${canTrash?trash.length:'—'}</strong><small>Elementy w koszu</small></article>
-    </div>
-    <div class="matt-center-columns matt-dashboard-columns">
-      <section class="matt-center-card matt-dashboard-panel"><header class="matt-dashboard-panel-head"><div><small>HISTORIA DZIAŁAŃ</small><h3>Aktywność zespołu</h3><p>Ostatnie zmiany na stronie</p></div>${has('audit.view')?'<button type="button" class="matt-dashboard-action" data-open-full-audit>Pełne logi <span aria-hidden="true">↗</span></button>':''}</header>
-        <div class="matt-activity-list matt-dashboard-activity">${audit.length?audit.slice(0,7).map(row=>`<article><span class="matt-dashboard-avatar">${esc((row.actor_username||row.actor_email||'SYSTEM').slice(0,2).toUpperCase())}</span><div><strong>${esc(auditLabel(row.action))}</strong><p>${esc(row.summary||row.entity_type||'')}</p></div><time>${esc(fmt(row.created_at))}</time></article>`).join(''):'<div class="matt-dashboard-empty">Nie ma jeszcze zmian do wyświetlenia.</div>'}</div>
-      </section>
-      <section class="matt-center-card matt-dashboard-panel"><header class="matt-dashboard-panel-head"><div><small>POWIADOMIENIA</small><h3>Wymaga uwagi</h3><p>Stan strony i zgłoszone problemy</p></div>${canAlerts?'<button type="button" class="matt-dashboard-action" data-open-alerts>Wszystkie <span aria-hidden="true">↗</span></button>':''}</header>
-        <div class="matt-alert-mini matt-dashboard-alerts">${canAlerts?(alerts.length?alerts.slice(0,5).map(a=>`<article class="${esc(a.level)}"><span>${esc(a.kind)}</span><div><strong>${esc(a.title)}</strong><p>${esc(a.detail)}</p></div></article>`).join(''):'<div class="matt-dashboard-empty matt-dashboard-clear"><span class="matt-dashboard-check">✓</span><strong>Wszystko w porządku</strong><p>Brak problemów wymagających uwagi.</p></div>'):'<div class="matt-dashboard-empty">Nie masz uprawnień do przeglądania alertów.</div>'}</div>
-      </section>
-    </div>
-    <div class="matt-quick-actions matt-dashboard-quick">
-      ${has('cms.search')?'<button data-quick="search">⌕ &nbsp; Wyszukiwarka</button>':''}
-      ${canTrash?'<button data-quick="trash">♲ &nbsp; Kosz</button>':''}
-      ${has('cms.links.check')?'<button data-quick="links">↗ &nbsp; Sprawdź linki</button>':''}
-      ${has('cms.integrity.check')?'<button data-quick="integrity">✓ &nbsp; Integralność</button>':''}
-      ${has('cms.preview.mode')?'<button data-preview-mode>◉ &nbsp; Podgląd strony</button>':''}
-    </div>`;
-    $('[data-open-alerts]',body)?.addEventListener('click',()=>openCenter('alerts'));
-    $('[data-open-full-audit]',body)?.addEventListener('click',()=>window.mattOpenAuditLogs?.());
-    $$('[data-quick]',body).forEach(btn=>btn.onclick=()=>openCenter(btn.dataset.quick));
-    $('[data-preview-mode]',body)?.addEventListener('click',()=>{centerModal.classList.remove('active');enableVisitorPreview();});
-  }
-
-  function flattenSearch(value, path='', out=[], depth=0) {
-    if(depth>5||out.length>2500)return out;
-    if(value==null)return out;
-    if(typeof value==='string'||typeof value==='number'||typeof value==='boolean') { out.push({path,text:String(value)}); return out; }
-    if(Array.isArray(value)) value.forEach((v,i)=>flattenSearch(v,`${path}[${i}]`,out,depth+1));
-    else if(typeof value==='object') Object.entries(value).forEach(([k,v])=>flattenSearch(v,path?`${path}.${k}`:k,out,depth+1));
-    return out;
   }
 
   async function renderSearch(body) {
@@ -1209,8 +1154,8 @@
 
   function injectToolbar() {
     const toolbar=document.getElementById('cms-admin-toolbar');if(!toolbar)return;
-    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.center.access','cms.dashboard.view','cms.inbox.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','statistics.view','site.maintenance.manage'))) {
-      const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM MODERACJI';btn.addEventListener('click',()=>openCenter('dashboard'));
+    if(!toolbar.querySelector('[data-matt-suite-center]') && (viewerIsAdmin() || any('cms.center.access','cms.inbox.view','cms.search','cms.history.view','cms.notifications.view','cms.links.check','cms.integrity.check','cms.trash.view','backups.view','lobby.conflicts.view','lobby.config.view','statistics.view','site.maintenance.manage'))) {
+      const btn=document.createElement('button');btn.type='button';btn.dataset.mattSuiteCenter='1';btn.innerHTML='◎ CENTRUM MODERACJI';btn.addEventListener('click',()=>openCenter('history'));
       const backups=toolbar.querySelector('[data-cms-action="backups"]');toolbar.insertBefore(btn,backups||toolbar.querySelector('[data-cms-action="save"]'));
     }
     if(false && has('cms.trash.view') && !toolbar.querySelector('[data-matt-suite-trash]')) {

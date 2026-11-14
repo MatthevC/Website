@@ -67,23 +67,32 @@ const authApi={
  async signOut(){try{await ready;await sdk.u.signOut(auth);return {error:null};}catch(e){return fail(e.message);}},
  onAuthStateChange(cb){let unsub=()=>{};ready.then(()=>{unsub=sdk.u.onAuthStateChanged(auth,user=>cb(user?'SIGNED_IN':'SIGNED_OUT',user?{user:{id:user.uid,email:user.email}}:null));});return {data:{subscription:{unsubscribe:()=>unsub()}}};}
 };
+
+const ACCOUNT_WORKER='https://matt-world-auth.mateuszchrusciel95.workers.dev';
+async function accountRequest(path,body){
+ await ready;
+ const user=auth.currentUser;
+ if(!user)return fail('Zaloguj się, aby zarządzać kontami.');
+ try{
+  const token=await user.getIdToken();
+  const r=await fetch(ACCOUNT_WORKER+path,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body||{})});
+  const data=await r.json();
+  if(!r.ok||!data.ok)return fail(data.error||'Operacja konta nie powiodła się.');
+  return {data,error:null};
+ }catch(e){return fail(e.message||String(e));}
+}
 const rpc=async(name,args={})=>{await ready;
  if(name==='matt_get_my_access'){
   if(!auth.currentUser)return {data:null,error:null};
   try{const p=await sdk.f.getDoc(sdk.f.doc(db,'profiles',auth.currentUser.uid));const profile=p.data();return {data:profile?{role:profile.role,permissions:Array.isArray(profile.permissions)?profile.permissions:[],user_id:auth.currentUser.uid,username:profile.username}:null,error:null};}catch(e){return fail(e.message);}
  }
  if(name==='matt_admin_list_accounts'){
-  if(auth.currentUser?.uid!=='6UYgp0Lj7NMDRbIK3UBr40oNRLq2')return fail('Brak uprawnień administratora.');
-  try{const snap=await sdk.f.getDocs(sdk.f.collection(db,'profiles'));
-    return {data:snap.docs.map(d=>{const p=normalize(d.data());return {...p,auth_user_id:p.firebase_uid||p.auth_user_id||d.id,username:p.username||'',role:p.role||'user',permissions:Array.isArray(p.permissions)?p.permissions:[]};}),error:null};
-  }catch(e){return fail(e.message||String(e));}
+  const r=await accountRequest('/accounts/list',{});
+  return {data:r.data?.data||null,error:r.error};
  }
  if(name==='matt_admin_set_account_access'){
-  if(auth.currentUser?.uid!=='6UYgp0Lj7NMDRbIK3UBr40oNRLq2')return fail('Brak uprawnień administratora.');
-  const uid=String(args.p_user_id||'');const role=String(args.p_role||'user');
-  if(!/^[A-Za-z0-9_-]{10,128}$/.test(uid)||!['admin','moderator','user'].includes(role))return fail('Nieprawidłowy użytkownik lub rola.');
-  if(uid==='6UYgp0Lj7NMDRbIK3UBr40oNRLq2'&&role!=='admin')return fail('Nie można odebrać roli głównemu administratorowi.');
-  try{await sdk.f.updateDoc(sdk.f.doc(db,'profiles',uid),{role,permissions:Array.isArray(args.p_permissions)?args.p_permissions.filter(x=>typeof x==='string').slice(0,200):[]});return {data:true,error:null};}catch(e){return fail(e.message||String(e));}
+  const r=await accountRequest('/accounts/access',args);
+  return {data:r.data?.data??null,error:r.error};
  }
  if(name==='matt_cms_save'){
   // CMS overrides are a complete map. Replacing the document is essential:
@@ -119,6 +128,6 @@ async function readCmsFromServer(key) {
     return fail(e.message || String(e));
   }
 }
-const facade={auth:authApi,from:(name)=>new Query(name),readCmsFromServer,rpc,functions:{invoke:async()=>unsupported('Funkcje serwerowe')},storage:storageApi};
+const facade={auth:authApi,from:(name)=>new Query(name),readCmsFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();
