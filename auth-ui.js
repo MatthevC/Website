@@ -1272,7 +1272,7 @@ async function mattOpenAccountManager() {
   try {
     await load();
   } catch (error) {
-    body.innerHTML = `<div class="account-empty"><strong>Nie udało się otworzyć zarządzania kontami.</strong><p>${mattAccountEscape(error?.message || 'Nieznany błąd')}</p></div>`;
+    body.innerHTML = `<div class="account-empty"><strong>Nie udało się pobrać kont z Firebase.</strong><p>${mattAccountEscape(error?.message || 'Nieznany błąd')}</p><p>Sprawdź Cloudflare Worker i jego logi. Nie trzeba usuwać kont ani ponownie tworzyć użytkowników.</p></div>`;
   }
 }
 window.mattOpenAccountManager = mattOpenAccountManager;
