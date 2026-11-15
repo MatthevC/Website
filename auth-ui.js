@@ -1315,8 +1315,11 @@ function mattRandomMonkey(exclude='') {
   return choices[Math.floor(Math.random() * choices.length)];
 }
 
-async function mattUploadProfileAvatar(file, userId, username, session) {
-  const blob = await mattCompressAvatar(file);
+async function mattAvatarHash(blob) {
+  const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+  return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+}
+async function mattUploadProfileAvatar(blob, session) {
   return await mattProfileApi('/profile/avatar', blob, session, 'image/webp');
 }
 async function mattDeleteProfileAvatar(path, userId) {
@@ -1431,6 +1434,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const avatarRemove = document.getElementById("profileAvatarRemove");
   const avatarPreview = document.getElementById("profileAvatarPreview");
   const avatarName = document.getElementById("profileAvatarName");
+  const avatarHistory = document.getElementById("profileAvatarHistory");
   const newNick = document.getElementById("profileNewNick");
   const newEmail = document.getElementById("profileNewEmail");
   const currentPassword = document.getElementById("profileCurrentPassword");
@@ -1445,7 +1449,47 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedRoleAvatar = null;
   let originalAvatarUrl = null;
   let originalAvatarPath = null;
+  let originalAvatarHash = null;
+  let history = [];
+  let selectedHistory = null;
   let session = null;
+
+  const drawHistory = () => {
+    if (!avatarHistory) return;
+    avatarHistory.replaceChildren();
+    if (!history.length) {
+      const info = document.createElement('span');
+      info.className = 'profile-help';
+      info.textContent = 'Historia jest pusta. Po zmianie własnego zdjęcia poprzednie avatary pojawią się tutaj.';
+      avatarHistory.append(info);
+      return;
+    }
+    for (const entry of history.slice(0, 5)) {
+      if (!entry?.url || !entry?.path) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'profile-avatar-history-item' + (selectedHistory?.path === entry.path ? ' selected' : '');
+      button.title = 'Wybierz poprzedni avatar';
+      const img = document.createElement('img');
+      img.src = entry.url;
+      img.alt = 'Poprzedni avatar';
+      img.loading = 'lazy';
+      img.onerror = () => { button.disabled = true; button.title = 'Plik niedostępny w R2'; };
+      button.append(img);
+      button.onclick = () => {
+        selectedHistory = entry;
+        selectedAvatarFile = null;
+        selectedRoleAvatar = null;
+        avatarRemovalRequested = false;
+        avatarInput.value = '';
+        avatarName.textContent = 'Wybrano avatar z historii';
+        setPreview(entry.url);
+        msg.textContent = 'Kliknij ZAPISZ PROFIL, aby przywrócić zdjęcie bez ponownego przesyłania.';
+        drawHistory();
+      };
+      avatarHistory.append(button);
+    }
+  };
 
   const setPreview = (url) => {
     avatarPreview.src = url || mattDefaultMonkey(session?.user?.id);
@@ -1467,6 +1511,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedAvatarFile = null;
     avatarRemovalRequested = false;
     selectedRoleAvatar = null;
+    selectedHistory = null;
     avatarName.textContent = "Nie wybrano nowego zdjęcia";
     resetSensitiveFields();
 
@@ -1487,6 +1532,9 @@ document.addEventListener("DOMContentLoaded", () => {
       newEmail.value = session.user.email || profile.email || "";
       originalAvatarUrl = profile.avatar_url || null;
       originalAvatarPath = profile.avatar_path || null;
+      originalAvatarHash = profile.avatar_hash || null;
+      history = Array.isArray(profile.avatar_history) ? profile.avatar_history.slice(0, 5) : [];
+      drawHistory();
       setPreview(originalAvatarUrl || mattDefaultMonkey(session.user.id));
       msg.textContent = "";
     } catch (error) {
@@ -1514,6 +1562,8 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedAvatarFile = file;
     avatarRemovalRequested = false;
     selectedRoleAvatar = null;
+    selectedHistory = null;
+    drawHistory();
     avatarName.textContent = file.name;
     setPreview(URL.createObjectURL(file));
     msg.textContent = "";
@@ -1523,6 +1573,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (randomButton) randomButton.onclick = () => {
     selectedRoleAvatar = mattRandomMonkey(selectedRoleAvatar || originalAvatarUrl || '');
     selectedAvatarFile = null;
+    selectedHistory = null;
+    drawHistory();
     avatarInput.value = '';
     avatarRemovalRequested = false;
     avatarName.textContent = 'Losowa małpka: ' + selectedRoleAvatar.split('/').pop().replace('.webp','');
@@ -1534,6 +1586,8 @@ document.addEventListener("DOMContentLoaded", () => {
     avatarInput.value = "";
     avatarRemovalRequested = true;
     selectedRoleAvatar = null;
+    selectedHistory = null;
+    drawHistory();
     avatarName.textContent = "Użyty zostanie avatar domyślny";
     setPreview(null);
     msg.textContent = "Po zapisaniu zostanie ustawiony domyślny avatar.";
@@ -1578,26 +1632,47 @@ document.addEventListener("DOMContentLoaded", () => {
       let avatarUrl = originalAvatarUrl;
       let avatarPath = originalAvatarPath;
       let setAvatar = false;
+      let avatarHash = originalAvatarHash;
 
       if (selectedAvatarFile) {
-        uploaded = await mattUploadProfileAvatar(selectedAvatarFile, session.user.id, username, session);
-        avatarUrl = uploaded.publicUrl;
-        avatarPath = uploaded.path;
+        const blob = await mattCompressAvatar(selectedAvatarFile);
+        const hash = await mattAvatarHash(blob);
+        const existing = [
+          ...(originalAvatarPath ? [{ path: originalAvatarPath, url: originalAvatarUrl, hash: originalAvatarHash }] : []),
+          ...history
+        ].find(e => e.hash && e.hash === hash);
+        if (existing) {
+          avatarUrl = existing.url;
+          avatarPath = existing.path;
+        } else {
+          uploaded = await mattUploadProfileAvatar(blob, session);
+          avatarUrl = uploaded.publicUrl;
+          avatarPath = uploaded.path;
+        }
+        avatarHash = hash;
+        setAvatar = true;
+      } else if (selectedHistory) {
+        avatarUrl = selectedHistory.url;
+        avatarPath = selectedHistory.path;
+        avatarHash = selectedHistory.hash || null;
         setAvatar = true;
       } else if (selectedRoleAvatar) {
         avatarUrl = selectedRoleAvatar;
         avatarPath = null;
+        avatarHash = null;
         setAvatar = true;
       } else if (avatarRemovalRequested) {
         avatarUrl = null;
         avatarPath = null;
+        avatarHash = null;
         setAvatar = true;
       }
 
-      await mattProfileApi('/profile/update', {
+      const savedProfile = await mattProfileApi('/profile/update', {
         username,
         avatarUrl,
         avatarPath,
+        avatarHash,
         setAvatar
       }, session);
 
@@ -1622,6 +1697,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       originalAvatarUrl = avatarUrl;
       originalAvatarPath = avatarPath;
+      originalAvatarHash = savedProfile.profile?.avatar_hash || null;
+      history = Array.isArray(savedProfile.profile?.avatar_history) ? savedProfile.profile.avatar_history : [];
+      selectedHistory = null;
+      drawHistory();
       selectedAvatarFile = null;
       avatarRemovalRequested = false;
       selectedRoleAvatar = null;
