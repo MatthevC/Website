@@ -13,13 +13,28 @@
 [data-matt-suite-center]{position:relative}
 </style>
 <style>
-.profile-avatar-history-wrap { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
-.profile-avatar-history { display:flex; flex-wrap:wrap; gap:9px; padding:4px 0; }
-.profile-avatar-history-item { cursor:pointer; width:62px; height:62px; padding:3px; border:2px solid rgba(255,255,255,.24); border-radius:12px; background:rgba(255,255,255,.06); transition:border-color .15s,transform .15s; }
-.profile-avatar-history-item:hover { border-color:#ff9a42; transform:translateY(-2px); }
-.profile-avatar-history-item.selected { border-color:#ff9a42; box-shadow:0 0 0 2px rgba(255,154,66,.25); }
-.profile-avatar-history-item:disabled { opacity:.35; cursor:not-allowed; }
-.profile-avatar-history-item img { display:block; width:100%; height:100%; border-radius:8px; object-fit:cover; }
+/* Historia avatarów: małe, czytelne kwadraty niezależne od ogólnych stylów przycisków */
+.profile-avatar-history-wrap { display:flex; flex-direction:column; gap:8px; margin-top:14px; min-width:0; }
+#profileAvatarHistory.profile-avatar-history { display:flex !important; flex-flow:row wrap !important; align-items:flex-start !important; justify-content:flex-start !important; gap:10px !important; padding:4px 0 !important; width:100%; min-width:0; }
+#profileAvatarHistory > button.profile-avatar-history-item {
+  box-sizing:border-box !important; display:flex !important; flex:0 0 64px !important;
+  width:64px !important; min-width:64px !important; max-width:64px !important;
+  height:64px !important; min-height:64px !important; max-height:64px !important;
+  margin:0 !important; padding:3px !important; overflow:hidden !important;
+  align-items:center !important; justify-content:center !important;
+  cursor:pointer; border:2px solid rgba(255,255,255,.24) !important;
+  border-radius:10px !important; background:#18191e !important;
+  transition:border-color .15s,transform .15s;
+}
+#profileAvatarHistory > button.profile-avatar-history-item:hover { border-color:#ff9a42 !important; transform:translateY(-2px); }
+#profileAvatarHistory > button.profile-avatar-history-item.selected { border-color:#ff9a42 !important; box-shadow:0 0 0 2px rgba(255,154,66,.25); }
+#profileAvatarHistory > button.profile-avatar-history-item:disabled { opacity:.35; cursor:not-allowed; }
+#profileAvatarHistory > button.profile-avatar-history-item > img {
+  display:block !important; flex:none !important; width:100% !important; height:100% !important;
+  min-width:0 !important; min-height:0 !important; max-width:100% !important; max-height:100% !important;
+  margin:0 !important; padding:0 !important; border:0 !important;
+  border-radius:6px !important; object-fit:contain !important; object-position:center !important;
+}
 </style>
 </head>
 <body>
@@ -128,7 +143,7 @@
         </div>
         <span id="profileAvatarName" class="profile-file-name">Nie wybrano nowego zdjęcia</span>
         <div class="profile-avatar-history-wrap">
-          <strong>OSTATNIE AVATARY (DO 5)</strong>
+          <strong>OSTATNIE</strong>
           <span class="profile-help">Kliknij miniaturę, a następnie ZAPISZ PROFIL. Przywrócenie nie przesyła ponownie zdjęcia.</span>
           <div id="profileAvatarHistory" class="profile-avatar-history"></div>
         </div>
