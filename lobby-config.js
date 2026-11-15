@@ -10,6 +10,14 @@ const can=p=>access?.role==='admin'||(access?.role==='moderator'&&access.permiss
 function allowed(){return can('lobby.config.view')||can('lobby.config.edit');}
 function editable(){return can('lobby.config.edit');}
 function state(){if(!profiles[selected])profiles[selected]={...defaults,game:selected,limits:{...defaults.limits},slots:games.find(x=>x[0]===selected)?.[2]||5};profiles[selected].new_days=7;profiles[selected].regular_days=30;return profiles[selected];}
+// Porownuj wartosci konfiguracji niezaleznie od kolejnosci pol i dodatkowych pol dokumentu.
+// Weryfikacja nadal wymaga zgodnosci kazdej zapisanej wartosci.
+function configMatches(saved,expected){
+ if(expected===null||typeof expected!== 'object')return Object.is(saved,expected);
+ if(Array.isArray(expected))return Array.isArray(saved)&&saved.length===expected.length&&expected.every((v,i)=>configMatches(saved[i],v));
+ if(!saved||typeof saved!=='object'||Array.isArray(saved))return false;
+ return Object.keys(expected).every(k=>Object.prototype.hasOwnProperty.call(saved,k)&&configMatches(saved[k],expected[k]));
+}
 function msg(t,err=false){const e=root.querySelector('[data-config-msg]');if(e){e.textContent=t;e.className=err?'mlc-message error':'mlc-message';}}
 async function load(){try{const {data,error}=await firebaseClient.from('matt_lobby_game_config').select('game,settings');if(error)throw error;profiles={};for(const row of data||[]){const v=row.settings||{};profiles[row.game]={...defaults,...v,new_days:7,regular_days:30,game:row.game,limits:{...defaults.limits,...(v.limits||{})}};}loaded=true;render();}catch(e){loaded=false;render();msg('Nie udało się odczytać konfiguracji z Firebase: '+e.message,true);}}
 function field(label,key,min,max,description){const v=state()[key];return `<label class="mlc-field"><span><strong>${label}</strong>${description?`<small>${description}</small>`:''}</span><input data-num="${key}" type="number" min="${min}" max="${max}" step="1" value="${esc(v)}" ${editable()?'':'disabled'}></label>`;}
@@ -23,7 +31,7 @@ root.querySelector('[data-reset]').onchange=e=>{state().reset_mode=e.target.valu
 root.querySelector('[data-save]')?.addEventListener('click',save);
 root.querySelector('[data-sync]')?.addEventListener('click',syncBot);
 }
-async function save(){if(!editable())return;const s=state();if(!Number.isInteger(s.new_days)||!Number.isInteger(s.regular_days)||s.new_days>=s.regular_days||s.new_days<0||s.regular_days>3650||!Number.isInteger(s.slots)||s.slots<1||s.slots>30||!Number.isInteger(s.cooldown)||s.cooldown<0||s.cooldown>20||Object.values(s.limits).some(x=>!Number.isInteger(x)||x<0||x>999)){msg('Sprawdź wartości: progi followage muszą rosnąć, a limity muszą być liczbami całkowitymi.',true);return;}const btn=root.querySelector('[data-save]');btn.disabled=true;try{const {error}=await firebaseClient.from('matt_lobby_game_config').upsert({game:selected,settings:s},{onConflict:'game'});if(error)throw error;const check=await firebaseClient.readLobbyConfigFromServer(selected);if(check.error)throw Error('Zapis wysłany, ale nie można potwierdzić go na serwerze: '+check.error.message);if(!check.data||JSON.stringify(check.data.settings)!==JSON.stringify(s))throw Error('Konfiguracja odczytana z serwera różni się od zapisanej.');dirty=false;loaded=true;msg('Zapisano i potwierdzono konfigurację w Firebase. Bot wymaga osobnego podłączenia odczytu ustawień.');}catch(e){msg('Błąd zapisu: '+e.message,true);}finally{btn.disabled=false;}}
+async function save(){if(!editable())return;const s=state();if(!Number.isInteger(s.new_days)||!Number.isInteger(s.regular_days)||s.new_days>=s.regular_days||s.new_days<0||s.regular_days>3650||!Number.isInteger(s.slots)||s.slots<1||s.slots>30||!Number.isInteger(s.cooldown)||s.cooldown<0||s.cooldown>20||Object.values(s.limits).some(x=>!Number.isInteger(x)||x<0||x>999)){msg('Sprawdź wartości: progi followage muszą rosnąć, a limity muszą być liczbami całkowitymi.',true);return;}const btn=root.querySelector('[data-save]');btn.disabled=true;try{const {error}=await firebaseClient.from('matt_lobby_game_config').upsert({game:selected,settings:s},{onConflict:'game'});if(error)throw error;const check=await firebaseClient.readLobbyConfigFromServer(selected);if(check.error)throw Error('Zapis wysłany, ale nie można potwierdzić go na serwerze: '+check.error.message);if(!check.data||!configMatches(check.data.settings,s))throw Error('Konfiguracja odczytana z serwera różni się od zapisanej.');dirty=false;loaded=true;msg('Zapisano i potwierdzono konfigurację w Firebase. Możesz teraz kliknąć SYNCHRONIZUJ Z BOTEM.');}catch(e){msg('Błąd zapisu: '+e.message,true);}finally{btn.disabled=false;}}
 
 async function syncBot(){
  if(dirty){msg('Najpierw zapisz zmiany konfiguracji.',true);return;}
@@ -37,10 +45,10 @@ async function syncBot(){
    const check=await firebaseClient.lobbySyncStatus();if(check.error)throw Error(check.error.message);
    const state=check.data||{};
    if(state.revision!==revision){msg('Pojawiło się nowsze żądanie synchronizacji.',true);return;}
-   if(state.status==='synced'){msg('Lokalny agent pobrał dane (integracja z akcjami bota wymaga osobnego testu): '+(state.ackAt||''));return;}
+   if(state.status==='synced'){msg('Bot potwierdził pobranie danych (losowanie wymaga osobnego testu): '+(state.ackAt||''));return;}
    if(state.status==='error')throw Error(state.error||'Bot zgłosił błąd');
   }
-  msg('Bot jeszcze nie potwierdził synchronizacji. Sprawdź, czy lokalny agent działa.',true);
+  msg('Bot jeszcze nie potwierdził synchronizacji. Sprawdź, czy akcja 13 w Streamer.bot jest uruchamiana.',true);
  }catch(e){msg('Synchronizacja: '+e.message,true);}finally{if(btn.isConnected)btn.disabled=false;}
 }
 
