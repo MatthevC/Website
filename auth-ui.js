@@ -1291,7 +1291,7 @@ async function mattProfileApi(path, body, session, contentType='application/json
 }
 async function mattCompressAvatar(file) {
   if (!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('Wybierz JPG, PNG lub WebP.');
-  if (file.size > 4 * 1024 * 1024) throw new Error('Maksymalny rozmiar oryginału: 4 MB.');
+  if (file.size > 2 * 1024 * 1024) throw new Error('Maksymalny rozmiar oryginału: 2 MB.');
   const bitmap = await createImageBitmap(file);
   try {
     const canvas = document.createElement('canvas');
@@ -1479,7 +1479,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const profile = await mattGetOwnProfile(session);
-      if (!profile || !("avatar_url" in profile)) {
+      if (!profile) {
         msg.textContent = "Funkcja profilu i avatarów wymaga poprawnej konfiguracji profilu użytkownika w Firebase.";
         return;
       }
@@ -1501,13 +1501,13 @@ document.addEventListener("DOMContentLoaded", () => {
   avatarInput.onchange = () => {
     const file = avatarInput.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      msg.textContent = "Wybierz plik graficzny JPG, PNG, WEBP lub GIF.";
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      msg.textContent = "Wybierz plik graficzny JPG, PNG lub WebP.";
       avatarInput.value = "";
       return;
     }
-    if (file.size > 8 * 1024 * 1024) {
-      msg.textContent = "Avatar może mieć maksymalnie 8 MB.";
+    if (file.size > 2 * 1024 * 1024) {
+      msg.textContent = "Avatar może mieć maksymalnie 2 MB.";
       avatarInput.value = "";
       return;
     }
