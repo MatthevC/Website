@@ -128,6 +128,11 @@ async function readCmsFromServer(key) {
     return fail(e.message || String(e));
   }
 }
-const facade={auth:authApi,from:(name)=>new Query(name),readCmsFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
+async function readLobbyConfigFromServer(game){
+ try{await ready;const snap=await sdk.f.getDocFromServer(sdk.f.doc(db,'matt_lobby_game_config',String(game)));
+ return {data:snap.exists()?normalize(snap.data()):null,error:null};
+ }catch(e){return fail(e.message||String(e));}
+}
+const facade={auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();
