@@ -3131,38 +3131,61 @@ async function loadEvents() {
   }
 }
 
-// Automatyczna, bezplatna grafika zastepcza dla eventow (bez zapisu w Firebase).
+// Neutralna grafika zastępcza bez powtarzania tytułu i opisu wydarzenia.
 function mattEventFallbackImage(event) {
-  const title = String(event?.title || 'WYDARZENIE MATT’S WORLD').trim().slice(0, 90);
-  const description = String(event?.excerpt || event?.content || '').replace(/<[^>]*>/g, '').trim().slice(0, 105);
-  const xml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
-  const wrap = (value, limit, maxLines) => {
-    const words = value.split(/\s+/).filter(Boolean);
-    const lines = []; let current = '';
-    for (const word of words) {
-      if ((current + ' ' + word).trim().length > limit && current) { lines.push(current); current = word; }
-      else current = (current + ' ' + word).trim();
-      if (lines.length >= maxLines) break;
-    }
-    if (current && lines.length < maxLines) lines.push(current);
-    return lines;
-  };
-  const titleLines = wrap(title.toUpperCase(), 22, 3);
-  const descriptionLines = wrap(description, 44, 2);
-  const titleSvg = titleLines.map((line, i) => `<text x="52" y="${185 + i * 54}" fill="#fff" font-size="42" font-family="Arial,sans-serif" font-weight="900">${xml(line)}</text>`).join('');
-  const descSvg = descriptionLines.map((line, i) => `<text x="54" y="${386 + i * 25}" fill="#c5b8bd" font-size="19" font-family="Arial,sans-serif">${xml(line)}</text>`).join('');
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#171015"/><stop offset=".58" stop-color="#2b1018"/><stop offset="1" stop-color="#09090c"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/><circle cx="850" cy="110" r="250" fill="#ff253d" opacity=".08"/><path d="M0 0h11v540H0z" fill="#f5223c"/><text x="52" y="75" fill="#ff4255" font-family="Arial,sans-serif" font-size="21" font-weight="800" letter-spacing="4">MATT’S WORLD  /  EVENT</text><path d="M52 101h855" stroke="#86303d" stroke-width="2"/>${titleSvg}${descSvg}<path d="M52 468h855" stroke="#86303d" stroke-width="2"/><text x="52" y="510" fill="#ff4255" font-size="18" font-weight="800" font-family="Arial,sans-serif" letter-spacing="2">WSPÓLNE GRANIE • SPOŁECZNOŚĆ • WYDARZENIA</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675"><defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b121b"/><stop offset=".55" stop-color="#251018"/><stop offset="1" stop-color="#09090d"/></linearGradient><radialGradient id="glow"><stop stop-color="#a32037" stop-opacity=".6"/><stop offset="1" stop-color="#a32037" stop-opacity="0"/></radialGradient></defs><rect width="1200" height="675" fill="url(#bg)"/><circle cx="940" cy="180" r="420" fill="url(#glow)"/><g fill="none" stroke="#b63a49" stroke-opacity=".28"><path d="M0 550L500 70 1200 550M0 300L700 670 1200 80"/><circle cx="930" cy="330" r="220"/><circle cx="930" cy="330" r="170"/></g><g fill="#f1e8e8" opacity=".86"><path d="M575 244l55 34v118l-55 34-55-34V278zm-23 53v81l23 15 23-15v-81l-23-15z"/><path d="M480 328h-65v-18h65zm190 0h65v-18h-65z"/></g><text x="600" y="505" text-anchor="middle" fill="#ddd0d0" font-family="Arial,sans-serif" font-weight="700" font-size="25" letter-spacing="8">MATT’S WORLD</text><text x="600" y="545" text-anchor="middle" fill="#bc6570" font-family="Arial,sans-serif" font-size="17" letter-spacing="7">WYDARZENIE</text></svg>`;
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-// Jesli istniejacy adres grafiki zwraca 404, pokaz przygotowany podglad.
+// Ścieżki względne do grafik rozwiązywane względem katalogu strony,
+// a nie adresu z hashem (#/events/...).
+function mattEventImageUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw || /^(?:javascript|vbscript):/i.test(raw)) return '';
+  if (/^(?:https?:|data:image\/|blob:)/i.test(raw)) return raw;
+  try { return new URL(raw.replace(/^\.\//, ''), document.baseURI.split('#')[0]).href; }
+  catch (_) { return ''; }
+}
+
+// Błędne lub niedostępne grafiki zastępujemy neutralnym obrazem.
 document.addEventListener('error', function mattEventImageFallback(error) {
   const img = error.target;
   if (!(img instanceof HTMLImageElement) || !img.matches('img[data-matt-event-fallback]')) return;
   if (img.dataset.mattFallbackApplied === '1') return;
   img.dataset.mattFallbackApplied = '1';
-  img.src = img.dataset.mattEventFallback;
+  img.src = img.dataset.mattEventFallback || mattEventFallbackImage();
 }, true);
+
+function mattEventOpenImage(src, title) {
+  const overlay = document.createElement('div');
+  overlay.className = 'matt-event-lightbox';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Powiększona grafika wydarzenia');
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = title || 'Grafika wydarzenia';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'matt-event-lightbox-close';
+  close.textContent = '✕ Zamknij';
+  const dismiss = () => { document.removeEventListener('keydown', onKey); overlay.remove(); };
+  const onKey = event => { if (event.key === 'Escape') dismiss(); };
+  close.addEventListener('click', dismiss);
+  overlay.addEventListener('click', event => { if (event.target === overlay) dismiss(); });
+  overlay.append(img, close);
+  document.body.append(overlay);
+  document.addEventListener('keydown', onKey);
+  close.focus();
+}
+
+document.addEventListener('click', event => {
+  const trigger = event.target.closest?.('[data-matt-event-zoom]');
+  if (!trigger) return;
+  const img = trigger.querySelector('img');
+  if (!img) return;
+  mattEventOpenImage(img.currentSrc || img.src, img.alt);
+});
 
 function eventCard(event) {
   const ended = isEventEnded(event);
@@ -3170,8 +3193,9 @@ function eventCard(event) {
   const archived = event.archived === true;
   const statusBadge = archived ? '<div class="event-ended-badge event-archive-badge">ARCHIWUM</div>' : (ended ? '<div class="event-ended-badge">ZAKOŃCZONY</div>' : (ongoing ? '<div class="event-ongoing-badge">∞ W TRAKCIE</div>' : ''));
   const fallback = mattEventFallbackImage(event);
+  const coverUrl = mattEventImageUrl(event.image) || fallback;
   const cover = `<div class="event-cover event-cover-image${ended ? " event-cover-ended" : ""}${ongoing ? " event-cover-ongoing" : ""}">
-         <img style="object-fit:${event.image ? escapeHtml(event.imageFit || "contain") : "cover"};object-position:center" src="${escapeHtml(event.image || fallback)}" data-matt-event-fallback="${escapeHtml(fallback)}" alt="Grafika wydarzenia: ${escapeHtml(event.title)}" loading="lazy">
+         <img style="object-fit:${event.image ? escapeHtml(event.imageFit || "contain") : "cover"};object-position:center" src="${escapeHtml(coverUrl)}" data-matt-event-fallback="${escapeHtml(fallback)}" alt="Grafika wydarzenia: ${escapeHtml(event.title)}" loading="lazy">
          ${statusBadge}
        </div>`;
 
@@ -3477,7 +3501,10 @@ async function renderEventDetail(id) {
         </div>
         <div class="event-title-admin-row"><h1>${escapeHtml(event.title)}</h1></div>
         
-        ${event.mainImage ? `<div class="event-detail-image"><img style="object-fit:${event.mainImageFit || "contain"};object-position:center" src="${escapeHtml(event.mainImage)}" alt="${escapeHtml(event.title)}"></div>` : ""}
+        <button class="event-detail-image matt-event-zoom-trigger" type="button" data-matt-event-zoom title="Kliknij, aby powiększyć grafikę" aria-label="Powiększ grafikę wydarzenia">
+          <img style="object-fit:${escapeHtml(event.mainImageFit || event.imageFit || "contain")};object-position:center" src="${escapeHtml(mattEventImageUrl(event.mainImage || event.image) || mattEventFallbackImage(event))}" data-matt-event-fallback="${escapeHtml(mattEventFallbackImage(event))}" alt="Grafika wydarzenia: ${escapeHtml(event.title)}">
+          <span class="matt-event-zoom-hint">⤢ Powiększ grafikę</span>
+        </button>
         <div class="event-dates-box">
           <div><small>ROZPOCZĘCIE</small><strong>${formatDate(event.date)}<div class="event-time"><span>🕒</span> ${formatTime(event.date)}</div></strong></div>
           <div class="${isEventOngoing(event) ? 'event-date-ongoing' : ''}"><small>ZAKOŃCZENIE</small><strong>${eventEndStatusHtml(event)}</strong></div>
