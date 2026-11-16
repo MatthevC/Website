@@ -133,6 +133,6 @@ async function readLobbyConfigFromServer(game){
  return {data:snap.exists()?normalize(snap.data()):null,error:null};
  }catch(e){return fail(e.message||String(e));}
 }
-const facade={lobbySyncRequest:()=>accountRequest('/lobby/sync',{}),lobbySyncStatus:()=>accountRequest('/lobby/status',{}),auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
+const facade={lobbySyncRequest:(selectedGame)=>accountRequest('/lobby/sync',{selectedGame}),lobbySyncStatus:()=>accountRequest('/lobby/status',{}),auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();

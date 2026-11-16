@@ -38,7 +38,7 @@ async function syncBot(){
  const btn=root.querySelector('[data-sync]');if(!btn)return;
  btn.disabled=true;msg('Wysyłanie żądania synchronizacji…');
  try{
-  const result=await firebaseClient.lobbySyncRequest();if(result.error)throw Error(result.error.message);
+  const result=await firebaseClient.lobbySyncRequest(selected);if(result.error)throw Error(result.error.message);
   const revision=result.data.revision;msg('Oczekiwanie na potwierdzenie lokalnego bota…');
   for(let n=0;n<18;n++){
    await new Promise(resolve=>setTimeout(resolve,5000));
