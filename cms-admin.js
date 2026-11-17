@@ -1913,7 +1913,7 @@
       return `<fieldset class="cms-field cms-roles"><legend>${esc(field.label)}</legend>${[['viewer','WIDZ'],['vip','VIP'],['moderator','MODERACJA']].map(([v,l])=>`<label><input type="checkbox" name="roles" value="${v}" ${roles.includes(v)?'checked':''}> ${l}</label>`).join('')}</fieldset>`;
     }
     if (field.type === 'checkbox') return `<label class="cms-field cms-check"><input type="checkbox" name="${esc(field.name)}" ${val?'checked':''}> <span>${esc(field.label)}</span></label>`;
-    return `<label class="cms-field"><span>${esc(field.label)}</span><input type="${field.type || 'text'}" name="${esc(field.name)}" value="${esc(val)}" ${field.placeholder?`placeholder="${esc(field.placeholder)}"`:''} ${field.required?'required':''}>${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
+    return `<label class="cms-field"><span>${esc(field.label)}</span><input type="${field.type || 'text'}" name="${esc(field.name)}" value="${esc(val)}" ${field.placeholder?`placeholder="${esc(field.placeholder)}"`:''} ${field.required?'required':''} ${field.type==='date'?'min="0001-01-01" max="9999-12-31"':''}>${field.help?`<small class="cms-field-help">${esc(field.help)}</small>`:''}</label>`;
   }
 
   function bindImageFileFields(form, fields) {
@@ -4464,6 +4464,34 @@
       </form>`);
       $('.cms-modal',modal)?.classList.add('cms-modal-event');
       const form=$('#cms-event-form',modal); bindImageFileFields(form,[imageField,mainImageField]);
+      // Native date inputs may allow years with more than four digits in some browsers.
+      // Enforce the range on edit and again before persisting an event.
+      const eventDateNames=['startDate','endDate','publishDate'];
+      const eventDateValid = value => {
+        if(!value) return true;
+        const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+        if(!match) return false;
+        const year=Number(match[1]), month=Number(match[2]), day=Number(match[3]);
+        if(year<1 || month<1 || month>12 || day<1) return false;
+        const test=new Date(0);test.setFullYear(year,month-1,day);
+        return test.getFullYear()===year && test.getMonth()===month-1 && test.getDate()===day;
+      };
+      const validateEventDates = (showMessage=false) => {
+        for(const name of eventDateNames){
+          const input=form.elements[name];
+          if(!input || input.disabled) continue;
+          const invalid=input.validity.badInput || !eventDateValid(input.value) || (input.value && !input.validity.valid);
+          input.setCustomValidity(invalid?'Wpisz poprawną datę z czterocyfrowym rokiem (0001–9999).':'');
+          if(invalid){if(showMessage)input.reportValidity();return false;}
+        }
+        return true;
+      };
+      eventDateNames.forEach(name=>{
+        const input=form.elements[name];if(!input)return;
+        input.addEventListener('input',()=>validateEventDates(false));
+        input.addEventListener('change',()=>validateEventDates(true));
+      });
+
       if (!canImages) {
         form.querySelectorAll('.cms-event-image-mode input, .cms-event-media-grid input, .cms-event-media-grid select, .cms-event-media-grid button').forEach(control => { control.disabled = true; });
         form.querySelectorAll('.cms-event-media-card').forEach(card => card.classList.add('cms-permission-locked'));
@@ -4544,6 +4572,7 @@
         try{
           const title=String(form.elements.title?.value||'').trim(); const description=String(form.elements.description?.value||'').trim();
           if(!title) throw new Error('Podaj nazwę eventu.'); if(!form.elements.startDate?.value) throw new Error('Podaj datę rozpoczęcia eventu.');
+          if(!validateEventDates(true)) throw new Error('Popraw datę eventu: rok musi mieć dokładnie 4 cyfry (0001–9999).');
           const sharedImages=canImages ? String(form.elements.imageMode?.value||'shared')==='shared' : current.imageMode==='shared';
           let image=canImages ? imageFromField('image') : current.image;
           let mainImage=canImages ? (sharedImages ? '' : imageFromField('mainImage')) : current.mainImage;
