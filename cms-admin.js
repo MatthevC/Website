@@ -4549,11 +4549,14 @@
           let mainImage=canImages ? (sharedImages ? '' : imageFromField('mainImage')) : current.mainImage;
           const imageFile=canImages ? form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0] : null;
           const mainImageFile=canImages && !sharedImages ? form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0] : null;
-          if(imageFile) image=await uploadEventImage(imageFile,title,'event');
-          if(!image) throw new Error('Wybierz grafikę eventu.');
-          if(mainImageFile) mainImage=await uploadEventImage(mainImageFile,title,'event-main');
+          // GitHub Pages nie udostępnia zapisu do repozytorium z poziomu przeglądarki.
+          // Nie próbujemy wysyłać grafik do Firebase Storage (błąd CORS).
+          if (imageFile || mainImageFile) {
+            throw new Error('Wybrany plik nie został wysłany. Aby trzymać grafikę w plikach strony, dodaj ją najpierw do assets/pictures/events/ w repozytorium GitHub, a następnie wpisz jej ścieżkę w polu adresu grafiki (np. assets/pictures/events/plakat.png). Możesz też zapisać event bez grafiki.');
+          }
           if(sharedImages) mainImage=image;
-          if(!sharedImages && !mainImage) throw new Error('W trybie dwóch grafik wybierz także grafikę na stronie eventu.');
+          // Grafika jest opcjonalna, także w trybie dwóch obrazów.
+          if(!sharedImages && !mainImage) mainImage=image || '';
           const ongoingRequested = canSchedule
             ? Boolean(form.elements.ongoing?.checked)
             : eventAdminIsOngoing(row?._db_end_date ?? row?.end_date, row?.ongoing);
