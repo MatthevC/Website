@@ -104,7 +104,7 @@
     if (error) {
       const raw = String(error.message || 'Nieznany błąd');
       if (raw.includes('matt_create_backup_v2') || raw.includes('schema cache') || error.code === 'PGRST202') {
-        throw new Error('W Firebase brakuje wymaganej funkcji backupów i logów. Sprawdź konfigurację backendu Firebase, a potem odśwież stronę.');
+        throw new Error('Worker nie udostępnia jeszcze tworzenia backupów. Wgraj aktualny cloudflare-worker.js.');
       }
       throw new Error(`Nie udało się utworzyć backupu: ${raw}`);
     }
@@ -148,26 +148,15 @@
 
   async function listBackups(type = null) {
     requirePermission('backups.view');
-    let query = firebaseClient
-      .from('cms_backups')
-      .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type')
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false })
-      .limit(200);
-    if (type === 'automatic' || type === 'manual') query = query.eq('backup_type', type);
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
+    const {data,error}=await firebaseClient.cmsBackupRequest('matt_list_backups',{});
+    if(error)throw error;
+    return (data||[]).filter(row=>!type||row.backup_type===type).slice(0,200);
   }
 
   async function getBackup(id) {
     requirePermission('backups.view');
-    const { data, error } = await firebaseClient
-      .from('cms_backups')
-      .select('id,label,created_at,created_by,created_by_username,created_by_user_id,backup_type,snapshot')
-      .eq('id', id)
-      .single();
-    if (error) throw error;
+    const {data,error}=await firebaseClient.cmsBackupRequest('matt_get_backup',{id});
+    if(error)throw error;
     return data;
   }
 

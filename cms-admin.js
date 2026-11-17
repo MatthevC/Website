@@ -4549,10 +4549,16 @@
           let mainImage=canImages ? (sharedImages ? '' : imageFromField('mainImage')) : current.mainImage;
           const imageFile=canImages ? form.querySelector('[data-cms-image-field="image"] [data-image-file]')?.files?.[0] : null;
           const mainImageFile=canImages && !sharedImages ? form.querySelector('[data-cms-image-field="mainImage"] [data-image-file]')?.files?.[0] : null;
-          // GitHub Pages nie udostępnia zapisu do repozytorium z poziomu przeglądarki.
-          // Nie próbujemy wysyłać grafik do Firebase Storage (błąd CORS).
-          if (imageFile || mainImageFile) {
-            throw new Error('Wybrany plik nie został wysłany. Aby trzymać grafikę w plikach strony, dodaj ją najpierw do assets/pictures/events/ w repozytorium GitHub, a następnie wpisz jej ścieżkę w polu adresu grafiki (np. assets/pictures/events/plakat.png). Możesz też zapisać event bez grafiki.');
+          // Upload through authenticated Worker; GitHub token never reaches the browser.
+          if (imageFile) {
+            const uploaded=await window.firebaseClient.uploadEventToGitHub(imageFile);
+            if(uploaded.error)throw new Error(uploaded.error.message);
+            image=uploaded.data.url;
+          }
+          if (mainImageFile) {
+            const uploaded=await window.firebaseClient.uploadEventToGitHub(mainImageFile);
+            if(uploaded.error)throw new Error(uploaded.error.message);
+            mainImage=uploaded.data.url;
           }
           if(sharedImages) mainImage=image;
           // Grafika jest opcjonalna, także w trybie dwóch obrazów.

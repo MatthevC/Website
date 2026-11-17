@@ -94,6 +94,9 @@ const rpc=async(name,args={})=>{await ready;
   const r=await accountRequest('/accounts/access',args);
   return {data:r.data?.data??null,error:r.error};
  }
+ if(['matt_create_backup_v2','matt_delete_backup','matt_restore_backup','matt_restore_snapshot'].includes(name)){
+  const r=await accountRequest('/cms/backup',{name,args});return {data:r.data?.data??null,error:r.error};
+ }
  if(name==='matt_cms_save'){
   // CMS overrides are a complete map. Replacing the document is essential:
   // merge:true would retain deleted keys such as t0001 when restoring base text.
@@ -133,6 +136,10 @@ async function readLobbyConfigFromServer(game){
  return {data:snap.exists()?normalize(snap.data()):null,error:null};
  }catch(e){return fail(e.message||String(e));}
 }
-const facade={lobbySyncRequest:(selectedGame)=>accountRequest('/lobby/sync',{selectedGame}),lobbySyncStatus:()=>accountRequest('/lobby/status',{}),auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
+async function uploadEventToGitHub(file){
+ await ready;const user=auth.currentUser;if(!user)return fail('Zaloguj się.');
+ try{const token=await user.getIdToken();const r=await fetch(ACCOUNT_WORKER+'/events/image',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':file.type},body:file});const data=await r.json();if(!r.ok||!data.ok)return fail(data.error||'Nie udało się zapisać grafiki.');return {data,error:null};}catch(e){return fail(e.message||String(e));}
+}
+const facade={cmsBackupRequest:async(name,args={})=>{const r=await accountRequest('/cms/backup',{name,args});return {data:r.data?.data??null,error:r.error};},uploadEventToGitHub,lobbySyncRequest:(selectedGame)=>accountRequest('/lobby/sync',{selectedGame}),lobbySyncStatus:()=>accountRequest('/lobby/status',{}),auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();
