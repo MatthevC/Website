@@ -4228,7 +4228,7 @@ function setupContactForm() {
       if(!data?.ok)throw new Error(data?.error || 'Nie udało się zapisać zgłoszenia.');
       if(data.email_status==='sent') {
         status.className='form-status success';
-        status.textContent=`Zgłoszenie #${data.reference} zapisane w Centrum i wysłane e-mailem. Dziękujemy!`;
+        status.textContent="Wniosek został wysłany! Sprawdzaj swoją skrzynkę e-mail, w tym folder SPAM. Odpowiemy w ciągu maksymalnie 7 dni roboczych.";
       } else {
         status.className='form-status error';
         status.textContent=`Zgłoszenie #${data.reference} zapisane w Centrum. E-mail nie został wysłany — administrator zobaczy zgłoszenie w panelu.`;
