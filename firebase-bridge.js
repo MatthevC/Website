@@ -8,7 +8,7 @@ const ready=Promise.all([
  import('https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js'),
  import('https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js'),
  import('https://www.gstatic.com/firebasejs/11.10.0/firebase-storage.js')
-]).then(([a,u,f,st])=>{const app=a.initializeApp(firebaseConfig);auth=u.getAuth(app);db=f.getFirestore(app);sdk={u,f,st,storage:st.getStorage(app)};return new Promise(resolve=>u.onAuthStateChanged(auth,()=>resolve()));});
+]).then(([a,u,f,st])=>{const app=a.initializeApp(firebaseConfig);auth=u.getAuth(app);db=f.initializeFirestore(app,{experimentalForceLongPolling:true});sdk={u,f,st,storage:st.getStorage(app)};return new Promise(resolve=>u.onAuthStateChanged(auth,()=>resolve()));});
 const fail=(message)=>({data:null,error:{message,code:'firebase-operation-unavailable'}});
 const collectionMap={matt_permission_catalog:'matt_permission_catalog',profiles:'profiles',cms_data:'cms_data',events:'events',rewards:'rewards',matt_lobby_game_config:'matt_lobby_game_config',matt_contact_submissions:'matt_contact_submissions',matt_user_permissions:'legacy_user_permissions',matt_lobby_conflicts:'matt_lobby_conflicts'};
 const docId=(table,row)=>String(table==='cms_data'?row.key:table==='matt_lobby_game_config'?row.game:row.id||'');
@@ -85,6 +85,9 @@ const rpc=async(name,args={})=>{await ready;
  if(name==='matt_get_my_access'){
   if(!auth.currentUser)return {data:null,error:null};
   try{const p=await sdk.f.getDoc(sdk.f.doc(db,'profiles',auth.currentUser.uid));const profile=p.data();return {data:profile?{role:profile.role,permissions:Array.isArray(profile.permissions)?profile.permissions:[],user_id:auth.currentUser.uid,username:profile.username}:null,error:null};}catch(e){return fail(e.message);}
+ }
+ if(name==='matt_admin_permission_catalog'){
+  const r=await accountRequest('/accounts/catalog',{});return {data:r.data?.data||[],error:r.error};
  }
  if(name==='matt_admin_list_accounts'){
   const r=await accountRequest('/accounts/list',{});

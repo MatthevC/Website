@@ -3,19 +3,15 @@ const MATT_DEFAULT_AVATAR = "assets/pictures/social/default-avatar.svg";
 // Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Firebase,
 // aby były od razu dostępne w panelu Zarządzaj kontami bez dokładania plików wdrożeniowych do paczki strony.
 const MATT_EXTRA_PERMISSION_CATALOG = [
-  { permission:"cms.inbox.delete", group_name:"CENTRUM MODERACJI", label:"Wnioski — trwałe usuwanie (tylko główny administrator)", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"cms.inbox.delete", group_name:"CENTRUM MODERACJI", label:"Wnioski — trwałe usuwanie", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"cms.inbox.restore", group_name:"CENTRUM MODERACJI", label:"Wnioski — przywracanie z kosza", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"cms.inbox.notes", group_name:"CENTRUM MODERACJI", label:"Wnioski — notatki wewnętrzne", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"cms.inbox.trash", group_name:"CENTRUM MODERACJI", label:"Wnioski — przenoszenie do kosza", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"cms.inbox.status", group_name:"CENTRUM MODERACJI", label:"Wnioski — zmiana statusu", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"cms.inbox.notes", group_name:"CENTRUM MODERACJI", label:"Wnioski — notatki wewnętrzne", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"cms.inbox.reply", group_name:"CENTRUM MODERACJI", label:"Wnioski — wysyłanie odpowiedzi e-mail", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"cms.inbox.status", group_name:"CENTRUM MODERACJI", label:"Wnioski — zmiana statusu", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
-
-  { permission:"cms.inbox.reply", group_name:"CENTRUM MODERACJI", label:"Wnioski — wysyłanie odpowiedzi e-mail", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
-
-  { permission:"cms.inbox.edit", group_name:"CENTRUM MODERACJI", label:"Wnioski — edycja (uprawnienie zgodności)", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"cms.inbox.edit", group_name:"CENTRUM MODERACJI", label:"Wnioski — edycja (uprawnienie zgodności)", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
   { permission:"github.restore", group_name:"CENTRUM MODERACJI", label:"Github — restore", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
 
@@ -83,19 +79,19 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
 
   { permission:"audit.view", group_name:"LOGI I BEZPIECZEŃSTWO", label:"Audit — view", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
 
-  { permission:"accounts.delete", group_name:"KONTA I DOSTĘP", label:"Accounts — delete", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.delete", group_name:"KONTA I DOSTĘP", label:"Accounts — delete", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"accounts.email.change", group_name:"KONTA I DOSTĘP", label:"Accounts — email — change", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.email.change", group_name:"KONTA I DOSTĘP", label:"Accounts — email — change", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"accounts.password.reset", group_name:"KONTA I DOSTĘP", label:"Accounts — password — reset", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.password.reset", group_name:"KONTA I DOSTĘP", label:"Accounts — password — reset", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"accounts.permissions.change", group_name:"KONTA I DOSTĘP", label:"Accounts — permissions — change", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.permissions.change", group_name:"KONTA I DOSTĘP", label:"Accounts — permissions — change", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"accounts.role.change", group_name:"KONTA I DOSTĘP", label:"Accounts — role — change", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.role.change", group_name:"KONTA I DOSTĘP", label:"Accounts — role — change", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"accounts.create", group_name:"KONTA I DOSTĘP", label:"Accounts — create", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.create", group_name:"KONTA I DOSTĘP", label:"Accounts — create", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
-  { permission:"accounts.view", group_name:"KONTA I DOSTĘP", label:"Accounts — view", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+  { permission:"accounts.view", group_name:"KONTA I DOSTĘP", label:"Accounts — view", description:"Wymaga uprawnień do obsługi zgłoszeń.", sort_order:850 },
 
   // MATT STUDIO 3: use the established permission identifiers so existing Firebase grants remain effective.
   { permission:"page.text.edit", group_name:"MATT STUDIO 3", label:"Studio 3 — edycja tekstów i kreator sekcji", description:"Edycja tekstów oraz dodawanie, duplikowanie, usuwanie i sortowanie własnych sekcji. Zachowuje dotychczasowe uprawnienia.", sort_order:501 },
@@ -682,7 +678,7 @@ async function mattOpenAccountManager() {
     body.innerHTML = `<div class="account-loading">Ładowanie kont i katalogu uprawnień…</div>`;
     const [accountsRes, catalogRes] = await Promise.all([
       firebaseClient.rpc("matt_admin_list_accounts"),
-      firebaseClient.from("matt_permission_catalog").select("permission,group_name,label,description,sort_order").order("sort_order")
+      firebaseClient.rpc("matt_admin_permission_catalog")
     ]);
     if (accountsRes.error) throw accountsRes.error;
     // Catalog is optional during Firebase migration; local catalog still enables permission editor.

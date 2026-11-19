@@ -41,7 +41,7 @@
   // Odczyt pełnej kolekcji tylko dla administratora. Pozostałe sesje
   // odczytują pojedyncze publiczne dokumenty, bez ujawniania danych kont.
   const PUBLIC_CMS_KEYS = ['navigation','site_links','home_hero_image','commands','contact_topics','discord_channels','discord_join_preview','discord_join_bubbles','downloads_config','streamers','moderators','moderator_benefits','page_layout','reward_graphics','site_maintenance'];
-  const STAFF_CMS_KEYS = ['event_workflow','cms_trash','cms_edit_locks'];
+  const STAFF_CMS_KEYS = ['event_workflow'];
   async function loadVisibleKeys() {
     const role = window.currentUserRole || 'guest';
     if (role === 'admin') {
