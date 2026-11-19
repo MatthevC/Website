@@ -232,13 +232,8 @@ async function mattLoadAccessState() {
     const role = String(data?.role || "user").toLowerCase();
     let permissions = Array.isArray(data?.permissions) ? [...data.permissions] : [];
     if (role === "moderator") {
-      const [{ data:sessionData }, extraMap] = await Promise.all([
-        firebaseClient.auth.getSession(),
-        mattLoadExtraPermissionsMap()
-      ]);
-      const uid = sessionData?.session?.user?.id || "";
-      const extras = Array.isArray(extraMap?.[uid]) ? extraMap[uid] : [];
-      permissions = [...new Set([...permissions, ...extras])];
+      // Wszystkie uprawnienia są zapisane bezpośrednio w profilu Firebase.
+      permissions = [...new Set(permissions)];
     }
     window.currentUserRole = role;
     window.currentUserPermissions = permissions;
@@ -685,10 +680,9 @@ async function mattOpenAccountManager() {
 
   const load = async () => {
     body.innerHTML = `<div class="account-loading">Ładowanie kont i katalogu uprawnień…</div>`;
-    const [accountsRes, catalogRes, extraPermissions] = await Promise.all([
+    const [accountsRes, catalogRes] = await Promise.all([
       firebaseClient.rpc("matt_admin_list_accounts"),
-      firebaseClient.from("matt_permission_catalog").select("permission,group_name,label,description,sort_order").order("sort_order"),
-      mattLoadExtraPermissionsMap()
+      firebaseClient.from("matt_permission_catalog").select("permission,group_name,label,description,sort_order").order("sort_order")
     ]);
     if (accountsRes.error) throw accountsRes.error;
     // Catalog is optional during Firebase migration; local catalog still enables permission editor.
@@ -696,8 +690,7 @@ async function mattOpenAccountManager() {
     dbCatalogPermissions = new Set((catalogRes.data || []).map(item => item.permission));
     accounts = (accountsRes.data || []).map(account => {
       const base = Array.isArray(account.permissions) ? account.permissions : [];
-      const extras = String(account.role || '').toLowerCase() === 'moderator' && Array.isArray(extraPermissions?.[account.auth_user_id]) ? extraPermissions[account.auth_user_id] : [];
-      return { ...account, permissions:[...new Set([...base, ...extras])] };
+      return { ...account, permissions:[...new Set(base)] };
     });
     const mergedCatalog = new Map((catalogRes.data || []).map(item => [item.permission, { ...item }]));
     MATT_EXTRA_PERMISSION_CATALOG.forEach(item => {
@@ -1039,13 +1032,8 @@ async function mattOpenAccountManager() {
         });
         try {
           saveSimple.disabled = true;
-          const dbPermissions=[...selected].filter(p=>dbCatalogPermissions.has(p));
-          const extraPermissions=[...selected].filter(p=>!dbCatalogPermissions.has(p));
-          const {error}=await firebaseClient.rpc("matt_admin_set_account_access",{p_user_id:account.auth_user_id,p_role:role,p_permissions:dbPermissions});
+          const {error}=await firebaseClient.rpc("matt_admin_set_account_access",{p_user_id:account.auth_user_id,p_role:role,p_permissions:role==='moderator'?[...selected]:[]});
           if(error) throw error;
-          const extraMap=await mattLoadExtraPermissionsMap();
-          if(extraPermissions.length) extraMap[account.auth_user_id]=extraPermissions; else delete extraMap[account.auth_user_id];
-          await mattSaveExtraPermissionsMap(extraMap);
           await load();
         } catch(error) {
           body.querySelector('[data-account-message]').textContent=error.message||'Błąd zapisu';
@@ -1259,11 +1247,6 @@ async function mattOpenAccountManager() {
         await invokeAccountAction({ action:"delete_user", userId:account.auth_user_id });
         // Posprzątaj pomocnicze dane tego konta. Błąd czyszczenia nie cofnie poprawnie wykonanego usunięcia konta.
         try {
-          const extraMap = await mattLoadExtraPermissionsMap();
-          if (extraMap && Object.prototype.hasOwnProperty.call(extraMap, account.auth_user_id)) {
-            delete extraMap[account.auth_user_id];
-            await mattSaveExtraPermissionsMap(extraMap);
-          }
           const security = await mattGetAccountSecurityState();
           let changed = false;
           if (security.blocks?.[account.auth_user_id]) { delete security.blocks[account.auth_user_id]; changed = true; }
@@ -1292,18 +1275,12 @@ async function mattOpenAccountManager() {
       button.disabled = true;
       if (message) message.textContent = "Zapisywanie…";
       try {
-        const dbPermissions = selectedPermissions.filter(permission => dbCatalogPermissions.has(permission));
-        const extraPermissions = selectedPermissions.filter(permission => !dbCatalogPermissions.has(permission));
         const { error } = await firebaseClient.rpc("matt_admin_set_account_access", {
           p_user_id: account.auth_user_id,
           p_role: role,
-          p_permissions: dbPermissions
+          p_permissions: selectedPermissions
         });
         if (error) throw error;
-        const extraMap = await mattLoadExtraPermissionsMap();
-        if (role === "moderator" && extraPermissions.length) extraMap[account.auth_user_id] = extraPermissions;
-        else delete extraMap[account.auth_user_id];
-        await mattSaveExtraPermissionsMap(extraMap);
         if (message) message.textContent = "Rola i uprawnienia zostały zapisane.";
         selectedId = account.auth_user_id;
         await load();

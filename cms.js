@@ -1,6 +1,15 @@
 (() => {
   const cache = new Map();
   let loadError = null;
+  const deniedUntil = new Map();
+  const isDenied = error => /missing or insufficient permissions|permission-denied/i.test(String(error?.message || error || ''));
+  const warnOnce = (key, error) => {
+    if (isDenied(error)) {
+      if (deniedUntil.get(key) > Date.now()) return;
+      deniedUntil.set(key, Date.now() + 120000);
+      console.info('[MATT CMS] Brak dostępu do klucza:', key, '(kolejne próby czasowo wstrzymane)');
+    } else console.warn('[MATT CMS] Błąd odczytu:', key, error?.message || error);
+  };
 
   const managedSelectors = [
     '.recommended-grid', '.recommended-toc', '.moderator-grid', '.moderator-benefits-grid',
@@ -29,20 +38,35 @@
     return tpl.innerHTML;
   }
 
-  async function loadAll() {
-    try {
-      const { data, error } = await firebaseClient.from('cms_data').select('key,data');
-      if (error) throw error;
-      (data || []).forEach(row => cache.set(row.key, row.data));
-    } catch (error) {
-      loadError = error;
-      console.info('[MATT CMS] Tabela cms_data nie jest jeszcze dostępna. Strona używa treści domyślnych.', error?.message || error);
+  // Odczyt pełnej kolekcji tylko dla administratora. Pozostałe sesje
+  // odczytują pojedyncze publiczne dokumenty, bez ujawniania danych kont.
+  const PUBLIC_CMS_KEYS = ['navigation','site_links','home_hero_image','commands','contact_topics','discord_channels','discord_join_preview','discord_join_bubbles','downloads_config','streamers','moderators','moderator_benefits','page_layout','reward_graphics','site_maintenance'];
+  const STAFF_CMS_KEYS = ['event_workflow','cms_trash','cms_edit_locks'];
+  async function loadVisibleKeys() {
+    const role = window.currentUserRole || 'guest';
+    if (role === 'admin') {
+      const {data,error}=await firebaseClient.from('cms_data').select('key,data');
+      if(error) throw error;
+      (data||[]).forEach(row=>cache.set(row.key,row.data));
+      return;
     }
+    const keys = role === 'moderator' ? [...PUBLIC_CMS_KEYS,...STAFF_CMS_KEYS] : PUBLIC_CMS_KEYS;
+    const results = await Promise.all(keys.map(async key => {
+      if ((deniedUntil.get(key)||0)>Date.now()) return;
+      const {data,error}=await firebaseClient.from('cms_data').select('key,data').eq('key',key).maybeSingle();
+      if(error) { warnOnce(key,error); return; }
+      if(data) cache.set(key,data.data);
+    }));
+  }
+  async function loadAll() {
+    try { await loadVisibleKeys(); }
+    catch(error) { loadError=error; warnOnce('cms_data:initial',error); }
   }
 
   const ready = loadAll();
   // Retry CMS data after sign-in: public Firestore rules may not permit full collection listing.
   window.addEventListener('matt-auth-change', event => {
+    deniedUntil.clear();
     if (event?.detail?.role && event.detail.role !== 'guest') {
       refreshAll().then(ok => { if(ok) { const route=window.MattCMS?.routeKey?.(location.hash)||'home'; window.MattCMS?.applyRoute?.(route); } });
     }
@@ -53,26 +77,25 @@
   }
 
   async function refreshKey(key) {
+    if ((deniedUntil.get(key) || 0) > Date.now()) return get(key, null);
     try {
       const { data, error } = await firebaseClient.from('cms_data').select('key,data').eq('key', key).maybeSingle();
       if (error) throw error;
+      deniedUntil.delete(key);
       if (data) cache.set(key, data.data); else cache.delete(key);
       return data?.data ?? null;
     } catch (error) {
-      console.warn('[MATT CMS] Nie udało się odświeżyć klucza CMS:', key, error?.message || error);
+      warnOnce(key, error);
       return get(key, null);
     }
   }
 
   async function refreshAll() {
     try {
-      const { data, error } = await firebaseClient.from('cms_data').select('key,data');
-      if (error) throw error;
-      cache.clear();
-      (data || []).forEach(row => cache.set(row.key, row.data));
+      await loadVisibleKeys();
       return true;
-    } catch (error) {
-      console.warn('[MATT CMS] Nie udało się odświeżyć danych CMS:', error?.message || error);
+    } catch(error) {
+      warnOnce('cms_data:list',error);
       return false;
     }
   }
