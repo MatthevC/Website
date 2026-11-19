@@ -4217,7 +4217,8 @@ function setupContactForm() {
     status.className='form-status';status.textContent='Zapisywanie i wysyłanie zgłoszenia…';
     if(submit)submit.disabled=true;
     try {
-      const {data,error}=await window.firebaseClient.functions.invoke('matt-contact-submit',{body:payload});
+      const response=await fetch('https://matt-world-auth.mateuszchrusciel95.workers.dev/contact/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const data=await response.json();const error=response.ok?null:{message:data.error||'Nie udało się wysłać zgłoszenia.'};
       if(error){
         let explanation='';
         try { const response=error.context; if(response && typeof response.clone==='function'){const body=await response.clone().json();explanation=String(body?.error||'');} } catch(_){}

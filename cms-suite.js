@@ -539,12 +539,8 @@
     }
     inboxCheckPending = true;
     try {
-      const {count,error} = await window.firebaseClient
-        .from('matt_contact_submissions')
-        .select('id', {count:'exact',head:true})
-        .eq('status','new');
-      if (error) throw error;
-      inboxNewCount = count || 0;
+      const {data} = await mattContactAdmin({action:'list'});
+      inboxNewCount = (data||[]).filter(x=>x.status==='new').length;
       inboxCountReady = true;
       inboxLastCheckAt = Date.now();
       paintInboxBadges();
@@ -612,12 +608,15 @@
     }
   }
 
+  async function mattContactAdmin(payload){
+    const session=(await window.firebaseClient.auth.getSession())?.data?.session;
+    if(!session?.access_token)throw new Error('Zaloguj się ponownie.');
+    const response=await fetch('https://matt-world-auth.mateuszchrusciel95.workers.dev/contact/manage',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify(payload)});
+    const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.error||'Operacja nie powiodła się');return result;
+  }
   async function renderInbox(body) {
     if(!isStaff()) {body.textContent='Brak dostępu.';return;}
-    const {data,error}=await window.firebaseClient.from('matt_contact_submissions')
-      .select('id,created_at,twitch_nick,reply_email,topic,message,details,status,admin_note,email_status,resolved_at,resolved_by')
-      .order('created_at',{ascending:false}).limit(1000);
-    if(error) throw error;
+    const {data}=await mattContactAdmin({action:'list'});
     const rows=data||[];
     inboxNewCount=rows.filter(x=>x.status==='new').length;inboxCountReady=true;paintInboxBadges();
     const statuses=[['all','Wszystkie'],['new','Nowe'],['progress','W trakcie'],['done','Ukończone'],['rejected','Odrzucone']];
@@ -664,8 +663,10 @@
             <div class="matt-inbox-compact-meta">Numer: ${esc(String(x.id).slice(0,8).toUpperCase())} · ${esc(x.reply_email)} · ${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</div>
             <div class="matt-inbox-compact-message">${esc(x.message)}</div>
             ${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}
-            ${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small>${esc(fmt(x.resolved_at))} · automatyczne usunięcie po 30 dniach</small></div>`:''}
-            <div class="matt-inbox-compact-actions"><a href="mailto:${encodeURIComponent(x.reply_email)}?subject=${encodeURIComponent('MATT’S WORLD — '+x.topic)}">✉ Odpowiedz e-mailem</a><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>
+            ${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small>${esc(fmt(x.resolved_at))} · przechowywanie zgodnie z polityką retencji</small></div>`:''}
+            <div class="matt-inbox-compact-actions"><button type="button" data-inbox-reply>✉ Odpowiedz przez Gmail</button><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>
+            <label class="matt-inbox-note">Treść odpowiedzi e-mail<textarea rows="5" maxlength="5000" data-inbox-reply-text placeholder="Wpisz odpowiedź dla zgłaszającego…"></textarea></label>
+            ${Array.isArray(x.reply_history)&&x.reply_history.length?`<div class="matt-inbox-details"><strong>Historia odpowiedzi:</strong>${x.reply_history.map(r=>`<p>${esc(fmt(r.at))}: ${esc(r.message)}</p>`).join('')}</div>`:''}
             <label class="matt-inbox-note">Notatka wewnętrzna<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label>
             <button class="matt-inbox-compact-save" data-inbox-save>Zapisz status i notatkę</button>
           </div>`:''}
@@ -675,15 +676,22 @@
         const id=btn.closest('[data-inbox-id]').dataset.inboxId;
         expandedId=expandedId===id?null:id;draw();
       });
+      $$('[data-inbox-reply]',list).forEach(btn=>btn.onclick=async()=>{
+        const card=btn.closest('[data-inbox-id]');const id=card.dataset.inboxId;
+        const message=$('[data-inbox-reply-text]',card).value.trim();
+        if(message.length<2){toast('Wpisz treść odpowiedzi.','error');return;}
+        if(!confirm('Wysłać odpowiedź e-mail do zgłaszającego?'))return;
+        btn.disabled=true;
+        try{await mattContactAdmin({action:'reply',id,message});toast('Odpowiedź wysłana przez Gmail API.');openCenter('inbox');}
+        catch(error){toast('Nie udało się wysłać: '+error.message,'error');btn.disabled=false;}
+      });
       $$('[data-inbox-save]',list).forEach(btn=>btn.onclick=async()=>{
         const card=btn.closest('[data-inbox-id]');const id=card.dataset.inboxId;
         const status=$('[data-inbox-status]',card).value;
-        if(['done','rejected'].includes(status)&&!confirm(`Oznaczyć zgłoszenie jako ${labels[status]}? Po 30 dniach zostanie automatycznie usunięte.`))return;
+        if(['done','rejected'].includes(status)&&!confirm(`Oznaczyć zgłoszenie jako ${labels[status]}? `))return;
         btn.disabled=true;
-        const {error}=await window.firebaseClient.rpc('matt_contact_update_submission',{
-          p_id:id,p_status:status,p_admin_note:$('[data-inbox-note]',card).value
-        });
-        if(error){toast('Nie zapisano: '+error.message,'error');btn.disabled=false;return;}
+        try{await mattContactAdmin({action:'update',id,status,admin_note:$('[data-inbox-note]',card).value});}
+        catch(error){toast('Nie zapisano: '+error.message,'error');btn.disabled=false;return;}
         toast('Zapisano zgłoszenie.');openCenter('inbox');
       });
     };
