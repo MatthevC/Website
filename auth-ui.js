@@ -3,6 +3,100 @@ const MATT_DEFAULT_AVATAR = "assets/pictures/social/default-avatar.svg";
 // Dodatkowe, bardziej szczegółowe uprawnienia. Są scalane z katalogiem Firebase,
 // aby były od razu dostępne w panelu Zarządzaj kontami bez dokładania plików wdrożeniowych do paczki strony.
 const MATT_EXTRA_PERMISSION_CATALOG = [
+  { permission:"cms.inbox.delete", group_name:"CENTRUM MODERACJI", label:"Wnioski — trwałe usuwanie (tylko główny administrator)", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"cms.inbox.restore", group_name:"CENTRUM MODERACJI", label:"Wnioski — przywracanie z kosza", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"cms.inbox.trash", group_name:"CENTRUM MODERACJI", label:"Wnioski — przenoszenie do kosza", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"cms.inbox.notes", group_name:"CENTRUM MODERACJI", label:"Wnioski — notatki wewnętrzne", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"cms.inbox.status", group_name:"CENTRUM MODERACJI", label:"Wnioski — zmiana statusu", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"cms.inbox.reply", group_name:"CENTRUM MODERACJI", label:"Wnioski — wysyłanie odpowiedzi e-mail", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"cms.inbox.edit", group_name:"CENTRUM MODERACJI", label:"Wnioski — edycja (uprawnienie zgodności)", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"github.restore", group_name:"CENTRUM MODERACJI", label:"Github — restore", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"backups.import", group_name:"CENTRUM MODERACJI", label:"Backups — import", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"backups.restore", group_name:"CENTRUM MODERACJI", label:"Backups — restore", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"backups.delete.automatic", group_name:"CENTRUM MODERACJI", label:"Backups — delete — automatic", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"backups.delete.manual", group_name:"CENTRUM MODERACJI", label:"Backups — delete — manual", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"backups.manual.create", group_name:"CENTRUM MODERACJI", label:"Backups — manual — create", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"backups.view", group_name:"CENTRUM MODERACJI", label:"Backups — view", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"lobby.edit", group_name:"MATT LOBBY", label:"Lobby — edit", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"lobby.view", group_name:"MATT LOBBY", label:"Lobby — view", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"lobby.conflicts.delete", group_name:"MATT LOBBY", label:"Lobby — conflicts — delete", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"lobby.conflicts.edit", group_name:"MATT LOBBY", label:"Lobby — conflicts — edit", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"lobby.conflicts.create", group_name:"MATT LOBBY", label:"Lobby — conflicts — create", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"lobby.conflicts.view", group_name:"MATT LOBBY", label:"Lobby — conflicts — view", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"site.navigation.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Site — navigation — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"site.links.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Site — links — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"page.layout.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Page — layout — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"streamers.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Streamers — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"rules.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Rules — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"moderation.benefits.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Moderation — benefits — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"moderation.people.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Moderation — people — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"discord.join.any", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Discord — join — any", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"discord.join.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Discord — join — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"discord.channels.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Discord — channels — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"contact.topics.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Contact — topics — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"commands.manage", group_name:"SPOŁECZNOŚĆ I TREŚCI", label:"Commands — manage", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"downloads.reorder", group_name:"PLIKI DO POBRANIA", label:"Downloads — reorder", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"downloads.delete", group_name:"PLIKI DO POBRANIA", label:"Downloads — delete", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"downloads.edit", group_name:"PLIKI DO POBRANIA", label:"Downloads — edit", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"downloads.create", group_name:"PLIKI DO POBRANIA", label:"Downloads — create", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"events.delete", group_name:"EVENTY", label:"Events — delete", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"events.edit", group_name:"EVENTY", label:"Events — edit", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"events.create", group_name:"EVENTY", label:"Events — create", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"audit.view", group_name:"LOGI I BEZPIECZEŃSTWO", label:"Audit — view", description:"Szczegółowy zakres dostępu do funkcji strony. Wymaga odpowiedniej kontroli w kodzie modułu i regułach Firebase.", sort_order:850 },
+
+  { permission:"accounts.delete", group_name:"KONTA I DOSTĘP", label:"Accounts — delete", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"accounts.email.change", group_name:"KONTA I DOSTĘP", label:"Accounts — email — change", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"accounts.password.reset", group_name:"KONTA I DOSTĘP", label:"Accounts — password — reset", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"accounts.permissions.change", group_name:"KONTA I DOSTĘP", label:"Accounts — permissions — change", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"accounts.role.change", group_name:"KONTA I DOSTĘP", label:"Accounts — role — change", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"accounts.create", group_name:"KONTA I DOSTĘP", label:"Accounts — create", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
+  { permission:"accounts.view", group_name:"KONTA I DOSTĘP", label:"Accounts — view", description:"Operacja jest ograniczona również przez backend; sam checkbox nie nadaje dostępu.", sort_order:850 },
+
   // MATT STUDIO 3: use the established permission identifiers so existing Firebase grants remain effective.
   { permission:"page.text.edit", group_name:"MATT STUDIO 3", label:"Studio 3 — edycja tekstów i kreator sekcji", description:"Edycja tekstów oraz dodawanie, duplikowanie, usuwanie i sortowanie własnych sekcji. Zachowuje dotychczasowe uprawnienia.", sort_order:501 },
   { permission:"page.images.manage", group_name:"MATT STUDIO 3", label:"Studio 3 — multimedia i grafiki", description:"Zarządzanie zdjęciami i dekoracjami podstron.", sort_order:502 },
@@ -702,15 +796,17 @@ async function mattOpenAccountManager() {
     return tabs + (accountPermissionMode === 'simple' ? renderSimpleAccess(account) : renderSelected(account));
   };
 
+  // Grupowanie według faktycznego katalogu (wbudowanego + Firebase), bez pomijania nowych uprawnień.
   const simplePermissionSets = [
-    {name:"Twitch", permissions:["streamers.delete","commands.delete"], desc:"Moderacja kanału, komendy i obsługa Twitch"},
-    {name:"Discord", permissions:["discord.join.messages.manage","discord.join.members.manage","discord.channels.delete"], desc:"Moderacja serwera Discord"},
-    {name:"Eventy", permissions:["events.create","events.edit","events.delete","events.schedule.manage","events.images.manage","events.publish"], desc:"Tworzenie i zarządzanie wydarzeniami"},
-    {name:"Treści strony", permissions:["rules.delete","contact.topics.delete"], desc:"Zarządzanie materiałami i treścią"},
-    {name:"Społeczność", permissions:["moderation.people.delete","moderation.benefits.delete"], desc:"Moderowanie społeczności"},
-    {name:"Centrum Moderacji", permissions:["cms.center.access","cms.inbox.view","cms.notifications.view"], desc:"Wnioski i alerty; pozostałe sekcje przydzielisz w trybie zaawansowanym"},
-    {name:"Pełna administracja", permissions:null, desc:"Pełny dostęp do wszystkich funkcji"}
-  ];
+    {name:"Eventy", prefixes:["events."], desc:"Wydarzenia i ich publikacja"},
+    {name:"Pliki do pobrania", prefixes:["downloads."], desc:"Pliki, publikacja i porządkowanie"},
+    {name:"Discord", prefixes:["discord."], desc:"Moduły Discord na stronie"},
+    {name:"Społeczność", prefixes:["moderation.","streamers.","commands.","rules.","contact.topics."], desc:"Społeczność, streamerzy i komendy"},
+    {name:"Treści strony", prefixes:["page.","home.","site.navigation.","site.links."], desc:"Wygląd i zawartość witryny"},
+    {name:"Centrum Moderacji", prefixes:["cms.","backups.","github.","statistics.","site.maintenance."], desc:"Wnioski, historia, bezpieczeństwo i backupy"},
+    {name:"MATT LOBBY", prefixes:["lobby."], desc:"Kolejka, konflikty i konfiguracja"},
+    {name:"Konta i dostęp", prefixes:["accounts.","audit."], desc:"Uprawnienia wrażliwe — tylko zaufani administratorzy"}
+  ].map(set => ({...set, permissions:catalog.filter(item=>set.prefixes.some(prefix=>item.permission.startsWith(prefix))).map(item=>item.permission)}));
 
   const simpleRoles = {
     user:{label:"Użytkownik", desc:"Zwykłe konto społeczności", permissions:[]},
@@ -736,8 +832,8 @@ async function mattOpenAccountManager() {
       <h4>Dodatkowe możliwości</h4>
       <div class="account-simple-options">
       ${simplePermissionSets.map((set,i)=>{
-        const perms=set.permissions||catalog.map(x=>x.permission);
-        const checked=perms.every(p=>selected.has(p));
+        const perms=set.permissions;
+        const checked=perms.length>0 && perms.every(p=>selected.has(p));
         return `<label class="account-simple-option"><input type="checkbox" data-simple-group="${i}" ${checked?'checked':''}><span><strong>${set.name}</strong><small>${set.desc}<br>${perms.length} szczegółowych uprawnień</small></span></label>`;
       }).join('')}
       </div>
