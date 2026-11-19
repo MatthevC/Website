@@ -12547,53 +12547,47 @@ input,select,textarea{max-width:100%;box-sizing:border-box}
 }
 
 
-/* MATT WORLD — naprawa nawigacji i przycisku logowania (2026-11-19) */
+/* MATT WORLD: nagłówek bez nachodzenia elementów */
 .site-header .header-inner{
   display:flex;
   align-items:center;
-  flex-wrap:nowrap;
-  gap:clamp(8px,1vw,18px);
+  gap:clamp(8px,1vw,16px);
   min-width:0;
   max-width:100%;
 }
+.site-header .header-spacer{display:none!important}
 .site-header .brand{flex:0 0 auto;min-width:0}
-.site-header .main-nav{flex:1 1 auto;min-width:0}
-.site-header .header-spacer{display:none!important;min-width:0!important;flex:0 0 0!important}
-.site-header .header-cta{margin-left:0!important;flex:0 0 auto}
-.site-header .user-area{margin-left:0!important;flex:0 0 auto;min-width:0;max-width:100%}
-.site-header #openLogin{max-width:min(220px,100%);min-width:0;overflow:hidden}
+.site-header .main-nav{min-width:0;flex:1 1 auto}
+.site-header .header-cta{flex:0 0 auto;margin-left:0!important}
+.site-header .user-area{flex:0 0 auto;margin-left:0!important;min-width:0}
+.site-header .header-login{min-width:0;max-width:160px;padding-inline:12px}
 .site-header #headerUserName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media (max-width:1450px){
+/* Pełna nawigacja nie mieści się w 1200–1600px: przełącz ją na menu */
+@media(max-width:1600px){
   .site-header .header-inner{justify-content:space-between}
-  .site-header .mobile-menu-btn{display:block!important;flex:0 0 auto}
+  .site-header .mobile-menu-btn{display:block!important;order:1;flex:0 0 auto}
+  .site-header .brand{order:0}
+  .site-header .header-cta{order:2;margin-left:auto!important}
+  .site-header .user-area{order:3}
   .site-header .main-nav{
-    display:none!important;position:absolute;top:100%;left:12px;right:12px;
-    width:auto;min-width:0;height:auto;max-height:calc(100dvh - 85px);
-    overflow-y:auto;flex-direction:column;align-items:stretch;
-    background:#101010;border:1px solid #303030;padding:8px;
-    box-shadow:0 20px 40px rgba(0,0,0,.55);z-index:1200;
+    position:absolute!important;top:100%!important;left:12px!important;right:12px!important;
+    width:auto!important;height:auto!important;max-height:calc(100dvh - 90px)!important;
+    overflow-y:auto!important;display:none!important;flex-direction:column!important;
+    align-items:stretch!important;justify-content:flex-start!important;
+    padding:10px!important;background:#101010!important;border:1px solid #333!important;
+    box-shadow:0 15px 30px #0009;z-index:1100!important
   }
   .site-header .main-nav.open{display:flex!important}
-  .site-header .main-nav > a,.site-header .nav-dropdown > button{
-    min-height:44px;width:100%;justify-content:space-between;padding:0 13px;
+  .site-header .main-nav>a,.site-header .nav-dropdown>button{
+    width:100%;min-height:44px;justify-content:space-between;padding:0 13px
   }
   .site-header .nav-dropdown{display:block}
-  .site-header .dropdown-menu{
-    position:static;border-top:0;border-left:2px solid var(--red);
-    box-shadow:none;margin:0 0 6px 10px;
-  }
+  .site-header .dropdown-menu{position:static;box-shadow:none;border-left:2px solid #ef2b2d}
   .site-header .nav-dropdown.open .dropdown-menu{display:block}
-  .site-header .header-cta{margin-left:auto!important}
 }
 @media(max-width:650px){
-  .site-header .header-inner{gap:8px}
   .site-header .header-cta{display:none!important}
-  .site-header .brand{flex:0 1 auto;min-width:0}
-  .site-header .brand-text{overflow:hidden;text-overflow:ellipsis}
-  .site-header #openLogin{padding-inline:10px;max-width:125px}
-}
-@media(max-width:360px){
-  .site-header .brand-logo-wrap,.site-header .brand-logo{width:36px;height:36px}
-  .site-header .brand{gap:5px}
-  .site-header #openLogin{max-width:95px}
+  .site-header .brand{flex:0 1 auto}
+  .site-header .brand-text{font-size:clamp(16px,4vw,21px)}
+  .site-header .header-login{max-width:120px;padding-inline:8px}
 }
