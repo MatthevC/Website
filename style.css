@@ -12501,3 +12501,47 @@ html.matt-route-loading #app {
 .account-permission-critical {font-size:9px!important;}
 .account-permission-search {font-size:12px!important;}
 @media (max-width: 1050px) {.account-permissions {grid-template-columns:1fr!important;max-height:55vh!important;}}
+
+/* MATT WORLD — adaptive viewport and reduced-width layouts, 2026-11-19 */
+html{max-width:100%;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{max-width:100%;min-width:0;overflow-x:clip}
+img,video,canvas,svg{max-width:100%}
+iframe{max-width:100%}
+input,select,textarea{max-width:100%;box-sizing:border-box}
+.account-manager-box,.cms-modal,.admin-dashboard-modal,.admin-modal,.event-modal,.login-modal{box-sizing:border-box;max-width:calc(100vw - 20px)}
+.account-manager-grid,.account-edit-panel,.account-list-panel,.cms-modal-body{min-width:0}
+.account-permission,.account-permission-group,.account-permission strong,.account-permission small{overflow-wrap:anywhere}
+@media(max-width:1100px){
+ .account-manager-modal{padding:12px!important}
+ .account-manager-box{width:100%!important;max-width:100%!important;max-height:calc(100dvh - 24px)!important}
+ .account-manager-grid{grid-template-columns:minmax(210px,30%) minmax(0,1fr)!important}
+ .account-permissions{grid-template-columns:1fr!important}
+ .cms-modal{max-height:calc(100dvh - 20px)!important}
+ .cms-form-grid,.cms-site-settings-grid,.cms-preview-admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .account-manager-modal{padding:6px!important;align-items:center!important}
+ .account-manager-box{width:100%!important;max-width:100%!important;max-height:calc(100dvh - 12px)!important;border-radius:10px!important}
+ .account-manager-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+ .account-list-panel,.account-edit-panel{width:100%!important;min-width:0!important}
+ .account-permissions{grid-template-columns:minmax(0,1fr)!important;max-height:none!important}
+ .account-role-grid{grid-template-columns:1fr!important}
+ .cms-modal,.admin-modal,.admin-dashboard-modal,.event-modal,.login-modal{width:calc(100vw - 12px)!important;max-width:calc(100vw - 12px)!important;max-height:calc(100dvh - 12px)!important}
+ .cms-modal-body{overflow-x:hidden!important;overflow-y:auto!important}
+ .cms-form-grid,.cms-event-editor-layout,.cms-event-media-grid,.cms-feature-grid,.cms-image-manager-grid,.cms-site-settings-grid,.cms-preview-admin-grid,.cms-reward-editor-grid,.cms-reward-settings-grid,.admin-grid,.hero-grid,.form-grid,.discord-role-grid,.discord-step-grid,.command-grid{grid-template-columns:minmax(0,1fr)!important}
+ .account-manager-box button,.cms-modal button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+ #events-list{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(max-width:480px){
+ .account-manager-modal{padding:0!important}
+ .account-manager-box{max-width:100%!important;max-height:100dvh!important;border-radius:0!important}
+ .cms-modal,.admin-modal,.admin-dashboard-modal{width:100vw!important;max-width:100vw!important;max-height:100dvh!important;border-radius:0!important}
+ .cms-modal-body{padding:12px!important}
+ .account-permission{align-items:flex-start!important}
+ .account-permission-group{padding:10px!important}
+}
+@media(max-height:650px){
+ .account-manager-modal{padding:5px!important}
+ .account-manager-box{max-height:calc(100dvh - 10px)!important}
+ .cms-modal,.admin-modal,.admin-dashboard-modal{max-height:calc(100dvh - 10px)!important}
+}
