@@ -157,6 +157,14 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
   { permission:"accounts.permissions.copy", group_name:"KONTA I DOSTĘP", label:"Kopiowanie uprawnień moderatora", description:"Może skopiować cały zestaw uprawnień z jednego Moderatora do formularza drugiego Moderatora. Zmiany nadal wymagają kliknięcia ZAPISZ.", sort_order:729 }
 ];
 
+
+function mattReadablePermissionLabel(permission) {
+  const words = String(permission || '').split('.');
+  const translate = {"view": "Podgląd", "manage": "Zarządzanie", "create": "Dodawanie", "edit": "Edycja", "delete": "Usuwanie", "publish": "Publikowanie", "reorder": "Zmiana kolejności", "restore": "Przywracanie", "import": "Import", "export": "Eksport", "any": "Pełny zakres modułu", "bulk": "Operacje zbiorcze", "preview": "Podgląd", "nonpublic": "Nieopublikowane", "notes": "Notatki", "history": "Historia", "images": "Grafiki", "schedule": "Harmonogram", "autoarchive": "Automatyczna archiwizacja", "duplicate": "Duplikowanie", "devices": "Urządzenia", "status": "Zmiana statusu", "reply": "Odpowiadanie", "access": "Dostęp", "center": "Panel", "members": "Użytkownicy", "messages": "Wiadomości", "join": "Dołączanie", "channels": "Kanały", "config": "Konfiguracja", "conflicts": "Konflikty", "people": "Osoby", "benefits": "Korzyści", "topics": "Tematy", "links": "Linki", "navigation": "Nawigacja", "maintenance": "Tryb konserwacji", "permissions": "Uprawnienia", "role": "Role", "change": "Zmiana", "password": "Hasła", "reset": "Resetowanie", "email": "E-mail", "sessions": "Sesje", "revoke": "Unieważnianie", "block": "Blokowanie", "copy": "Kopiowanie", "manual": "Ręczne", "automatic": "Automatyczne", "forms": "Formularze", "autosave": "Automatyczny zapis", "inbox": "Wnioski i kontakt", "integrity": "Spójność danych", "check": "Sprawdzanie", "notifications": "Powiadomienia", "search": "Wyszukiwanie", "layout": "Układ", "text": "Tekst", "callouts": "Oznaczenia", "hero": "Baner główny", "rules": "Regulamin", "streamers": "Streamerzy", "moderation": "Moderacja", "downloads": "Pliki", "events": "Eventy", "discord": "Discord", "lobby": "Lobby", "accounts": "Konta", "backups": "Kopie zapasowe", "github": "GitHub", "cms": "Centrum Moderacji", "statistics": "Statystyki", "audit": "Dziennik zdarzeń", "home": "Strona główna", "site": "Strona", "page": "Podstrona", "commands": "Komendy", "contact": "Kontakt", "filters": "Filtry", "filter": "Filtry", "editlocks": "Blokady edycji", "preview_as": "Podgląd jako moderator", "rewards": "Nagrody", "security": "Bezpieczeństwo"};
+  return words.map(w => translate[w] || w.replace(/_/g,' ')).join(' · ');
+}
+const MATT_INVALID_PERMISSION_IDS = new Set(["accounts.filter", "accounts.find", "accounts.google.com", "accounts.length", "accounts.map", "audit.filter", "backups.filter", "backups.find", "backups.length", "backups.slice", "cms.created", "cms.deleted", "cms.updated", "discord.com", "discord.gg", "events.filter", "events.find", "events.for", "events.json", "events.length", "events.map", "page.append", "page.body", "page.dataset.discord", "page.query", "page.title", "rules.find", "streamers.for", "streamers.length", "streamers.map"]);
+
 const MATT_PERMISSION_GROUP_ORDER = [
   ["events.", "EVENTY", 10],
   ["downloads.", "PLIKI DO POBRANIA", 20],
@@ -169,13 +177,13 @@ const MATT_PERMISSION_GROUP_ORDER = [
   ["home.", "STRONA I WYGLĄD", 50],
   ["page.", "STRONA I WYGLĄD", 50],
   ["site.", "STRONA I WYGLĄD", 50],
-  ["backups.", "BACKUPY I PRZYWRACANIE", 60],
-  ["github.", "BACKUPY I PRZYWRACANIE", 60],
+  ["backups.", "CENTRUM MODERACJI", 60],
+  ["github.", "CENTRUM MODERACJI", 60],
   ["accounts.", "KONTA I DOSTĘP", 70],
   ["cms.", "CENTRUM MODERACJI", 75],
   ["lobby.", "MATT LOBBY", 76],
-  ["statistics.", "LOGI I BEZPIECZEŃSTWO", 80],
-  ["audit.", "LOGI I BEZPIECZEŃSTWO", 80]
+  ["statistics.", "CENTRUM MODERACJI", 80],
+  ["audit.", "KONTA I DOSTĘP", 80]
 ];
 
 function mattPermissionGroupMeta(permission, fallback = "INNE") {
@@ -693,7 +701,7 @@ async function mattOpenAccountManager() {
       const existing = mergedCatalog.get(item.permission);
       mergedCatalog.set(item.permission, existing ? { ...existing, ...item } : { ...item });
     });
-    catalog = [...mergedCatalog.values()].sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999));
+    catalog = [...mergedCatalog.values()].filter(item => item.permission && !MATT_INVALID_PERMISSION_IDS.has(item.permission) && !item.permission.startsWith("cms.trash.")).map(item => ({...item, label: (!item.label || /^(?:Events|Downloads|Discord|Backups|Accounts|Cms|Page|Site|Lobby|Streamers|Rules|Github|Contact|Commands|Moderation|Home|Statistics|Audit)\s*[—-]/i.test(item.label) || item.description === "Uprawnienie modułu MATT’S WORLD") ? mattReadablePermissionLabel(item.permission) : item.label, description: item.description === "Uprawnienie modułu MATT’S WORLD" || item.description?.startsWith("Szczegółowy zakres dostępu") ? "Uprawnienie do wskazanej czynności w module." : item.description})).sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999));
     if (!selectedId && accounts.length) {
       selectedId = accounts.find(a => a.auth_user_id === viewerUserId)?.auth_user_id || accounts[0].auth_user_id;
     }
@@ -786,16 +794,18 @@ async function mattOpenAccountManager() {
   };
 
   // Grupowanie według faktycznego katalogu (wbudowanego + Firebase), bez pomijania nowych uprawnień.
+  // Obliczaj zestawy dopiero po załadowaniu katalogu z Workera.
+  // Wcześniejsza wersja wyliczała je na pustym katalogu, dlatego wszędzie było 0.
   const simplePermissionSets = [
-    {name:"Eventy", prefixes:["events."], desc:"Wydarzenia i ich publikacja"},
-    {name:"Pliki do pobrania", prefixes:["downloads."], desc:"Pliki, publikacja i porządkowanie"},
-    {name:"Discord", prefixes:["discord."], desc:"Moduły Discord na stronie"},
-    {name:"Społeczność", prefixes:["moderation.","streamers.","commands.","rules.","contact.topics."], desc:"Społeczność, streamerzy i komendy"},
-    {name:"Treści strony", prefixes:["page.","home.","site.navigation.","site.links."], desc:"Wygląd i zawartość witryny"},
-    {name:"Centrum Moderacji", prefixes:["cms.","backups.","github.","statistics.","site.maintenance."], desc:"Wnioski, historia, bezpieczeństwo i backupy"},
+    {name:"Eventy", prefixes:["events."], desc:"Tworzenie, edycja i publikacja wydarzeń"},
+    {name:"Pliki do pobrania", prefixes:["downloads."], desc:"Dodawanie, edycja i publikacja plików"},
+    {name:"Discord", prefixes:["discord."], desc:"Ustawienia Discorda na stronie"},
+    {name:"Społeczność", prefixes:["moderation.","streamers.","commands.","rules.","contact."], desc:"Streamerzy, regulamin, komendy i społeczność"},
+    {name:"Treści strony", prefixes:["page.","home.","site."], desc:"Zawartość i wygląd strony"},
+    {name:"Centrum Moderacji", prefixes:["cms.","backups.","github.","statistics."], desc:"Wnioski, historia, kopie zapasowe i statystyki"},
     {name:"MATT LOBBY", prefixes:["lobby."], desc:"Kolejka, konflikty i konfiguracja"},
-    {name:"Konta i dostęp", prefixes:["accounts.","audit."], desc:"Uprawnienia wrażliwe — tylko zaufani administratorzy"}
-  ].map(set => ({...set, permissions:catalog.filter(item=>set.prefixes.some(prefix=>item.permission.startsWith(prefix))).map(item=>item.permission)}));
+    {name:"Konta i dostęp", prefixes:["accounts.","audit."], desc:"Zarządzanie kontami i bezpieczeństwo"}
+  ].map(set => ({...set, get permissions() { return catalog.filter(item => set.prefixes.some(prefix => item.permission.startsWith(prefix))).map(item => item.permission); }}));
 
   const simpleRoles = {
     user:{label:"Użytkownik", desc:"Zwykłe konto społeczności", permissions:[]},
@@ -989,7 +999,7 @@ async function mattOpenAccountManager() {
         const box=body.querySelector('[data-simple-preview]');
         if(box) box.innerHTML=`<strong>Podgląd dostępu</strong><p>Rola: ${simpleRoles[role].label}</p><p>${simpleRoles[role].desc}</p><p>Moduły: ${selected.length?selected.join(', '):'brak dodatkowych modułów'}</p>`;
       };
-      body.querySelectorAll('[data-simple-role],[data-simple-group]').forEach(x=>x.addEventListener('change',updateSimplePreview));
+      body.querySelectorAll('[data-simple-role],[data-simple-group]').forEach(x=>x.addEventListener('change',()=>{ if(x.matches('[data-simple-group]')) x.dataset.touched='1'; updateSimplePreview(); }));
       body.querySelectorAll('[data-preview-role-view]').forEach(previewBtn=>previewBtn.addEventListener('click',()=>{
         const role=body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || selectedRole?.() || 'user';
         const permissions=new Set();
@@ -1016,15 +1026,14 @@ async function mattOpenAccountManager() {
       updateSimplePreview();
       saveSimple?.addEventListener('click', async () => {
         const role = body.querySelector('[data-simple-role]:checked')?.dataset.simpleRole || 'user';
-        const selected = new Set();
+        const selected = new Set(role === "moderator" ? (account.permissions || []) : []);
         const rolePermissions=simpleRoles[role].permissions;
         if(rolePermissions) rolePermissions.forEach(p=>selected.add(p));
         else if(rolePermissions===null) catalog.forEach(x=>selected.add(x.permission));
         body.querySelectorAll('[data-simple-group]').forEach(cb => {
-          if (cb.checked) {
-            const set = simplePermissionSets[Number(cb.dataset.simpleGroup)];
-            (set.permissions || catalog.map(x=>x.permission)).forEach(p=>selected.add(p));
-          }
+          const set = simplePermissionSets[Number(cb.dataset.simpleGroup)];
+          if (cb.checked) set.permissions.forEach(p=>selected.add(p));
+          else if (cb.dataset.touched === "1") set.permissions.forEach(p=>selected.delete(p));
         });
         try {
           saveSimple.disabled = true;
