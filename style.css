@@ -12637,3 +12637,28 @@ input,select,textarea{max-width:100%;box-sizing:border-box}
   .site-header .brand-text {max-width:105px;overflow:hidden;text-overflow:ellipsis;}
   .site-header .header-login {max-width:105px !important;padding-inline:7px !important;}
 }
+
+
+/* MATT WORLD — zwarte menu: usunięcie rozciągania odstępów */
+@media (min-width: 1250px) {
+  .site-header .container.header-inner {
+    justify-content: flex-start !important;
+    gap: clamp(10px, .8vw, 16px) !important;
+  }
+  .site-header .main-nav {
+    flex: 0 1 auto !important;
+    justify-content: flex-start !important;
+    gap: clamp(0px, .15vw, 3px) !important;
+    margin: 0 !important;
+  }
+  .site-header .main-nav > a,
+  .site-header .main-nav .nav-dropdown > button {
+    padding-inline: clamp(7px, .55vw, 11px) !important;
+  }
+  .site-header .header-cta {
+    margin-left: auto !important;
+  }
+  .site-header .user-area {
+    margin-left: 0 !important;
+  }
+}
