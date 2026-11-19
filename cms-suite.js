@@ -643,6 +643,25 @@
       <div class="matt-inbox-compact-summary"><span data-inbox-count></span><span class="matt-inbox-compact-new">${rows.filter(x=>x.status==='new').length} nowych</span><span class="matt-inbox-compact-hint">Kliknij wiersz, aby wyświetlić szczegóły</span></div>
       <div class="matt-inbox-compact-list" data-inbox-list></div>
     </section>`;
+    if(!document.getElementById('matt-inbox-mail-style')){
+      const style=document.createElement('style');style.id='matt-inbox-mail-style';
+      style.textContent=`
+      .matt-inbox-mail-panel{background:linear-gradient(145deg,#17191e,#101115);border:1px solid #34353d;border-left:3px solid #d51d35;border-radius:12px;padding:18px;margin:12px 0 18px;color:#ececf1}
+      .matt-inbox-mail-kicker{font-size:10px;letter-spacing:1.5px;color:#ef5466;font-weight:800;text-transform:uppercase;margin-bottom:10px}
+      .matt-inbox-mail-subject{font-weight:750;font-size:15px;margin-bottom:14px}
+      .matt-inbox-mail-content{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.8 Arial,Helvetica,sans-serif;color:#e7e7eb}
+      .matt-inbox-mail-meta{display:flex;flex-wrap:wrap;gap:7px 15px;color:#a8aab4;font-size:11px;margin-bottom:14px}
+      .matt-inbox-compose{background:#111216;border:1px solid #36323b;border-radius:12px;padding:15px;margin:14px 0}
+      .matt-inbox-compose textarea{box-sizing:border-box;width:100%;min-height:135px;background:#191a20;color:#f2f2f5;border:1px solid #48404b;border-radius:8px;padding:12px;font:13px/1.7 Arial,Helvetica,sans-serif;resize:vertical}
+      .matt-inbox-compose textarea:focus{outline:1px solid #df3146;border-color:#df3146}
+      .matt-inbox-mail-preview{background:#1c1d23;border:1px solid #333640;border-radius:9px;padding:15px;margin-top:12px;font:13px/1.75 Arial,Helvetica,sans-serif;color:#f0f0f2}
+      .matt-inbox-mail-preview-body{white-space:pre-wrap;overflow-wrap:anywhere;min-height:36px}
+      .matt-inbox-mail-signature{margin-top:18px;line-height:1.65}.matt-inbox-mail-signature strong{font-size:14px}
+      .matt-inbox-send{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#b71930,#801426)!important;color:#fff!important;border:1px solid #e34257!important;border-radius:9px!important;padding:11px 16px!important;font-weight:750!important;letter-spacing:.2px;cursor:pointer;transition:transform .15s,filter .15s,box-shadow .15s}
+      .matt-inbox-send:hover{transform:translateY(-1px);filter:brightness(1.14);box-shadow:0 6px 18px #b7193033}.matt-inbox-send:disabled{opacity:.55;cursor:wait;transform:none}
+      .matt-inbox-compact-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+      `;document.head.appendChild(style);
+    }
     const list=$('[data-inbox-list]',body);
     let expandedId=null;
     const draw=()=>{
@@ -661,11 +680,11 @@
           </button>
           ${expanded?`<div class="matt-inbox-compact-detail">
             <div class="matt-inbox-compact-meta">Numer: ${esc(String(x.id).slice(0,8).toUpperCase())} · ${esc(x.reply_email)} · ${x.email_status==='sent'?'✉ E-mail wysłany':'✉ E-mail niewysłany'}</div>
-            <div class="matt-inbox-compact-message">${esc(x.message)}</div>
+            <div class="matt-inbox-mail-panel"><div class="matt-inbox-mail-kicker">Oryginalna wiadomość</div><div class="matt-inbox-mail-subject">${esc(x.topic)}</div><div class="matt-inbox-mail-meta"><span>Od: ${esc(x.twitch_nick)}</span><span>E-mail: ${esc(x.reply_email)}</span><span>${esc(fmt(x.created_at))}</span></div><div class="matt-inbox-mail-content">${esc(x.message)}</div></div>
             ${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}
             ${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small>${esc(fmt(x.resolved_at))} · przechowywanie zgodnie z polityką retencji</small></div>`:''}
-            <div class="matt-inbox-compact-actions"><button type="button" data-inbox-reply>✉ Odpowiedz przez Gmail</button><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>
-            <label class="matt-inbox-note">Treść odpowiedzi e-mail<textarea rows="5" maxlength="5000" data-inbox-reply-text placeholder="Wpisz odpowiedź dla zgłaszającego…"></textarea></label>
+            <div class="matt-inbox-compact-actions"><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>
+            <div class="matt-inbox-compose"><div class="matt-inbox-mail-kicker">Odpowiedź do zgłaszającego</div><label class="matt-inbox-note">Treść wiadomości<textarea rows="6" maxlength="5000" data-inbox-reply-text placeholder="Napisz odpowiedź…">${esc('Cześć '+String(x.twitch_nick||'')+',\n\n')}</textarea></label><div class="matt-inbox-mail-kicker" style="margin-top:14px">Podgląd całego e-maila</div><div class="matt-inbox-mail-preview"><div class="matt-inbox-mail-preview-body" data-inbox-preview-body></div><div class="matt-inbox-mail-signature"><em>Pozdrawiam i życzę miłego dnia,</em><div><strong>MatthevC</strong></div><div>🎮 Streamer Twitch | Content Creator</div><div><strong>MATT’S WORLD</strong></div></div></div><div style="margin-top:13px"><button type="button" class="matt-inbox-send" data-inbox-reply>➤ Wyślij odpowiedź przez Gmail</button></div><small style="display:block;margin-top:9px;color:#9b9da7">Podpis jest automatycznie dołączany przez Worker. Wysyłana jest treść wpisana powyżej.</small></div>
             ${Array.isArray(x.reply_history)&&x.reply_history.length?`<div class="matt-inbox-details"><strong>Historia odpowiedzi:</strong>${x.reply_history.map(r=>`<p>${esc(fmt(r.at))}: ${esc(r.message)}</p>`).join('')}</div>`:''}
             <label class="matt-inbox-note">Notatka wewnętrzna<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label>
             <button class="matt-inbox-compact-save" data-inbox-save>Zapisz status i notatkę</button>
@@ -675,6 +694,11 @@
       $$('[data-inbox-toggle]',list).forEach(btn=>btn.onclick=()=>{
         const id=btn.closest('[data-inbox-id]').dataset.inboxId;
         expandedId=expandedId===id?null:id;draw();
+      });
+      $$('[data-inbox-reply-text]',list).forEach(field=>{
+        const preview=$('[data-inbox-preview-body]',field.closest('[data-inbox-id]'));
+        const update=()=>{preview.textContent=field.value.trim()||'Tutaj pojawi się treść odpowiedzi…';};
+        field.addEventListener('input',update);update();
       });
       $$('[data-inbox-reply]',list).forEach(btn=>btn.onclick=async()=>{
         const card=btn.closest('[data-inbox-id]');const id=card.dataset.inboxId;
