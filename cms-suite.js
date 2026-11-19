@@ -618,8 +618,8 @@
     if(!isStaff()) {body.textContent='Brak dostępu.';return;}
     const {data}=await mattContactAdmin({action:'list'});
     const rows=data||[];
-    inboxNewCount=rows.filter(x=>x.status==='new').length;inboxCountReady=true;paintInboxBadges();
-    const statuses=[['all','Wszystkie'],['new','Nowe'],['progress','W trakcie'],['done','Ukończone'],['rejected','Odrzucone']];
+    inboxNewCount=rows.filter(x=>x.status==='new'&&!x.deleted_at).length;inboxCountReady=true;paintInboxBadges();
+    const statuses=[['all','Wszystkie'],['new','Nowe'],['progress','W trakcie'],['done','Ukończone'],['rejected','Odrzucone'],['trash','Kosz zgłoszeń']];
     const labels=Object.fromEntries(statuses);
     const categoryOf=(topic)=>{
       const t=String(topic||'').toLocaleLowerCase('pl');
@@ -640,7 +640,7 @@
         <label><span>Status</span><select data-inbox-filter>${statuses.map(([k,n])=>option(k,n)).join('')}</select></label>
         <label class="matt-inbox-compact-search"><span>Wyszukaj</span><input type="search" data-inbox-search placeholder="Nick, temat, numer, treść..."></label>
       </div>
-      <div class="matt-inbox-compact-summary"><span data-inbox-count></span><span class="matt-inbox-compact-new">${rows.filter(x=>x.status==='new').length} nowych</span><span class="matt-inbox-compact-hint">Kliknij wiersz, aby wyświetlić szczegóły</span></div>
+      <div class="matt-inbox-compact-summary"><span data-inbox-count></span><span class="matt-inbox-compact-new">${rows.filter(x=>x.status==='new'&&!x.deleted_at).length} nowych</span><span class="matt-inbox-compact-hint">Kliknij wiersz, aby wyświetlić szczegóły</span></div>
       <div class="matt-inbox-compact-list" data-inbox-list></div>
     </section>`;
     if(!document.getElementById('matt-inbox-mail-style')){
@@ -660,6 +660,9 @@
       .matt-inbox-send{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#b71930,#801426)!important;color:#fff!important;border:1px solid #e34257!important;border-radius:9px!important;padding:11px 16px!important;font-weight:750!important;letter-spacing:.2px;cursor:pointer;transition:transform .15s,filter .15s,box-shadow .15s}
       .matt-inbox-send:hover{transform:translateY(-1px);filter:brightness(1.14);box-shadow:0 6px 18px #b7193033}.matt-inbox-send:disabled{opacity:.55;cursor:wait;transform:none}
       .matt-inbox-compact-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+      .matt-inbox-delete,.matt-inbox-permanent,.matt-inbox-restore{padding:10px 14px;border-radius:9px;font-weight:750;cursor:pointer;background:#22171c;color:#ff9aa8;border:1px solid #77313d}
+      .matt-inbox-restore{background:#17241d;color:#b8f0c6;border-color:#355f45}.matt-inbox-permanent{background:#6b1020;color:#fff;border-color:#d93b52}
+      .matt-inbox-delete:hover,.matt-inbox-permanent:hover,.matt-inbox-restore:hover{filter:brightness(1.2)}
       `;document.head.appendChild(style);
     }
     const list=$('[data-inbox-list]',body);
@@ -668,7 +671,7 @@
       const filter=$('[data-inbox-filter]',body).value;
       const category=$('[data-inbox-category]',body).value;
       const query=String($('[data-inbox-search]',body).value||'').toLocaleLowerCase('pl');
-      const visible=rows.filter(x=>(filter==='all'||x.status===filter)&&(category==='Wszystkie'||categoryOf(x.topic)===category)&&[x.id,x.twitch_nick,x.topic,x.message,x.reply_email,...Object.values(x.details||{})].join(' ').toLocaleLowerCase('pl').includes(query));
+      const visible=rows.filter(x=>(filter==='trash'?!!x.deleted_at:!x.deleted_at&&(filter==='all'||x.status===filter))&&(category==='Wszystkie'||categoryOf(x.topic)===category)&&[x.id,x.twitch_nick,x.topic,x.message,x.reply_email,...Object.values(x.details||{})].join(' ').toLocaleLowerCase('pl').includes(query));
       $('[data-inbox-count]',body).textContent=`${visible.length} ${visible.length===1?'zgłoszenie':'zgłoszeń'}`;
       list.innerHTML=visible.length?visible.map(x=>{
         const expanded=expandedId===String(x.id);
@@ -683,11 +686,11 @@
             <div class="matt-inbox-mail-panel"><div class="matt-inbox-mail-kicker">Oryginalna wiadomość</div><div class="matt-inbox-mail-subject">${esc(x.topic)}</div><div class="matt-inbox-mail-meta"><span>Od: ${esc(x.twitch_nick)}</span><span>E-mail: ${esc(x.reply_email)}</span><span>${esc(fmt(x.created_at))}</span></div><div class="matt-inbox-mail-content">${esc(x.message)}</div></div>
             ${Object.keys(x.details||{}).length?`<div class="matt-inbox-details">${Object.entries(x.details).map(([k,v])=>`<div><strong>${esc(k.replaceAll('_',' '))}:</strong> ${esc(v)}</div>`).join('')}</div>`:''}
             ${x.resolved_at&&['done','rejected'].includes(x.status)?`<div class="matt-inbox-resolution"><strong>${x.status==='done'?'✓ Ukończone':'✕ Odrzucone'} przez: ${esc(x.resolved_by||'Nieustalony moderator')}</strong><small>${esc(fmt(x.resolved_at))} · przechowywanie zgodnie z polityką retencji</small></div>`:''}
-            <div class="matt-inbox-compact-actions"><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>
-            <div class="matt-inbox-compose"><div class="matt-inbox-mail-kicker">Odpowiedź do zgłaszającego</div><label class="matt-inbox-note">Treść wiadomości<textarea rows="6" maxlength="5000" data-inbox-reply-text placeholder="Napisz odpowiedź…">${esc('Cześć '+String(x.twitch_nick||'')+',\n\n')}</textarea></label><div class="matt-inbox-mail-kicker" style="margin-top:14px">Podgląd całego e-maila</div><div class="matt-inbox-mail-preview"><div class="matt-inbox-mail-preview-body" data-inbox-preview-body></div><div class="matt-inbox-mail-signature"><em>Pozdrawiam i życzę miłego dnia,</em><div><strong>MatthevC</strong></div><div>🎮 Streamer Twitch | Content Creator</div><div><strong>MATT’S WORLD</strong></div></div></div><div style="margin-top:13px"><button type="button" class="matt-inbox-send" data-inbox-reply>➤ Wyślij odpowiedź przez Gmail</button></div><small style="display:block;margin-top:9px;color:#9b9da7">Podpis jest automatycznie dołączany przez Worker. Wysyłana jest treść wpisana powyżej.</small></div>
+            ${x.deleted_at?`<div class="matt-inbox-compact-meta">W koszu od: ${esc(fmt(x.deleted_at))}</div>`:`<div class="matt-inbox-compact-actions"><label>Status <select data-inbox-status>${statuses.filter(([k])=>k!=='all').map(([k,n])=>`<option value="${k}" ${x.status===k?'selected':''}>${esc(n)}</option>`).join('')}</select></label></div>`}
+            ${x.deleted_at?'':`<div class="matt-inbox-compose"><div class="matt-inbox-mail-kicker">Odpowiedź do zgłaszającego</div><label class="matt-inbox-note">Treść wiadomości<textarea rows="6" maxlength="5000" data-inbox-reply-text placeholder="Napisz odpowiedź…">${esc('Cześć '+String(x.twitch_nick||'')+',\n\n')}</textarea></label><div class="matt-inbox-mail-kicker" style="margin-top:14px">Podgląd całego e-maila</div><div class="matt-inbox-mail-preview"><div class="matt-inbox-mail-preview-body" data-inbox-preview-body></div><div class="matt-inbox-mail-signature"><em>Pozdrawiam i życzę miłego dnia,</em><div><strong>MatthevC</strong></div><div>🎮 Streamer Twitch | Content Creator</div><div><strong>MATT’S WORLD</strong></div></div></div><div style="margin-top:13px"><button type="button" class="matt-inbox-send" data-inbox-reply>➤ Wyślij odpowiedź przez Gmail</button></div><small style="display:block;margin-top:9px;color:#9b9da7">Podpis jest automatycznie dołączany przez Worker. Wysyłana jest treść wpisana powyżej.</small></div>`}
             ${Array.isArray(x.reply_history)&&x.reply_history.length?`<div class="matt-inbox-details"><strong>Historia odpowiedzi:</strong>${x.reply_history.map(r=>`<p>${esc(fmt(r.at))}: ${esc(r.message)}</p>`).join('')}</div>`:''}
             <label class="matt-inbox-note">Notatka wewnętrzna<textarea rows="2" maxlength="2000" data-inbox-note placeholder="Notatka administratora lub moderatora…">${esc(x.admin_note||'')}</textarea></label>
-            <button class="matt-inbox-compact-save" data-inbox-save>Zapisz status i notatkę</button>
+            ${x.deleted_at?`<div class="matt-inbox-compact-actions"><button type="button" class="matt-inbox-restore" data-inbox-restore>↶ Przywróć zgłoszenie</button>${window.MattCMS?.isMainAdmin?.()?'':''}<button type="button" class="matt-inbox-permanent" data-inbox-permanent>✕ Usuń na stałe</button></div>`:`<div class="matt-inbox-compact-actions"><button class="matt-inbox-compact-save" data-inbox-save>Zapisz status i notatkę</button><button type="button" class="matt-inbox-delete" data-inbox-delete>▣ Przenieś do kosza</button></div>`}
           </div>`:''}
         </article>`;
       }).join(''):'<div class="matt-center-empty">Brak zgłoszeń dla wybranych filtrów.</div>';
@@ -708,6 +711,18 @@
         btn.disabled=true;
         try{await mattContactAdmin({action:'reply',id,message});toast('Odpowiedź wysłana przez Gmail API.');openCenter('inbox');}
         catch(error){toast('Nie udało się wysłać: '+error.message,'error');btn.disabled=false;}
+      });
+      for(const [attr,action,question] of [
+        ['data-inbox-delete','trash','Przenieść zgłoszenie do kosza?'],
+        ['data-inbox-restore','restore','Przywrócić zgłoszenie?'],
+        ['data-inbox-permanent','delete','UWAGA: trwale usunąć zgłoszenie wraz z historią odpowiedzi? Tej operacji nie można cofnąć.']
+      ]) $$('['+attr+']',list).forEach(btn=>btn.onclick=async()=>{
+        const id=btn.closest('[data-inbox-id]').dataset.inboxId;
+        if(!confirm(question))return;
+        if(action==='delete'&&!confirm('Ostateczne potwierdzenie: usunąć bezpowrotnie?'))return;
+        btn.disabled=true;
+        try{await mattContactAdmin({action,id});toast(action==='trash'?'Przeniesiono do kosza.':action==='restore'?'Przywrócono zgłoszenie.':'Usunięto zgłoszenie na stałe.');openCenter('inbox');}
+        catch(error){toast('Operacja nie powiodła się: '+error.message,'error');btn.disabled=false;}
       });
       $$('[data-inbox-save]',list).forEach(btn=>btn.onclick=async()=>{
         const card=btn.closest('[data-inbox-id]');const id=card.dataset.inboxId;
