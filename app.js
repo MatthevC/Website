@@ -4256,7 +4256,7 @@ document.getElementById("mobile-menu-btn").addEventListener("click", () => {
 document.addEventListener("click", (event) => {
   const button = event.target.closest(".nav-dropdown > button");
   if (!button) return;
-  if (window.innerWidth <= 900) {
+  if (window.innerWidth <= 1249) {
     button.parentElement.classList.toggle("open");
   }
 });
