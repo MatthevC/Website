@@ -12484,3 +12484,20 @@ html.matt-route-loading #app {
 .matt-event-lightbox img{display:block;max-width:100%;max-height:100%;object-fit:contain}
 .matt-event-lightbox-close{position:absolute;top:15px;right:20px;background:#222;color:#fff;border:1px solid #777;border-radius:7px;padding:10px 17px;cursor:pointer}
 @media(max-width:760px){#events-list{grid-template-columns:1fr!important;gap:17px}.event-detail-modern{padding:18px!important}.event-detail-modern .event-detail-image{aspect-ratio:auto;min-height:190px}.event-detail-modern .event-detail-image img{height:auto;max-height:70vh!important}.matt-event-zoom-hint{font-size:11px}}
+
+/* MATT WORLD: czytelny panel uprawnień, szerokie karty i większe etykiety */
+@media (min-width: 1051px) {
+  .account-manager-box { width:min(1500px, 97vw)!important; max-width:97vw!important; }
+  .account-manager-grid {grid-template-columns:minmax(250px, 300px) minmax(0,1fr)!important;}
+  .account-permissions {grid-template-columns:repeat(2,minmax(300px,1fr))!important;max-height:55vh!important;gap:14px!important;}
+}
+.account-permission-group {padding:14px!important;}
+.account-permission {min-height:58px!important;padding:11px 7px!important;gap:11px!important;}
+.account-permission strong {font-size:13px!important;line-height:1.45!important;color:#f5f5f7!important;}
+.account-permission small {font-size:11px!important;line-height:1.5!important;color:#b8bbc4!important;}
+.account-permission-group h4 {font-size:12px!important;line-height:1.4!important;letter-spacing:.035em!important;}
+.account-permission-group-tools button {font-size:10px!important;padding:7px 9px!important;}
+.account-permission-group-tools>span {font-size:10px!important;}
+.account-permission-critical {font-size:9px!important;}
+.account-permission-search {font-size:12px!important;}
+@media (max-width: 1050px) {.account-permissions {grid-template-columns:1fr!important;max-height:55vh!important;}}

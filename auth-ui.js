@@ -158,6 +158,44 @@ const MATT_EXTRA_PERMISSION_CATALOG = [
 ];
 
 
+function mattFriendlyPermissionLabel(permission) {
+  const explicit = {
+    "backups.manual.create":"Utwórz ręczną kopię zapasową",
+    "backups.create":"Utwórz kopię zapasową",
+    "backups.view":"Przeglądaj kopie zapasowe",
+    "backups.restore":"Przywróć kopię zapasową",
+    "backups.import":"Importuj kopię zapasową",
+    "backups.delete.manual":"Usuń ręczną kopię zapasową",
+    "backups.delete.automatic":"Usuń automatyczną kopię zapasową",
+    "github.restore":"Przywróć pliki z GitHuba",
+    "accounts.create":"Dodawaj konta użytkowników",
+    "accounts.delete":"Usuwaj konta użytkowników",
+    "accounts.view":"Przeglądaj konta użytkowników",
+    "accounts.email.change":"Zmieniaj adresy e-mail kont",
+    "accounts.password.reset":"Resetuj hasła użytkowników",
+    "accounts.permissions.change":"Nadawaj i odbieraj uprawnienia",
+    "accounts.role.change":"Zmieniaj role użytkowników",
+    "accounts.permissions.copy":"Kopiuj uprawnienia między moderatorami",
+    "accounts.sessions.revoke":"Wyloguj użytkownika ze wszystkich sesji",
+    "accounts.sessions.view":"Przeglądaj aktywność kont",
+    "accounts.block":"Blokuj i odblokowuj konta",
+    "accounts.preview_as":"Podgląd panelu moderatora",
+    "cms.inbox.view":"Przeglądaj wnioski kontaktowe",
+    "cms.inbox.delete":"Trwale usuwaj wnioski",
+    "cms.inbox.reply":"Odpowiadaj na wnioski e-mailem",
+    "cms.inbox.status":"Zmieniaj statusy wniosków",
+    "cms.inbox.notes":"Edytuj notatki do wniosków",
+    "cms.inbox.edit":"Edytuj wnioski kontaktowe",
+    "lobby.config.edit":"Zmieniaj ustawienia lobby"
+  };
+  if (explicit[permission]) return explicit[permission];
+  const parts = String(permission).split('.');
+  const action = parts.at(-1);
+  const actions = {view:'Przeglądaj',create:'Dodawaj',edit:'Edytuj',delete:'Usuwaj',manage:'Zarządzaj',publish:'Publikuj',restore:'Przywracaj',import:'Importuj',export:'Eksportuj',reorder:'Zmieniaj kolejność',change:'Zmieniaj',copy:'Kopiuj',reset:'Resetuj'};
+  const names = {events:'wydarzeniami',downloads:'plikami do pobrania',discord:'Discordem',streamers:'polecanymi streamerami',moderation:'moderacją',commands:'komendami',rules:'regulaminem',contact:'kontaktem',page:'treścią strony',site:'ustawieniami strony',home:'stroną główną',lobby:'lobby',cms:'Centrum Moderacji',backups:'kopiami zapasowymi',accounts:'kontami',audit:'dziennikiem zdarzeń',statistics:'statystykami',github:'plikami GitHub'};
+  if (parts.length === 2 && actions[action] && names[parts[0]]) return `${actions[action]} ${names[parts[0]]}`;
+  return mattReadablePermissionLabel(permission);
+}
 function mattReadablePermissionLabel(permission) {
   const words = String(permission || '').split('.');
   const translate = {"view": "Podgląd", "manage": "Zarządzanie", "create": "Dodawanie", "edit": "Edycja", "delete": "Usuwanie", "publish": "Publikowanie", "reorder": "Zmiana kolejności", "restore": "Przywracanie", "import": "Import", "export": "Eksport", "any": "Pełny zakres modułu", "bulk": "Operacje zbiorcze", "preview": "Podgląd", "nonpublic": "Nieopublikowane", "notes": "Notatki", "history": "Historia", "images": "Grafiki", "schedule": "Harmonogram", "autoarchive": "Automatyczna archiwizacja", "duplicate": "Duplikowanie", "devices": "Urządzenia", "status": "Zmiana statusu", "reply": "Odpowiadanie", "access": "Dostęp", "center": "Panel", "members": "Użytkownicy", "messages": "Wiadomości", "join": "Dołączanie", "channels": "Kanały", "config": "Konfiguracja", "conflicts": "Konflikty", "people": "Osoby", "benefits": "Korzyści", "topics": "Tematy", "links": "Linki", "navigation": "Nawigacja", "maintenance": "Tryb konserwacji", "permissions": "Uprawnienia", "role": "Role", "change": "Zmiana", "password": "Hasła", "reset": "Resetowanie", "email": "E-mail", "sessions": "Sesje", "revoke": "Unieważnianie", "block": "Blokowanie", "copy": "Kopiowanie", "manual": "Ręczne", "automatic": "Automatyczne", "forms": "Formularze", "autosave": "Automatyczny zapis", "inbox": "Wnioski i kontakt", "integrity": "Spójność danych", "check": "Sprawdzanie", "notifications": "Powiadomienia", "search": "Wyszukiwanie", "layout": "Układ", "text": "Tekst", "callouts": "Oznaczenia", "hero": "Baner główny", "rules": "Regulamin", "streamers": "Streamerzy", "moderation": "Moderacja", "downloads": "Pliki", "events": "Eventy", "discord": "Discord", "lobby": "Lobby", "accounts": "Konta", "backups": "Kopie zapasowe", "github": "GitHub", "cms": "Centrum Moderacji", "statistics": "Statystyki", "audit": "Dziennik zdarzeń", "home": "Strona główna", "site": "Strona", "page": "Podstrona", "commands": "Komendy", "contact": "Kontakt", "filters": "Filtry", "filter": "Filtry", "editlocks": "Blokady edycji", "preview_as": "Podgląd jako moderator", "rewards": "Nagrody", "security": "Bezpieczeństwo"};
@@ -701,7 +739,7 @@ async function mattOpenAccountManager() {
       const existing = mergedCatalog.get(item.permission);
       mergedCatalog.set(item.permission, existing ? { ...existing, ...item } : { ...item });
     });
-    catalog = [...mergedCatalog.values()].filter(item => item.permission && !MATT_INVALID_PERMISSION_IDS.has(item.permission) && !item.permission.startsWith("cms.trash.")).map(item => ({...item, label: (!item.label || /^(?:Events|Downloads|Discord|Backups|Accounts|Cms|Page|Site|Lobby|Streamers|Rules|Github|Contact|Commands|Moderation|Home|Statistics|Audit)\s*[—-]/i.test(item.label) || item.description === "Uprawnienie modułu MATT’S WORLD") ? mattReadablePermissionLabel(item.permission) : item.label, description: item.description === "Uprawnienie modułu MATT’S WORLD" || item.description?.startsWith("Szczegółowy zakres dostępu") ? "Uprawnienie do wskazanej czynności w module." : item.description})).sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999));
+    catalog = [...mergedCatalog.values()].filter(item => item.permission && !MATT_INVALID_PERMISSION_IDS.has(item.permission) && !item.permission.startsWith("cms.trash.")).map(item => ({...item, label: mattFriendlyPermissionLabel(item.permission) === mattReadablePermissionLabel(item.permission) && item.label && !/^(?:Events|Downloads|Discord|Backups|Accounts|Cms|Page|Site|Lobby|Streamers|Rules|Github|Contact|Commands|Moderation|Home|Statistics|Audit)\s*[—-]/i.test(item.label) ? item.label : mattFriendlyPermissionLabel(item.permission), description: item.description === "Uprawnienie modułu MATT’S WORLD" || item.description?.startsWith("Szczegółowy zakres dostępu") ? "Uprawnienie do wskazanej czynności w module." : item.description})).sort((a,b) => Number(a.sort_order || 9999) - Number(b.sort_order || 9999));
     if (!selectedId && accounts.length) {
       selectedId = accounts.find(a => a.auth_user_id === viewerUserId)?.auth_user_id || accounts[0].auth_user_id;
     }
@@ -805,7 +843,8 @@ async function mattOpenAccountManager() {
     {name:"Centrum Moderacji", prefixes:["cms.","backups.","github.","statistics."], desc:"Wnioski, historia, kopie zapasowe i statystyki"},
     {name:"MATT LOBBY", prefixes:["lobby."], desc:"Kolejka, konflikty i konfiguracja"},
     {name:"Konta i dostęp", prefixes:["accounts.","audit."], desc:"Zarządzanie kontami i bezpieczeństwo"}
-  ].map(set => ({...set, get permissions() { return catalog.filter(item => set.prefixes.some(prefix => item.permission.startsWith(prefix))).map(item => item.permission); }}));
+  ].map(set => ({...set}));
+  const simpleSetPermissions = set => catalog.filter(item => set.prefixes.some(prefix => item.permission.startsWith(prefix))).map(item => item.permission);
 
   const simpleRoles = {
     user:{label:"Użytkownik", desc:"Zwykłe konto społeczności", permissions:[]},
@@ -831,7 +870,7 @@ async function mattOpenAccountManager() {
       <h4>Dodatkowe możliwości</h4>
       <div class="account-simple-options">
       ${simplePermissionSets.map((set,i)=>{
-        const perms=set.permissions;
+        const perms=simpleSetPermissions(set);
         const checked=perms.length>0 && perms.every(p=>selected.has(p));
         return `<label class="account-simple-option"><input type="checkbox" data-simple-group="${i}" ${checked?'checked':''}><span><strong>${set.name}</strong><small>${set.desc}<br>${perms.length} szczegółowych uprawnień</small></span></label>`;
       }).join('')}
@@ -1011,11 +1050,7 @@ async function mattOpenAccountManager() {
         }
         body.querySelectorAll('[data-simple-group]:checked').forEach(cb=>{
           const set=simplePermissionSets[Number(cb.dataset.simpleGroup)];
-          if(set?.permissions===null){
-            catalog.forEach(x=>permissions.add(x.permission));
-          }else{
-            (set?.permissions||[]).forEach(p=>permissions.add(p));
-          }
+          if(set) simpleSetPermissions(set).forEach(p=>permissions.add(p));
         });
         sessionStorage.setItem('matt_preview_as_moderator',JSON.stringify({
           username: account.username || 'Podgląd roli',
@@ -1032,8 +1067,8 @@ async function mattOpenAccountManager() {
         else if(rolePermissions===null) catalog.forEach(x=>selected.add(x.permission));
         body.querySelectorAll('[data-simple-group]').forEach(cb => {
           const set = simplePermissionSets[Number(cb.dataset.simpleGroup)];
-          if (cb.checked) set.permissions.forEach(p=>selected.add(p));
-          else if (cb.dataset.touched === "1") set.permissions.forEach(p=>selected.delete(p));
+          if (cb.checked) simpleSetPermissions(set).forEach(p=>selected.add(p));
+          else if (cb.dataset.touched === "1") simpleSetPermissions(set).forEach(p=>selected.delete(p));
         });
         try {
           saveSimple.disabled = true;
