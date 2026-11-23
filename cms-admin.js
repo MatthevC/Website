@@ -2553,6 +2553,14 @@
     openArrayManager({
       key:'moderators', title:'NASZA MODERACJA', singular:'osobę', fallback:extractModerators, label:item=>item.name, deletePermission:'moderation.people.delete',
       livePreview:(m,{index})=>`<article class="moderator-card cms-live-moderator-card"><div class="moderator-photo-wrap">${m.image?`<img class="moderator-photo" src="${esc(m.image)}" alt="">`:'<div class="cms-live-photo-placeholder">BRAK ZDJĘCIA</div>'}<div class="moderator-photo-index">${String((index>=0?index:0)+1).padStart(2,'0')}</div></div><div class="moderator-card-body"><div class="moderator-name-row"><h2>${esc(m.name||'NOWA OSOBA')}</h2><span class="moderator-role">${esc(m.role||'ROLA')}</span></div><p>${esc(m.description||'Opis moderatora pojawi się w tym miejscu.')}</p><div class="moderator-links"><span class="moderator-social moderator-twitch"><span>TWITCH</span><strong>${esc(m.name||'nick')}</strong><b>↗</b></span><div class="moderator-social moderator-discord"><span>DISCORD</span><strong>${esc(m.discord||'nick_discord')}</strong></div></div></div></article>`,
+      onFormReady:(form,{items})=>{
+        const role=form.querySelector('[name="role"]');if(!role)return;
+        const list=document.createElement('datalist');list.id='matt-moderator-roles';
+        const names=[...new Set(['MODERATOR GŁÓWNY','MODERATOR TRANSMISJI','MODERATOR DISCORDA','KOORDYNATOR EVENTÓW','OPIEKUN SPOŁECZNOŚCI','STRAŻNIK DISCORDA',...items.map(x=>String(x.role||'').trim()).filter(Boolean)])];
+        names.forEach(name=>{const option=document.createElement('option');option.value=name;list.appendChild(option)});
+        role.setAttribute('list',list.id);role.after(list);
+        role.placeholder='Wybierz z podpowiedzi lub wpisz własną rolę';
+      },
       fields:[
         {name:'name',label:'Nick / nazwa',required:true},{name:'role',label:'Rola / stanowisko',required:true},
         {name:'description',label:'Opis osoby',type:'textarea',required:true},{name:'twitch',label:'Link Twitch',type:'url'},
@@ -2560,6 +2568,9 @@
       ]
     });
   }
+
+  // Public entry point for the dedicated moderator creator in MATT STUDIO.
+  window.MattOpenModeratorsManager = openModeratorsManager;
 
   function openBenefitsManager() {
     const esc = window.MattCMS.escape;
