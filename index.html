@@ -244,7 +244,7 @@
 
   <script src="image-paths.js?v=1"></script>
   <script src="config.js?v=9"></script>
-  <script src="firebase-bridge.js?v=3-account-fix"></script>
+  <script src="firebase-bridge.js?v=moderators-fix-20261123"></script>
 <script src="gmail-oauth-admin.js?v=1"></script>
 <script src="cms.js?v=39-canonical-readback"></script>
 <script src="studio-blocks.js?v=45"></script>
@@ -267,7 +267,7 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=40-proofread','cms-suite.js?v=proofread-20261109'].forEach(function(src){
+    ['cms-admin.js?v=moderators-fix-20261123','cms-suite.js?v=proofread-20261109'].forEach(function(src){
       const script = document.createElement('script');
       script.src = src;
       script.defer = true;

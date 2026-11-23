@@ -443,6 +443,26 @@
   async function uploadCmsImage(file, itemLabel, folder = 'moderators', onAttempt) {
     validateCmsImage(file);
     if (!window.firebaseClient) throw new Error('Brak połączenia z Firebase.');
+    // Moderator images are uploaded via the authenticated Worker and GitHub,
+    // avoiding the browser's Firebase Storage CORS preflight failure.
+    if (folder === 'moderators') {
+      if (file.size > 4 * 1024 * 1024) throw new Error('Zdjęcie moderatora może mieć maksymalnie 4 MB.');
+      if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Wybierz PNG, JPG lub WebP.');
+      const result = await window.firebaseClient.uploadModeratorToGitHub(file);
+      if (result?.error) throw new Error(result.error.message || 'Błąd przesyłania zdjęcia.');
+      if (!result?.data?.url) throw new Error('Serwer nie zwrócił adresu zdjęcia.');
+      return result.data.url;
+    }
+    // Moderator images are uploaded via the authenticated Worker and GitHub,
+    // avoiding the browser's Firebase Storage CORS preflight failure.
+    if (folder === 'moderators') {
+      if (file.size > 4 * 1024 * 1024) throw new Error('Zdjęcie moderatora może mieć maksymalnie 4 MB.');
+      if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Wybierz PNG, JPG lub WebP.');
+      const result = await window.firebaseClient.uploadModeratorToGitHub(file);
+      if (result?.error) throw new Error(result.error.message || 'Błąd przesyłania zdjęcia.');
+      if (!result?.data?.url) throw new Error('Serwer nie zwrócił adresu zdjęcia.');
+      return result.data.url;
+    }
     const safeFolder = slugify(folder || 'obrazy');
     const safeName = slugify(itemLabel || 'zdjecie').slice(0, 48) || 'zdjecie';
     const unique = `${cmsCompactStamp()}-${Math.random().toString(36).slice(2, 8)}`;

@@ -105,7 +105,7 @@ const rpc=async(name,args={})=>{await ready;
   // merge:true would retain deleted keys such as t0001 when restoring base text.
   if(!auth.currentUser)return fail('Zaloguj się, aby zapisywać dane.');
   const key=String(args.p_key||'');
-  if(!key || !args.p_data || typeof args.p_data!=='object' || Array.isArray(args.p_data))return fail('Nieprawidłowe dane CMS.');
+  if(!key || !args.p_data || typeof args.p_data!=='object')return fail('Nieprawidłowe dane CMS.');
   try{
     await sdk.f.setDoc(sdk.f.doc(db,'cms_data',key),{
       key,data:args.p_data,updated_at:new Date().toISOString()
@@ -139,10 +139,21 @@ async function readLobbyConfigFromServer(game){
  return {data:snap.exists()?normalize(snap.data()):null,error:null};
  }catch(e){return fail(e.message||String(e));}
 }
+async function uploadModeratorToGitHub(file){
+ await ready;
+ if(!auth.currentUser)return fail('Zaloguj się, aby przesłać zdjęcie moderatora.');
+ try{
+  const token=await auth.currentUser.getIdToken();
+  const r=await fetch(ACCOUNT_WORKER+'/moderators/image',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':file.type},body:file});
+  const data=await r.json();
+  if(!r.ok||!data.ok)return fail(data.error||'Nie udało się zapisać zdjęcia moderatora.');
+  return {data,error:null};
+ }catch(e){return fail(e.message||String(e));}
+}
 async function uploadEventToGitHub(file){
  await ready;const user=auth.currentUser;if(!user)return fail('Zaloguj się.');
  try{const token=await user.getIdToken();const r=await fetch(ACCOUNT_WORKER+'/events/image',{method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':file.type},body:file});const data=await r.json();if(!r.ok||!data.ok)return fail(data.error||'Nie udało się zapisać grafiki.');return {data,error:null};}catch(e){return fail(e.message||String(e));}
 }
-const facade={cmsBackupRequest:async(name,args={})=>{const r=await accountRequest('/cms/backup',{name,args});return {data:r.data?.data??null,error:r.error};},uploadEventToGitHub,lobbySyncRequest:(selectedGame)=>accountRequest('/lobby/sync',{selectedGame}),lobbySyncStatus:()=>accountRequest('/lobby/status',{}),auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
+const facade={cmsBackupRequest:async(name,args={})=>{const r=await accountRequest('/cms/backup',{name,args});return {data:r.data?.data??null,error:r.error};},uploadEventToGitHub,uploadModeratorToGitHub,lobbySyncRequest:(selectedGame)=>accountRequest('/lobby/sync',{selectedGame}),lobbySyncStatus:()=>accountRequest('/lobby/status',{}),auth:authApi,from:(name)=>new Query(name),readCmsFromServer,readLobbyConfigFromServer,rpc,functions:{invoke:async(name,options={})=>name==='admin-manage-users'?accountRequest('/accounts/action',options.body):unsupported('Funkcja '+name)},storage:storageApi};
 window.firebaseClient=facade;window.__mattFirebaseReady=ready;window.__mattFirebaseMigrationIncomplete=true;
 })();
