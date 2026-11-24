@@ -3041,7 +3041,7 @@ function getEventsUrl() {
   return new URL('events/events.json', script ? script.src : document.baseURI).href;
 }
 
-const EVENTS_CACHE_KEY = "matt_events_rows_v2";
+const EVENTS_CACHE_KEY = "matt_events_rows_v3";
 const EVENTS_CACHE_TTL = 2 * 60 * 1000;
 let __eventsRowsCache = null;
 let __eventsRowsCacheAt = 0;
@@ -3085,6 +3085,8 @@ async function fetchEventRows(force = false) {
   try { return await __eventsRowsPromise; } finally { __eventsRowsPromise = null; }
 }
 
+window.mattRefreshEventRows = () => fetchEventRows(true);
+
 async function loadEvents() {
   console.log("[MATT'S WORLD] Ładowanie eventów z cache/Firebase...");
 
@@ -3108,9 +3110,9 @@ async function loadEvents() {
         endDate: ongoing ? null : event.end_date,
         ongoing,
         image: event.image_url,
-        imageFit: meta.imageFit || event.image_fit || "contain",
-        mainImage: meta.mainImageUrl || event.main_image_url || event.image_url,
-        mainImageFit: meta.mainImageFit || event.main_image_fit || "contain",
+        imageFit: event.image_fit || meta.imageFit || "contain",
+        mainImage: event.main_image_url || meta.mainImageUrl || event.image_url,
+        mainImageFit: event.main_image_fit || meta.mainImageFit || "contain",
         excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
         content: event.description || "",
         publishDate: event.publish_date,

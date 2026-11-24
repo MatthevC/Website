@@ -4647,7 +4647,11 @@
             start_date:canSchedule?eventAdminCombineDateTime(form.elements.startDate?.value,form.elements.startTime?.value):(row?.start_date||null),
             end_date:endDate,
             publish_date:canSchedule?eventAdminCombineDateTime(form.elements.publishDate?.value,form.elements.publishTime?.value):(row?.publish_date||null),
-            image_url:image||null
+            image_url:image||null,
+            main_image_url:mediaState.main_image_url,
+            main_image_fit:mediaState.main_image_fit,
+            image_fit:mediaState.image_fit,
+            image_mode:mediaState.image_mode
           };
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing
@@ -4671,7 +4675,7 @@
           }
           window.MattSuite?.clearFormAutosave?.(form);
           if (savedRow?.id && window.MattSuite?.releaseEditLock) await window.MattSuite.releaseEditLock(`event:${savedRow.id}`);
-          notify(editing?'Event został zapisany.':'Event został dodany.'); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
+          notify(editing?'Event został zapisany.':'Event został dodany.'); if(window.mattRefreshEventRows) await window.mattRefreshEventRows(); if(typeof window.render==='function') await window.render(); await draw(); refreshToolbar();
         }catch(error){notify(`Nie udało się zapisać eventu: ${error.message}`,'error');if(submit){submit.disabled=false;submit.textContent=editing?'ZAPISZ ZMIANY':'DODAJ EVENT';}}
       });
       renderPreview();
