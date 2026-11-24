@@ -3041,7 +3041,7 @@ function getEventsUrl() {
   return new URL('events/events.json', script ? script.src : document.baseURI).href;
 }
 
-const EVENTS_CACHE_KEY = "matt_events_rows_v3";
+const EVENTS_CACHE_KEY = "matt_events_rows_v4";
 const EVENTS_CACHE_TTL = 2 * 60 * 1000;
 let __eventsRowsCache = null;
 let __eventsRowsCacheAt = 0;
@@ -3111,7 +3111,7 @@ async function loadEvents() {
         ongoing,
         image: event.image_url,
         imageFit: event.image_fit || meta.imageFit || "contain",
-        mainImage: event.main_image_url || meta.mainImageUrl || event.image_url,
+        mainImage: event.main_image_url && event.main_image_url !== event.image_url ? event.main_image_url : (String(event.id) === "f4cc906c-3555-44a5-a856-815d40cbb301" && event.media_revision !== 2 ? "assets/pictures/events/event-1795507106780-6c77ca2d-a53f-4bf0-80d5-c09662437efb.png" : (event.image_mode === "shared" ? event.image_url : meta.mainImageUrl || event.main_image_url || event.image_url)),
         mainImageFit: event.main_image_fit || meta.mainImageFit || "contain",
         excerpt: (event.description || "").length > 150 ? (event.description || "").slice(0,150) + "..." : (event.description || ""),
         content: event.description || "",

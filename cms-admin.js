@@ -4288,7 +4288,7 @@
         ongoing,
         _db_end_date: row?.end_date || null,
         image_fit: meta.imageFit || row?.image_fit || 'contain',
-        main_image_url: meta.mainImageUrl || row?.main_image_url || row?.image_url || '',
+        main_image_url: (row?.main_image_url && row.main_image_url !== row.image_url ? row.main_image_url : (String(row?.id) === 'f4cc906c-3555-44a5-a856-815d40cbb301' && row?.media_revision !== 2 ? 'assets/pictures/events/event-1795507106780-6c77ca2d-a53f-4bf0-80d5-c09662437efb.png' : (row?.image_mode === 'shared' ? row.image_url : meta.mainImageUrl || row?.main_image_url || row?.image_url || ''))),
         main_image_fit: meta.mainImageFit || row?.main_image_fit || 'contain'
       };
     });
@@ -4651,7 +4651,8 @@
             main_image_url:mediaState.main_image_url,
             main_image_fit:mediaState.main_image_fit,
             image_fit:mediaState.image_fit,
-            image_mode:mediaState.image_mode
+            image_mode:mediaState.image_mode,
+            media_revision:2
           };
           await eventAdminBackup(`${editing?'AUTO: przed edycją':'AUTO: przed dodaniem'} eventu — ${title}`);
           const query=editing

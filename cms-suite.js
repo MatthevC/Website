@@ -244,7 +244,11 @@
       start_date:row.start_date,
       end_date:eventEndForDb(row.end_date, sourceMeta.ongoing === true || isDbOngoingEnd(row.end_date)),
       publish_date:new Date().toISOString(),
-      image_url:row.image_url
+      image_url:row.image_url,
+      main_image_url:row.main_image_url || sourceMeta.mainImageUrl || row.image_url || null,
+      main_image_fit:row.main_image_fit || sourceMeta.mainImageFit || "contain",
+      image_fit:row.image_fit || sourceMeta.imageFit || "contain",
+      image_mode:row.image_mode || sourceMeta.imageMode || ((row.main_image_url || sourceMeta.mainImageUrl) && (row.main_image_url || sourceMeta.mainImageUrl)!==row.image_url ? "separate" : "shared")
     };
     const { data:newRow, error:insertError } = await window.firebaseClient.from('events').insert(payload).select().single();
     if (insertError) throw insertError;
@@ -884,6 +888,7 @@
       await window.MattCMS.createBackup(`AUTO: przed przywróceniem eventu — ${label}`);
       const r=version.row;
       const payload={title:r.title,description:r.description,start_date:r.start_date,end_date:eventEndForDb(r.end_date),publish_date:r.publish_date,image_url:r.image_url};
+      for(const k of ["main_image_url","main_image_fit","image_fit","image_mode","media_revision"]) if(r[k]!==undefined) payload[k]=r[k];
       const {error}=await window.firebaseClient.from('events').update(payload).eq('id',eventId); if(error)throw error;
       const wfRow=(version.backup.snapshot?.cms_data||[]).find(x=>x.key===KEYS.workflow);
       const backupMeta=wfRow?.data?.[String(eventId)] || {};
@@ -917,7 +922,7 @@
     if(!confirm(`Przywrócić „${item.label||'element'}”?`))return;
     if(item.kind==='event') {
       const r=item.payload||{}; const payload={};
-      ['id','title','description','start_date','end_date','publish_date','image_url'].forEach(k=>{if(r[k]!==undefined)payload[k]=r[k];});
+      ['id','title','description','start_date','end_date','publish_date','image_url','main_image_url','main_image_fit','image_fit','image_mode','media_revision'].forEach(k=>{if(r[k]!==undefined)payload[k]=r[k];});
       payload.end_date = eventEndForDb(payload.end_date, item.meta?.workflow?.ongoing === true);
       let result=await window.firebaseClient.from('events').insert(payload).select().single();
       if(result.error && payload.id){ delete payload.id; result=await window.firebaseClient.from('events').insert(payload).select().single(); }
