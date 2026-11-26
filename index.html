@@ -268,7 +268,8 @@
     const role = event?.detail?.role || window.currentUserRole || 'guest';
     if (loaded || (role !== 'admin' && role !== 'moderator')) return;
     loaded = true;
-    ['cms-admin.js?v=20261125-viewer-lobby      const script = document.createElement('script');
+    ['cms-admin.js?v=20261126-toolbar','cms-suite.js?v=proofread-20261109'].forEach(function(src){
+      const script = document.createElement('script');
       script.src = src;
       script.defer = true;
       document.body.appendChild(script);

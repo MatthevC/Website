@@ -1074,7 +1074,7 @@
     mattApplyPins();
     toolbar.addEventListener('click', e => {
       const action = e.target.closest('[data-cms-action]')?.dataset.cmsAction;
-      if (action === 'toggle-toolbar') { setToolbarCollapsed(!isToolbarCollapsed()); return; }
+      if (action === 'toggle-toolbar') { setToolbarCollapsed(!isToolbarCollapsed()); syncToolbarMenu(); return; }
       if (action === 'toolbar-orientation') {
         setToolbarOrientation(getToolbarOrientation() === 'vertical' ? 'horizontal' : 'vertical');
         return;
@@ -1100,12 +1100,46 @@
     return toolbar;
   }
 
+  const toolbarVisibilityKey = 'matt_cms_toolbar_hidden_v1';
+  let toolbarHidden = false;
+  try { toolbarHidden = localStorage.getItem(toolbarVisibilityKey) === '1'; } catch (_) {}
+  function syncToolbarMenu() {
+    const menu = document.getElementById('userMenu');
+    if (!menu) return;
+    let button = document.getElementById('mattToggleManagementPanel');
+    if (!button) {
+      button = document.createElement('button');
+      button.id = 'mattToggleManagementPanel';
+      button.type = 'button';
+      menu.insertBefore(button, document.getElementById('logoutBtn'));
+      button.onclick = () => {
+        if (!isAdmin()) return;
+        toolbarHidden = !(toolbarHidden || !toolbar || isToolbarCollapsed());
+        try { localStorage.setItem(toolbarVisibilityKey, toolbarHidden ? '1' : '0'); } catch (_) {}
+        if (!toolbarHidden) {
+          refreshToolbar();
+          setToolbarCollapsed(false);
+          resetToolbarPosition();
+        } else refreshToolbar();
+        menu.classList.remove('show');
+      };
+    }
+    button.hidden = !isAdmin();
+    button.style.display = isAdmin() ? '' : 'none';
+    button.textContent = toolbarHidden || !toolbar || isToolbarCollapsed() ? 'Pokaż panel zarządzania' : 'Ukryj panel zarządzania';
+  }
   function refreshToolbar() {
+    syncToolbarMenu();
     if (!isAdmin()) {
       toolbar?.remove(); toolbar = null;
       return;
     }
+    if (toolbarHidden && !inlineEditing && !layoutEditing) {
+      if (toolbar) toolbar.style.setProperty('display','none','important');
+      return;
+    }
     ensureToolbar();
+    toolbar.style.removeProperty('display');
     const roleBadge = $('.cms-toolbar-title span', toolbar);
     const roleTitle = $('.cms-toolbar-title strong', toolbar);
     if (roleBadge) roleBadge.textContent = window.currentUserRole === 'admin' ? 'ADMIN' : 'MOD';
@@ -1147,6 +1181,7 @@
     }
     mattApplyPins();
     applyToolbarState();
+    syncToolbarMenu();
   }
 
   // MATT STUDIO: wspólny punkt edycji treści i komunikatów.
