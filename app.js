@@ -370,6 +370,7 @@ const pages = {
     body: rewardsPage()
   },
 
+  "viewer/lobby": { title: "DLA WIDZA / <span>JAK DOŁĄCZYĆ DO LOBBY?</span>", body: viewerLobbyPage() },
   "viewer/vip": {
     title: "DLA WIDZA / <span>VIP</span>",
     body: vipPage()
@@ -1049,6 +1050,22 @@ function rulesPage(title, subtitle) {
       </div>
     </div>
   `;
+}
+
+function viewerLobbyPage() {
+  const limits = [['Nowy widz',2],['Widz powyżej 7 dni',3],['Widz powyżej 30 dni',4],['Subskrybent',6],['VIP / Moderator',6],['VIP / Moderator + Subskrybent',10]];
+  const example = (file, alt) => `<button class="lobby-guide-image" type="button" data-image-preview="assets/pictures/lobby-guide/${file}" data-image-alt="${alt}"><img src="assets/pictures/lobby-guide/${file}" alt="${alt}" loading="lazy"><small>↗ Powiększ przykład</small></button>`;
+  return `<div class="container content-wrap lobby-guide"><div class="page-panel">
+    <a class="back-link" href="#/">← WRÓĆ NA START</a>
+    <div class="vip-hero"><div class="lobby-guide-icon" aria-hidden="true">🎮</div><div><h1>JAK DOŁĄCZYĆ DO <span>LOBBY?</span></h1><p>Chcesz zagrać ze mną na transmisji? Dołącz do kolejki — MATT LOBBY zajmie się resztą!</p></div></div>
+    <section class="lobby-guide-section"><div class="vip-card-number">01 / WSPÓLNE GRY</div><h2>DOŁĄCZ W 3 KROKACH</h2>
+    <div class="lobby-guide-steps"><article class="vip-card"><div class="vip-card-number">KROK 1</div><h3>Dołącz do kolejki</h3><p>Wpisz na czacie Twitch jedną z komend:</p><div class="lobby-guide-commands"><code>!jachcem</code><code>!jachce</code><code>!join</code></div></article><article class="vip-card"><div class="vip-card-number">KROK 2</div><h3>Sprawdź pozycję</h3><p>Bot doda Cię do kolejki. Swoje miejsce sprawdzisz komendą:</p><div class="lobby-guide-commands"><code>!pozycja</code><code>!checkQueue</code></div></article><article class="vip-card"><div class="vip-card-number">KROK 3</div><h3>Poczekaj na swoją kolej</h3><p>Po rozegraniu ustalonej liczby meczów bot zaprosi kolejne osoby. Bądź cierpliwy — miejsce się zwolni!</p></article></div>
+    <div class="lobby-guide-example"><div><h3>Tak wygląda to na czacie</h3><p>Bot potwierdzi dołączenie do kolejki, a następnie poinformuje o aktualnym lobby.</p><a class="lobby-guide-link" href="#/viewer/commands">ZOBACZ WSZYSTKIE KOMENDY →</a></div>${example('chat.webp','Przykład dołączenia do kolejki i aktualnego lobby na czacie')}</div></section>
+    <section class="lobby-guide-section"><div class="vip-card-number">02 / LIMITY</div><h2>ILE MECZÓW MOGĘ ZAGRAĆ?</h2><div class="lobby-guide-limits">${limits.map(([name,n])=>`<div class="vip-card lobby-guide-limit"><strong>${name}</strong><b>${n}</b><small>${n===2||n===3||n===4?'mecze':'meczów'}</small></div>`).join('')}</div><div class="notice vip-note"><strong>VIP i moderator są traktowani tak samo przez bota.</strong><br>Po wykorzystaniu limitu możesz ponownie wpisać <code>!jachcem</code> i poczekać na swoją kolej.</div></section>
+    <section class="lobby-guide-section"><div class="vip-card-number">03 / KOMFORT GRY</div><h2>NIE CHCESZ GRAĆ Z KONKRETNĄ OSOBĄ?</h2><p>Nie każdy musi się ze sobą dogadywać. Dlatego MATT LOBBY obsługuje konflikty — po zatwierdzeniu zgłoszenia bot nie dobierze Was do jednego lobby.</p><div class="lobby-guide-example lobby-guide-conflict"><div><h3>Jak zgłosić konflikt?</h3><ol><li>Przejdź do WNIOSKI / KONTAKT.</li><li>Wybierz temat „Informacja — z kim nie chcę grać”.</li><li>Podaj nick gracza i opisz sprawę.</li><li>Poczekaj na kontakt ode mnie. Osobiście zweryfikuję zgłoszenie i potwierdzę, czy konflikt został dodany.</li></ol><a class="lobby-guide-link" href="#/contact">ZGŁOŚ KONFLIKT →</a></div>${example('contact.webp','Formularz zgłoszenia konfliktu w grze')}</div>
+    <div class="notice vip-note"><strong>Kto ma pierwszeństwo?</strong><br>Liczy się kolejność dołączenia do kolejki. Jeśli osoby objęte konfliktem zapiszą się w tym samym lub bardzo zbliżonym czasie, pierwszeństwo ma osoba, która nie zgłaszała tego konfliktu.</div></section>
+    <section class="lobby-guide-section"><div class="vip-card-number">04 / PRZYKŁADY</div><h2>CO JEŚLI ZOSTAŁO JEDNO WOLNE MIEJSCE?</h2><p>Osoba pierwsza w kolejce ma konflikt z graczem, który jest już w lobby.</p><div class="vip-section-grid"><article class="vip-card"><div class="vip-card-number">SYTUACJA A</div><h3>Nikt inny nie czeka</h3><div class="lobby-guide-flow"><span>Gracz w lobby</span><b>✕</b><span>Gracz w konflikcie</span></div><p>Bot nie połączy tych osób. Zagramy z losowym graczem, a osoba w kolejce poczeka.</p></article><article class="vip-card"><div class="vip-card-number">SYTUACJA B</div><h3>Ktoś jeszcze czeka</h3><div class="lobby-guide-flow"><span>Gracz w konflikcie czeka</span><b>→</b><span>Kolejny zgodny gracz wchodzi</span></div><p>Bot wybierze kolejną osobę bez konfliktu z lobby. Pominięty gracz poczeka na zakończenie meczów osoby, z którą ma konflikt.</p></article></div><p class="lobby-guide-foot">Ta zasada działa w obie strony — niezależnie od tego, kto zgłosił konflikt.</p></section>
+    </div></div>`;
 }
 
 function vipPage() {
@@ -3765,7 +3782,7 @@ async function render() {
   }
   const routeQuery = new URLSearchParams(rawQuery);
 
-  if ((path === "viewer/vip" || path === "vip" || path === "vip/how-to" || path === "vip/benefits") && !routeQuery.get("jump")) {
+  if ((path === "viewer/lobby" || path === "viewer/vip" || path === "vip" || path === "vip/how-to" || path === "vip/benefits") && !routeQuery.get("jump")) {
     window.scrollTo(0, 0);
   }
 

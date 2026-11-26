@@ -1,0 +1,1 @@
+Podmień pięć plików w katalogu głównym repozytorium. Dodaj oba obrazy do assets/pictures/lobby-guide/. Nie zmieniaj Workera ani Firebase. Po publikacji Ctrl+Shift+R. Sprawdź #/viewer/lobby oraz menu DLA WIDZA.

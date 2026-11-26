@@ -2295,7 +2295,7 @@
 
   function openNavigationManager() {
     if (!isAdmin()) return;
-    let items = clone(window.MattCMS?.get('navigation', null) || window.MattCMS?.extractNavigationFromDom?.() || []);
+    let items = clone(window.MattCMS?.extractNavigationFromDom?.() || window.MattCMS?.get('navigation', null) || []);
     const esc = window.MattCMS.escape;
     const navPreviewHtml = draft => `<nav class="main-nav cms-live-main-nav">${draft.map(item=>{const children=Array.isArray(item.children)?item.children:[];return children.length?`<div class="nav-dropdown"><button type="button">${esc(item.label||'KATEGORIA')} <span>⌄</span></button><div class="dropdown-menu">${children.map(child=>`<a href="#">${esc(child.label||'PODKATEGORIA')}</a>`).join('')}</div></div>`:`<a href="#">${esc(item.label||'KATEGORIA')}</a>`;}).join('')}</nav>`;
     const bindNavFormPreview = (form, fields, current, makeDraft) => {

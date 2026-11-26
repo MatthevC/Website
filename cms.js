@@ -239,7 +239,17 @@
     }).filter(Boolean);
   }
 
+  function withViewerLobbyNavigation(items) {
+    if (!Array.isArray(items)) return items;
+    return items.map(item => {
+      const children = Array.isArray(item?.children) ? item.children : [];
+      if (!children.some(child => child?.href === '#/viewer/vip') && String(item?.label || '').trim().toUpperCase() !== 'DLA WIDZA') return item;
+      if (children.some(child => child?.href === '#/viewer/lobby')) return item;
+      return {...item, children: [{label:'JAK DOŁĄCZYĆ DO LOBBY?', href:'#/viewer/lobby'}, ...children]};
+    });
+  }
   function renderNavigation(items) {
+    items = withViewerLobbyNavigation(items);
     const nav = document.getElementById('main-nav');
     if (!nav || !Array.isArray(items)) return;
     nav.innerHTML = items.map(item => {
